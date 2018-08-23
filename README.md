@@ -1,2 +1,2 @@
 # demodcritus
-A generic atomic modding framework for Haxe games
+An atomic modding framework for Haxe games
