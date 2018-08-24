@@ -28,6 +28,7 @@ class Demo extends Sprite
 		
 		makeButtons();
 		drawImages();
+		drawText();
 	}
 	
 	public function destroy()
@@ -48,6 +49,7 @@ class Demo extends Sprite
 		}
 		stuff.splice(0, stuff.length);
 		drawImages();
+		drawText();
 	}
 	
 	private function makeButtons()
@@ -66,6 +68,19 @@ class Demo extends Sprite
 			
 			xx += Std.int(w.width) + 10;
 			addChild(w);
+		}
+		
+		updateWidgets();
+	}
+	
+	private function updateWidgets()
+	{
+		if (widgets == null) return;
+		for (i in 0...widgets.length)
+		{
+			var showLeft = i != 0;
+			var showRight = i != widgets.length - 1;
+			widgets[i].showButtons(showLeft, showRight);
 		}
 	}
 	
@@ -106,6 +121,8 @@ class Demo extends Sprite
 			}
 			callback(theMods);
 		}
+		
+		updateWidgets();
 	}
 	
 	private function drawImages()
@@ -127,11 +144,9 @@ class Demo extends Sprite
 			bmp.x = xx;
 			bmp.y = yy;
 			
-			var text = new TextField();
+			var text = getText();
+			
 			text.width = bmp.width;
-			var dtf = text.defaultTextFormat;
-			dtf.align = TextFormatAlign.CENTER;
-			text.setTextFormat(dtf);
 			text.text = image;
 			text.x = xx;
 			text.y = bmp.y + bmp.height;
@@ -145,4 +160,61 @@ class Demo extends Sprite
 		}
 	}
 	
+	private function drawText()
+	{
+		var xx = 350;
+		var yy = 10;
+		
+		var texts = Assets.list(AssetType.TEXT);
+		
+		for (t in texts)
+		{
+			var isXML:Bool = false;
+			var align = TextFormatAlign.CENTER;
+			if (t.indexOf("xml") != -1)
+			{
+				isXML = true;
+				align = TextFormatAlign.LEFT;
+			}
+			
+			var text = getText(align);
+			text.x = xx;
+			text.y = yy;
+			text.height = 100;
+			text.border = true;
+			text.width = 150;
+			if (isXML)
+			{
+				text.width = 250;
+			}
+			text.wordWrap = true;
+			text.multiline = true;
+			
+			var str = Assets.getText(t);
+			text.text = (str != null ? str : "null");
+			
+			var caption = getText();
+			caption.x = xx;
+			caption.y = text.y + text.height;
+			caption.text = t;
+			caption.width = text.width;
+			
+			addChild(text);
+			addChild(caption);
+			stuff.push(text);
+			stuff.push(caption);
+			
+			xx += Std.int(text.width + 10);
+		}
+	}
+	
+	private function getText(align:TextFormatAlign = CENTER):TextField
+	{
+		var text = new TextField();
+		var dtf = text.defaultTextFormat;
+		dtf.align = align;
+		text.setTextFormat(dtf);
+		text.selectable = false;
+		return text;
+	}
 }

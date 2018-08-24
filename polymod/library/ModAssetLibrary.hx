@@ -64,7 +64,7 @@ class ModAssetLibrary extends AssetLibrary
 	
 	public override function exists (id:String, type:String):Bool
 	{
-		var e = check(id);
+		var e = check(id, type);
 		if (!e && fallBackToDefault)
 		{
 			return fallback.exists(id, type);
@@ -224,7 +224,8 @@ class ModAssetLibrary extends AssetLibrary
 		
 		for (id in this.type.keys ())
 		{
-			if (requestedType == null || exists (id, type))
+			if (id.indexOf("_append") == 0 || id.indexOf("_merge") == 0) continue;
+			if (requestedType == null || exists (id, requestedType))
 			{
 				items.push (id);
 			}
@@ -234,7 +235,10 @@ class ModAssetLibrary extends AssetLibrary
 		{
 			if (items.indexOf(otherId) == -1)
 			{
-				items.push(otherId);
+				if (requestedType == null || fallback.exists(otherId, type))
+				{
+					items.push(otherId);
+				}
 			}
 		}
 		
@@ -345,7 +349,7 @@ class ModAssetLibrary extends AssetLibrary
 			else
 			{
 				var doti = Util.uLastIndexOf(f,".");
-				var ext:String = doti != -1 ? f.substring(doti) : "";
+				var ext:String = doti != -1 ? f.substring(doti+1) : "";
 				switch(ext.toLowerCase())
 				{
 					case "mp3", "ogg", "wav": type.set(f, AssetType.SOUND);
@@ -364,13 +368,14 @@ class ModAssetLibrary extends AssetLibrary
 	 * @param	id
 	 * @return
 	 */
-	private function check(id:String):Bool
+	private function check(id:String, type:String=null):Bool
 	{
 		#if sys
+		var exists = false;
 		id = Util.stripAssetsPrefix(id);
 		if (dirs == null)
 		{
-			return FileSystem.exists(dir + Util.sl() + id);
+			exists = FileSystem.exists(dir + Util.sl() + id);
 		}
 		else
 		{
@@ -378,12 +383,34 @@ class ModAssetLibrary extends AssetLibrary
 			{
 				if (FileSystem.exists(d + Util.sl() + id))
 				{
-					return true;
+					exists = true;
 				}
 			}
 		}
+		if (exists && type != null)
+		{
+			exists = (this.type.get(id) == type);
+		}
+		return exists;
 		#end
 		return false;
+	}
+	
+	private function checkType(id:String):AssetType
+	{
+		if (this.type.exists(id))
+		{
+			var value = this.type.get(id);
+			if (value != null)
+			{
+				return value;
+			}
+		}
+		if (fallBackToDefault)
+		{
+			return @:privateAccess fallback.types.get(id);
+		}
+		return null;
 	}
 	
 	private function checkDirectly(dir:String,id:String):Bool

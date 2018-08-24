@@ -116,6 +116,7 @@ class CheapButton extends Sprite
 		dtf.size = 18;
 		dtf.align = TextFormatAlign.CENTER;
 		t.setTextFormat(dtf);
+		t.selectable = false;
 		return t;
 	}
 	

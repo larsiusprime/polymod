@@ -32,8 +32,8 @@ class ModWidget extends DisplayObjectContainer
 		status.text = "inactive";
 		
 		var button = new CheapButton(str, onClick);
-		var moveLeft = new CheapButton("←", onMove.bind(-1));
-		var moveRight = new CheapButton("→", onMove.bind(1));
+		moveLeft = new CheapButton("←", onMove.bind(-1));
+		moveRight = new CheapButton("→", onMove.bind(1));
 		
 		addChild(status);
 		addChild(button);
@@ -44,6 +44,13 @@ class ModWidget extends DisplayObjectContainer
 		
 		moveLeft.y = status.y + status.height + 10;
 		moveRight.y = moveLeft.y + moveLeft.height + 4;
+	}
+	
+	public function showButtons(left:Bool, right:Bool)
+	{
+		if (moveLeft == null) return;
+		moveLeft.visible = left;
+		moveRight.visible = right;
 	}
 	
 	public function destroy()
@@ -84,6 +91,7 @@ class ModWidget extends DisplayObjectContainer
 		dtf.size = 18;
 		dtf.align = TextFormatAlign.CENTER;
 		t.setTextFormat(dtf);
+		t.selectable = false;
 		return t;
 	}
 	

@@ -400,12 +400,10 @@ class Util
 		{
 			var f = all[i];
 			var stri = uIndexOf(f, str + "/");
-			Sys.println("f-->" + f);
 			if (stri == 0)
 			{
 				f = uSubstr(f, uLength(str+"/"), uLength(f));
 				all[i] = f;
-				Sys.println("----->" + f);
 			}
 		}
 		return all;
