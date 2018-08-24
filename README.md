@@ -1,9 +1,24 @@
 # Polymod
 An atomic modding framework for Haxe games
 
-WIP
+![A visual preview of the polymod OpenFL sample](preview.gif)
 
-Currently works with OpenFL only but could be expanded to support other frameworks.
+# What is this
+
+Let's say you have a game or app that you want to make moddable. The easiest way to do this is to:
+
+1. Make your game data-driven (expose as much of your content in the form of loose data files as possible)
+2. Let players provide their own data files
+
+Easy enough. But what if you want players to be able to use multiple mods together? How do you manage that?
+
+Polymod solves both problems.
+
+First, it **overrides** your basic lime/openfl Asset library with a custom one pointed at a mod folder (or folders) somewhere on the user's hard drive. Whenever you request an asset via `Assets.getBitmapData()` call or whatever, the custom library first checks if the mod has a modified version of this file. If it does, it returns the mod's version. If it doesn't, it falls through to the default asset library (the assets included with the game).
+
+Second, it supports **atomic mods**. Instead of supplying one mod folder, you can provide several. Polymod will go through each folder in turn and apply the changes from each mod, automatically joining them into one combined mod at runtime. Note that this means that the order you load the mods in matters, in the case that they have overlapping changes.
+
+Polymod currently works with OpenFL desktop target only but could be expanded to support other frameworks and targets if there's interest.
 
 # Usage
 
@@ -25,8 +40,14 @@ After that, you just load your assets as normal:
 var myImage = Assets.getBitmapData("myImage.png"); //either the default asset or the one overriden by a mod
 ```
 
-# How It Works
+# Creating a mod
 
-Blah blah fill this in with details.
+I'll include more documentation about this when I have time. Until then, see this article:
 
 https://www.fortressofdoors.com/player-friendly-atomic-game-modding/
+
+## TODO:
+- root folder
+- `_append` folder
+- `_merge` folder
+- asset types
