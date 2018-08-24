@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>  
 <data>  
 	<object value="sunflower">
-		<merge key="value" value="moon"/>
+		<merge key="value" value="star"/>
 	</object>
 </data>  
