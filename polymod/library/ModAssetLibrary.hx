@@ -1,8 +1,10 @@
 package polymod.library;
 
+import flash.display.BitmapData;
 import haxe.xml.Fast;
 import haxe.xml.Printer;
-import lime.utils.Assets;
+import lime.utils.Assets in LimeAssets;
+import openfl.utils.Assets in OpenFLAssets;
 #if sys
 import sys.FileSystem;
 #end
@@ -57,7 +59,6 @@ class ModAssetLibrary extends AssetLibrary
 		fallback = Fallback;
 		super();
 		fallBackToDefault = fallback != null;
-		Sys.println("new ModAssetLibrary() Dir=" + Dir + " Dirs=" + Dirs);
 		init();
 	}
 	
@@ -151,7 +152,6 @@ class ModAssetLibrary extends AssetLibrary
 	
 	public override function getImage (id:String):Image
 	{
-		Sys.println("getImage(" + id + ")");
 		if (check(id))
 		{
 			return Image.fromFile (file(id));
@@ -217,12 +217,7 @@ class ModAssetLibrary extends AssetLibrary
 	
 	public override function list (type:String):Array<String>
 	{
-		Sys.println("list(" + type+")");
-		
 		var otherList = fallBackToDefault ? fallback.list(type) : [];
-		
-		Sys.println("fallback = " + fallback + " fallbacktodefault = " + fallBackToDefault);
-		Sys.println("otherList = " + otherList);
 		
 		var requestedType = type != null ? cast (type, AssetType) : null;
 		var items = [];
@@ -249,15 +244,55 @@ class ModAssetLibrary extends AssetLibrary
 	/****PRIVATE****/
 	
 	
+	private function clearCache()
+	{
+		OpenFLAssets.cache.clear();
+		
+		for (key in LimeAssets.cache.audio.keys())
+		{
+			LimeAssets.cache.audio.remove(key);
+		}
+		for (key in LimeAssets.cache.font.keys())
+		{
+			LimeAssets.cache.font.remove(key);
+		}
+		for (key in LimeAssets.cache.image.keys())
+		{
+			LimeAssets.cache.image.remove(key);
+		}
+		
+		for (key in cachedAudioBuffers.keys())
+		{
+			cachedAudioBuffers.remove(key);
+		}
+		for (key in cachedBytes.keys())
+		{
+			cachedBytes.remove(key);
+		}
+		for (key in cachedFonts.keys())
+		{
+			cachedFonts.remove(key);
+		}
+		for (key in cachedImages.keys())
+		{
+			cachedImages.remove(key);
+		}
+		for (key in cachedText.keys())
+		{
+			cachedText.remove(key);
+		}
+	}
+	
 	private function init():Void
 	{
 		#if sys
+		clearCache();
 		type = new Map<String, AssetType>();
 		if (dirs != null)
 		{
 			for (d in dirs)
 			{
-				_initMod(dir);
+				_initMod(d);
 			}
 		}
 		else
@@ -267,24 +302,22 @@ class ModAssetLibrary extends AssetLibrary
 		#end
 	}
 	
-	private function _initMod(dir:String):Void
+	private function _initMod(d:String):Void
 	{
-		if (dir == null) return;
+		if (d == null) return;
 		
-		Sys.println("_initMod(" + dir + ")");
 		var all:Array<String> = null;
 		
-		if (dir == "" || dir == null)
+		if (d == "" || d == null)
 		{
 			all = [];
 		}
 		
 		try
 		{
-			if (FileSystem.exists(dir))
+			if (FileSystem.exists(d))
 			{
-				all = Util.readDirectoryRecursive(dir);
-				Sys.println("all = " + all);
+				all = Util.readDirectoryRecursive(d);
 			}
 			else
 			{

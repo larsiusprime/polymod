@@ -12,21 +12,36 @@ import polymod.Polymod;
  */
 class Main extends Sprite 
 {
-
+	private var demo:Demo=null;
+	
 	public function new() 
 	{
 		super();
 		
-		var modPath = "..\\..\\..\\mods\\";
-		Polymod.init([modPath + "mod1", modPath + "mod3"]);
-		
-		var demo = new Demo();
+		loadDemo();
+	}
+	
+	private function loadDemo()
+	{
+		demo = new Demo(onModChange);
 		addChild(demo);
+	}
+	
+	private function onModChange(arr:Array<String>)
+	{
+		loadMods(arr);
+		demo.refresh();
 	}
 	
 	private function loadMods(dirs:Array<String>)
 	{
-		Polymod.init(dirs);
+		var modPath = "../../../mods/";
+		var mods = [];
+		for (dir in dirs)
+		{
+			mods.push(modPath + dir);
+		}
+		Polymod.init(mods);
 	}
 
 }

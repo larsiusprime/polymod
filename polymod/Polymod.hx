@@ -2,7 +2,8 @@ package polymod;
 import lime.utils.AssetLibrary;
 import polymod.library.ModAssetLibrary;
 
-import lime.utils.Assets;
+import lime.utils.Assets in LimeAssets;
+import openfl.utils.Assets;
 
 /**
  * ...
@@ -11,7 +12,8 @@ import lime.utils.Assets;
 class Polymod
 {
 
-	private static var defaultLibrary:AssetLibrary=null;
+	private static var defaultLibrary:AssetLibrary = null;
+	private static var modLibrary:ModAssetLibrary = null;
 	/**
 	 * Initializes the chosen mod or mods.
 	 * @param	dir	root directory of a single mod
@@ -23,15 +25,43 @@ class Polymod
 		var dirsNull = dirs == null || dirs.length == 0;
 		if (dirNull && dirsNull)
 		{
-			throw "Polymod.init() ERROR: both dir and dirs are empty!";
-		}
-		if (defaultLibrary == null)
-		{
-			defaultLibrary = lime.utils.Assets.getLibrary("default");
+			if (defaultLibrary != null)
+			{
+				LimeAssets.registerLibrary("default", defaultLibrary);
+			}
+			else
+			{
+				return;
+			}
 		}
 		
-		var modLibrary = new ModAssetLibrary(dir, defaultLibrary, dirs);
-		lime.utils.Assets.registerLibrary("default", modLibrary);
+		if (defaultLibrary == null)
+		{
+			defaultLibrary = LimeAssets.getLibrary("default");
+		}
+		
+		clearCache();
+		
+		modLibrary = new ModAssetLibrary(dir, defaultLibrary, dirs);
+		LimeAssets.registerLibrary("default", modLibrary);
 	}
 	
+	private static function clearCache()
+	{
+		if (defaultLibrary != null)
+		{
+			for (key in LimeAssets.cache.audio.keys())
+			{
+				LimeAssets.cache.audio.remove(key);
+			}
+			for (key in LimeAssets.cache.font.keys())
+			{
+				LimeAssets.cache.font.remove(key);
+			}
+			for (key in LimeAssets.cache.image.keys())
+			{
+				LimeAssets.cache.image.remove(key);
+			}
+		}
+	}
 }

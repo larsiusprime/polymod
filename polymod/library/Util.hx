@@ -399,11 +399,13 @@ class Util
 		for (i in 0...all.length)
 		{
 			var f = all[i];
-			var stri = uIndexOf(f, str+"/");
+			var stri = uIndexOf(f, str + "/");
+			Sys.println("f-->" + f);
 			if (stri == 0)
 			{
 				f = uSubstr(f, uLength(str+"/"), uLength(f));
 				all[i] = f;
+				Sys.println("----->" + f);
 			}
 		}
 		return all;
@@ -442,9 +444,6 @@ class Util
 	
 	public static function sl():String
 	{
-		#if windows
-			return "\\";
-		#end
 		return "/";
 	}
 	
