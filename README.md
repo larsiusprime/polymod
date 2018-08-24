@@ -25,6 +25,8 @@ Polymod supports the following kinds of operations:
 - Append data to the end of existing asset (text only)
 - Merge data at a specified location within an existing asset (text only)
 
+Merge logic is currently supported for plaintext (TXT), TSV, and XML file formats only. Support for JSON is planned.
+
 # Usage
 
 Loading one mod:
