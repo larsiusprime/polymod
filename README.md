@@ -14,11 +14,16 @@ Easy enough. But what if you want players to be able to use multiple mods togeth
 
 Polymod solves both problems.
 
-First, it **overrides** your basic lime/openfl Asset library with a custom one pointed at a mod folder (or folders) somewhere on the user's hard drive. Whenever you request an asset via `Assets.getBitmapData()` call or whatever, the custom library first checks if the mod has a modified version of this file. If it does, it returns the mod's version. If it doesn't, it falls through to the default asset library (the assets included with the game).
+First, it **overrides** your basic lime/openfl Asset library with a custom one pointed at a mod folder (or folders) somewhere on the user's hard drive. Whenever you request an asset via `Assets.getBitmapData()` call or whatever, the custom library first checks if the mod has a modified version of this file. If it does, it returns the mod's modified version. If it doesn't, it falls through to the default asset library (the assets included with the game).
 
 Second, it supports **atomic mods**. Instead of supplying one mod folder, you can provide several. Polymod will go through each folder in turn and apply the changes from each mod, automatically joining them into one combined mod at runtime. Note that this means that the order you load the mods in matters, in the case that they have overlapping changes.
 
 Polymod currently works with OpenFL desktop target only but could be expanded to support other frameworks and targets if there's interest.
+
+Polymod supports the following kinds of operations:
+- Replace asset
+- Append data to the end of existing asset (text only)
+- Merge data at a specified location within an existing asset (text only)
 
 # Usage
 
