@@ -41,7 +41,7 @@ Loading multiple mods:
 Polymod.init(["path/to/first/mod","path/to/second/mod","path/to/third/mod","etc"]);
 ```
 
-Be sure to call Polymod.init() before you load any assets.
+Be sure to call `Polymod.init()` before you load any assets. Also note that calling `Polymod.init()` will clear your Asset cache.
 
 After that, you just load your assets as normal:
 
