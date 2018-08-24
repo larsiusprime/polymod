@@ -18,3 +18,15 @@ Polymod.init(["path/to/first/mod","path/to/second/mod","path/to/third/mod","etc"
 ```
 
 Be sure to call Polymod.init() before you load any assets.
+
+After that, you just load your assets as normal:
+
+```haxe
+var myImage = Assets.getBitmapData("myImage.png"); //either the default asset or the one overriden by a mod
+```
+
+# How It Works
+
+Blah blah fill this in with details.
+
+https://www.fortressofdoors.com/player-friendly-atomic-game-modding/
