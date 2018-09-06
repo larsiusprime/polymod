@@ -62,3 +62,7 @@ https://www.fortressofdoors.com/player-friendly-atomic-game-modding/
 - `_append` folder
 - `_merge` folder
 - asset types
+
+# Security
+
+Players modifying their games to accept random untrusted third party content are already exposing themselves in a fundamental way, but there's perhaps some things we can do to shave the attack surface area down a bit. For one, special care needs to be taken care if some of the assets you're loading via Polymod are driving in-game scripts and have access to e.g. File read/write/delete API's (or even worse, invoking system commands and/or launching other executables). At the moment, Polymod does absolutely nothing to protect you from this, so you must make your own safeguards. In the future we might provide some basic sandboxing or safety checks.
