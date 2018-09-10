@@ -35,7 +35,7 @@ class ModAssetLibrary extends AssetLibrary
 {
 	/****VARS****/
 	
-	public var type(default, null) = new Map<String,AssetType>();
+	private var type(default, null) = new Map<String,AssetType>();
 	
 	private var dir:String;
 	private var dirs:Array<String> = null;
@@ -424,27 +424,14 @@ class ModAssetLibrary extends AssetLibrary
 		}
 		for (f in all)
 		{
-			if (f.indexOf("audio/music") == 0)
+			var doti = Util.uLastIndexOf(f,".");
+			var ext:String = doti != -1 ? f.substring(doti+1) : "";
+			ext = ext.toLowerCase();
+			switch(ext)
 			{
-				type.set(f, AssetType.MUSIC);
-			}
-			else if (f.indexOf("audio/sfx") == 0)
-			{
-				type.set(f, AssetType.SOUND);
-			}
-			else if (f.indexOf("fonts") == 0)
-			{
-				type.set(f, AssetType.FONT);
-			}
-			else
-			{
-				var doti = Util.uLastIndexOf(f,".");
-				var ext:String = doti != -1 ? f.substring(doti+1) : "";
-				switch(ext.toLowerCase())
-				{
-					case "mp3", "ogg", "wav": type.set(f, AssetType.SOUND);
-					case "jpg", "png":type.set(f, AssetType.IMAGE);
-					case "txt", "xml", "json", "tsv", "csv", "mpf", "tsx", "tmx", "vdf": type.set(f, AssetType.TEXT);
+				case "mp3", "ogg", "wav": type.set(f, AssetType.SOUND);
+				case "jpg", "png":type.set(f, AssetType.IMAGE);
+				case "txt", "xml", "json", "tsv", "csv", "mpf", "tsx", "tmx", "vdf": type.set(f, AssetType.TEXT);
 					case "ttf", "otf": type.set(f, AssetType.FONT);
 					default: type.set(f, AssetType.BINARY);
 				}
@@ -477,7 +464,7 @@ class ModAssetLibrary extends AssetLibrary
 				}
 			}
 		}
-		if (exists && type != null)
+		if (exists && type != null && type != BINARY)
 		{
 			exists = (this.type.get(id) == type);
 		}
