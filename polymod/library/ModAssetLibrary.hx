@@ -3,8 +3,10 @@ package polymod.library;
 import flash.display.BitmapData;
 import haxe.xml.Fast;
 import haxe.xml.Printer;
+import lime.app.Future;
 import lime.utils.Assets in LimeAssets;
 import openfl.utils.Assets in OpenFLAssets;
+import lime.net.HTTPRequest;
 #if sys
 import sys.FileSystem;
 #end
@@ -199,7 +201,95 @@ class ModAssetLibrary extends AssetLibrary
 		
 		return modText;
 	}
-	
+
+	public override function loadBytes (id:String):Future<Bytes> 
+	{
+		if (check(id))
+		{
+			return Bytes.loadFromFile (file(id));
+		}
+		else if (fallBackToDefault)
+		{
+			return fallback.loadBytes(id);
+		}
+		return Bytes.loadFromFile("");
+	}
+
+	public override function loadFont(id:String):Future<Font>
+	{
+		if (check(id)) {
+
+			#if (js && html5)
+			return Font.loadFromName (paths.get (file(id)));
+			#else
+			return Font.loadFromFile (paths.get (file(id)));
+			#end
+
+		} else if (fallBackToDefault) {
+
+			return fallback.loadFont(id);
+
+		}
+		#if (js && html5)
+		return Font.loadFromName (paths.get (""));
+		#else
+		return Font.loadFromFile (paths.get (""));
+		#end
+	}
+
+	public override function loadImage(id:String):Future<Image>
+	{
+		if (check(id)) {
+
+			return Image.loadFromFile(file(id));
+
+		} else if(fallBackToDefault) {
+
+			return fallback.loadImage(id);
+
+		}
+		return Image.loadFromFile("");
+	}
+
+	public override function loadAudioBuffer(id:String)
+	{
+		if (check(id)) {
+
+			//return 
+			if (pathGroups.exists(file(id))) {
+
+				return AudioBuffer.loadFromFiles (pathGroups.get(file(id)));
+
+			} else {
+
+				return AudioBuffer.loadFromFile(paths.get(file(id)));
+
+			}
+
+		} else if (fallBackToDefault) {
+
+			return fallback.loadAudioBuffer(id);
+
+		}
+		return AudioBuffer.loadFromFile("");
+	}
+
+	public override function loadText(id:String):Future<String>
+	{
+		if (check(id)) {
+			
+			var request = new HTTPRequest<String> ();
+			return request.load (paths.get (file(id)));
+
+		}
+		else if (fallBackToDefault) {
+			
+			return fallback.loadText(id);
+
+		}
+		var request = new HTTPRequest<String> ();
+		return request.load ("");
+	}
 	
 	public override function isLocal (id:String, type:String):Bool
 	{

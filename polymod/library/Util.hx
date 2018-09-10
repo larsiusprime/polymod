@@ -4,6 +4,10 @@ package polymod.library;
 import sys.FileSystem;
 #end
 
+#if unifill
+import unifill.Unifill;
+#end
+
 import haxe.Utf8;
 
 class Util
@@ -506,7 +510,7 @@ class Util
 	public static function uCharAt(str:String, index:Int):String
 	{
 		#if unifill
-		return Unfill.uCharAt(str, index);
+		return Unifill.uCharAt(str, index);
 		#else
 		return str.charAt(index);
 		#end
@@ -594,7 +598,7 @@ class Util
 	public static function uSubstr(str:String, pos:Int, ?len:Int):String
 	{
 		#if unifill
-		return Unifill.uSubstr(str, pos, len)
+		return Unifill.uSubstr(str, pos, len);
 		#else
 		return str.substr(pos, len);
 		#end
@@ -603,7 +607,7 @@ class Util
 	public static function uSubstring(str:String, startIndex:Int, ?endIndex:Int):String
 	{
 		#if unifill
-		return Unifill.uSubstring(str, startIndex, endIndex)
+		return Unifill.uSubstring(str, startIndex, endIndex);
 		#else
 		return str.substring(startIndex, endIndex);
 		#end
