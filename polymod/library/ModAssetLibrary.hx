@@ -434,9 +434,8 @@ class ModAssetLibrary extends AssetLibrary
 				case "mp3", "ogg", "wav": type.set(f, AssetType.SOUND);
 				case "jpg", "png":type.set(f, AssetType.IMAGE);
 				case "txt", "xml", "json", "tsv", "csv", "mpf", "tsx", "tmx", "vdf": type.set(f, AssetType.TEXT);
-					case "ttf", "otf": type.set(f, AssetType.FONT);
-					default: type.set(f, AssetType.BINARY);
-				}
+				case "ttf", "otf": type.set(f, AssetType.FONT);
+				default: type.set(f, AssetType.BINARY);
 			}
 		}
 	}
