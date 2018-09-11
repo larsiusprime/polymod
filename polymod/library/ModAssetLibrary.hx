@@ -409,11 +409,13 @@ class ModAssetLibrary extends AssetLibrary
 		
 		try
 		{
+			#if sys
 			if (FileSystem.exists(d))
 			{
 				all = Util.readDirectoryRecursive(d);
 			}
 			else
+			#end
 			{
 				all = [];
 			}
@@ -534,7 +536,9 @@ class ModAssetLibrary extends AssetLibrary
 			for (d in dirs)
 			{
 				var thePath = d + Util.sl() + id;
+				#if sys
 				if (FileSystem.exists(thePath))
+				#end
 				{
 					theFile = thePath;
 				}
