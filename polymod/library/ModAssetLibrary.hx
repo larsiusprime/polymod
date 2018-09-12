@@ -41,7 +41,7 @@ class ModAssetLibrary extends AssetLibrary
 	private var dirs:Array<String> = null;
 	private var fallBackToDefault:Bool = true;
 	private var fallback:AssetLibrary = null;
-	
+
 	/****PUBLIC****/
 	
 	/**
@@ -304,7 +304,23 @@ class ModAssetLibrary extends AssetLibrary
 		return false;
 	}
 	
-	
+	public function listModFiles (type:String):Array<String>
+	{
+		var requestedType = type != null ? cast (type, AssetType) : null;
+		var items = [];
+		
+		for (id in this.type.keys ())
+		{
+			if (id.indexOf("_append") == 0 || id.indexOf("_merge") == 0) continue;
+			if (requestedType == null || exists (id, requestedType))
+			{
+				items.push (id);
+			}
+		}
+		
+		return items;
+	}
+
 	public override function list (type:String):Array<String>
 	{
 		var otherList = fallBackToDefault ? fallback.list(type) : [];

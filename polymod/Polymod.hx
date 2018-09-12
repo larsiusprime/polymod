@@ -1,5 +1,6 @@
 package polymod;
 import lime.utils.AssetLibrary;
+import lime.utils.AssetType;
 import polymod.library.ModAssetLibrary;
 
 import lime.utils.Assets in LimeAssets;
@@ -41,7 +42,6 @@ class Polymod
 		
 		clearCache();
 		
-		modLibrary = new ModAssetLibrary(dir, defaultLibrary, dirs);
 		for(i in 0...dirs.length) {
 			if(dirs[i] != null){
 				dirs[i] = modRoot + "/" + dirs[i];
@@ -55,6 +55,41 @@ class Polymod
 			initModPack(modRoot);
 		}
 	}
+
+	/**
+	 * Get the asset library that Polymod uses as a fallback for assets your
+	 * mod doesn't provide
+	 * @return AssetLibrary
+	 */
+	public static function getDefaultLibrary():AssetLibrary
+	{
+		return defaultLibrary;
+	}
+
+	/**
+	 * Get the mod asset library that Polymod sets as your default asset library
+	 * @return ModAssetLibrary
+	 */
+	public static function getModLibrary():ModAssetLibrary
+	{
+		return modLibrary;
+	}
+
+	/**
+	 * Provide a list of assets included in or modified by the mod(s)
+	 * @param type the type of asset you want (lime.utils.AssetType)
+	 * @return Array<String> a list of assets of the matching type
+	 */
+	public static function listModFiles(type:AssetType=null):Array<String>
+	{
+		if(modLibrary != null)
+		{
+			return modLibrary.listModFiles(type);
+		}
+		return [];
+	}
+
+	/***PRIVATE***/
 
 	private static function initModPack(modRoot:String)
 	{
