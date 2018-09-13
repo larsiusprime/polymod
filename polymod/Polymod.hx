@@ -51,7 +51,7 @@ typedef PolymodParams = {
 	/**
 	 * semantic version of your game's Mod API (will generate errors & warnings)
 	 */
-	var version:SemanticVersion;
+	var api_version:SemanticVersion;
 
 	/**
 	 * (optional) callback for any errors generated during mod initialization
@@ -110,9 +110,9 @@ class Polymod
 				var meta:ModMetadata = getMetadata(dirs[i]);
 				if(meta != null)
 				{
-					if(!meta.version.isCompatibleWith(params.version))
+					if(!meta.api_version.isCompatibleWith(params.api_version))
 					{
-						Polymod.warning("sem_ver_conflict","Mod \""+dirs[i]+"\" has incompatible version " + meta.version.toString() + ", there could be problems! (Mod API version is " + params.version.toString()+")");
+						Polymod.warning("sem_ver_conflict","Mod \""+dirs[i]+"\" was built for outdated API version " + meta.api_version.toString() + ", current API version is " + params.api_version.toString());
 					}
 					modMeta.push(meta);
 				}
@@ -160,7 +160,7 @@ class Polymod
 		{
 			var meta:ModMetadata = null;
 			
-			var metaFile = dir+"/_polymod_meta.txt";
+			var metaFile = dir+"/_polymod_meta.json";
 			var iconFile = dir+"/_polymod_icon.png";
 			if(!FileSystem.exists(metaFile))
 			{
@@ -265,7 +265,8 @@ class ModMetadata
 	public var title:String;
 	public var description:String;
 	public var author:String;
-	public var version:SemanticVersion;
+	public var api_version:SemanticVersion;
+	public var mod_version:SemanticVersion;
 	public var license:String;
 	public var license_ref:String;
 	public var icon:BitmapData;
@@ -279,14 +280,24 @@ class ModMetadata
 		m.title = JsonHelp.str(json,"title");
 		m.description = JsonHelp.str(json, "description");
 		m.author = JsonHelp.str(json, "author");
-		var versionStr = JsonHelp.str(json, "version");
+		var apiVersionStr = JsonHelp.str(json, "api_version");
+		var modVersionStr = JsonHelp.str(json, "mod_version");
 		try
 		{
-			m.version = SemanticVersion.fromString(versionStr);
+			m.api_version = SemanticVersion.fromString(apiVersionStr);
 		}
 		catch(msg:Dynamic)
 		{
-			Polymod.error("parse_mod_version","Error parsing mod version: ("+Std.string(msg)+") _polymod_meta.txt was : " + str);
+			Polymod.error("parse_api_version","Error parsing api version: ("+Std.string(msg)+") _polymod_meta.json was : " + str);
+			return null;
+		}
+		try
+		{
+			m.mod_version = SemanticVersion.fromString(modVersionStr);
+		}
+		catch(msg:Dynamic)
+		{
+			Polymod.error("parse_mod_version","Error parsing mod version: ("+Std.string(msg)+") _polymod_meta.json was : " + str);
 			return null;
 		}
 		m.license = JsonHelp.str(json, "license");

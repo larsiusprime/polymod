@@ -96,7 +96,7 @@ class SemanticVersion
 	{
 		var v = new SemanticVersion();
 		v.original = str;
-		if(str == "" || str == null) throw "SemanticVersion: string is empty!";
+		if(str == "" || str == null) throw "SemanticVersion.hx: string is empty!";
 		var extra = "";
         if(str.indexOf("+") != -1){
             var arr = str.split("+");
@@ -108,28 +108,28 @@ class SemanticVersion
 			extra = arr[1];
 		}
 		var arr = str.split(".");
-		if(arr.length < 3) throw "SemanticVersion: needs major, minor, and patch versions! :\""+str+"\"";
+		if(arr.length < 3) throw "SemanticVersion.hx: needs major, minor, and patch versions! :\""+str+"\"";
 		for(substr in arr) {
 			if(substr.length > 1 && substr.charAt(0) == "0"){
-				throw "SemanticVersion: no leading zeroes allowed! : \""+str+"\"";
+				throw "SemanticVersion.hx: no leading zeroes allowed! : \""+str+"\"";
 			}
 		}
 		var maj = Std.parseInt(arr[0]);
 		var min = Std.parseInt(arr[1]);
 		var pat = Std.parseInt(arr[2]);
-		if(maj == null) throw "SemanticVersion: couldn't parse major version! :\""+str+"\"";
-		if(min == null) throw "SemanticVersion: couldn't parse minor version! :\""+str+"\"";
-		if(pat == null) throw "SemanticVersion: couldn't parse patch version! :\""+str+"\"";
+		if(maj == null) throw "SemanticVersion.hx: couldn't parse major version! :\""+str+"\"";
+		if(min == null) throw "SemanticVersion.hx: couldn't parse minor version! :\""+str+"\"";
+		if(pat == null) throw "SemanticVersion.hx: couldn't parse patch version! :\""+str+"\"";
 		v.major = maj;
 		v.minor = min;
 		v.patch = pat;
 		v.preRelease = [];
 		if(extra != null && extra != "")
 		{
-            if(maj > 1) throw "SemanticVersion: pre-release version not allowed post 1.0.0! :\""+str+"\"";
+            if(maj > 1) throw "SemanticVersion.hx: pre-release version not allowed post 1.0.0! :\""+str+"\"";
             if(maj == 1){
-                if(min > 0) throw "SemanticVersion: pre-release version not allowed post 1.0.0! :\""+str+"\"";
-                if(pat > 0) throw "SemanticVersion: pre-release version not allowed post 1.0.0! :\""+str+"\"";
+                if(min > 0) throw "SemanticVersion.hx: pre-release version not allowed post 1.0.0! :\""+str+"\"";
+                if(pat > 0) throw "SemanticVersion.hx: pre-release version not allowed post 1.0.0! :\""+str+"\"";
             }
 			var arr = extra.split(".");
 			if(arr != null && arr.length > 0)
@@ -141,7 +141,7 @@ class SemanticVersion
 					{
 						if(substr.length > 0 && substr.charAt(0) == "0")
 						{
-							throw "SemanticVersion: no leading zeroes allowed! : \""+str+"\"";
+							throw "SemanticVersion.hx: no leading zeroes allowed! : \""+str+"\"";
 						}
 					}
 					v.preRelease.push(substr);
