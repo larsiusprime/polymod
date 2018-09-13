@@ -49,11 +49,29 @@ class SemanticVersion
 		}
 		var arr = str.split(".");
 		if(arr.length < 3) throw "SemanticVersion.hx: needs major, minor, and patch versions! :\""+str+"\"";
-		for(substr in arr)
+		for(ii in 0...arr.length)
 		{
+			var substr = arr[ii];
 			if(substr.length > 1 && substr.charAt(0) == "0")
 			{
 				throw "SemanticVersion.hx: no leading zeroes allowed! : \""+str+"\"";
+			}
+			for(i in 0...substr.length)
+			{
+				var char:String = substr.charAt(i);
+				switch(char)
+				{
+					case "0","1","2","3","4","5","6","7","8","9":
+						//donothing, fine
+					default:
+						var word = switch(ii){
+							case 0: "major";
+							case 1: "minor";
+							case 2: "patch";
+							default: "";
+						}
+						throw "SemanticVersion.hx: couldn't parse " + word + " version! :\""+str+"\"";
+				}
 			}
 		}
 		var maj:Null<Int> = null;
@@ -129,16 +147,6 @@ class SemanticVersion
 	
     public function new(){}
     
-	/**
-	 * Check if these two versions are compatible
-	 * @param newer version to check against
-	 * @return Bool
-	 */
-	public function isCompatibleWith(newer:SemanticVersion):Bool
-	{
-		return checkCompatibility(newer) > 0;
-	}
-
 	/**
 	 * Compare version numbers and return compatibility score
 	 * @param newer version to check against

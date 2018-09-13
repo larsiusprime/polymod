@@ -142,23 +142,23 @@ class Polymod
 		{
 			if(dirs[i] != null)
 			{
+				var origDir = dirs[i];
 				dirs[i] = modRoot + "/" + dirs[i];
 				var meta:ModMetadata = getMetadata(dirs[i]);
 				
 				if(meta != null)
 				{
-					meta.id = dirs[i];
-					trace("loading mod : " + meta.id);
-					trace("meta.apiVersion = " + meta.apiVersion.toString());
-					trace("apiVersion = " + apiVersion.toString());
-					if(!meta.apiVersion.isCompatibleWith(apiVersion))
+					meta.id = origDir;
+					var apiScore = meta.apiVersion.checkCompatibility(apiVersion);
+					if(apiScore < 3)
 					{
-						Polymod.error(VERSION_CONFLICT_API, "Mod \""+dirs[i]+"\" was built for outdated API version " + meta.apiVersion.toString() + ", current API version is " + params.apiVersion.toString());
+						Polymod.error(VERSION_CONFLICT_API, "Mod \""+origDir+"\" was built for incompatible API version " + meta.apiVersion.toString() + ", current API version is " + params.apiVersion.toString());
 					}
 					var modVer = modVers.length > i ? modVers[i] : null;
 					if(modVer != null)
 					{
-						if(!modVer.isCompatibleWith(meta.modVersion))
+						var score = modVer.checkCompatibility(meta.modVersion);
+						if(score < 3)
 						{
 							Polymod.error(VERSION_CONFLICT_MOD, "Mod pack wants version " + modVer.toString() + " of mod("+meta.id+"), found incompatible version " + meta.modVersion.toString() + " instead");
 						}
@@ -355,7 +355,7 @@ class ModMetadata
 		}
 		catch(msg:Dynamic)
 		{
-			Polymod.error(PARSE_API_VERSION,"Error parsing api version: ("+Std.string(msg)+") _polymod_meta.json was : " + str);
+			Polymod.error(PARSE_MOD_API_VERSION,"Error parsing api version: ("+Std.string(msg)+") _polymod_meta.json was : " + str);
 			return null;
 		}
 		try
@@ -397,6 +397,7 @@ enum PolymodErrorType
 @:enum abstract PolymodErrorCode(String) from String to String
 {
 	var PARSE_MOD_VERSION:String = "parse_mod_version";
+	var PARSE_MOD_API_VERSION:String = "parse_mod_api_version";
 	var PARSE_API_VERSION:String = "parse_api_version";
 	var MISSING_MOD:String = "missing_mod";
 	var MISSING_META:String = "missing_meta";
