@@ -63,16 +63,6 @@ typedef PolymodParams = {
 	 * if not provided, no version checks will be made
 	 */
 	?modVersions:Array<String>,
-
-	/**
-	 * (optional) if true, sends an error rather than a warning when an API version check fails. False if not present.
-	 */
-	?errorOnAPIVersionFail:Bool,
-
-	/**
-	 * (optional) if true, sends an error rather than a warning when a Mod version check fails. False if not present.
-	 */
-	?errorOnModVersionFail:Bool
 }
 
 /**
@@ -116,27 +106,35 @@ class Polymod
 		
 		clearCache();
 		
-		var apiVersion = SemanticVersion.fromString(params.apiVersion);
+		var apiVersion:SemanticVersion = null;
+		try
+		{
+			apiVersion = SemanticVersion.fromString(params.apiVersion);
+		}
+		catch(msg:Dynamic)
+		{
+			Polymod.error(PARSE_API_VERSION,"Error parsing api version: ("+Std.string(msg)+")");
+			return [];
+		}
 
 		var modMeta = [];
 		var modVers = [];
-
-		var errorOnAPIFail = params.errorOnAPIVersionFail != null ? params.errorOnAPIVersionFail : false;
-		var errorOnModFail = params.errorOnModVersionFail != null ? params.errorOnModVersionFail : false;
 
 		if(params.modVersions != null)
 		{
 			for(str in params.modVersions)
 			{
+				var semVer = null;
 				try
 				{
-					var semVer = SemanticVersion.fromString(str);
-					modVers.push(semVer);
+					semVer = SemanticVersion.fromString(str);
 				}
 				catch(msg:Dynamic)
 				{
-					Polymod.error("param_mod_ver","There was an error with one of the mod version patterns you provided: " + msg);
+					Polymod.error(PARAM_MOD_VERSION,"There was an error with one of the mod version patterns you provided: " + msg);
+					semVer = SemanticVersion.fromString("*.*.*");
 				}
+				modVers.push(semVer);
 			}
 		}
 
@@ -146,19 +144,23 @@ class Polymod
 			{
 				dirs[i] = modRoot + "/" + dirs[i];
 				var meta:ModMetadata = getMetadata(dirs[i]);
-				meta.id = dirs[i];
+				
 				if(meta != null)
 				{
+					meta.id = dirs[i];
+					trace("loading mod : " + meta.id);
+					trace("meta.apiVersion = " + meta.apiVersion.toString());
+					trace("apiVersion = " + apiVersion.toString());
 					if(!meta.apiVersion.isCompatibleWith(apiVersion))
 					{
-						Polymod.errOrWarn(errorOnAPIFail, "api_sem_ver_conflict","Mod \""+dirs[i]+"\" was built for outdated API version " + meta.apiVersion.toString() + ", current API version is " + params.apiVersion.toString());
+						Polymod.error(VERSION_CONFLICT_API, "Mod \""+dirs[i]+"\" was built for outdated API version " + meta.apiVersion.toString() + ", current API version is " + params.apiVersion.toString());
 					}
 					var modVer = modVers.length > i ? modVers[i] : null;
 					if(modVer != null)
 					{
 						if(!modVer.isCompatibleWith(meta.modVersion))
 						{
-							Polymod.errOrWarn(errorOnModFail, "mod_sem_ver_conflict","Mod pack wants version " + modVer.toString() + " of mod("+meta.id+"), found incompatible version " + meta.modVersion.toString() + " instead");
+							Polymod.error(VERSION_CONFLICT_MOD, "Mod pack wants version " + modVer.toString() + " of mod("+meta.id+"), found incompatible version " + meta.modVersion.toString() + " instead");
 						}
 					}
 					modMeta.push(meta);
@@ -176,33 +178,27 @@ class Polymod
 		return modMeta;
 	}
 
-	public static function errOrWarn(doError:Bool, type:String, message:String)
-	{
-		if(doError) error(type, message);
-		else warning(type, message);
-	}
-
-	public static function error(type:String, message:String)
+	public static function error(code:PolymodErrorCode, message:String)
 	{
 		if(onError != null)
 		{
-			onError(new PolymodError(PolymodErrorType.ERROR, type, message));
+			onError(new PolymodError(PolymodErrorType.ERROR, code, message));
 		}
 	}
 
-	public static function warning(type:String, message:String)
+	public static function warning(code:PolymodErrorCode, message:String)
 	{
 		if(onError != null)
 		{
-			onError(new PolymodError(PolymodErrorType.WARNING, type, message));
+			onError(new PolymodError(PolymodErrorType.WARNING, code, message));
 		}
 	}
 
-	public static function notice(type:String, message:String)
+	public static function notice(code:PolymodErrorCode, message:String)
 	{
 		if(onError != null)
 		{
-			onError(new PolymodError(PolymodErrorType.NOTICE, type, message));
+			onError(new PolymodError(PolymodErrorType.NOTICE, code, message));
 		}
 	}
 
@@ -217,7 +213,7 @@ class Polymod
 			var iconFile = dir+"/_polymod_icon.png";
 			if(!FileSystem.exists(metaFile))
 			{
-				warning("missing_meta","Could not find mod metadata file: \""+metaFile+"\"");
+				warning(MISSING_META,"Could not find mod metadata file: \""+metaFile+"\"");
 			}
 			else
 			{
@@ -226,7 +222,7 @@ class Polymod
 			}
 			if(!FileSystem.exists(iconFile))
 			{
-				warning("missing_icon","Could not find mod icon file: \""+iconFile+"\"");
+				warning(MISSING_ICON,"Could not find mod icon file: \""+iconFile+"\"");
 				if(meta != null)
 				{
 					meta.icon = BitmapData.fromFile(iconFile);
@@ -236,7 +232,7 @@ class Polymod
 		}
 		else
 		{
-			error("missing_mod","Could not find mod directory: \""+dir+"\"");
+			error(MISSING_MOD,"Could not find mod directory: \""+dir+"\"");
 		}
 		#end
 		return null;
@@ -359,7 +355,7 @@ class ModMetadata
 		}
 		catch(msg:Dynamic)
 		{
-			Polymod.error("parse_api_version","Error parsing api version: ("+Std.string(msg)+") _polymod_meta.json was : " + str);
+			Polymod.error(PARSE_API_VERSION,"Error parsing api version: ("+Std.string(msg)+") _polymod_meta.json was : " + str);
 			return null;
 		}
 		try
@@ -368,7 +364,7 @@ class ModMetadata
 		}
 		catch(msg:Dynamic)
 		{
-			Polymod.error("parse_mod_version","Error parsing mod version: ("+Std.string(msg)+") _polymod_meta.json was : " + str);
+			Polymod.error(PARSE_MOD_VERSION,"Error parsing mod version: ("+Std.string(msg)+") _polymod_meta.json was : " + str);
 			return null;
 		}
 		m.license = JsonHelp.str(json, "license");
@@ -380,13 +376,13 @@ class ModMetadata
 class PolymodError
 {
 	public var severity:PolymodErrorType;
-	public var type:String;
+	public var code:String;
 	public var message:String;
 
-	public function new(severity:PolymodErrorType,type:String,message:String)
+	public function new(severity:PolymodErrorType, code:PolymodErrorCode, message:String)
 	{
 		this.severity = severity;
-		this.type = type;
+		this.code = code;
 		this.message = message;
 	}
 }
@@ -396,4 +392,16 @@ enum PolymodErrorType
 	NOTICE;
 	WARNING;
 	ERROR;
+}
+
+@:enum abstract PolymodErrorCode(String) from String to String
+{
+	var PARSE_MOD_VERSION:String = "parse_mod_version";
+	var PARSE_API_VERSION:String = "parse_api_version";
+	var MISSING_MOD:String = "missing_mod";
+	var MISSING_META:String = "missing_meta";
+	var MISSING_ICON:String = "missing_icon";
+	var VERSION_CONFLICT_MOD:String = "version_conflict_mod";
+	var VERSION_CONFLICT_API:String = "version_conflict_api";
+	var PARAM_MOD_VERSION:String = "param_mod_version";
 }
