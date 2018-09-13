@@ -27,6 +27,7 @@ import lime.utils.AssetType;
 import polymod.library.ModAssetLibrary;
 import polymod.library.JsonHelp;
 import polymod.library.SemanticVersion;
+import polymod.library.Util.MergeRules;
 import openfl.display.BitmapData;
 
 import lime.utils.Assets in LimeAssets;
@@ -63,6 +64,11 @@ typedef PolymodParams = {
 	 * if not provided, no version checks will be made
 	 */
 	?modVersions:Array<String>,
+
+	/**
+	 * (optional) rules for merging various data formats
+	 */
+	 ?mergeRules:MergeRules
 }
 
 /**
@@ -167,7 +173,13 @@ class Polymod
 				}
 			}
 		}
-		modLibrary = new ModAssetLibrary(null, defaultLibrary, dirs);
+
+		modLibrary = new ModAssetLibrary({
+			dir:null, 
+			fallback:defaultLibrary, 
+			dirs:dirs,
+			mergeRules:params.mergeRules
+		});
 		LimeAssets.registerLibrary("default", modLibrary);
 
 		if(Assets.exists("_polymod_pack.txt"))

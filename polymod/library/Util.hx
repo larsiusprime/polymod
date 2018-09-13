@@ -46,7 +46,7 @@ typedef MergeRules =
 class Util
 {
 
-	public static function mergeAndAppendText(baseText:String, id:String, dirs:Array<String>, getBaseText:String->String->String, mergeRules:MergeRules=null):String
+	public static function mergeAndAppendText(baseText:String, id:String, dirs:Array<String>, getModText:String->String->String, mergeRules:MergeRules=null):String
 	{
 		var text = baseText;
 		
@@ -55,10 +55,11 @@ class Util
 			if (hasMerge(id, d))
 			{
 				text = mergeText(text, id, d, getBaseText, mergeRules);
+				text = mergeText(text, id, d, getModText, mergeRules);
 			}
 			if (hasAppend(id, d))
 			{
-				text = appendText(text, id, d, getBaseText);
+				text = appendText(text, id, d, getModText);
 			}
 		}
 		
@@ -68,15 +69,17 @@ class Util
 	/**
 	 * Looks for a "_merge" entry for an asset and tries to merge its contents into the original
 	 * With the following rules:
-	 * - Only applies to XML and TSV files (identified by extension)
+	 * - Only applies to XML, TSV, and CSV files (identified by extension)
 	 * - Adds single nodes from the merged asset into the original
 	 * - If the original has that node too, it overwrites the original information
 	 * @param	baseText	the basic text file you're merging extra content into
 	 * @param	id	the name of the asset file
+	 * @param	getModText	a function for getting the mod's contribution
+	 * @param	mergeRules	formatting rules to help with merging
 	 * @return
 	 */
 	
-	public static function mergeText(baseText:String, id:String, theDir:String = "", getBaseText:String->String->String, mergeRules:MergeRules=null):String
+	public static function mergeText(baseText:String, id:String, theDir:String = "", getModText:String->String->String, mergeRules:MergeRules=null):String
 	{
 		var extension = uExtension(id, true);
 		
@@ -86,19 +89,19 @@ class Util
 
 		if (extension == "xml")
 		{
-			var mergeText = getBaseText(mergeFile, theDir);
+			var mergeText = getModText(mergeFile, theDir);
 			return mergeXML(baseText, mergeText, id);
 		}
 		else if (extension == "tsv")
 		{
-			var mergeText = getBaseText(mergeFile, theDir);
+			var mergeText = getModText(mergeFile, theDir);
 			return mergeTSV(baseText, mergeText, id);
 		}
 		else if (extension == "csv")
 		{
-			var mergeText = getBaseText(mergeFile, theDir);
+			var mergeText = getModText(mergeFile, theDir);
 			var csvFormat = (mergeRules != null ? mergeRules.csv : null);
-			if(csvFormat != null)
+			if(csvFormat == null)
 			{
 				Polymod.warning("no_csv_format", "No CSV format provided, using default parse format, there could be problems!");
 				csvFormat = new CSVParseFormat(",",true);
@@ -198,7 +201,7 @@ class Util
 		
 		var strSoFar = buf.toString();
 		
-		if (strSoFar.indexOf("\n") != -1)
+		if (strSoFar.indexOf("\n") == -1)
 		{
 			buf.add(Std.string("\r\n"));
 		}
@@ -253,7 +256,7 @@ class Util
 		
 		var strSoFar = buf.toString();
 		
-		if (strSoFar.indexOf("\n") != -1)
+		if (strSoFar.indexOf("\n") == -1)
 		{
 			buf.add(Std.string("\r\n"));
 		}

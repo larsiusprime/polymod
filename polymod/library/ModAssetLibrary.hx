@@ -30,13 +30,14 @@ import lime.app.Future;
 import lime.utils.Assets in LimeAssets;
 import openfl.utils.Assets in OpenFLAssets;
 import lime.net.HTTPRequest;
-#if sys
-import sys.FileSystem;
-#end
 import lime.graphics.Image;
 import lime.text.Font;
 import lime.utils.Bytes;
 import openfl.errors.Error;
+import polymod.library.Util.MergeRules;
+#if sys
+import sys.FileSystem;
+#end
 #if unifill
 import unifill.Unifill;
 #end
@@ -49,6 +50,29 @@ import lime.Assets.AssetLibrary;
 import lime.audio.AudioBuffer;
 import lime.Assets.AssetType;
 #end
+
+typedef ModAssetLibraryParams = {
+	/**
+	 * full path to the mod's root directory
+	 */
+	dir:String,
+	
+	/**
+	 * (optional) if we can't find something, should we try the default asset library?
+	 */
+	?fallback:AssetLibrary,
+
+	/**
+	 * (optional) to combine mods, provide multiple paths to several mod's root directories. 
+	 * This takes precedence over the "Dir" parameter and the order matters -- mod files will load from first to last, with last taking precedence
+	 */
+	?dirs:Array<String>,
+	
+	/**
+	 * (optional) formatting rules for merging various data formats
+	 */
+	?mergeRules:MergeRules
+}
 
 /**
  * 
@@ -64,24 +88,24 @@ class ModAssetLibrary extends AssetLibrary
 	private var dirs:Array<String> = null;
 	private var fallBackToDefault:Bool = true;
 	private var fallback:AssetLibrary = null;
+	private var mergeRules:MergeRules = null;
 
 	/****PUBLIC****/
 	
 	/**
 	 * Activating a mod is as simple as substituting the default asset library for this one!
-	 * @param	Dir full path to the mod's root directory
-	 * @param	FallBackToDefault if we can't find something, should we try the default asset library?
-	 * @param	Dirs (optional) to combine mods, provide multiple paths to several mod's root directories. This takes precedence over the "Dir" parameter and the order matters -- mod files will load from first to last, with last taking precedence
+	 * @param	params
 	 */
 	
-	public function new(Dir:String, Fallback:AssetLibrary=null, Dirs:Array<String>=null)
+	public function new(params:ModAssetLibraryParams)
 	{
-		dir = Dir;
-		if (Dirs != null)
+		dir = params.dir;
+		if (params.dirs != null)
 		{
-			dirs = Dirs;
+			dirs = params.dirs;
 		}
-		fallback = Fallback;
+		fallback = params.fallback;
+		mergeRules = params.mergeRules;
 		super();
 		fallBackToDefault = fallback != null;
 		init();
@@ -219,7 +243,7 @@ class ModAssetLibrary extends AssetLibrary
 		if (modText != null)
 		{
 			var theDirs = dirs != null ? dirs : [dir];
-			modText = Util.mergeAndAppendText(modText, id, theDirs, getTextDirectly);
+			modText = Util.mergeAndAppendText(modText, id, theDirs, getTextDirectly, mergeRules);
 		}
 		
 		return modText;
