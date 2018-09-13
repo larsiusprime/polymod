@@ -54,7 +54,7 @@ class Util
 		{
 			if (hasMerge(id, d))
 			{
-				text = mergeText(text, id, d, getBaseText, mergeRules);
+				text = mergeText(text, id, d, getModText, mergeRules);
 				text = mergeText(text, id, d, getModText, mergeRules);
 			}
 			if (hasAppend(id, d))
@@ -321,7 +321,7 @@ class Util
 		return result;
 	}
 	
-	public static function appendText(baseText:String, id:String, theDir:String, getBaseText:String->String->String):String
+	public static function appendText(baseText:String, id:String, theDir:String, getModText:String->String->String):String
 	{
 		var extension = uExtension(id, true);
 		
@@ -329,7 +329,7 @@ class Util
 		
 		if (extension == "xml")
 		{
-			var appendText = getBaseText("_append" + sl() + id, theDir);
+			var appendText = getModText("_append" + sl() + id, theDir);
 			
 			switch(id)
 			{
@@ -344,7 +344,7 @@ class Util
 		}
 		else if(extension == "csv" || extension == "tsv" || extension == "txt")
 		{
-			var appendText = getBaseText("_append" + sl() + id, theDir);
+			var appendText = getModText("_append" + sl() + id, theDir);
 			
 			var lastChar = uCharAt(baseText, uLength(baseText) - 1);
 			var lastLastChar = uCharAt(baseText, uLength(baseText) - 1);

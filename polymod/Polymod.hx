@@ -82,6 +82,70 @@ class Polymod
 	private static var modLibrary:ModAssetLibrary = null;
 	
 	/**
+	 * Scan the given directory for available mods and returns their metadata entries
+	 * @param modRoot root directory of all mods
+	 * @param apiVersionStr (optional) enforce a modding API version -- incompatible mods will not be returned
+	 * @param errorCallback (optional) callback for any errors generated during scanning
+	 * @return Array<ModMetadata>
+	 */
+	public static function scan(modRoot:String, ?apiVersionStr:String="*.*.*", ?errorCallback:PolymodError->Void):Array<ModMetadata>
+	{
+		onError = errorCallback;
+		var apiVersion:SemanticVersion = null;
+		try
+		{
+			apiVersion = SemanticVersion.fromString(apiVersionStr);
+		}
+		catch(msg:Dynamic)
+		{
+			Polymod.error(PARSE_API_VERSION,"Error parsing api version: ("+Std.string(msg)+")");
+			return [];
+		}
+
+		var modMeta = [];
+
+		if(!FileSystem.exists(modRoot) || !FileSystem.isDirectory(modRoot))
+		{
+			return modMeta;
+		}
+		var dirs = FileSystem.readDirectory(modRoot);
+		var l = dirs.length;
+		for(i in 0...l)
+		{
+			var j = l-i-1;
+			var dir = dirs[j];
+			var testDir = modRoot+"/"+dir;
+			if(!FileSystem.isDirectory(testDir) || !FileSystem.exists(testDir))
+			{
+				dirs.splice(j,1);
+			}
+		}
+
+		for(i in 0...dirs.length)
+		{
+			if(dirs[i] != null)
+			{
+				var origDir = dirs[i];
+				dirs[i] = modRoot + "/" + dirs[i];
+				var meta:ModMetadata = getMetadata(dirs[i]);
+				
+				if(meta != null)
+				{
+					meta.id = origDir;
+					var apiScore = meta.apiVersion.checkCompatibility(apiVersion);
+					if(apiScore < 3)
+					{
+						Polymod.error(VERSION_CONFLICT_API, "Mod \""+origDir+"\" was built for incompatible API version " + meta.apiVersion.toString() + ", current API version is " + apiVersion.toString());
+					}
+					modMeta.push(meta);
+				}
+			}
+		}
+
+		return modMeta;
+	}
+	
+	/**
 	 * Initializes the chosen mod or mods.
 	 * @param	params initialization parameters
 	 * @return	an array of metadata entries for successfully loaded mods
@@ -174,19 +238,6 @@ class Polymod
 			}
 		}
 
-		modLibrary = new ModAssetLibrary({
-			dir:null, 
-			fallback:defaultLibrary, 
-			dirs:dirs,
-			mergeRules:params.mergeRules
-		});
-		LimeAssets.registerLibrary("default", modLibrary);
-
-		if(Assets.exists("_polymod_pack.txt"))
-		{
-			initModPack(params);
-		}
-
 		return modMeta;
 	}
 
@@ -223,6 +274,7 @@ class Polymod
 			
 			var metaFile = dir+"/_polymod_meta.json";
 			var iconFile = dir+"/_polymod_icon.png";
+			var packFile = dir+"/_polymod_pack.txt";
 			if(!FileSystem.exists(metaFile))
 			{
 				warning(MISSING_META,"Could not find mod metadata file: \""+metaFile+"\"");
@@ -239,6 +291,13 @@ class Polymod
 				{
 					meta.icon = BitmapData.fromFile(iconFile);
 				}
+			}
+			if(FileSystem.exists(packFile))
+			{
+				meta.isModPack = true;
+				var packText = File.getContent(packFile);
+				meta.modPack = getModPack(packText);
+
 			}
 			return meta;
 		}
@@ -290,10 +349,24 @@ class Polymod
 		var polymodpack:String = Assets.getText("_polymod_pack.txt");
 		if(polymodpack != null)
 		{
-			var mods = polymodpack.split(",");
+			var data = getModPack(polymodpack);
+			var mods:Array<String> = data.mods;
+			var vers:Array<String> = data.versions;
+
+			params.dirs = mods;
+			params.modVersions = vers;
+			init(params);
+		}
+	}
+
+	private static function getModPack(text:String):{mods:Array<String>,versions:Array<String>}
+	{
+		if(text != null)
+		{
+			var mods = text.split(",");
 			if(mods == null || mods.length == 0)
 			{
-				return;
+				return null;
 			}
 			var vers = [];
 			for(i in 0...mods.length)
@@ -309,13 +382,9 @@ class Polymod
 					}
 				}
 			}
-
-			trace("initModPack! orig=("+polymodpack+") mods = " + mods + " vers = " + vers);
-
-			params.dirs = mods;
-			params.modVersions = vers;
-			init(params);
+			return {mods:mods,versions:vers};
 		}
+		return null;
 	}
 	
 	private static function clearCache()
@@ -349,6 +418,8 @@ class ModMetadata
 	public var license:String;
 	public var licenseRef:String;
 	public var icon:BitmapData;
+	public var isModPack:Bool;
+	public var modPack:{mods:Array<String>,versions:Array<String>};
 
 	public function new(){}
 
