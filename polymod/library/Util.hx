@@ -1,8 +1,36 @@
+/**
+ * Copyright (c) 2018 Level Up Labs, LLC
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ * 
+ */
+ 
 package polymod.library;
 
 #if sys
 import sys.FileSystem;
 #end
+
+import polymod.Polymod;
+import polymod.Polymod.PolymodError;
+import polymod.Polymod.PolymodErrorType;
+import polymod.library.CSV.CSVParseFormat;
 
 #if unifill
 import unifill.Unifill;
@@ -10,9 +38,15 @@ import unifill.Unifill;
 
 import haxe.Utf8;
 
+typedef MergeRules =
+{
+	?csv:CSVParseFormat
+}
+
 class Util
 {
-	public static function mergeAndAppendText(baseText:String, id:String, dirs:Array<String>, getBaseText:String->String->String):String
+
+	public static function mergeAndAppendText(baseText:String, id:String, dirs:Array<String>, getBaseText:String->String->String, mergeRules:MergeRules=null):String
 	{
 		var text = baseText;
 		
@@ -20,7 +54,7 @@ class Util
 		{
 			if (hasMerge(id, d))
 			{
-				text = mergeText(text, id, d, getBaseText);
+				text = mergeText(text, id, d, getBaseText, mergeRules);
 			}
 			if (hasAppend(id, d))
 			{
@@ -42,30 +76,80 @@ class Util
 	 * @return
 	 */
 	
-	public static function mergeText(baseText:String, id:String, theDir:String = "", getBaseText:String->String->String):String
+	public static function mergeText(baseText:String, id:String, theDir:String = "", getBaseText:String->String->String, mergeRules:MergeRules=null):String
 	{
 		var extension = uExtension(id, true);
 		
 		id = stripAssetsPrefix(id);
 		
+		var mergeFile = "_merge" + sl() + id;
+
 		if (extension == "xml")
 		{
-			var mergeText = getBaseText("_merge" + sl() + id, theDir);
+			var mergeText = getBaseText(mergeFile, theDir);
 			return mergeXML(baseText, mergeText, id);
 		}
 		else if (extension == "tsv")
 		{
-			var mergeText = getBaseText("_merge" + sl() + id, theDir);
+			var mergeText = getBaseText(mergeFile, theDir);
 			return mergeTSV(baseText, mergeText, id);
+		}
+		else if (extension == "csv")
+		{
+			var mergeText = getBaseText(mergeFile, theDir);
+			var csvFormat = (mergeRules != null ? mergeRules.csv : null);
+			if(csvFormat != null)
+			{
+				Polymod.warning("no_csv_format", "No CSV format provided, using default parse format, there could be problems!");
+				csvFormat = new CSVParseFormat(",",true);
+			}
+			return mergeCSV(baseText, mergeText, id, csvFormat);
+		}
+		else if (extension == "txt")
+		{
+
 		}
 		
 		return baseText;
 	}
-	
+
+	private static function mergeCSV(a:String, b:String, id:String, format:CSVParseFormat)
+	{
+		var aCSV = CSV.parseWithFormat(a, format);
+		var bCSV = CSV.parseWithFormat(b, format);
+
+		for (row in bCSV.grid)
+		{
+			var flag = row.length > 0 ? row[0] : "";
+			if (flag != "")
+			{
+				for (i in 0...aCSV.grid.length)
+				{
+					var otherRow = aCSV.grid[i];
+					var otherFlag = otherRow[0];
+					if (flag == otherFlag)
+					{
+						for (j in 0...row.length)
+						{
+							if (j < otherRow.length)
+							{
+								otherRow[j] = row[j];
+							}
+						}
+					}
+				}
+			}
+		}
+		
+		var result = printCSV(aCSV, format);
+		
+		return result;
+	}
+
 	private static function mergeTSV(a:String, b:String, id:String):String
 	{
-		var aTSV = new TSV(a);
-		var bTSV = new TSV(b);
+		var aTSV = TSV.parse(a);
+		var bTSV = TSV.parse(b);
 		
 		for (row in bTSV.grid)
 		{
@@ -95,6 +179,62 @@ class Util
 		return result;
 	}
 	
+	public static function printCSV(csv:CSV, format:CSVParseFormat):String
+	{
+		var buf = new StringBuf();
+		
+		var delimeter = format.delimeter;
+		var lf = 0x0A;
+		var dq = 0x22;
+		
+		for (i in 0...csv.fields.length)
+		{
+			buf.add(csv.fields[i]);
+			if (i != csv.fields.length - 1)
+			{
+				buf.add(delimeter);
+			}
+		}
+		
+		var strSoFar = buf.toString();
+		
+		if (strSoFar.indexOf("\n") != -1)
+		{
+			buf.add(Std.string("\r\n"));
+		}
+		
+		var grid = csv.grid;
+		
+		for (iy in 0...grid.length)
+		{
+			var row = grid[iy];
+			for (ix in 0...row.length)
+			{
+				var cell = row[ix];
+				if(format.quotedCells){
+					buf.addChar(dq);
+				}
+				Utf8.iter(cell, function(char:Int)
+				{
+					buf.addChar(char);
+				});
+				if(format.quotedCells){
+					buf.addChar(dq);
+				}
+				if (ix != row.length - 1)
+				{
+					buf.add(delimeter);
+				}
+			}
+			if (iy != grid.length -1)
+			{
+				buf.add(Std.string("\r\n"));
+			}
+		}
+		
+		return buf.toString();
+	}
+
 	public static function printTSV(tsv:TSV):String
 	{
 		var buf = new StringBuf();
@@ -190,13 +330,16 @@ class Util
 			
 			switch(id)
 			{
+				/*
+				//game-specific cruft from defender's quest
 				case "game_progression.xml":
 					return appendSpecialXML(baseText, appendText, ["<plotlines>"], ["</plotlines>"]);
+				*/
 				default:
 					return appendXML(baseText, appendText);
 			}
 		}
-		else if(extension == "tsv" || extension == "txt")
+		else if(extension == "csv" || extension == "tsv" || extension == "txt")
 		{
 			var appendText = getBaseText("_append" + sl() + id, theDir);
 			
@@ -222,7 +365,7 @@ class Util
 				joiner = endLine;
 			}
 			
-			if (extension == "tsv")
+			if (extension == "tsv" || extension == "csv")
 			{
 				var otherEndline = endLine == "\n" ? "\r\n" : "\n";
 				appendText = uSplitReplace(appendText, otherEndline, endLine);
