@@ -25,6 +25,101 @@ package polymod.library;
 
 class SemanticVersion
 {
+	/**
+	 * Expects a string of the format "1.2.3", "1.2.3-blah", "1.2.3-alpha.1.blah.2", etc
+	 * @param str 
+	 * @return SemanticVersion
+	 */
+	public static function fromString(str:String):SemanticVersion
+	{
+		var v = new SemanticVersion();
+		v.original = str;
+		if(str == "" || str == null) throw "SemanticVersion.hx: string is empty!";
+		var extra = "";
+        if(str.indexOf("+") != -1)
+		{
+            var arr = str.split("+");
+         	str = arr[0];   
+        }
+		if(str.indexOf("-") != -1)
+		{
+			var arr = str.split("-");
+			str = arr[0];
+			extra = arr[1];
+		}
+		var arr = str.split(".");
+		if(arr.length < 3) throw "SemanticVersion.hx: needs major, minor, and patch versions! :\""+str+"\"";
+		for(substr in arr)
+		{
+			if(substr.length > 1 && substr.charAt(0) == "0")
+			{
+				throw "SemanticVersion.hx: no leading zeroes allowed! : \""+str+"\"";
+			}
+		}
+		var maj:Null<Int> = null;
+		var min:Null<Int> = null;
+		var pat:Null<Int> = null;
+		if(arr[0] == "*") maj = -1;
+		if(arr[1] == "*") min = -1;
+		if(arr[2] == "*") pat = -1;
+		if(maj == null) maj = Std.parseInt(arr[0]);
+		if(min == null) min = Std.parseInt(arr[1]);
+		if(pat == null) pat = Std.parseInt(arr[2]);
+		if(maj == null) throw "SemanticVersion.hx: couldn't parse major version! :\""+str+"\"";
+		if(min == null) throw "SemanticVersion.hx: couldn't parse minor version! :\""+str+"\"";
+		if(pat == null) throw "SemanticVersion.hx: couldn't parse patch version! :\""+str+"\"";
+
+		if(maj == -1)
+		{
+			min = -1;
+			pat = -1;
+		}
+		if(min == -1)
+		{
+			pat = -1;
+		}
+
+		v.major = maj;
+		v.minor = min;
+		v.patch = pat;
+		v.preRelease = [];
+
+		if(maj == -1 || min == -1 || pat == -1)
+		{
+			extra = "";
+		}
+
+		if(extra != null && extra != "")
+		{
+            if(maj > 1) throw "SemanticVersion.hx: pre-release version not allowed post 1.0.0! :\""+str+"\"";
+            if(maj == 1){
+                if(min > 0) throw "SemanticVersion.hx: pre-release version not allowed post 1.0.0! :\""+str+"\"";
+                if(pat > 0) throw "SemanticVersion.hx: pre-release version not allowed post 1.0.0! :\""+str+"\"";
+            }
+			var arr = extra.split(".");
+			if(arr != null && arr.length > 0)
+			{
+				for(substr in arr)
+				{
+					var i = Std.parseInt(substr);
+					if(i != null)
+					{
+						if(substr.length > 0 && substr.charAt(0) == "0")
+						{
+							throw "SemanticVersion.hx: no leading zeroes allowed! : \""+str+"\"";
+						}
+					}
+					v.preRelease.push(substr);
+				}
+			}
+		}
+		v.effective = v.major + "." + v.minor + "." + v.patch;
+		if(v.preRelease != null){
+			v.effective += "-" + v.preRelease.join(".");
+		}
+        return v;
+	}
+	
 	public var original:String;
 	public var effective:String;
 	public var major:Int;
@@ -34,18 +129,48 @@ class SemanticVersion
 	
     public function new(){}
     
+	/**
+	 * Check if these two versions are compatible
+	 * @param newer version to check against
+	 * @return Bool
+	 */
 	public function isCompatibleWith(newer:SemanticVersion):Bool
 	{
-		if(newer.major == major) return true;
-        return false;
+		return checkCompatibility(newer) > 0;
+	}
+
+	/**
+	 * Compare version numbers and return compatibility score
+	 * @param newer version to check against
+	 * @return Int 3:match major/minor/patch, 2:match major/minor, 1:match major, 0:incompatible
+	 */
+	public function checkCompatibility(newer:SemanticVersion):Int
+	{
+		var score = 0;
+		if(newer.major == major || newer.major == -1 || major == -1)
+		{
+			score++;
+			if(newer.minor >= minor || newer.minor == -1 || minor == -1)
+			{
+				score++;
+				if(newer.patch >= patch || newer.patch == -1 || patch == -1)
+				{
+					score++;
+				}
+			}
+		}
+        return score;
 	}
     
     private function compare(other:SemanticVersion):Int
     {
-        if(major > other.major) return -1;
+		if(major == -1 || other.major == -1) return 0;
+		if(major > other.major) return -1;
         if(major < other.major) return  1;
+		if(minor == -1 || other.minor == -1) return 0;
 		if(minor > other.minor) return -1;
         if(minor < other.minor) return  1;
+		if(patch == -1 || other.patch == -1) return 0;
 		if(patch > other.patch) return -1;
         if(patch < other.patch) return  1;
         var bits  = preRelease.length;
@@ -85,73 +210,5 @@ class SemanticVersion
 	public function toString():String
 	{
 		return effective;
-	}
-
-	/**
-	 * Expects a string of the format "1.2.3", "1.2.3-blah", "1.2.3-alpha.1.blah.2", etc
-	 * @param str 
-	 * @return SemanticVersion
-	 */
-	public static function fromString(str:String):SemanticVersion
-	{
-		var v = new SemanticVersion();
-		v.original = str;
-		if(str == "" || str == null) throw "SemanticVersion.hx: string is empty!";
-		var extra = "";
-        if(str.indexOf("+") != -1){
-            var arr = str.split("+");
-         	str = arr[0];   
-        }
-		if(str.indexOf("-") != -1){
-			var arr = str.split("-");
-			str = arr[0];
-			extra = arr[1];
-		}
-		var arr = str.split(".");
-		if(arr.length < 3) throw "SemanticVersion.hx: needs major, minor, and patch versions! :\""+str+"\"";
-		for(substr in arr) {
-			if(substr.length > 1 && substr.charAt(0) == "0"){
-				throw "SemanticVersion.hx: no leading zeroes allowed! : \""+str+"\"";
-			}
-		}
-		var maj = Std.parseInt(arr[0]);
-		var min = Std.parseInt(arr[1]);
-		var pat = Std.parseInt(arr[2]);
-		if(maj == null) throw "SemanticVersion.hx: couldn't parse major version! :\""+str+"\"";
-		if(min == null) throw "SemanticVersion.hx: couldn't parse minor version! :\""+str+"\"";
-		if(pat == null) throw "SemanticVersion.hx: couldn't parse patch version! :\""+str+"\"";
-		v.major = maj;
-		v.minor = min;
-		v.patch = pat;
-		v.preRelease = [];
-		if(extra != null && extra != "")
-		{
-            if(maj > 1) throw "SemanticVersion.hx: pre-release version not allowed post 1.0.0! :\""+str+"\"";
-            if(maj == 1){
-                if(min > 0) throw "SemanticVersion.hx: pre-release version not allowed post 1.0.0! :\""+str+"\"";
-                if(pat > 0) throw "SemanticVersion.hx: pre-release version not allowed post 1.0.0! :\""+str+"\"";
-            }
-			var arr = extra.split(".");
-			if(arr != null && arr.length > 0)
-			{
-				for(substr in arr)
-				{
-					var i = Std.parseInt(substr);
-					if(i != null)
-					{
-						if(substr.length > 0 && substr.charAt(0) == "0")
-						{
-							throw "SemanticVersion.hx: no leading zeroes allowed! : \""+str+"\"";
-						}
-					}
-					v.preRelease.push(substr);
-				}
-			}
-		}
-		v.effective = v.major + "." + v.minor + "." + v.patch;
-		if(v.preRelease != null){
-			v.effective += "-" + v.preRelease.join(".");
-		}
-        return v;
 	}
 }

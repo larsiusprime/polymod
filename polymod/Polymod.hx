@@ -41,22 +41,38 @@ typedef PolymodParams = {
 	/**
 	 * root directory of all mods
 	 */
-	var modRoot:String;
+	modRoot:String,
 
 	/**
 	 * directory names of one or more mods, relative to modRoot
 	 */
-	var dirs:Array<String>;
+	dirs:Array<String>,
 
 	/**
-	 * semantic version of your game's Mod API (will generate errors & warnings)
+	 * semantic version of your game's Modding API (will generate errors & warnings)
 	 */
-	var api_version:SemanticVersion;
+	apiVersion:String,
 
 	/**
 	 * (optional) callback for any errors generated during mod initialization
 	 */
-	var errorCallback:PolymodError->Void;
+	?errorCallback:PolymodError->Void,
+
+	/**
+	 * (optional) for each mod you're loading, a corresponding semantic version pattern to enforce (will generate errors & warnings)
+	 * if not provided, no version checks will be made
+	 */
+	?modVersions:Array<String>,
+
+	/**
+	 * (optional) if true, sends an error rather than a warning when an API version check fails. False if not present.
+	 */
+	?errorOnAPIVersionFail:Bool,
+
+	/**
+	 * (optional) if true, sends an error rather than a warning when a Mod version check fails. False if not present.
+	 */
+	?errorOnModVersionFail:Bool
 }
 
 /**
@@ -100,7 +116,29 @@ class Polymod
 		
 		clearCache();
 		
+		var apiVersion = SemanticVersion.fromString(params.apiVersion);
+
 		var modMeta = [];
+		var modVers = [];
+
+		var errorOnAPIFail = params.errorOnAPIVersionFail != null ? params.errorOnAPIVersionFail : false;
+		var errorOnModFail = params.errorOnModVersionFail != null ? params.errorOnModVersionFail : false;
+
+		if(params.modVersions != null)
+		{
+			for(str in params.modVersions)
+			{
+				try
+				{
+					var semVer = SemanticVersion.fromString(str);
+					modVers.push(semVer);
+				}
+				catch(msg:Dynamic)
+				{
+					Polymod.error("param_mod_ver","There was an error with one of the mod version patterns you provided: " + msg);
+				}
+			}
+		}
 
 		for(i in 0...dirs.length)
 		{
@@ -108,11 +146,20 @@ class Polymod
 			{
 				dirs[i] = modRoot + "/" + dirs[i];
 				var meta:ModMetadata = getMetadata(dirs[i]);
+				meta.id = dirs[i];
 				if(meta != null)
 				{
-					if(!meta.api_version.isCompatibleWith(params.api_version))
+					if(!meta.apiVersion.isCompatibleWith(apiVersion))
 					{
-						Polymod.warning("sem_ver_conflict","Mod \""+dirs[i]+"\" was built for outdated API version " + meta.api_version.toString() + ", current API version is " + params.api_version.toString());
+						Polymod.errOrWarn(errorOnAPIFail, "api_sem_ver_conflict","Mod \""+dirs[i]+"\" was built for outdated API version " + meta.apiVersion.toString() + ", current API version is " + params.apiVersion.toString());
+					}
+					var modVer = modVers.length > i ? modVers[i] : null;
+					if(modVer != null)
+					{
+						if(!modVer.isCompatibleWith(meta.modVersion))
+						{
+							Polymod.errOrWarn(errorOnModFail, "mod_sem_ver_conflict","Mod pack wants version " + modVer.toString() + " of mod("+meta.id+"), found incompatible version " + meta.modVersion.toString() + " instead");
+						}
 					}
 					modMeta.push(meta);
 				}
@@ -121,12 +168,18 @@ class Polymod
 		modLibrary = new ModAssetLibrary(null, defaultLibrary, dirs);
 		LimeAssets.registerLibrary("default", modLibrary);
 
-		if(Assets.exists("_polymodpack.txt"))
+		if(Assets.exists("_polymod_pack.txt"))
 		{
 			initModPack(params);
 		}
 
 		return modMeta;
+	}
+
+	public static function errOrWarn(doError:Bool, type:String, message:String)
+	{
+		if(doError) error(type, message);
+		else warning(type, message);
 	}
 
 	public static function error(type:String, message:String)
@@ -226,7 +279,7 @@ class Polymod
 
 	private static function initModPack(params:PolymodParams)
 	{
-		var polymodpack:String = Assets.getText("_polymodpack.txt");
+		var polymodpack:String = Assets.getText("_polymod_pack.txt");
 		if(polymodpack != null)
 		{
 			var mods = polymodpack.split(",");
@@ -234,8 +287,25 @@ class Polymod
 			{
 				return;
 			}
+			var vers = [];
+			for(i in 0...mods.length)
+			{
+				vers[i] = "*.*.*";
+				if(mods[i].indexOf(":") != -1)
+				{
+					var arr = mods[i].split(":");
+					if(arr != null && arr.length == 2)
+					{
+						mods[i] = arr[0];
+						vers[i] = arr[1];
+					}
+				}
+			}
+
+			trace("initModPack! orig=("+polymodpack+") mods = " + mods + " vers = " + vers);
 
 			params.dirs = mods;
+			params.modVersions = vers;
 			init(params);
 		}
 	}
@@ -262,13 +332,14 @@ class Polymod
 
 class ModMetadata
 {
+	public var id:String;
 	public var title:String;
 	public var description:String;
 	public var author:String;
-	public var api_version:SemanticVersion;
-	public var mod_version:SemanticVersion;
+	public var apiVersion:SemanticVersion;
+	public var modVersion:SemanticVersion;
 	public var license:String;
-	public var license_ref:String;
+	public var licenseRef:String;
 	public var icon:BitmapData;
 
 	public function new(){}
@@ -284,7 +355,7 @@ class ModMetadata
 		var modVersionStr = JsonHelp.str(json, "mod_version");
 		try
 		{
-			m.api_version = SemanticVersion.fromString(apiVersionStr);
+			m.apiVersion = SemanticVersion.fromString(apiVersionStr);
 		}
 		catch(msg:Dynamic)
 		{
@@ -293,7 +364,7 @@ class ModMetadata
 		}
 		try
 		{
-			m.mod_version = SemanticVersion.fromString(modVersionStr);
+			m.modVersion = SemanticVersion.fromString(modVersionStr);
 		}
 		catch(msg:Dynamic)
 		{
@@ -301,7 +372,7 @@ class ModMetadata
 			return null;
 		}
 		m.license = JsonHelp.str(json, "license");
-		m.license_ref = JsonHelp.str(json, "license_ref");
+		m.licenseRef = JsonHelp.str(json, "license_ref");
 		return m;
 	}
 }
