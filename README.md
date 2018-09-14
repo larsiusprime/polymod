@@ -27,7 +27,7 @@ Polymod supports the following kinds of operations:
 
 Replace logic works on any asset format.
 Append logic works only on text assets.
-Merge logic is currently supported for plaintext (TXT), TSV, and XML asset formats only. Support for JSON is planned.
+Merge logic is currently supported for plaintext (TXT), CSV, TSV, and XML asset formats only. Support for JSON is planned.
 
 A sample for the OpenFL framework is provided.
 
