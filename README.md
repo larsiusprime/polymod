@@ -124,7 +124,7 @@ Hello from my mod!
 
 ### `_merge` folder
 
-This is mostly meant for XML and CSV/TSV files. Say you have a big complicated XML file at `data/stuff.xml` with lots of nodes, and it happens to have this 
+This is mostly meant for XML and CSV/TSV files. Say you have a big complicated XML file at `data/stuff.xml` with lots of nodes:
 
 ```xml
 <?xml version="1.0" encoding="utf-8" ?>  
