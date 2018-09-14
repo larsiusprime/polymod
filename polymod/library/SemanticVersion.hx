@@ -61,7 +61,7 @@ class SemanticVersion
 				var char:String = substr.charAt(i);
 				switch(char)
 				{
-					case "0","1","2","3","4","5","6","7","8","9":
+					case "0","1","2","3","4","5","6","7","8","9","*":
 						//donothing, fine
 					default:
 						var word = switch(ii){

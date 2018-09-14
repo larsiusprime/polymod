@@ -71,7 +71,12 @@ typedef ModAssetLibraryParams = {
 	/**
 	 * (optional) formatting rules for merging various data formats
 	 */
-	?mergeRules:MergeRules
+	?mergeRules:MergeRules,
+
+	/**
+ 	 * (optional) list of files it ignore in this mod asset library (get the fallback version instead)
+	 */
+	 ?ignoredFiles:Array<String>
 }
 
 /**
@@ -89,6 +94,7 @@ class ModAssetLibrary extends AssetLibrary
 	private var fallBackToDefault:Bool = true;
 	private var fallback:AssetLibrary = null;
 	private var mergeRules:MergeRules = null;
+	private var ignoredFiles:Array<String> = null;
 
 	/****PUBLIC****/
 	
@@ -106,6 +112,7 @@ class ModAssetLibrary extends AssetLibrary
 		}
 		fallback = params.fallback;
 		mergeRules = params.mergeRules;
+		ignoredFiles = params.ignoredFiles != null ? params.ignoredFiles.copy() : [];
 		super();
 		fallBackToDefault = fallback != null;
 		init();
@@ -511,6 +518,7 @@ class ModAssetLibrary extends AssetLibrary
 	 */
 	private function check(id:String, type:String=null):Bool
 	{
+		if(ignoredFiles.length > 0 && ignoredFiles.indexOf(id) != -1) return false;
 		#if sys
 		var exists = false;
 		id = Util.stripAssetsPrefix(id);

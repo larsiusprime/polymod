@@ -52,7 +52,7 @@ typedef PolymodParams = {
 	/**
 	 * semantic version of your game's Modding API (will generate errors & warnings)
 	 */
-	apiVersion:String,
+	?apiVersion:String,
 
 	/**
 	 * (optional) callback for any errors generated during mod initialization
@@ -68,7 +68,12 @@ typedef PolymodParams = {
 	/**
 	 * (optional) rules for merging various data formats
 	 */
-	 ?mergeRules:MergeRules
+	 ?mergeRules:MergeRules,
+
+	 /**
+	  * (optional) list of filenames to ignore in mods
+	  */
+	  ?ignoredFiles:Array<String>
 }
 
 /**
@@ -81,6 +86,11 @@ class Polymod
 	private static var defaultLibrary:AssetLibrary = null;
 	private static var modLibrary:ModAssetLibrary = null;
 	
+	public static function getDefaultIgnoreList():Array<String>
+	{
+		return ["_polymod_meta.json","_polymod_icon.png","ASSET_LICENSE.txt","CODE_LICENSE.txt","LICENSE.txt"];
+	}
+
 	/**
 	 * Scan the given directory for available mods and returns their metadata entries
 	 * @param modRoot root directory of all mods
@@ -179,7 +189,11 @@ class Polymod
 		var apiVersion:SemanticVersion = null;
 		try
 		{
-			apiVersion = SemanticVersion.fromString(params.apiVersion);
+			var apiStr = params.apiVersion;
+			if(apiStr == null || apiStr == ""){
+				apiStr = "*.*.*";
+			}
+			apiVersion = SemanticVersion.fromString(apiStr);
 		}
 		catch(msg:Dynamic)
 		{
@@ -237,6 +251,21 @@ class Polymod
 				}
 			}
 		}
+
+		modLibrary = new ModAssetLibrary({
+			dir:null,
+			fallback:defaultLibrary,
+			dirs:dirs,
+			mergeRules:params.mergeRules,
+			ignoredFiles:params.ignoredFiles
+		});
+		LimeAssets.registerLibrary("default", modLibrary);
+		/*
+		if(Assets.exists("_polymod_pack.txt"))
+		{
+			initModPack(params);
+		}
+		*/
 
 		return modMeta;
 	}

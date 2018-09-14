@@ -17,7 +17,6 @@ class Main extends Sprite
 	public function new() 
 	{
 		super();
-		
 		loadDemo();
 	}
 	
@@ -35,13 +34,18 @@ class Main extends Sprite
 	
 	private function loadMods(dirs:Array<String>)
 	{
-		var modPath = "../../../mods/";
-		var mods = [];
-		for (dir in dirs)
-		{
-			mods.push(modPath + dir);
-		}
-		Polymod.init(mods);
+		var modRoot = "../../../mods/";
+		Polymod.init({
+			modRoot:modRoot,
+			dirs:dirs,
+			errorCallback:onError,
+			ignoredFiles:Polymod.getDefaultIgnoreList()
+		});
+	}
+
+	private function onError(error:PolymodError)
+	{
+		trace(error.severity + "(" + error.code.toUpperCase() + "):" + error.message);
 	}
 
 }
