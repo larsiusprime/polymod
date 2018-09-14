@@ -183,7 +183,7 @@ As soon as it finds the first match, it stops and merges the payload with the sp
 
 CSV and TSV files can be merged as well, but no logic needs to be supplied. In this case, the mod loader will look for any rows in the base file whose first cell matches the same value as those in the merge file, and replace them with the rows from the merge file.
 
-TODO: Merge logic for JSON is currently planned but not yet supported.
+TODO: Merge logic for JSON is currently planned but not yet supported.  
 TODO: Advanced merge logic for CSV/TSV (specifcy a field other than the one at index 0 as the primary merge key) is not yet supported.
 
 ## Metadata
@@ -232,12 +232,34 @@ As well as use wildcards:
 
 `foo:1.*.*,bar:1.2.*`
 
-## Further reading
+# Best Practices
+
+## For game/app developers
+
+### 1. Loose, flat files
+
+Mods work best when modders can rely entirely on replace and append logic. The easiest way to facilitate this is to leave files separated out one by one rather than all glommed together. For instance, it's way easier to replace just one character sprite if each character sprite sheet is its own file, rather than all of them being packed together in one.
+
+Of course, for performance reasons developers will often combine files, so there's some tension here.
+
+Note that this best practice only refers to the *virtual file system* represented by your OpenFL Asset Library. The default asset library provides a pretty much one-to-one mapping between asset names and actual files ond isk, but there's no reason you couldn't override your default asset library with say, something that stores everything in one single binary (even encrypted!) PAK file or whatever.
+
+Two common kinds of combined data formats are 1) data tables and 2) packed textures/sprites. Both of these can be worked around fairly easily to allow for player-friendly atomic mod formats.
+
+### 2. 
+
+### 3. 
+
+
+## For modders
+
+
+# Further reading
 
 https://www.fortressofdoors.com/player-friendly-atomic-game-modding/
 
-## TODO:
+# TODO:
 
-# Security
+## Security
 
 Players modifying their games to accept random untrusted third party content are already exposing themselves in a fundamental way, but there's perhaps some things we can do to shave the attack surface area down a bit. For one, special care needs to be taken care if some of the assets you're loading via Polymod are driving in-game scripts and have access to e.g. File read/write/delete API's (or even worse, invoking system commands and/or launching other executables). At the moment, Polymod does absolutely nothing to protect you from this, so you must make your own safeguards. In the future we might provide some basic sandboxing or safety checks.
