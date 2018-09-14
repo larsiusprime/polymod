@@ -80,6 +80,7 @@ It's common to put some basic metadata files in the root directory of mods, but 
  
  * `_polymod_meta.json`
  * `_polymod_icon.png`
+ * `_polymod_pack.txt`
  * `ASSET_LICENSE.txt`
  * `CODE_LICENSE.txt`
  * `LICENSE.txt`
@@ -136,7 +137,31 @@ These files are not required, but are strongly recommended:
 * `ASSET_LICENSE.txt` (for asset-specific licensing terms, I recommend something from [Creative Commons](https://creativecommons.org/))
 * `CODE_LICENSE.txt` (for code/script-specific licensing terms, I recommend something like [MIT](https://opensource.org/licenses/MIT))
 
-I'll include more documentation about this when I have time. Until then, see this article:
+And this file indicates that the mod is a mod pack:
+
+* `_polymod_pack.txt`
+
+## Mod packs
+
+If a mod includes the file `_polymod_pack.txt` in the root directory, it will be treated not as a regular mod, but as a *mod pack*, ie, a collection of mods. This text file is a simple comma-separated list of mod directory names (relative to the root mod directory). 
+
+**NOTE:** *If a mod contains a mod pack list, ALL other files will be ignored.*
+
+Let's say you have a mod called `stuff` that contains this `_polymod_pack.txt`:
+
+`foo,bar,abc,xyz`
+
+Loading `stuff` will cause Polymod to load those four mods in the specified order. 
+
+You can also indicate specific versions of mods:
+
+`foo:1.0.0,bar:1.2.0`
+
+As well as use wildcards:
+
+`foo:1.*.*,bar:1.2.*`
+
+## Further reading
 
 https://www.fortressofdoors.com/player-friendly-atomic-game-modding/
 
