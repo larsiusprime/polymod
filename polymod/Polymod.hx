@@ -88,7 +88,7 @@ class Polymod
 	
 	public static function getDefaultIgnoreList():Array<String>
 	{
-		return ["_polymod_meta.json","_polymod_icon.png","ASSET_LICENSE.txt","CODE_LICENSE.txt","LICENSE.txt"];
+		return ["_polymod_meta.json","_polymod_icon.png","_polymod_pack.txt","ASSET_LICENSE.txt","CODE_LICENSE.txt","LICENSE.txt"];
 	}
 
 	/**
