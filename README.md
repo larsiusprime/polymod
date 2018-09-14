@@ -86,15 +86,55 @@ It's common to put some basic metadata files in the root directory of mods, but 
 
 # Creating a mod
 
+## Basic mod structure
+
+- root folder
+  - (metadata files)
+  - (files you want to replace)
+- `_append` folder
+  - (text files you want to add lines to)
+- `_merge` folder
+  - (text files you want to insert data into)
+
+### Root folder
+
+TODO
+
+### `_append` folder
+
+TODO
+
+### `_merge` folder
+
+TODO
+
+## Metadata
+
+The only metadata file that is required is `_polymod_meta.json`, and it will look something like this:
+
+```json
+{
+	"title":"Daisy",
+	"description":"This mod has a daisy",
+	"author":"Lars A. Doucet",
+	"api_version":"0.1.0",
+	"mod_version":"1.0.0-alpha",
+	"license":"CC BY 4.0,MIT"
+}
+```
+
+These files are not required, but are strongly recommended:
+
+* `_polymod_icon.png` (for use in mod browsers, etc)
+* `LICENSE.txt` (for general licensing terms)
+* `ASSET_LICENSE.txt` (for asset-specific licensing terms, I recommend something from [Creative Commons](https://creativecommons.org/))
+* `CODE_LICENSE.txt` (for code/script-specific licensing terms, I recommend something like [MIT](https://opensource.org/licenses/MIT))
+
 I'll include more documentation about this when I have time. Until then, see this article:
 
 https://www.fortressofdoors.com/player-friendly-atomic-game-modding/
 
 ## TODO:
-- root folder
-- `_append` folder
-- `_merge` folder
-- asset types
 
 # Security
 
