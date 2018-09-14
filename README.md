@@ -18,7 +18,9 @@ First, it **overrides your lime/OpenFL Asset library** with a custom one pointed
 
 Second, it **combines mods atomically**. Instead of supplying one mod folder, you can provide several. Polymod will go through each folder in turn and apply the changes from each mod, automatically joining them into one combined mod at runtime. Note that this means that the order you load the mods in matters, in the case that they have overlapping changes.
 
-Polymod currently works with OpenFL desktop target only but could be expanded to support other frameworks and targets if there's interest.
+Polymod currently works with OpenFL desktop* target only but could be expanded to support other frameworks and targets if there's interest.
+
+\**`sys` target, technically. Any target with a File System.*
 
 Polymod supports the following kinds of operations:
 - Replace asset
