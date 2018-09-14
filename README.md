@@ -238,21 +238,63 @@ As well as use wildcards:
 
 ### 1. Loose, flat files
 
-Mods work best when modders can rely entirely on replace and append logic. The easiest way to facilitate this is to leave files separated out one by one rather than all glommed together. For instance, it's way easier to replace just one character sprite if each character sprite sheet is its own file, rather than all of them being packed together in one.
+Mods work best when modders can rely entirely on replace and append logic. The easiest way to facilitate this is to leave files separated out one by one rather than all glommed together. For instance, it's way easier to replace just one character sprite if each character sprite sheet is its own file, rather than all of them being packed together in one. This presents a challenge to atomic modding, because although a modder can easily copy and paste the packed file, make a change, and add it to their mod as a replacement, this becomes fragile in two ways: 
+
+1. If the base game updates that file (say parts other than what the modder changed), the mod will now have an old version of it, even though they only intended to modify one part of it.
+2. If two modders want to change different in-game objects that reside in the same file, if they both must resort to replace logic, only one of their changes will be reflected when loading both mods.
 
 Of course, for performance reasons developers will often combine files, so there's some tension here.
 
-Note that this best practice only refers to the *virtual file system* represented by your OpenFL Asset Library. The default asset library provides a pretty much one-to-one mapping between asset names and actual files ond isk, but there's no reason you couldn't override your default asset library with say, something that stores everything in one single binary (even encrypted!) PAK file or whatever.
+Note that this best practice only refers to the *virtual file system* represented by your OpenFL Asset Library. The default asset library provides a pretty much one-to-one mapping between asset names and actual files ond isk, but there's no reason you couldn't override your default asset library with say, an asset library that stores everything on disk in one single binary (even encrypted!) PAK file or whatever, while still exposing a nice list of individual asset names.
 
-Two common kinds of combined data formats are 1) data tables and 2) packed textures/sprites. Both of these can be worked around fairly easily to allow for player-friendly atomic mod formats.
+### 2. Texture packs
 
-### 2. 
+Most texture packs will provide metadata that allows the original image frames/files to be extracted from a packed file, which in its own way is a tiny virtual file system. You might consider modifying your game/app code to first look for a given asset stored in its own loose file (in case a modder has provided one), before looking in your texture atlas cache.
 
-### 3. 
+### 3. Data tables
 
+Data tables and other "flat" file formats can work very well with atomic modding, particularly with append logic. If adding new items or enemies is as simple as adding a new line to a spreadsheet, this is ideal for modders who want to create mix-and-matchable content.
+
+### 4. Publish a modding API, adhere to Semantic Versioning
+
+As soon as your game is ready for modding, you should publish a modding API for your game that tells players what they can expect to modify and how, as well as an associated Mod API version. Don't forget to adhere to [Semantic Versioning 2.0], which is summarized thus:
+
+    Given a version number MAJOR.MINOR.PATCH, increment the:
+
+    MAJOR version when you make incompatible API changes,
+    MINOR version when you add functionality in a backwards-compatible manner, and
+    PATCH version when you make backwards-compatible bug fixes.
+
+### 5. Use the error handler
+
+You should pass in an error handler during initialization and then *use it*, ideally piping useful feedback to your players so that they can debug their mods and make sure they're properly formatted.
+
+### 6. Data-driven design
+
+A game that is mod friendly is heavily data-driven. IE, rather than hard-coding your list of possibly enemy types, make it a text file that you load in at runtime. This way players can define their own types by simply adding new entries to the list.
 
 ## For modders
 
+### 1. Start simple
+
+Don't try to do too much too fast. Start with something basic, like replacing a single loose image, or adding a line of text somewhere. Don't try to change too much at once -- make one small edit, then test your mod to see how it's working. You can build up steady momentum this way as you build familiarity with both modding and the game's asset set.
+
+### 2. Include a license
+
+If your mod doesn't include a license, it's in a legal gray area. By default, anything you create is automatically your copyright (in the USA at least), and in the absence of a license the assumption is that it's "all rights reserved" -- ie, nobody's allowed to use it any way you haven't specifically permitted.
+
+It gets even worse if other people want to include your mod in theirs, or build off of it. To foster a collaborative modding community, I strongly recommend using open licenses such as these:
+
+[Creative Commons Attribution 4.0](https://creativecommons.org/licenses/by/4.0/) -- for assets and data, etc.
+[MIT License](https://opensource.org/licenses/MIT) -- for code/script files, etc.
+
+### 3. It doesn't have to be big
+
+Some of the best mods are simple ones that just do one thing. Since Polymod lets you combine multiple mods easily, it can be nice to just make a few small mods rather than one big one. You can always create a modpack to link multiple atomic mods together, after all.
+
+### 4. Don't over-rely on merge logic
+
+Merge logic is the most complicated, least flexible, and most error prone of the three supported operations. If the developer has structured their game well, you should be able to get most of your work done with just append and replace logic. You should save merge logic only for problems you can't solve any other way.
 
 # Further reading
 
