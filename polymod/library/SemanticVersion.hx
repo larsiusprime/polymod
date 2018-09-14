@@ -54,7 +54,7 @@ class SemanticVersion
 			var substr = arr[ii];
 			if(substr.length > 1 && substr.charAt(0) == "0")
 			{
-				throw "SemanticVersion.hx: no leading zeroes allowed! : \""+str+"\"";
+				throw "SemanticVersion.hx: no leading zeroes allowed! :\""+str+"\"";
 			}
 			for(i in 0...substr.length)
 			{
@@ -124,7 +124,7 @@ class SemanticVersion
 					{
 						if(substr.length > 0 && substr.charAt(0) == "0")
 						{
-							throw "SemanticVersion.hx: no leading zeroes allowed! : \""+str+"\"";
+							throw "SemanticVersion.hx: no leading zeroes allowed! :\""+str+"\"";
 						}
 					}
 					v.preRelease.push(substr);
