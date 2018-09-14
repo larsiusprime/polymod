@@ -277,7 +277,7 @@ A game that is mod friendly is heavily data-driven. IE, rather than hard-coding 
 
 ### 1. Start simple
 
-Don't try to do too much too fast. Start with something basic, like replacing a single loose image, or adding a line of text somewhere. Don't try to change too much at once -- make one small edit, then test your mod to see how it's working. You can build up steady momentum this way as you build familiarity with both modding and the game's asset set.
+Don't try to do too much too fast. Start with something basic, like replacing a single loose image, or adding a line of text somewhere. Don't try to change too much at once -- make one small edit, then test your mod to see how it's working. You can build up steady momentum this way as you build familiarity with both modding in general and the game's specific data set.
 
 ### 2. Include a license
 
