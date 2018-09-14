@@ -287,17 +287,16 @@ class Polymod
 			if(!FileSystem.exists(iconFile))
 			{
 				warning(MISSING_ICON,"Could not find mod icon file: \""+iconFile+"\"");
-				if(meta != null)
-				{
-					meta.icon = BitmapData.fromFile(iconFile);
-				}
+			}
+			else
+			{
+				meta.icon = BitmapData.fromFile(iconFile);
 			}
 			if(FileSystem.exists(packFile))
 			{
 				meta.isModPack = true;
 				var packText = File.getContent(packFile);
 				meta.modPack = getModPack(packText);
-
 			}
 			return meta;
 		}
