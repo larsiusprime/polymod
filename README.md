@@ -285,7 +285,7 @@ If your mod doesn't include a license, it's in a legal gray area. By default, an
 
 It gets even worse if other people want to include your mod in theirs, or build off of it. To foster a collaborative modding community, I strongly recommend using open licenses such as these:
 
-[Creative Commons Attribution 4.0](https://creativecommons.org/licenses/by/4.0/) -- for assets and data, etc.
+[Creative Commons Attribution 4.0](https://creativecommons.org/licenses/by/4.0/) -- for assets and data, etc.  
 [MIT License](https://opensource.org/licenses/MIT) -- for code/script files, etc.
 
 ### 3. It doesn't have to be big
