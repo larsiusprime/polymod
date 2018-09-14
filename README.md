@@ -184,7 +184,7 @@ As soon as it finds the first match, it stops and merges the payload with the sp
 CSV and TSV files can be merged as well, but no logic needs to be supplied. In this case, the mod loader will look for any rows in the base file whose first cell matches the same value as those in the merge file, and replace them with the rows from the merge file.
 
 TODO: Merge logic for JSON is currently planned but not yet supported.  
-TODO: Advanced merge logic for CSV/TSV (specifcy a field other than the one at index 0 as the primary merge key) is not yet supported.
+TODO: Advanced merge logic for CSV/TSV (specify a field other than the one at index 0 as the primary merge key) is not yet supported.
 
 ## Metadata
 
