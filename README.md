@@ -243,7 +243,7 @@ When Polymod tries to load a modpack, it will look in the root mod directory you
 Mods work best when modders can rely entirely on replace and append logic. The easiest way to facilitate this is to leave files separated out one by one rather than all glommed together. For instance, it's way easier to replace just one character sprite if each character sprite sheet is its own file, rather than all of them being packed together in one. Although a modder can easily copy and paste the packed file, make a change, and add it to their mod as a replacement, this becomes fragile in two ways: 
 
 1. If the base game updates that file (say parts other than what the modder changed), the mod will now have an old version of it, even though they only intended to modify one part of it.
-2. If two modders want to change different in-game objects that reside in the same file, if they both must resort to replace logic, only one of their changes will be reflected when loading both mods.
+2. If two modders want to change different in-game objects that reside in the same file, and they both use replace logic, their changes will override each other and only one will be resolved in the final asset set.
 
 Of course, for performance reasons developers will often combine files, so there's some tension here.
 
