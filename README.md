@@ -86,6 +86,12 @@ It's common to put some basic metadata files in the root directory of mods, but 
 
 # Creating a mod
 
+The Polymod format is fairly simple -- create a folder for your mod, and stick some files in it. These files will then either replace or modify files from the base asset set. You have three basic operations:
+
+* Replace: provide files to replace the default ones
+* Append: add some lines of text to the end of an existing text file
+* Merge: insert some text in the middle of an existing text file, according to specified pattern matching
+
 ## Basic mod structure
 
 - root folder
