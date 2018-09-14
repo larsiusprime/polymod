@@ -240,7 +240,7 @@ When Polymod tries to load a modpack, it will look in the root mod directory you
 
 "Okay," you say, "I can replace all the assets I want, but how do I override the base game's code?"
 
-Polymod doesn't provide any basic method for handling this, but it should be naturally possible if the game's developer has exposed a proper scripting platform and API. Any script file represented as text can be replaced, adeed to, or modified, the same as any other data file.
+Polymod doesn't provide any basic method for handling this, but it should be naturally possible if the game's developer has exposed a proper scripting platform and API. Any script file represented as text can be replaced, added to, or modified, the same as any other data file.
 
 # Best Practices
 
