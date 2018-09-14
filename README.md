@@ -96,24 +96,95 @@ The Polymod format is fairly simple -- create a folder for your mod, and stick s
 ## Basic mod structure
 
 - root folder
-  - (metadata files)
-  - (files you want to replace)
 - `_append` folder
-  - (text files you want to add lines to)
 - `_merge` folder
-  - (text files you want to insert data into)
 
 ### Root folder
 
-TODO
+Any files you place here will replace those found in the default asset library. So if the default asset library has a file called `graphics/apple.png`, you can provide your own version by placing it at `<modroot>/graphics/apple.png`.
+
+When loading multiple mods, if several mods all provide the same file, the last one loaded will provide the final asset. You can see this behavior in the included sample. This is why the order in which you load mods matters!
 
 ### `_append` folder
 
-TODO
+Any text files you place here will have their contents appended to the ends of files with the same names in the default asset library. So if the base game has a file called `text/hello.txt` that says:
+
+`Hello, world!`
+
+You can add additional lines by placing a file at `<modroot>/_append/text/hello.txt` that says:
+
+`Hello from my mod!`
+
+Which will result in this in game when `text/hello.txt` is loaded and displayed:
+
+```
+Hello, world!
+Hello from my mod!
+```
 
 ### `_merge` folder
 
-TODO
+This is mostly meant for XML and CSV/TSV files. Say you have a big complicated XML file at `data/stuff.xml` with lots of nodes, and it happens to have this 
+
+```xml
+<?xml version="1.0" encoding="utf-8" ?>  
+<data> 
+   <!--lots of complicated stuff-->
+   <mode id="difficulty" values="easy"/>
+   <!--even more complicated stuff-->
+</data>
+```
+
+And you want it to say this instead:
+
+```xml
+<?xml version="1.0" encoding="utf-8" ?>  
+<data> 
+   <!--lots of complicated stuff-->
+   <mode id="difficulty" values="super_hard"/>
+   <!--even more complicated stuff-->
+</data>
+```
+
+Basically we want to change this one tag from this:
+
+```xml
+<mode id="difficulty" values="easy"/> 
+```
+
+to this:
+```xml
+<mode id="difficulty" values="super_hard"/>
+```
+
+This is the file you would put in `<modroot>/_merge/data/stuff.xml`:
+```xml
+<?xml version="1.0" encoding="utf-8" ?>  
+<data>  
+    <mode id="difficulty" values="super_hard">
+        <merge key="id" value="difficulty"/>
+    </mode>
+</data>
+```
+
+This file contains both data and merge instructions. The `<merge>` child tag tells the mod loader what to do, and will not be included in the final data. The actual payload is just this:
+
+```xml
+<mode id="difficulty" values="super_hard">
+```
+
+The `<merge>` tag instructs the mod loader thus:
+
+* Look for any tags with the same name as my parent (in this case, `<mode>`)
+* Look within said tags for a `key` attribute (in this case, one named `"id"`)
+* Check if the key's value matches what I'm looking for (in this case, `"difficulty"`)
+
+As soon as it finds the first match, it stops and merges the payload with the specified tag. Any attributes will be added to the base tag (overwriting any existing attributes with the same name, which in this case changes values from "easy" to just "super_hard", which is what we want). Furthermore, if the payload has child nodes, all of its children will be merged with the target tag as well.
+
+CSV and TSV files can be merged as well, but no logic needs to be supplied. In this case, the mod loader will look for any rows in the base file whose first cell matches the same value as those in the merge file, and replace them with the rows from the merge file.
+
+TODO: Merge logic for JSON is currently planned but not yet supported.
+TODO: Advanced merge logic for CSV/TSV (specifcy a field other than the one at index 0 as the primary merge key) is not yet supported.
 
 ## Metadata
 
