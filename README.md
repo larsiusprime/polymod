@@ -35,12 +35,18 @@ A sample for the OpenFL framework is provided.
 
 Loading one mod:
 ```haxe
-Polymod.init("path/to/my/mod");
+Polymod.init({
+  modRoot:"path/to/mods/",
+  dirs:["mymod"]
+ });
 ```
 
 Loading multiple mods:
 ```haxe
-Polymod.init(["path/to/first/mod","path/to/second/mod","path/to/third/mod","etc"]);
+Polymod.init({
+  modRoot:"path/to/mods/",
+  dirs:["firstmod","secondmod","thirdmod","etc"]
+ });
 ```
 
 Be sure to call `Polymod.init()` before you load any assets. Also note that calling `Polymod.init()` will clear your Asset cache.
