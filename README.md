@@ -232,6 +232,8 @@ As well as use wildcards:
 
 `foo:1.*.*,bar:1.2.*`
 
+When Polymod tries to load a modpack, it will look in the root mod directory you provided for the indicated mods. It will only load mods that 1) actually exist and 2) pass the version check (if specified). Any errors or warning will be sent to the error callback handler, and only non-failing mods will be loaded.
+
 # Best Practices
 
 ## For game/app developers
