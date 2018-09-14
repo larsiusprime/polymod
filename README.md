@@ -245,9 +245,7 @@ Mods work best when modders can rely entirely on replace and append logic. The e
 1. If the base game updates that file (say parts other than what the modder changed), the mod will now have an old version of it, even though they only intended to modify one part of it.
 2. If two modders want to change different in-game objects that reside in the same file, and they both use replace logic, their changes will override each other and only one will be resolved in the final asset set.
 
-Of course, for performance reasons developers will often combine files, so there's some tension here.
-
-Note that this best practice only refers to the *virtual file system* represented by your OpenFL Asset Library. The default asset library provides a pretty much one-to-one mapping between asset names and actual files ond isk, but there's no reason you couldn't override your default asset library with say, an asset library that stores everything on disk in one single binary (even encrypted!) PAK file or whatever, while still exposing a nice list of individual asset names.
+Of course, for performance reasons developers will often combine files, so there's some tension here. However keep in mind that the OpenFL Asset Library is a kind of *virtual file system*. The default asset library provides a nearly one-to-one mapping between asset names and actual files on disk, but there's no reason you couldn't override your default asset library with say, an asset library that stores everything on disk in one single binary (even encrypted!) PAK file or whatever, while still exposing a nice list of individual asset names. Polymod doesn't care how your actual assets are stored and loaded from disk.
 
 ### 2. Texture packs
 
