@@ -236,6 +236,12 @@ As well as use wildcards:
 
 When Polymod tries to load a modpack, it will look in the root mod directory you provided for the indicated mods. It will only load mods that 1) actually exist and 2) pass the version check (if specified). Any errors or warning will be sent to the error callback handler, and only non-failing mods will be loaded.
 
+## Scripting
+
+"Okay," you say, "I can replace all the assets I want, but how do I override the base game's code?"
+
+Polymod doesn't provide any basic method for handling this, but it should be naturally possible if the game's developer has exposed a proper scripting platform and API. Any script file represented as text can be replaced, adeed to, or modified, the same as any other data file.
+
 # Best Practices
 
 ## For game/app developers
@@ -274,6 +280,15 @@ You should pass in an error handler during initialization and then *use it*, ide
 ### 6. Data-driven design
 
 A game that is mod friendly is heavily data-driven. IE, rather than hard-coding your list of possibly enemy types, make it a text file that you load in at runtime. This way players can define their own types by simply adding new entries to the list.
+
+### 7. Support scripting
+
+Certain parts of your code, such as basic game logic, AI routines, formula calculations, etc, can be exposed to modding via scripts -- human-readable code interpreted at runtime. Polymod can support any scripting language in theory, but we strongly recommend [hscript](https://github.com/HaxeFoundation/hscript) for Haxe games.
+
+If you do so, you should document a list of methods and properties exposed by your scripting system, and publish these along with your default asset manifest as your game's modding API
+
+I might eventually add support for targetted merge logic for hscript files (allowing you to selectively replace e.g. function calls by name) but as of right now no such thing exists. To best support modders, stick to simple script files.
+
 
 ## For modders
 
