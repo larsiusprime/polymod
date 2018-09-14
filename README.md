@@ -257,7 +257,7 @@ Data tables and other "flat" file formats can work very well with atomic modding
 
 ### 4. Publish a modding API, adhere to Semantic Versioning
 
-As soon as your game is ready for modding, you should publish a modding API for your game that tells players what they can expect to modify and how, as well as an associated Mod API version. Don't forget to adhere to [Semantic Versioning 2.0], which is summarized thus:
+As soon as your game is ready for modding, you should publish a modding API for your game that tells players what they can expect to modify and how, as well as an associated Mod API version. Don't forget to adhere to [Semantic Versioning 2.0](https://semver.org/), which is summarized thus:
 
     Given a version number MAJOR.MINOR.PATCH, increment the:
 
