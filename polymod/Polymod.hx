@@ -68,12 +68,12 @@ typedef PolymodParams = {
 	/**
 	 * (optional) rules for merging various data formats
 	 */
-	 ?mergeRules:MergeRules,
+	?mergeRules:MergeRules,
 
-	 /**
-	  * (optional) list of filenames to ignore in mods
-	  */
-	  ?ignoredFiles:Array<String>
+	/**
+	 * (optional) list of filenames to ignore in mods
+	 */
+	?ignoredFiles:Array<String>
 }
 
 /**
