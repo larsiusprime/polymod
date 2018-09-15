@@ -289,6 +289,13 @@ If you do so, you should document a list of methods and properties exposed by yo
 
 I might eventually add support for targetted merge logic for hscript files (allowing you to selectively replace e.g. function calls by name) but as of right now no such thing exists. To best support modders, stick to simple script files.
 
+### 8. Encourage generic ids as merge keys
+
+If you look at the sample mod represented by the GIF at the top of this page, you'll notice a slight "bug" of sorts. The base app has three images, a sun, a moon, and a star, and an XML file with tags like `<object value="sun"/>` to match. Notice that when activating mods 1-3, each one replaces one of the graphics with a different kind of flower, and updates the xml tags to match. The mods are using file replace logic for the images, and merge logic for the xml file.
+
+But, notice what happens when mod 4 is activated. Mod 4 replaces the entire XML file so that the xml nodes have values "pineapple", "apple", and "bread". Notice that when Mod 4 is moved into load position 1 and the other mods are activated, the flowers replace the image assets, but they don't properly update the XML data. That's because the replace logic targets the same filenames ("a.png", "b.png", "c.png"), but the merge logic is keyed off of the specific value names ("sun", "moon", "stars"). So when the value names are changed, mods that depend on those specific values as merge keys will not act as intended.
+
+If this file structure had been designed so that each `<object>` tag had a generic key like `<object id="0" value="sun"/>`, and the mods were written to replace based on the unchanging key (`id="0"` instead of `object="sun"`), then these mods would work as intended.
 
 ## For modders
 
