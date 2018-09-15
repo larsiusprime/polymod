@@ -100,6 +100,7 @@ class Polymod
 	 */
 	public static function scan(modRoot:String, ?apiVersionStr:String="*.*.*", ?errorCallback:PolymodError->Void):Array<ModMetadata>
 	{
+		#if sys
 		onError = errorCallback;
 		var apiVersion:SemanticVersion = null;
 		try
@@ -153,6 +154,8 @@ class Polymod
 		}
 
 		return modMeta;
+		#end
+		return [];
 	}
 	
 	/**
