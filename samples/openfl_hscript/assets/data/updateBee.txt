@@ -1,0 +1,58 @@
+if(bee == null) return;
+
+if(bee.x < 0 || bee.x > 800 || bee.y < 0 || bee.y > 480)
+{
+    bee.x = 100 + Math.random() * 700;
+    bee.y = 50 + Math.random() * 380;
+}
+
+if(bee.pollen > 0)
+{
+    if(!isTouching(bee, home))
+    {
+        moveToward(bee, home, elapsed);
+        if(isTouching(bee, home))
+        {
+            home.honey += bee.pollen;
+            bee.pollen = 0;
+            updateScore(home.honey);
+        }
+    }
+    return;
+}
+
+if(bee.flower == null)
+{
+    bee.turnsSearching++;
+    bee.flower = getRandomFlower();
+    
+    if(bee.flower != null && bee.flower.pollen == 0)
+    {
+        bee.flower == null;
+    }
+
+    if(bee.turnsSearching > 2)
+    {
+        bee.flower = getRandomFlower();
+        bee.turnsSearching = 0;
+    }
+
+    if(bee.flower != null && bee.flower.pollen > 0)
+    {
+        bee.turnsSearching = 0;
+    }
+}
+
+if(bee.flower != null)
+{
+    moveToward(bee, bee.flower, elapsed);
+    if(isTouching(bee, bee.flower))
+    {
+        if(bee.flower.pollen > 0)
+        {
+            bee.pollen = bee.flower.pollen;
+            emptyFlower(bee.flower);
+        }
+        bee.flower = null;
+    }
+}

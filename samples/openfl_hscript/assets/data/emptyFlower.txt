@@ -1,0 +1,3 @@
+flower.pollen = 0;
+flower.cooldown = flower.maxCooldown;
+flower.alpha = 0.25;
