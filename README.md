@@ -1,8 +1,10 @@
 # Polymod
 An atomic modding framework for Haxe games
 
+Basic sample:
 ![A visual preview of the polymod OpenFL sample](preview.gif)
 
+Scripting sample:
 ![A visual preview of the polymod hscript sample](preview2.gif)
 
 # What is this
