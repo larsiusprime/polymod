@@ -279,7 +279,7 @@ You should pass in an error handler during initialization and then *use it*, ide
 
 ### 6. Data-driven design
 
-A game that is mod friendly is heavily data-driven. IE, rather than hard-coding your list of possibly enemy types, make it a text file that you load in at runtime. This way players can define their own types by simply adding new entries to the list.
+A game that is mod friendly is heavily data-driven. IE, rather than hard-coding your list of enemy types, make it a text file that you load in at runtime. This way players can define their own types by simply adding new entries to the list.
 
 ### 7. Support scripting
 
