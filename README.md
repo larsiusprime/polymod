@@ -3,6 +3,8 @@ An atomic modding framework for Haxe games
 
 ![A visual preview of the polymod OpenFL sample](preview.gif)
 
+![A visual preview of the polymod hscript sample](preview2.gif)
+
 # What is this
 
 Let's say you have a game or app that you want to make moddable. The easiest way to do this is to:
