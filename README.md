@@ -6,18 +6,18 @@ An atomic modding framework for Haxe games
 
 # Contents
 
-- [What is this](#What-is-this)
-- [Usage](#Usage)
-  - [Optional init parameters](#Optional-init-parameters)
--  [Creating a mod](#Creating-a-mod)
-  - [Basic mod structure](#Basic-mod-structure)
-  - [Metadata](#Metadata)
-  - [Mod packs](#Mod-packs)
-  - [Scripting](#Scripting)
-- [Best Practices](#Best-Practices)
-  - [For game/app developers](#For-game/app-developers)
-  - [For modders](#For modders)
-- [Further reading](#Further-reading)
+- [What is this](#what-is-this)
+- [Usage](#usage)
+  - [Optional init parameters](#optional-init-parameters)
+-  [Creating a mod](#creating-a-mod)
+  - [Basic mod structure](#basic-mod-structure)
+  - [Metadata](#metadata)
+  - [Mod packs](#mod-packs)
+  - [Scripting](#scripting)
+- [Best Practices](#best-practices)
+  - [For game/app developers](#for-gameapp-developers)
+  - [For modders](#for-modders)
+- [Further reading](#further-reading)
 
 # What is this
 
