@@ -36,13 +36,6 @@ class ScriptRunner
         var script = scripts.get(name);
         return script.execute();
     }
-
-    public function executeWithVars(name:String, vars:Map<String,Dynamic>):Dynamic
-    {
-        if(!scripts.exists(name)) return null;
-        var script = scripts.get(name);
-        return script.executeWithVars(vars);
-    }
 }
 
 class Script
@@ -71,15 +64,4 @@ class Script
     {
         return interp.execute(program);
     }
-
-    public function executeWithVars(vars:Map<String,Dynamic>):Dynamic
-    {
-        for(key in vars.keys())
-        {
-            interp.variables.set(key,vars.get(key));
-            vars.set(key,vars.get(key));
-        }
-        return interp.execute(program);
-    }
-
 }

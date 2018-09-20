@@ -93,27 +93,29 @@ class Demo extends Sprite implements polymod.hscript.HScriptable
 		}
 	}
 
-  @:hscript(Std, Math, numFlowers, numBees, distTest, makeFlower, makeHome, makeBee, home)
-	private function init():Void {
-    if (script_error) {
-      trace('hscript failed to load or threw: '+script_error);
-      trace('TODO: Do something to recover from this failure.');
-    }
-  }
+    @:hscript(Std, Math, numFlowers, numBees, distTest, makeFlower, makeHome, makeBee, home)
+	private function init():Void
+	{
+    	if (script_error)
+		{
+      		trace('hscript failed to load or threw: '+script_error);
+      		trace('TODO: Do something to recover from this failure.');
+    	}
+  	}
 
-  @:hscript
+  	@:hscript
 	private function updateFlower(flower:Flower, elapsed:Float) { }
 
-  @:hscript
+  	@:hscript
 	private function updateScore(value:Float)
 	{
-    score.text = script_result;
+    	score.text = script_result;
 	}
 
-  @:hscript(Math,bee,elapsed,home,moveToward,isTouching,getClosestFlower,getRandomFlower,emptyFlower,updateScore)
+  	@:hscript(Math,bee,elapsed,home,moveToward,isTouching,getClosestFlower,getRandomFlower,emptyFlower,updateScore)
 	private function updateBee(bee:Bee, elapsed:Float) { }
 
-  @:hscript
+  	@:hscript
 	private function emptyFlower(flower:Flower) { }
 
 	private function distTest(x1:Float,y1:Float,x2:Float,y2:Float,r:Float):Bool
