@@ -4,8 +4,20 @@ An atomic modding framework for Haxe games
 ## Basic sample:  
 ![A visual preview of the polymod OpenFL sample](preview.gif)
 
-## Scripting sample:  
-![A visual preview of the polymod hscript sample](preview2.gif)
+# Contents
+
+- [What is this](#What-is-this)
+- [Usage](#Usage)
+  - [Optional init parameters](#Optional-init-parameters)
+-  [Creating a mod](#Creating-a-mod)
+  - [Basic mod structure](#Basic-mod-structure)
+  - [Metadata](#Metadata)
+  - [Mod packs](#Mod-packs)
+  - [Scripting](#Scripting)
+- [Best Practices](#Best-Practices)
+  - [For game/app developers](#For-game/app-developers)
+  - [For modders](#For modders)
+- [Further reading](#Further-reading)
 
 # What is this
 
@@ -241,6 +253,8 @@ As well as use wildcards:
 When Polymod tries to load a modpack, it will look in the root mod directory you provided for the indicated mods. It will only load mods that 1) actually exist and 2) pass the version check (if specified). Any errors or warning will be sent to the error callback handler, and only non-failing mods will be loaded.
 
 ## Scripting
+
+![A visual preview of the polymod hscript sample](preview2.gif)
 
 "Okay," you say, "I can replace all the assets I want, but how do I override the base game's code?"
 
