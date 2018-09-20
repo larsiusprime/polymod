@@ -272,6 +272,8 @@ You don't need a dedicated scripting framework to get moddable scripts. So long 
 ## Use Polymod's `HScriptable` interface
 Polymod provides an optional interface called `HScriptable` that will use some macro magic to automatically bind targeted functions to [hscript](https://github.com/HaxeFoundation/hscript) scripts. 
 
+_NOTE: Big thanks to [Jeff Ward](https://github.com/jcward) for making this possible!_
+
 There are three steps to enable hscript bindings with Polymod:
 
 ### 1. Create a class that implements `HScriptable`
