@@ -258,7 +258,199 @@ When Polymod tries to load a modpack, it will look in the root mod directory you
 
 "Okay," you say, "I can replace all the assets I want, but how do I override the base game's code?"
 
-Polymod doesn't provide any basic method for handling this, but it should be naturally possible if the game's developer has exposed a proper scripting platform and API. Any script file represented as text can be replaced, added to, or modified, the same as any other data file.
+There are two ways to support scripting using Polymod:
+
+1. Do it yourself
+2. Use Polymod's `HScriptable` interface
+
+## Do it yourself
+You don't need a dedicated scripting framework to get moddable scripts. So long as your script files are part of your asset library, they can be replaced or modified like any other text file, and it doesn't even matter what scripting language you choose. This is a potential [footgun](https://en.wiktionary.org/wiki/footgun), however, so unless you really know what you're doing, I generally recommend using Polymod's built-in support for scripting.
+
+## Use Polymod's `HScriptable` interface
+Polymod provides an optional interface called `HScriptable` that will use some macro magic to automatically bind targeted functions to [hscript](https://github.com/HaxeFoundation/hscript) scripts. 
+
+There are three steps to enable hscript bindings with Polymod:
+
+1. Create a class that implements `HScriptable`
+
+Like this: 
+```haxe
+class MyClass implements polymod.hscript.HScriptable
+```
+This class should include some functions you intend to expose to hscript files.
+
+2. Tag a function with the `@:hscript` metadata
+
+Like this:
+```haxe
+@:hscript
+private function doSomething() { }
+```
+
+3. Provide an hscript file matching the function's name:
+```
+data/doSomething.txt
+```
+
+(Right now the asset path is hardcoded to the "data" folder, no namespacing prefixes are applied, and the file extension it looks for is ".txt". We plan on making all of these more flexible in the future.)
+
+When you do all of the above steps, "doSomething.txt" will be parsed during `MyClass`'s constructor, and when `MyClass.doSomething()` is run, the parsed hscript representation of `doSomething.txt` will be executed.
+
+## A practical example
+
+We shall use as our example the `openfl_hscript` sample included with Polymod, depicted above. For context, this is a simple simulation containing a field of flowers, some honeybees, and a "home" depicted by a honeypot. Bees will seek out flowers, drain them of pollen, return home, deposit the pollen as honey (updating the score), and then seek a new flower. We would like to expose various aspects of this behavior to scripts, so that users can change the behavior.
+
+First, note that the `Demo` class implements `HScriptable`:
+```haxe
+class Demo extends Sprite implements polymod.hscript.HScriptableclass Demo extends Sprite implements polymod.hscript.HScriptable
+```
+
+Next, let's explore some scripts.
+
+### Simple function
+
+Consider this function:
+```haxe
+@:hscript
+private function emptyFlower(flower:Flower) { }
+```
+
+And the corresponding hscript file `emptyFlower.txt`:
+```haxe
+flower.pollen = 0;
+flower.cooldown = flower.maxCooldown;
+flower.alpha = 0.25;
+```
+
+For context, this function runs when a bee visits a flower, touches it, and gains pollen. The default script will remove pollen from the flower, start a cooldown timer, and make it appear faded to indicate that it's depleted.
+
+Now, let's explain how the macro injection works.
+
+Note that the function body is empty. The macro will inject all the necessary boilerplate to load the `emptyFlower.txt` script file during the `Demo` class's constructor, and at runtime when `emptyFlower()` is called, the `flower:Flower` parameter will be passed in to the script as a local variable. So the final `emptyFlower()` function post macro-injection actually looks something like this:
+
+```haxe
+private function emptyFlower(flower:Flower)
+{
+	var script:Script = _polymod_scripts.get("emptyFlower");  //_polymod_scripts initialized in the constructor
+	script.set("flower", flower);
+	script.execute();
+}
+```
+
+### Resolving other variables
+
+Here's another function:
+```haxe
+private function updateBee(bee:Bee, elapsed:Float) { }
+```
+
+It only takes two variables, so this should be simple, right? Well, not so fast:
+```haxe
+if(bee == null) return;
+
+if(bee.x < 0 || bee.x > 800 || bee.y < 0 || bee.y > 480)
+{
+    bee.x = 100 + Math.random() * 700;
+    bee.y = 50 + Math.random() * 380;
+}
+
+if(bee.pollen > 0)
+{
+    if(!isTouching(bee, home))
+    {
+        moveToward(bee, home, elapsed);
+        if(isTouching(bee, home))
+        {
+            home.honey += bee.pollen;
+            bee.pollen = 0;
+            updateScore(home.honey);
+        }
+    }
+    return;
+}
+
+if(bee.flower == null)
+{
+    bee.turnsSearching++;
+    bee.flower = getRandomFlower();
+    
+    if(bee.flower != null && bee.flower.pollen == 0)
+    {
+        bee.flower == null;
+    }
+
+    if(bee.turnsSearching > 2)
+    {
+        bee.flower = getRandomFlower();
+        bee.turnsSearching = 0;
+    }
+
+    if(bee.flower != null && bee.flower.pollen > 0)
+    {
+        bee.turnsSearching = 0;
+    }
+}
+
+if(bee.flower != null)
+{
+    moveToward(bee, bee.flower, elapsed);
+    if(isTouching(bee, bee.flower))
+    {
+        if(bee.flower.pollen > 0)
+        {
+            bee.pollen = bee.flower.pollen;
+            emptyFlower(bee.flower);
+        }
+        bee.flower = null;
+    }
+}
+```
+
+That logic is relying on many other class member variables, and even calling other functions. This is a pretty common situation when you're trying to convert existing functions into hscript files, and it's not necessarily a good idea to "fix" the problem by cramming all those references in as explicit function parameters. Not only is that unwieldy, it will change the function signature, requiring you to track down every call to this function and update it. Not only is that a pain, it's an opportunity to introduce new bugs.
+
+Instead, you can just add extra variables to the script context, like this:
+```haxe
+@:hscript(Math,bee,elapsed,home,moveToward,isTouching,getClosestFlower,getRandomFlower,emptyFlower,updateScore)
+private function updateBee(bee:Bee, elapsed:Float) { }
+```
+
+Here the script will receive all the parameters we specified between the `@:hscript` tag's parentheses, followed by all the normal function parameters. This is also a good way to pass in global utility classes that are otherwise not available to your scripts, such as `Math`, `Std`, and `StringTools`.
+
+**NOTE:** _Although your scripts can make changes to any mutable objects you pass in, a local variable within an hscript file is *not* the same as the local variable from your host function with the same name, even if they both *point* to the same object. This means that you can do `bee.pollen = 0` in your script and expect to see that change even after the script is finished, but if you do `bee = anotherBee` within the script, the `bee` variable in your main function will remain unchanged. Does that make sense? This can be a common source of subtle bugs if you're not careful. TL;DR -- go ahead and use your scripts to change the internal state of objects, call functions, and do calculations, but be very careful about trying to use scripts to change what variables are pointing to._
+
+### Mixing code and scripts
+
+I should note that the function body of a scriptable function doesn't have to be empty!
+
+```haxe
+ @:hscript
+private function updateScore(value:Float)
+{
+    score.text = script_result;
+}
+```
+
+This function simply calculates the score and updates the text field that displays it. The macro will automatically inject your script logic at the beginning of your `@:hscript`-tagged function, before any other code you've written in the function body is executed. At the very end, it will define two new local variables: `script_result` and `script_error`, both of type `Dynamic`. In this function, we make use of the `script_result` to feed it directly into `score.text`.
+
+**NOTE:** _If your function returns something other than `Void`, the macro will inject a `return script_result;` line at the end of your function, *after* any code you supply. So if you want to return something other than `script_result` with your own logic, that's fine -- just be sure to provide your own `return` line to make the function return early, skipping the macro's injected `return`._
+
+### Handling errors
+
+If you're exposing scripts in your project, that means someone can change the game's logic at runtime, which means they could screw something up, and you might want your application to handle it gracefully, or at least give the user some feedback about what they did wrong.
+
+```haxe
+@:hscript(Std, Math, numFlowers, numBees, distTest, makeFlower, makeHome, makeBee, home)
+private function init():Void
+{
+    if (script_error != null)
+    {
+      	trace('hscript failed to load or threw: '+script_error);
+        trace('TODO: Do something to recover from this failure.');
+    }
+}
+```
+
+As mentioned before, the macro will inject a local `script_error` variable along with the rest of the boilerplate. If there was a problem with the script (typically: it couldn't load, or the script itself threw an error), this variable will be set. Note that there is no point in using a try/catch block, because the macro has already done that for you and caught the result, which is now stored in `script_error`. If `script_error` is null it can be safely ignored. Handling errors in this way at all is purely optional, but recommended.
 
 # Best Practices
 
