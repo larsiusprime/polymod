@@ -20,17 +20,21 @@ class HScriptMacro
     var constructor_setup:Array<Expr> = null;
 
     // Find all fields with @:hscript metadata
-    for (field in fields) {
+    for (field in fields)
+    {
       var scriptable_meta = field.meta.find(function(m) return m.name==":hscript");
-      if (scriptable_meta!=null) {
-        switch field.kind {
+      if (scriptable_meta!=null)
+      {
+        switch field.kind
+        {
           case FFun(func):
 
             // The variables we'll set on the hscript scope:
             var variable_names:Array<String> = [];
            
             // Get variables names from inside @:hscript(...)
-            for (p in scriptable_meta.params) switch p.expr {
+            for (p in scriptable_meta.params) switch p.expr
+            {
               case EConst(CIdent(name)): variable_names.push(name);
               default: Context.error("Error: Only identifiers (like Std, Math, myVariable, etc) are allowed in @:hscript()", p.pos);
             }
@@ -42,11 +46,13 @@ class HScriptMacro
             // function body. Store it in a variable called script_result.
             // If the return type is specified Void, don't return
             // anything. Otherwise, return the script_result.
-            var setters:Array<Expr> = variable_names.map(function(name) {
+            var setters:Array<Expr> = variable_names.map(function(name)
+            {
               return macro script.set($v{ name }, $i{ name });
             });
 
-            var return_expr = switch func.ret {
+            var return_expr = switch func.ret
+            {
               case TPath({ name:"Void", pack:[], params:[] }):
                 // Function sigture says Void, don't return anything
                 macro null;
@@ -55,15 +61,19 @@ class HScriptMacro
             }
 
             // Alter the function body:
-            func.expr = macro {
+            func.expr = macro
+            {
               var script_error:Dynamic = null;
               var script_result:Dynamic = null;
-              try {
+              try
+              {
                 var script = _polymod_scripts.get($v{ field.name });
                 #if POLYMOD_DEBUG if (script==null) throw "Did not find hscript: "+$v{ field.name }; #end
                 $b{ setters };
                 script_result = script.execute();
-              } catch (e:Dynamic) {
+              }
+              catch (e:Dynamic)
+              {
                 #if POLYMOD_DEBUG trace("Error: script "+$v{ field.name }+" threw:\n"+e); #end
                 script_error = e;
               }
@@ -73,10 +83,12 @@ class HScriptMacro
 
             // Generate the expression that will get inserted into the constructor
             // to load this script:
-            if (constructor_setup==null) {
+            if (constructor_setup==null)
+            {
               constructor_setup = [ macro _polymod_scripts = new polymod.hscript.HScriptable.ScriptRunner() ];
             }
-            constructor_setup.push(macro {
+            constructor_setup.push(macro
+            {
               #if POLYMOD_DEBUG trace("Polymod: Loading hscript "+$v{ field.name }); #end
               _polymod_scripts.load($v{ field.name }, Assets.getText("data/"+$v{ field.name }+".txt"));
             });
@@ -101,9 +113,11 @@ class HScriptMacro
     var constructor = fields.find(function(field) return field.name=="new");
     if (constructor==null) Context.error("Error: @:hscript requires a constructor", Context.currentPos());
 
-    switch constructor.kind {
+    switch constructor.kind
+    {
       case FFun(func):
-        func.expr = macro {
+        func.expr = macro
+        {
           $b{ constructor_setup };
           ${ func.expr };
         }

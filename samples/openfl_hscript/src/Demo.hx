@@ -96,7 +96,7 @@ class Demo extends Sprite implements polymod.hscript.HScriptable
     @:hscript(Std, Math, numFlowers, numBees, distTest, makeFlower, makeHome, makeBee, home)
 	private function init():Void
 	{
-    	if (script_error)
+    	if (script_error != null)
 		{
       		trace('hscript failed to load or threw: '+script_error);
       		trace('TODO: Do something to recover from this failure.');
