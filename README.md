@@ -272,16 +272,12 @@ Polymod provides an optional interface called `HScriptable` that will use some m
 There are three steps to enable hscript bindings with Polymod:
 
 ### 1. Create a class that implements `HScriptable`
-
-Like this: 
 ```haxe
 class MyClass implements polymod.hscript.HScriptable
 ```
 This class should include some functions you intend to expose to hscript files.
 
 ### 2. Tag a function with the `@:hscript` metadata
-
-Like this:
 ```haxe
 @:hscript
 private function doSomething() { }
