@@ -252,7 +252,7 @@ As well as use wildcards:
 
 When Polymod tries to load a modpack, it will look in the root mod directory you provided for the indicated mods. It will only load mods that 1) actually exist and 2) pass the version check (if specified). Any errors or warning will be sent to the error callback handler, and only non-failing mods will be loaded.
 
-## Scripting
+# Scripting
 
 ![A visual preview of the polymod hscript sample](preview2.gif)
 
