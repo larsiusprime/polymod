@@ -1,5 +1,11 @@
+package polymod.hscript;
+
 import hscript.*;
 import hscript.Expr;
+
+// This interface triggers this build macro on any implementing classes
+@:autoBuild(polymod.hscript.HScriptMacro.build())
+interface HScriptable { }
 
 class ScriptRunner
 {
@@ -10,7 +16,7 @@ class ScriptRunner
     {
         parser = new Parser();
         scripts = new Map<String, Script>();
-	}
+    }
 
     public function load(name:String,source:String):Script
     {

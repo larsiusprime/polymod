@@ -17,7 +17,7 @@ import sys.FileSystem;
  * ...
  * @author 
  */
-class Demo extends Sprite
+class Demo extends Sprite implements polymod.hscript.HScriptable
 {
 	private var bees:Array<Bee>;
 	private var flowers:Array<Flower>;
@@ -27,12 +27,10 @@ class Demo extends Sprite
 	
 	public var numBees:Int = 10;
 	public var numFlowers:Int = 30;
-	public var scripts:MyScriptRunner;
 
 	public function new() 
 	{
 		super();
-		scripts = new MyScriptRunner();
 		
 		bees = [];
 		flowers = [];
@@ -95,53 +93,28 @@ class Demo extends Sprite
 		}
 	}
 
-	private function init()
+  @:hscript(Std, Math, numFlowers, numBees, distTest, makeFlower, makeHome, makeBee, home)
+	private function init():Void {
+    if (script_error) {
+      trace('hscript failed to load or threw: '+script_error);
+      trace('TODO: Do something to recover from this failure.');
+    }
+  }
+
+  @:hscript
+	private function updateFlower(flower:Flower, elapsed:Float) { }
+
+  @:hscript
+	private function updateScore(value:Float)
 	{
-		scripts.init.set("Std",Std);
-		scripts.init.set("Math",Math);
-		scripts.init.set("numFlowers",numFlowers);
-		scripts.init.set("numBees",numBees);
-		scripts.init.set("distTest",distTest);
-		scripts.init.set("makeFlower",makeFlower);
-		scripts.init.set("makeHome",makeHome);
-		scripts.init.set("makeBee",makeBee);
-		scripts.init.set("home",home);
-		scripts.init.execute();
+    score.text = script_result;
 	}
 
-	private function updateFlower(flower:Flower, elapsed:Float)
-	{
-		scripts.updateFlower.set("flower",flower);
-		scripts.updateFlower.set("elapsed",elapsed);
-		scripts.updateFlower.execute();
-	}
+  @:hscript(Math,bee,elapsed,home,moveToward,isTouching,getClosestFlower,getRandomFlower,emptyFlower,updateScore)
+	private function updateBee(bee:Bee, elapsed:Float) { }
 
-	private function updateScore(f:Float)
-	{
-		scripts.updateScore.set("value",f);
-		score.text = scripts.updateScore.execute();
-	}
-
-	private function updateBee(bee:Bee, elapsed:Float)
-	{
-		scripts.updateBee.set("Math",Math);
-		scripts.updateBee.set("bee",bee);
-		scripts.updateBee.set("elapsed",elapsed);
-		scripts.updateBee.set("home",home);
-		scripts.updateBee.set("moveToward",moveToward);
-		scripts.updateBee.set("isTouching",isTouching);
-		scripts.updateBee.set("getClosestFlower",getClosestFlower);
-		scripts.updateBee.set("getRandomFlower",getRandomFlower);
-		scripts.updateBee.set("emptyFlower",emptyFlower);
-		scripts.updateBee.set("updateScore",updateScore);
-		scripts.updateBee.execute();
-	}
-
-	private function emptyFlower(flower:Flower)
-	{
-		scripts.emptyFlower.set("flower",flower);
-		scripts.emptyFlower.execute();
-	}
+  @:hscript
+	private function emptyFlower(flower:Flower) { }
 
 	private function distTest(x1:Float,y1:Float,x2:Float,y2:Float,r:Float):Bool
 	{
