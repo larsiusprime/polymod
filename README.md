@@ -298,7 +298,7 @@ We shall use as our example the `openfl_hscript` sample included with Polymod, d
 
 First, note that the `Demo` class implements `HScriptable`:
 ```haxe
-class Demo extends Sprite implements polymod.hscript.HScriptableclass Demo extends Sprite implements polymod.hscript.HScriptable
+class Demo extends Sprite implements polymod.hscript.HScriptable
 ```
 
 Next, let's explore some scripts.
