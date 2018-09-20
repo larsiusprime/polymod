@@ -304,8 +304,6 @@ First, note that the `Demo` class implements `HScriptable`:
 class Demo extends Sprite implements polymod.hscript.HScriptable
 ```
 
-Next, let's explore some scripts.
-
 ### Simple function
 
 Consider this function:
@@ -322,8 +320,6 @@ flower.alpha = 0.25;
 ```
 
 For context, this function runs when a bee visits a flower, touches it, and gains pollen. The default script will remove pollen from the flower, start a cooldown timer, and make it appear faded to indicate that it's depleted.
-
-Now, let's explain how the macro injection works.
 
 Note that the function body is empty. The macro will inject all the necessary boilerplate to load the `emptyFlower.txt` script file during the `Demo` class's constructor, and at runtime when `emptyFlower()` is called, the `flower:Flower` parameter will be passed in to the script as a local variable. So the final `emptyFlower()` function post macro-injection actually looks something like this:
 
@@ -343,7 +339,9 @@ Here's another function:
 private function updateBee(bee:Bee, elapsed:Float) { }
 ```
 
-It only takes two variables, so this should be simple, right? Well, not so fast:
+It only takes two variables, so this should be simple, right?
+
+Well, not so fast:
 ```haxe
 if(bee == null) return;
 
@@ -429,13 +427,22 @@ private function updateScore(value:Float)
 }
 ```
 
-This function simply calculates the score and updates the text field that displays it. The macro will automatically inject your script logic at the beginning of your `@:hscript`-tagged function, before any other code you've written in the function body is executed. At the very end, it will define two new local variables: `script_result` and `script_error`, both of type `Dynamic`. In this function, we make use of the `script_result` to feed it directly into `score.text`.
+The actual script is a simple one-liner:
+```haxe
+"Honey collected: " + value;
+```
 
-**NOTE:** _If your function returns something other than `Void`, the macro will inject a `return script_result;` line at the end of your function, *after* any code you supply. So if you want to return something other than `script_result` with your own logic, that's fine -- just be sure to provide your own `return` line to make the function return early, skipping the macro's injected `return`._
+The script simply composes a string, and the function takes the result and updates a text field. 
+
+What makes this work is that the macro automatically injects the script logic at the beginning of the `@:hscript`-tagged function, before any other code in the function body. Then it defines two new local variables: `script_result` and `script_error`, both of type `Dynamic`. In this particular function, we feed `script_result` into `score.text`.
+
+**NOTE:** _If your function returns something other than `Void`, the macro will inject a `return script_result;` line at the end of your function, *after* any code you supply. If you want to return something other than `script_result` with your own logic,  be sure to provide your own `return` line to force an early return that skips the macro's injected one.
 
 ### Handling errors
 
-If you're exposing scripts in your project, that means someone can change the game's logic at runtime, which means they could screw something up, and you might want your application to handle it gracefully, or at least give the user some feedback about what they did wrong.
+If you're exposing scripts in your project, that means someone can change the game's logic at runtime, which means they can and will screw something up, which means *errors*.
+
+You probably want your application to handle them gracefully, or at least give the user some feedback about what went wrong.
 
 ```haxe
 @:hscript(Std, Math, numFlowers, numBees, distTest, makeFlower, makeHome, makeBee, home)
@@ -449,7 +456,9 @@ private function init():Void
 }
 ```
 
-As mentioned before, the macro will inject a local `script_error` variable along with the rest of the boilerplate. If there was a problem with the script (typically: it couldn't load, or the script itself threw an error), this variable will be set. Note that there is no point in using a try/catch block, because the macro has already done that for you and caught the result, which is now stored in `script_error`. If `script_error` is null it can be safely ignored. Handling errors in this way at all is purely optional, but recommended.
+As mentioned before, the macro will inject a local `script_error` variable along with the rest of the boilerplate. If there was a problem with the script (typically: it couldn't load, or the script itself threw an error), this variable will be set. Note that there is no point in using your own try/catch block; the macro has already done that for you and caught the result, which is now stored in `script_error`. If `script_error` is null it can be safely ignored.
+
+Handling errors at all is purely optional, but recommended.
 
 # Best Practices
 
