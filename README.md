@@ -264,7 +264,7 @@ There are two ways to support scripting using Polymod:
 2. Use Polymod's `HScriptable` interface
 
 ## Do it yourself
-You don't need a dedicated scripting framework to get moddable scripts. So long as your script files are part of your asset library, they can be replaced or modified like any other text file, and it doesn't even matter what scripting language you choose. This is a potential [footgun](https://en.wiktionary.org/wiki/footgun), however, so unless you really know what you're doing, I generally recommend using Polymod's built-in support for scripting.
+You don't need a dedicated scripting framework to get moddable scripts. So long as your script files are part of your asset library, they can be replaced or modified like any other text file, and it doesn't even matter what scripting language you choose. This is a potential [footgun](https://en.wiktionary.org/wiki/footgun) for newcomers, however, so unless you already know what you're doing, I generally recommend using Polymod's built-in support for scripting.
 
 ## Use Polymod's `HScriptable` interface
 Polymod provides an optional interface called `HScriptable` that will use some macro magic to automatically bind targeted functions to [hscript](https://github.com/HaxeFoundation/hscript) scripts. 
