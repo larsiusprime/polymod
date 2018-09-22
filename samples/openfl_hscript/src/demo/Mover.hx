@@ -1,3 +1,5 @@
+package demo;
+
 import openfl.display.Sprite;
 import lime.math.Vector2;
 

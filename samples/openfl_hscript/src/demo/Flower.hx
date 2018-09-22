@@ -1,3 +1,5 @@
+package demo;
+
 import openfl.display.Sprite;
 import openfl.display.Bitmap;
 import openfl.utils.Assets;

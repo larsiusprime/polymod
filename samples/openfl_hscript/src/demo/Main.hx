@@ -1,4 +1,4 @@
-package;
+package demo;
 
 import openfl.Assets;
 import lime.utils.AssetType;
@@ -6,6 +6,7 @@ import openfl.display.Sprite;
 import openfl.Lib;
 import polymod.library.ModAssetLibrary;
 import polymod.Polymod;
+import polymod.hscript.HScriptConfig;
 import openfl.events.KeyboardEvent;
 import openfl.text.TextField;
 
@@ -21,6 +22,7 @@ class Main extends Sprite
 	
 	public function new() 
 	{
+		HScriptConfig.rootPath = "data/scripts/";
 		super();
 		mods = [];
 		loadDemo();

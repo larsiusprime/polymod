@@ -90,7 +90,7 @@ class HScriptMacro
             constructor_setup.push(macro
             {
               #if POLYMOD_DEBUG trace("Polymod: Loading hscript "+$v{ field.name }); #end
-              _polymod_scripts.load($v{ field.name }, Assets.getText("data/"+$v{ field.name }+".txt"));
+              _polymod_scripts.load($v{ field.name }, Assets.getText(polymod.hscript.HScriptConfig.rootPath+$v{ field.name }+".txt"));
             });
 
           default: Context.error("Error: The @:hscript meta is only allowed on functions", field.pos);

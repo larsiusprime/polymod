@@ -6,7 +6,7 @@
 	<meta title="OpenFLSample" package="OpenFLSample" version="1.0.0" company="" />
 	
 	<!-- output -->
-	<app main="Main" file="OpenFLSample" path="bin" />
+	<app main="demo.Main" file="OpenFLSample" path="bin" />
 	
 	<window background="#008800" fps="60" />
 	<window width="800" height="480" unless="mobile" />

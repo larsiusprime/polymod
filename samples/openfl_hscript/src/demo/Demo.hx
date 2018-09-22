@@ -1,4 +1,5 @@
-package;
+package demo;
+
 import flash.display.DisplayObject;
 import flash.text.TextFieldType;
 import openfl.Assets;

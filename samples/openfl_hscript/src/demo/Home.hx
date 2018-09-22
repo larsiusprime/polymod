@@ -1,21 +1,17 @@
+package demo;
+
 import openfl.display.Sprite;
 import openfl.display.Bitmap;
 import openfl.utils.Assets;
 
-class Bee extends Mover
+class Home extends Sprite
 {   
-    public var flower:Flower;
-    public var pollen:Float;
-    public var maxPollen:Float;
-    public var turnsSearching:Int = 0;
-
+    public var honey:Float = 0;
+    
     public function new()
     {
         super();
-
-        speed = 100;
-
-        var bmp = new Bitmap(Assets.getBitmapData("img/bee.png"));
+        var bmp = new Bitmap(Assets.getBitmapData("img/honey.png"));
         addChild(bmp);
         
         bmp.scaleX = 0.5;
@@ -24,4 +20,5 @@ class Bee extends Mover
         bmp.y -= bmp.height/2;
         bmp.smoothing = true;
     }
+
 }
