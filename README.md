@@ -293,7 +293,9 @@ private function doSomething() { }
 data/doSomething.txt
 ```
 
-(Right now the asset path is hardcoded to the "data" folder, no namespacing prefixes are applied, and the file extension it looks for is ".txt". We plan on making all of these more flexible in the future.)
+The default asset path is the top-level "data" folder in your assets library, and the file extension it looks for is ".txt". You can change this by modifying the public static variables in `polymod.hscript.HScriptConfig`. Be sure to do this *before* instantiating any class that implements `polymod.hscript.HScriptable`!
+
+**NOTE:** _as of right now, no namespacing prefixes are applied, and the file extension it looks for is ".txt". We plan on making these configurable in the near future._
 
 When you do all of the above steps, "doSomething.txt" will be parsed during `MyClass`'s constructor, and when `MyClass.doSomething()` is run, the parsed hscript representation of `doSomething.txt` will be executed.
 
