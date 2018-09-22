@@ -293,7 +293,7 @@ private function doSomething() { }
 data/doSomething.txt
 ```
 
-The default asset path is the top-level "data" folder in your assets library, and the file extension it looks for is ".txt". You can change this by modifying the public static variables in `polymod.hscript.HScriptConfig`. Be sure to do this *before* instantiating any class that implements `polymod.hscript.HScriptable`!
+The default asset path is the top-level "data" folder in your assets library. You can change this by modifying the public static variables in `polymod.hscript.HScriptConfig`. Be sure to do this *before* instantiating any class that implements `polymod.hscript.HScriptable`!
 
 **NOTE:** _as of right now, no namespacing prefixes are applied, and the file extension it looks for is ".txt". We plan on making these configurable in the near future._
 
