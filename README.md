@@ -288,14 +288,14 @@ This class should include some functions you intend to expose to hscript files.
 private function doSomething() { }
 ```
 
-### 3. Provide an hscript file matching the function's name:
+### 3. Provide an hscript file matching the function's module & name:
 ```
-data/doSomething.txt
+data/demo/Simulation/doSomething.txt
 ```
 
-The default asset path is the top-level "data" folder in your assets library. You can change this by modifying the public static variables in `polymod.hscript.HScriptConfig`. Be sure to do this *before* instantiating any class that implements `polymod.hscript.HScriptable`!
+The default root search path for scripts is the top-level "data" folder in your assets library. You can change this by modifying the public static variables in `polymod.hscript.HScriptConfig`. Be sure to do this *before* instantiating any class that implements `polymod.hscript.HScriptable`! You can also toggle on using the function's namespace module as a directory prefix (it's on by default). In this example, the file path `demo/Simulation/doSomething` corresponds with the function's fully qualified path in the Haxe namespace, `demo.Simulation.doSomething`. The casing from your code is reflected in the search path, so be aware of that on case-sensitive file systems (hello Linux!).
 
-**NOTE:** _as of right now, no namespacing prefixes are applied, and the file extension it looks for is ".txt". We plan on making these configurable in the near future._
+**NOTE:** _as of right now the file extension it looks for is ".txt". We plan on making this configurable in the near future._
 
 When you do all of the above steps, "doSomething.txt" will be parsed during `MyClass`'s constructor, and when `MyClass.doSomething()` is run, the parsed hscript representation of `doSomething.txt` will be executed.
 
@@ -303,9 +303,9 @@ When you do all of the above steps, "doSomething.txt" will be parsed during `MyC
 
 We shall use as our example the `openfl_hscript` sample included with Polymod, depicted above. For context, this is a simple simulation containing a field of flowers, some honeybees, and a "home" depicted by a honeypot. Bees will seek out flowers, drain them of pollen, return home, deposit the pollen as honey (updating the score), and then seek a new flower. We would like to expose various aspects of this behavior to scripts, so that users can change the behavior.
 
-First, note that the `Demo` class implements `HScriptable`:
+First, note that the `Simulation` class implements `HScriptable`:
 ```haxe
-class Demo extends Sprite implements polymod.hscript.HScriptable
+class Simulation extends Sprite implements polymod.hscript.HScriptable
 ```
 
 ### Simple function
@@ -325,7 +325,7 @@ flower.alpha = 0.25;
 
 For context, this function runs when a bee visits a flower, touches it, and gains pollen. The default script will remove pollen from the flower, start a cooldown timer, and make it appear faded to indicate that it's depleted.
 
-Note that the function body is empty. The macro will inject all the necessary boilerplate to load the `emptyFlower.txt` script file during the `Demo` class's constructor, and at runtime when `emptyFlower()` is called, the `flower:Flower` parameter will be passed in to the script as a local variable. So the final `emptyFlower()` function post macro-injection actually looks something like this:
+Note that the function body is empty. The macro will inject all the necessary boilerplate to load the `emptyFlower.txt` script file during the `Simulation` class's constructor, and at runtime when `emptyFlower()` is called, the `flower:Flower` parameter will be passed in to the script as a local variable. So the final `emptyFlower()` function post macro-injection actually looks something like this:
 
 ```haxe
 private function emptyFlower(flower:Flower)
