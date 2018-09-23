@@ -18,7 +18,7 @@ import sys.FileSystem;
  * ...
  * @author 
  */
-class Demo extends Sprite implements polymod.hscript.HScriptable
+class Simulation extends Sprite implements polymod.hscript.HScriptable
 {
 	private var bees:Array<Bee>;
 	private var flowers:Array<Flower>;

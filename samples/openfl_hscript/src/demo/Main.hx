@@ -16,7 +16,7 @@ import openfl.text.TextField;
  */
 class Main extends Sprite 
 {
-	private var demo:Demo=null;
+	private var sim:Simulation=null;
 	private var mods:Array<String> = null;
 	private var activeMods:Array<ModMetadata> = [];
 	
@@ -80,8 +80,8 @@ class Main extends Sprite
 
 	private function reset()
 	{
-		demo.destroy();
-		removeChild(demo);
+		sim.destroy();
+		removeChild(sim);
 		for(i in 0...numChildren)
 		{
 			removeChildAt(0);
@@ -92,8 +92,8 @@ class Main extends Sprite
 
 	private function loadDemo()
 	{
-		demo = new Demo();
-		addChild(demo);
+		sim = new Simulation();
+		addChild(sim);
 	}
 
 	private function loadMods()

@@ -60,6 +60,14 @@ class HScriptMacro
                 macro return script_result;
             }
 
+            var pathName = field.name;
+            if(polymod.hscript.HScriptConfig.useNamespaceInPaths)
+            {
+              var module:String = Context.getLocalModule();
+              module = StringTools.replace(module,".","/");
+              pathName = $v{module + "/" + pathName};
+            }
+
             // Alter the function body:
             func.expr = macro
             {
@@ -67,14 +75,14 @@ class HScriptMacro
               var script_result:Dynamic = null;
               try
               {
-                var script = _polymod_scripts.get($v{ field.name });
-                #if POLYMOD_DEBUG if (script==null) throw "Did not find hscript: "+$v{ field.name }; #end
+                var script = _polymod_scripts.get($v{ pathName });
+                #if POLYMOD_DEBUG if (script==null) throw "Did not find hscript: "+$v{ pathName }; #end
                 $b{ setters };
                 script_result = script.execute();
               }
               catch (e:Dynamic)
               {
-                #if POLYMOD_DEBUG trace("Error: script "+$v{ field.name }+" threw:\n"+e); #end
+                #if POLYMOD_DEBUG trace("Error: script "+$v{ pathName }+" threw:\n"+e); #end
                 script_error = e;
               }
               ${ func.expr };
@@ -89,8 +97,9 @@ class HScriptMacro
             }
             constructor_setup.push(macro
             {
-              #if POLYMOD_DEBUG trace("Polymod: Loading hscript "+$v{ field.name }); #end
-              _polymod_scripts.load($v{ field.name }, Assets.getText(polymod.hscript.HScriptConfig.rootPath+$v{ field.name }+".txt"));
+              
+              #if POLYMOD_DEBUG trace("Polymod: Loading hscript "+$v{ pathName }); #end
+              _polymod_scripts.load($v{ pathName }, Assets.getText(polymod.hscript.HScriptConfig.rootPath+$v{ pathName }+".txt"));
             });
 
           default: Context.error("Error: The @:hscript meta is only allowed on functions", field.pos);
