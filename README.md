@@ -293,7 +293,7 @@ private function doSomething() { }
 data/demo/Simulation/doSomething.txt
 ```
 
-The default root search path for scripts is the top-level "data" folder in your assets library. You can change this by modifying the public static variables in `polymod.hscript.HScriptConfig`. Be sure to do this *before* instantiating any class that implements `polymod.hscript.HScriptable`! You can also toggle on using the function's namespace module as a directory prefix (it's on by default). In this example, the file path `demo/Simulation/doSomething` corresponds with the function's fully qualified path in the Haxe namespace, `demo.Simulation.doSomething`. The casing from your code is reflected in the search path, so be aware of that on case-sensitive file systems (hello Linux!).
+The default root search path for scripts is the top-level "data" folder in your assets library. You can change this by modifying the public static variables in `polymod.hscript.HScriptConfig`. Be sure to do this *before* instantiating any class that implements `polymod.hscript.HScriptable`! You can also toggle whether to use the function's fully qualified path as a directory prefix (this behavior is on by default). In this example, the file path `demo/Simulation/doSomething` corresponds with the function's fully qualified path in the Haxe namespace, `demo.Simulation.doSomething`. The casing from your code is reflected in the search path, so be aware of that on case-sensitive file systems (hello Linux!).
 
 **NOTE:** _as of right now the file extension it looks for is ".txt". We plan on making this configurable in the near future._
 
