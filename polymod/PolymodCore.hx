@@ -406,24 +406,12 @@ class PolymodCore
 		return null;
 	}
 
-	// TODO (DK)
 	private static function clearCache()
 	{
-		// if (defaultLibrary != null)
-		// {
-		// 	for (key in LimeAssets.cache.audio.keys())
-		// 	{
-		// 		LimeAssets.cache.audio.remove(key);
-		// 	}
-		// 	for (key in LimeAssets.cache.font.keys())
-		// 	{
-		// 		LimeAssets.cache.font.remove(key);
-		// 	}
-		// 	for (key in LimeAssets.cache.image.keys())
-		// 	{
-		// 		LimeAssets.cache.image.remove(key);
-		// 	}
-		// }
+		if (defaultLibrary != null)
+		{
+			PolymodAssets.clearCache();
+		}
 	}
 }
 
