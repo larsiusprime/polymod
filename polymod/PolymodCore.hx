@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2018 Level Up Labs, LLC
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
@@ -10,7 +10,7 @@
  *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -18,25 +18,15 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
- * 
+ *
  */
- 
+
 package polymod;
-import lime.utils.AssetLibrary;
-import lime.utils.AssetType;
-import polymod.library.ModAssetLibrary;
+
 import polymod.library.JsonHelp;
+import polymod.library.ModAssetLibrary;
 import polymod.library.SemanticVersion;
 import polymod.library.Util.MergeRules;
-import openfl.display.BitmapData;
-
-import lime.utils.Assets in LimeAssets;
-import openfl.utils.Assets;
-
-#if sys
-import sys.FileSystem;
-import sys.io.File;
-#end
 
 typedef PolymodParams = {
 	/**
@@ -78,14 +68,14 @@ typedef PolymodParams = {
 
 /**
  * ...
- * @author 
+ * @author
  */
-class Polymod
+class PolymodCore
 {
 	public static var onError:PolymodError->Void = null;
 	private static var defaultLibrary:AssetLibrary = null;
 	private static var modLibrary:ModAssetLibrary = null;
-	
+
 	public static function getDefaultIgnoreList():Array<String>
 	{
 		return ["_polymod_meta.json","_polymod_icon.png","_polymod_pack.txt","ASSET_LICENSE.txt","CODE_LICENSE.txt","LICENSE.txt"];
@@ -100,7 +90,6 @@ class Polymod
 	 */
 	public static function scan(modRoot:String, ?apiVersionStr:String="*.*.*", ?errorCallback:PolymodError->Void):Array<ModMetadata>
 	{
-		#if sys
 		onError = errorCallback;
 		var apiVersion:SemanticVersion = null;
 		try
@@ -109,24 +98,24 @@ class Polymod
 		}
 		catch(msg:Dynamic)
 		{
-			Polymod.error(PARSE_API_VERSION,"Error parsing api version: ("+Std.string(msg)+")");
+			error(PARSE_API_VERSION,"Error parsing api version: ("+Std.string(msg)+")");
 			return [];
 		}
 
 		var modMeta = [];
 
-		if(!FileSystem.exists(modRoot) || !FileSystem.isDirectory(modRoot))
+		if(!PolymodFileSystem.exists(modRoot) || !PolymodFileSystem.isDirectory(modRoot))
 		{
 			return modMeta;
 		}
-		var dirs = FileSystem.readDirectory(modRoot);
+		var dirs = PolymodFileSystem.readDirectory(modRoot);
 		var l = dirs.length;
 		for(i in 0...l)
 		{
 			var j = l-i-1;
 			var dir = dirs[j];
 			var testDir = modRoot+"/"+dir;
-			if(!FileSystem.isDirectory(testDir) || !FileSystem.exists(testDir))
+			if(!PolymodFileSystem.isDirectory(testDir) || !PolymodFileSystem.exists(testDir))
 			{
 				dirs.splice(j,1);
 			}
@@ -139,14 +128,14 @@ class Polymod
 				var origDir = dirs[i];
 				dirs[i] = modRoot + "/" + dirs[i];
 				var meta:ModMetadata = getMetadata(dirs[i]);
-				
+
 				if(meta != null)
 				{
 					meta.id = origDir;
 					var apiScore = meta.apiVersion.checkCompatibility(apiVersion);
 					if(apiScore < 3)
 					{
-						Polymod.error(VERSION_CONFLICT_API, "Mod \""+origDir+"\" was built for incompatible API version " + meta.apiVersion.toString() + ", current API version is " + apiVersion.toString());
+						error(VERSION_CONFLICT_API, "Mod \""+origDir+"\" was built for incompatible API version " + meta.apiVersion.toString() + ", current API version is " + apiVersion.toString());
 					}
 					modMeta.push(meta);
 				}
@@ -154,10 +143,8 @@ class Polymod
 		}
 
 		return modMeta;
-		#end
-		return [];
 	}
-	
+
 	/**
 	 * Initializes the chosen mod or mods.
 	 * @param	params initialization parameters
@@ -174,21 +161,21 @@ class Polymod
 		{
 			if (defaultLibrary != null)
 			{
-				LimeAssets.registerLibrary("default", defaultLibrary);
+				PolymodAssets.registerLibrary("default", defaultLibrary);
 			}
 			else
 			{
 				return [];
 			}
 		}
-		
+
 		if (defaultLibrary == null)
 		{
-			defaultLibrary = LimeAssets.getLibrary("default");
+			defaultLibrary = PolymodAssets.getLibrary("default");
 		}
-		
+
 		clearCache();
-		
+
 		var apiVersion:SemanticVersion = null;
 		try
 		{
@@ -200,7 +187,7 @@ class Polymod
 		}
 		catch(msg:Dynamic)
 		{
-			Polymod.error(PARSE_API_VERSION,"Error parsing api version: ("+Std.string(msg)+")");
+			error(PARSE_API_VERSION,"Error parsing api version: ("+Std.string(msg)+")");
 			return [];
 		}
 
@@ -218,7 +205,7 @@ class Polymod
 				}
 				catch(msg:Dynamic)
 				{
-					Polymod.error(PARAM_MOD_VERSION,"There was an error with one of the mod version patterns you provided: " + msg);
+					error(PARAM_MOD_VERSION,"There was an error with one of the mod version patterns you provided: " + msg);
 					semVer = SemanticVersion.fromString("*.*.*");
 				}
 				modVers.push(semVer);
@@ -232,14 +219,14 @@ class Polymod
 				var origDir = dirs[i];
 				dirs[i] = modRoot + "/" + dirs[i];
 				var meta:ModMetadata = getMetadata(dirs[i]);
-				
+
 				if(meta != null)
 				{
 					meta.id = origDir;
 					var apiScore = meta.apiVersion.checkCompatibility(apiVersion);
 					if(apiScore < 3)
 					{
-						Polymod.error(VERSION_CONFLICT_API, "Mod \""+origDir+"\" was built for incompatible API version " + meta.apiVersion.toString() + ", current API version is " + params.apiVersion.toString());
+						error(VERSION_CONFLICT_API, "Mod \""+origDir+"\" was built for incompatible API version " + meta.apiVersion.toString() + ", current API version is " + params.apiVersion.toString());
 					}
 					var modVer = modVers.length > i ? modVers[i] : null;
 					if(modVer != null)
@@ -247,7 +234,7 @@ class Polymod
 						var score = modVer.checkCompatibility(meta.modVersion);
 						if(score < 3)
 						{
-							Polymod.error(VERSION_CONFLICT_MOD, "Mod pack wants version " + modVer.toString() + " of mod("+meta.id+"), found incompatible version " + meta.modVersion.toString() + " instead");
+							error(VERSION_CONFLICT_MOD, "Mod pack wants version " + modVer.toString() + " of mod("+meta.id+"), found incompatible version " + meta.modVersion.toString() + " instead");
 						}
 					}
 					modMeta.push(meta);
@@ -262,7 +249,7 @@ class Polymod
 			mergeRules:params.mergeRules,
 			ignoredFiles:params.ignoredFiles
 		});
-		LimeAssets.registerLibrary("default", modLibrary);
+		PolymodAssets.registerLibrary("default", modLibrary);
 		/*
 		if(Assets.exists("_polymod_pack.txt"))
 		{
@@ -299,35 +286,34 @@ class Polymod
 
 	private static function getMetadata(dir:String):ModMetadata
 	{
-		#if sys
-		if(FileSystem.exists(dir))
+		if(PolymodFileSystem.exists(dir))
 		{
 			var meta:ModMetadata = null;
-			
+
 			var metaFile = dir+"/_polymod_meta.json";
 			var iconFile = dir+"/_polymod_icon.png";
 			var packFile = dir+"/_polymod_pack.txt";
-			if(!FileSystem.exists(metaFile))
+			if(!PolymodFileSystem.exists(metaFile))
 			{
 				warning(MISSING_META,"Could not find mod metadata file: \""+metaFile+"\"");
 			}
 			else
 			{
-				var metaText = File.getContent(metaFile);
+				var metaText = PolymodFileSystem.getFileContent(metaFile);
 				meta = ModMetadata.fromJsonStr(metaText);
 			}
-			if(!FileSystem.exists(iconFile))
+			if(!PolymodFileSystem.exists(iconFile))
 			{
 				warning(MISSING_ICON,"Could not find mod icon file: \""+iconFile+"\"");
 			}
 			else
 			{
-				meta.icon = BitmapData.fromFile(iconFile);
+				// meta.icon = BitmapData.fromFile(iconFile); // TODO (DK)
 			}
-			if(FileSystem.exists(packFile))
+			if(PolymodFileSystem.exists(packFile))
 			{
 				meta.isModPack = true;
-				var packText = File.getContent(packFile);
+				var packText = PolymodFileSystem.getFileContent(packFile);
 				meta.modPack = getModPack(packText);
 			}
 			return meta;
@@ -336,28 +322,29 @@ class Polymod
 		{
 			error(MISSING_MOD,"Could not find mod directory: \""+dir+"\"");
 		}
-		#end
 		return null;
 	}
 
+	// TODO (DK) shouldn't be publicly exposed IMO?
 	/**
 	 * Get the asset library that Polymod uses as a fallback for assets your
 	 * mod doesn't provide
 	 * @return AssetLibrary
 	 */
-	public static function getDefaultLibrary():AssetLibrary
-	{
-		return defaultLibrary;
-	}
+	// public static function getDefaultLibrary():AssetLibrary
+	// {
+	// 	return defaultLibrary;
+	// }
 
+	// TODO (DK) shouldn't be publicly exposed IMO?
 	/**
 	 * Get the mod asset library that Polymod sets as your default asset library
 	 * @return ModAssetLibrary
 	 */
-	public static function getModLibrary():ModAssetLibrary
-	{
-		return modLibrary;
-	}
+	// public static function getModLibrary():ModAssetLibrary
+	// {
+	// 	return modLibrary;
+	// }
 
 	/**
 	 * Provide a list of assets included in or modified by the mod(s)
@@ -375,9 +362,10 @@ class Polymod
 
 	/***PRIVATE***/
 
+	// TODO (DK)
 	private static function initModPack(params:PolymodParams)
 	{
-		var polymodpack:String = Assets.getText("_polymod_pack.txt");
+		var polymodpack:String = null;//Assets.getText("_polymod_pack.txt");
 		if(polymodpack != null)
 		{
 			var data = getModPack(polymodpack);
@@ -417,24 +405,25 @@ class Polymod
 		}
 		return null;
 	}
-	
+
+	// TODO (DK)
 	private static function clearCache()
 	{
-		if (defaultLibrary != null)
-		{
-			for (key in LimeAssets.cache.audio.keys())
-			{
-				LimeAssets.cache.audio.remove(key);
-			}
-			for (key in LimeAssets.cache.font.keys())
-			{
-				LimeAssets.cache.font.remove(key);
-			}
-			for (key in LimeAssets.cache.image.keys())
-			{
-				LimeAssets.cache.image.remove(key);
-			}
-		}
+		// if (defaultLibrary != null)
+		// {
+		// 	for (key in LimeAssets.cache.audio.keys())
+		// 	{
+		// 		LimeAssets.cache.audio.remove(key);
+		// 	}
+		// 	for (key in LimeAssets.cache.font.keys())
+		// 	{
+		// 		LimeAssets.cache.font.remove(key);
+		// 	}
+		// 	for (key in LimeAssets.cache.image.keys())
+		// 	{
+		// 		LimeAssets.cache.image.remove(key);
+		// 	}
+		// }
 	}
 }
 
@@ -448,7 +437,7 @@ class ModMetadata
 	public var modVersion:SemanticVersion;
 	public var license:String;
 	public var licenseRef:String;
-	public var icon:BitmapData;
+	// public var icon:BitmapData; // TODO (DK)
 	public var isModPack:Bool;
 	public var modPack:{mods:Array<String>,versions:Array<String>};
 
@@ -469,7 +458,7 @@ class ModMetadata
 		}
 		catch(msg:Dynamic)
 		{
-			Polymod.error(PARSE_MOD_API_VERSION,"Error parsing api version: ("+Std.string(msg)+") _polymod_meta.json was : " + str);
+			PolymodCore.error(PARSE_MOD_API_VERSION,"Error parsing api version: ("+Std.string(msg)+") _polymod_meta.json was : " + str);
 			return null;
 		}
 		try
@@ -478,7 +467,7 @@ class ModMetadata
 		}
 		catch(msg:Dynamic)
 		{
-			Polymod.error(PARSE_MOD_VERSION,"Error parsing mod version: ("+Std.string(msg)+") _polymod_meta.json was : " + str);
+			PolymodCore.error(PARSE_MOD_VERSION,"Error parsing mod version: ("+Std.string(msg)+") _polymod_meta.json was : " + str);
 			return null;
 		}
 		m.license = JsonHelp.str(json, "license");
