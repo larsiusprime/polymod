@@ -38,6 +38,8 @@ class OpenFLBackend implements IBackend extends OpenFLAssetLibrary
     public var modLibrary:OpenFLAssetLibrary;
     public var fallback:OpenFLAssetLibrary;
     
+    private var hasFallback:Bool = false;
+
     function new(fallback:OpenFLAssetLibrary) 
     {
         #if !openfl
@@ -45,20 +47,43 @@ class OpenFLBackend implements IBackend extends OpenFLAssetLibrary
         #end
         modLibrary = new OpenFLAssetLibrary();
         this.fallback = fallback;
+        hasFallback = this.fallback != null;
     }
 
-    public function getText(id:String, fallback:Bool=false):String
-    {
-        if(fallback) return fallback.getText(id);
-        return modLibrary.getText(id);
+    public function getText(id:String):String { return modLibrary.getText(id);}   //returns String
+    public function getBytes(id:String) { return modLibrary.getBytes(id); }       //returns lime.util.Bytes (abstract over Haxe Bytes)
+    public function getImage(id:String) { return modLibrary.getImage(id); }       //returns lime.graphics.Image
+    public function getFont(id:String){ return modLibrary.getFont(id); }          //returns lime.text.Font
+    public function getAudio(id:String) { return modLibrary.getAudioBuffer(id); } //returns lime.audio.AudioBuffer
+    public function getVideo(id:String) {
+        //should put a warning here probably 
+        return getBytes(id);                                                      //video not supported as an asset type in OpenFL, just returns raw bytes
+    }                  
+        
+    public function getTextFallback(id:String):String { 
+        if(!hasFallback) return null;
+        return fallback.getText(id);
     }
-
-    public function getBytes(id:String, fallback:Bool=false){}
-    public function getImage(id:String, fallback:Bool=false){}
-    public function getAudio(id:String, fallback:Bool=false){}
-    public function getVideo(id:String, fallback:Bool=false){}
-    public function getFont(id:String, fallback:Bool=false){}
-    
-    
+    public function getBytesFallback(id:String) { 
+        if(!hasFallback) return null;
+        return fallback.getBytes(id);
+    }
+    public function getImageFallback(id:String) { 
+        if(!hasFallback) return null;
+        return fallback.getImage(id);
+    }
+    public function getFontFallback(id:String) {
+        if(!hasFallback) return null;
+        return fallback.getFont(id);
+    }
+    public function getAudioFallback(id:String) {
+        if(!hasFallback) return null;
+        return fallback.getAudioBuffer(id);
+    }
+    public function getVideoFallback(id:String) {
+        if(!hasFallback) return null;
+        //should put a warning here probably 
+        return fallback.getBytes(id);
+    }  
 }
 
