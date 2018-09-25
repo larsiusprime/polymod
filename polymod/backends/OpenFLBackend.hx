@@ -7,6 +7,7 @@ package polymod.backends;
     import lime.app.Future;
     import lime.utils.Assets in LimeAssets;
     import openfl.utils.Assets in OpenFLAssets;
+    import openfl.display.AssetLibrary in OpenFLAssetLibrary;
     import lime.net.HTTPRequest;
     import lime.graphics.Image;
     import lime.text.Font;
@@ -28,20 +29,36 @@ package polymod.backends;
     import lime.audio.AudioBuffer;
     import lime.Assets.AssetType;
     #end
+#else
+    typedef OpenFLAssetLibrary = Dynamic;
 #end
 
-class OpenFLBackend implements IBackend
+class OpenFLBackend implements IBackend extends OpenFLAssetLibrary
 {
-    #if openfl
-
-
-
-    function new() {}
-    #else
-    function new()
+    public var modLibrary:OpenFLAssetLibrary;
+    public var fallback:OpenFLAssetLibrary;
+    
+    function new(fallback:OpenFLAssetLibrary) 
     {
+        #if !openfl
         throw "OpenFLBackend: needs the openfl library!";
+        #end
+        modLibrary = new OpenFLAssetLibrary();
+        this.fallback = fallback;
     }
-    #end
+
+    public function getText(id:String, fallback:Bool=false):String
+    {
+        if(fallback) return fallback.getText(id);
+        return modLibrary.getText(id);
+    }
+
+    public function getBytes(id:String, fallback:Bool=false){}
+    public function getImage(id:String, fallback:Bool=false){}
+    public function getAudio(id:String, fallback:Bool=false){}
+    public function getVideo(id:String, fallback:Bool=false){}
+    public function getFont(id:String, fallback:Bool=false){}
+    
+    
 }
 
