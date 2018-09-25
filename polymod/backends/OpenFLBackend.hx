@@ -32,6 +32,7 @@ package polymod.backends;
 #else
     typedef OpenFLAssetLibrary = Dynamic;
 #end
+import polymod.PolymodAssets.AssetType in PolymodAssetType;
 
 class OpenFLBackend implements IBackend extends OpenFLAssetLibrary
 {
@@ -50,10 +51,27 @@ class OpenFLBackend implements IBackend extends OpenFLAssetLibrary
         hasFallback = this.fallback != null;
     }
 
+    public function checkType(id:String):PolymodAssetType
+    {
+        if(!hasFallback) return PolymodAssetType.UNKNOWN;
+        var type:AssetType = @:privateAccess fallback.types.get(id);
+        return switch(type)
+        {
+            case BINARY: PolymodAssetType.BYTES;
+            case FONT: PolymodAssetType.FONT;
+            case IMAGE: PolymodAssetType.IMAGE;
+            case MUSIC: PolymodAssetType.AUDIO_MUSIC;
+            case SOUND: PolymodAssetType.AUDIO_SOUND;
+            case MANIFEST: PolymodAssetType.MANIFEST;
+            case TEMPLATE: PolymodAssetType.TEMPLATE;
+            case TEXT: PolymodAssetType.TEXT;
+            default: PolymodAssetType.UNKNOWN;
+        }
+    }
     public function getText (id:String):String { return modLibrary.getText(id);}   //returns String
     public function getBytes (id:String) { return modLibrary.getBytes(id); }       //returns lime.util.Bytes (abstract over Haxe Bytes)
     public function getImage (id:String) { return modLibrary.getImage(id); }       //returns lime.graphics.Image
-    public function getFont (id:String)  { return modLibrary.getFont(id); }          //returns lime.text.Font
+    public function getFont (id:String)  { return modLibrary.getFont(id); }        //returns lime.text.Font
     public function getAudio (id:String) { return modLibrary.getAudioBuffer(id); } //returns lime.audio.AudioBuffer
     public function getVideo (id:String) 
     {

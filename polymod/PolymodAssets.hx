@@ -94,9 +94,14 @@ enum AssetType
     BYTES;
     TEXT;
     IMAGE;
-    AUDIO;
     VIDEO;
     FONT;
+    AUDIO_GENERIC;
+    AUDIO_MUSIC;
+    AUDIO_SOUND;
+    MANIFEST;
+    TEMPLATE;
+    UNKNOWN;
 }
 
 enum TextFileFormat

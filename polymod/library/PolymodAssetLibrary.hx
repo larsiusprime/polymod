@@ -7,6 +7,7 @@ import polymod.PolymodAssets.ModAssetLibraryParams;
 class PolymodAssetLibrary
 {
     private var backend:IBackend;
+    private var fileSystem:IFileSystem;
 
     private var type(default, null) = new Map<String, AssetType>();
 
@@ -16,9 +17,10 @@ class PolymodAssetLibrary
 	private var mergeRules:MergeRules = null;
 	private var ignoredFiles:Array<String> = null;
 
-    public function new(backend:IBackend, params:ModAssetLibraryParams)
+    public function new(params:ModAssetLibraryParams)
     {
-        this.backend = backend;
+        this.backend = params.backend;
+        this.fileSystem = params.fileSystem;
         dir = params.dir;
         if (params.dirs != null)
         {
@@ -88,14 +90,7 @@ class PolymodAssetLibrary
 		
 		if (checkDirectly(directory,id))
 		{
-            //refactor this better
-            /*
-            #if (openfl >= "8.0.0")
-			bytes = Bytes.fromFile (file(id, directory));
-			#else
-			bytes = Bytes.readFile (file(id, directory));
-			#end
-            */
+            bytes = filesystem.getText(id);
 		}
 		else if (fallBackToDefault)
 		{
@@ -114,16 +109,155 @@ class PolymodAssetLibrary
 		return null;
 	}
 
+   	public function getFont (id:String):Font
+	{
+        //TODO: cache font
+
+		if (check(id))
+		{
+            return backend.getFontFromFile(id);
+		}
+		else if (fallBackToDefault)
+		{
+			return backend.getFontFallback(id);
+		}
+		return null;
+	}
+
     public function getBytes(id:String)
     { 
+        //TODO: cache bytes
+
         if (check(id))
         {
-            return backend.getBytes(id)
+            return backend.getBytesFromFile(id)
         }
-        //return backend.getBytes(id);
+        else if (fallbackToDefault)
+        {
+            return backend.getBytesFallback(id);
+        }
     }
-    public function getImage(id:String) { return backend.getImage(id); }
-    public function getAudio(id:String) { return backend.getAudio(id); }
-    public function getVideo(id:String) { return backend.getVideo(id); }
-    public function getFont(id:String) { return backend.getFont(id); }
+    
+    public function getImage(id:String)
+    {
+        //TODO: cache image
+
+        if (check(id))
+        {
+            return backend.getImageFromFile(id);
+        }
+        else if (fallbackToDefault)
+        {
+            return backend.getImageFallback(id);
+        }
+    }
+
+    public function getAudio(id:String)
+    {
+        //TODO: cache audio
+
+        if (check(id))
+        {
+            return backend.getAudioFromFile(id);
+        }
+        else if (fallbackToDefault)
+        {
+            return backend.getAudioFallback(id);
+        }
+    }
+
+    public function getVideo(id:String)
+    {
+        //TODO: cache video
+
+        if (check(id))
+        {
+            return backend.getVideoFromFile(id);
+        }
+        else if (fallbackToDefault)
+        {
+            return backend.getVideoFallback(id);
+        }
+    }
+    
+    public function getFont(id:String)
+    {
+        //TODO: cache font
+
+        if (check(id))
+        {
+            return backend.getFontFromFile(id);
+        }
+        else if (fallbackToDefault)
+        {
+            return backend.getFontFallback(id);
+        }
+    }
+
+    /**
+	 * Check if the given asset exists
+	 * (If using multiple mods, it will return true if ANY of the mod folders contains this file)
+	 * @param	id
+	 * @return
+	 */
+    public function fileExists(id:String)
+    {
+        if(ignoredFiles.length > 0 && ignoredFiles.indexOf(id) != -1) return false;
+        var exists = false;
+        id = Util.stripAssetsPrefix(id);
+        if (dirs == null)
+        {
+            exists = fileSystem.exists(dir + Util.sl() + id);
+        }
+        else
+        {
+            for (d in dirs)
+            {
+                exists = fileSystem.exists(d + Util.sl() + id);
+                {
+                    exists = true;
+                }
+            }
+        }
+        if (exists && type != null && type != BINARY)
+        {
+            exists = (this.type.get(id) == type);
+        }
+        return exists;
+    }
+
+    public function checkType(id:String):AssetType
+    {
+        if (this.type.exists(id))
+		{
+			var value = this.type.get(id);
+			if (value != null)
+			{
+				return value;
+			}
+		}
+		if (fallBackToDefault)
+		{
+            return backend.checkTypeFallback(id);
+		}
+		return null;
+    }
+
+    public function checkDirectly(dir:String,id:String):Bool
+    {
+        id = Util.stripAssetsPrefix(id);
+		if (dir == null || dir == "")
+		{
+            return fileSystem.exists(id);
+		}
+		else
+		{
+			var thePath = Util.uCombine([dir, Util.sl(), id]);
+			if (fileSystem.exists(thePath))
+			{
+				return true;
+			}
+		}
+		return false;
+    }
 }

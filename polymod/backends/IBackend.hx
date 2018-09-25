@@ -2,6 +2,9 @@ package polymod.backends;
 
 interface IBackend
 {
+    //Check if the base asset set has a type defined for this asset
+    public function checkTypeFallback(id:String):Bool;
+    
     //Synchronous asset fetch from modified set:
     public function getText(id:String):String;
     public function getBytes(id:String);
