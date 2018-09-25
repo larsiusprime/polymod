@@ -1,5 +1,6 @@
 -lib heaps
 -lib hlsdl
+-lib polymod
 -hl demo.hl
 -main Main
 -D windowSize=1024x768

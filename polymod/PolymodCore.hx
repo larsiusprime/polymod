@@ -24,7 +24,6 @@
 package polymod;
 
 import polymod.library.JsonHelp;
-import polymod.library.ModAssetLibrary;
 import polymod.library.SemanticVersion;
 import polymod.library.Util.MergeRules;
 
@@ -365,7 +364,7 @@ class PolymodCore
 	// TODO (DK)
 	private static function initModPack(params:PolymodParams)
 	{
-		var polymodpack:String = null;//Assets.getText("_polymod_pack.txt");
+		var polymodpack:String = PolymodAssets.getText("_polymod_pack.txt");
 		if(polymodpack != null)
 		{
 			var data = getModPack(polymodpack);
