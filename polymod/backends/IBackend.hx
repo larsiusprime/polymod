@@ -1,25 +1,29 @@
 package polymod.backends;
 
+import polymod.PolymodAssets.PolymodAssetType;
+
 interface IBackend
 {
     //Check if the base asset set has a type defined for this asset
-    public function checkTypeFallback(id:String):Bool;
+    
+    public function checkType(id:String, useFallback:Fallback):Bool;
+    public function exists(id:String, type:AssetType, useFallback:Fallback):Bool;
+    public function getPath(id:String, useFallback:Fallback):String;
+    public function isLocal(id:String, type:AssetType, useFallback:Fallback):Bool;
+    public function list(id:String, type:AssetType, useFallback:Fallback):Bool;
     
     //Synchronous asset fetch from modified set:
-    public function getText(id:String):String;
-    public function getBytes(id:String);
-    public function getImage(id:String);
-    public function getFont(id:String);
-    public function getAudio(id:String);
-    public function getVideo(id:String);
-    
-    //Synchronous asset fetch from default unmodified set:
-    public function getTextFallback(id:String):String;
-    public function getBytesFallback(id:String);
-    public function getFontFallback(id:String);
-    public function getImageFallback(id:String);
-    public function getAudioFallback(id:String);
-    public function getVideoFallback(id:String);
+    public function getText(id:String, useFallback:Fallback):String;
+    public function getBytes(id:String, useFallback:Fallback);
+    public function getImage(id:String, useFallback:Fallback);
+    public function getFont(id:String, useFallback:Fallback);
+    public function getAudio(id:String, useFallback:Fallback);
+    public function getVideo(id:String, useFallback:Fallback);
+
+    public function getImageFromBytes(bytes:Bytes);
+    public function getFontFromBytes(bytes:Bytes);
+    public function getAudioFromBytes(bytes:Bytes);
+    public function getVideoFromBytes(bytes:Bytes);
     
     /*
     //Asynchronous asset fetch from modified set:
@@ -38,4 +42,10 @@ interface IBackend
     public function loadAudioFallback(id:String);
     public function loadVideoFallback(id:String);
     */
+}
+
+@:enum abstract Fallback(Bool) to Bool
+{
+    var FALLBACK = true;
+    var DEFAULT = false;
 }

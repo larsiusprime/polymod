@@ -4,6 +4,43 @@ import polymod.PolymodAssets.AssetType;
 import polymod.PolymodAssets.Framework;
 import polymod.PolymodAssets.ModAssetLibraryParams;
 
+typedef PolymodAssetLibraryParams = {
+   
+    backend:IBackend,
+    fileSystem:IFileSystem,
+
+   	/**
+	 * full path to the mod's root directory
+	 */
+	dir:String,
+
+	/**
+	 * (optional) if we can't find something, should we try the default asset library?
+	 */
+	//?fallback:AssetLibrary,
+
+	/**
+	 * (optional) to combine mods, provide multiple paths to several mod's root directories.
+	 * This takes precedence over the "Dir" parameter and the order matters -- mod files will load from first to last, with last taking precedence
+	 */
+	?dirs:Array<String>,
+
+	/**
+	 * (optional) formatting rules for merging various data formats
+	 */
+	?mergeRules:MergeRules,
+
+	/**
+ 	 * (optional) list of files it ignore in this mod asset library (get the fallback version instead)
+	 */
+	 ?ignoredFiles:Array<String>,
+
+     /**
+      * (optional) your own 
+      */
+     ?customBackend:Class<IBackend>
+}
+
 class PolymodAssetLibrary
 {
     private var backend:IBackend;
@@ -26,7 +63,6 @@ class PolymodAssetLibrary
         {
             dirs = params.dirs;
         }
-        backend.fallback = params.fallback;
         mergeRules = params.mergeRules;
         ignoredFiles = params.ignoredFiles != null ? params.ignoredFiles.copy() : [];
         fallbackToDefault = backend.fallback != null;
@@ -43,42 +79,33 @@ class PolymodAssetLibrary
         return e;
     }
 
-    public function getAsset(id:String, type:AssetType)
+    public function getAudio(id:String)
     {
-        return switch(type)
-        {
-            case TEXT: getText(id);
-            case BYTES: getBytes(id);
-            case IMAGE: getImage(id);
-            case AUDIO: getAudio(id);
-            case VIDEO: getVideo(id);
-            case FONT: getFont(id);
-            default: null;
-        }
-    }
-
-    public function getText(id:String):String
-    {
-        var modText = null;
-
+        //TODO: cache audio
         if (check(id))
         {
-            modText = backend.getText(id);
+            return backend.getAudioFromBytes(fileSystem.getBytes(file(id));
         }
-        else if(fallBackToDefault)
+        else if (fallbackToDefault)
         {
-            modText = backend.getTextFallback(id);
+            return backend.getAudio(id, FALLBACK);
         }
-
-        if (modText != null)
-        {
-            var theDirs = dirs != null ? dirs : [dir];
-            modText = Util.mergeAndAppendText(modText, id, theDirs, getTextDirectly, mergeRules);
-        }
-        return backend.getText(id);
     }
 
-	/**
+    public function getBytes(id:String)
+    { 
+        //TODO: cache bytes
+        if (check(id))
+        {
+            return fileSystem.getBytes(file(id));
+        }
+        else if (fallbackToDefault)
+        {
+            return backend.getBytes(id, FALLBACK);
+        }
+    }
+    
+    /**
 	 * Get text without consideration of any modifications
 	 * @param	id
 	 * @param	theDir
@@ -88,13 +115,13 @@ class PolymodAssetLibrary
 	{
 		var bytes = null;
 		
-		if (checkDirectly(directory,id))
+		if (checkDirectly(id, directory))
 		{
-            bytes = filesystem.getText(id);
+            bytes = fileSystem.getBytes(file(id, directory));
 		}
 		else if (fallBackToDefault)
 		{
-			bytes = backend.getTextFallback(id);
+			bytes = backend.getBytes(id, FALLBACK);
 		}
 		
 		if (bytes == null)
@@ -109,61 +136,64 @@ class PolymodAssetLibrary
 		return null;
 	}
 
-   	public function getFont (id:String):Font
+    public function getFont (id:String):Font
 	{
         //TODO: cache font
-
-		if (check(id))
+        if (check(id))
 		{
-            return backend.getFontFromFile(id);
+            return backend.getFontFromBytes(fileSystem.getBytes(file(id)));
 		}
 		else if (fallBackToDefault)
 		{
-			return backend.getFontFallback(id);
+			return backend.getFont(id, FALLBACK);
 		}
 		return null;
 	}
-
-    public function getBytes(id:String)
-    { 
-        //TODO: cache bytes
-
-        if (check(id))
-        {
-            return backend.getBytesFromFile(id)
-        }
-        else if (fallbackToDefault)
-        {
-            return backend.getBytesFallback(id);
-        }
-    }
     
     public function getImage(id:String)
     {
         //TODO: cache image
-
         if (check(id))
         {
-            return backend.getImageFromFile(id);
+            return backend.getImageFromFile(file(id));
         }
         else if (fallbackToDefault)
         {
-            return backend.getImageFallback(id);
+            return backend.getImage(id, FALLBACK);
         }
     }
 
-    public function getAudio(id:String)
+    public function getPath(id:String)
     {
-        //TODO: cache audio
-
         if (check(id))
         {
-            return backend.getAudioFromFile(id);
+            return file(id);
         }
         else if (fallbackToDefault)
         {
-            return backend.getAudioFallback(id);
+            return backend.getPath(id, FALLBACK);
         }
+    }
+
+    public function getText(id:String):String
+    {
+        var modText = null;
+
+        if (check(id))
+        {
+            modText = backend.getText(id);
+        }
+        else if(fallBackToDefault)
+        {
+            modText = backend.getText(id, FALLBACK);
+        }
+
+        if (modText != null)
+        {
+            var theDirs = dirs != null ? dirs : [dir];
+            modText = Util.mergeAndAppendText(modText, id, theDirs, getTextDirectly, mergeRules);
+        }
+        return modText;
     }
 
     public function getVideo(id:String)
@@ -172,35 +202,92 @@ class PolymodAssetLibrary
 
         if (check(id))
         {
-            return backend.getVideoFromFile(id);
+            return backend.getVideoFromBytes(fileSystem.getBytes(file(id));
         }
         else if (fallbackToDefault)
         {
-            return backend.getVideoFallback(id);
+            return backend.getVideo(id, FALLBACK);
         }
     }
-    
-    public function getFont(id:String)
-    {
-        //TODO: cache font
 
-        if (check(id))
+	public function isLocal (id:String, type:String):Bool
+	{
+		if (check(id))
+		{
+			return true;
+		}
+		else if (fallBackToDefault)
+		{
+			return backend.isLocal(id, type, FALLBACK);
+		}
+		return false;
+	}
+
+    public function listModFiles (type:AssetType):Array<String>
+	{
+		var items = [];
+		
+		for (id in this.type.keys ())
+		{
+			if (id.indexOf("_append") == 0 || id.indexOf("_merge") == 0) continue;
+			if (type == null || type == BINARY || backend.exists (id, type))
+			{
+				items.push (id);
+			}
+		}
+		
+		return items;
+	}
+
+	public override function list (type:AssetType):Array<String>
+	{
+		var otherList = fallBackToDefault ? backend.list(type, FALLBACK) : [];
+		var items = [];
+		
+		for (id in this.type.keys ())
+		{
+			if (id.indexOf("_append") == 0 || id.indexOf("_merge") == 0) continue;
+			if (type == null || type == BINARY || backend.exists (id, type))
+			{
+				items.push (id);
+			}
+		}
+		
+		for (otherId in otherList)
+		{
+			if (items.indexOf(otherId) == -1)
+			{
+				if (type == null || type == BINARY || backend.exists(otherId, type, FALLBACK))
+				{
+					items.push(otherId);
+				}
+			}
+		}
+		
+		return items;
+	}
+
+    public function getAsset(id:String, type:AssetType)
+    {
+        return switch(type)
         {
-            return backend.getFontFromFile(id);
-        }
-        else if (fallbackToDefault)
-        {
-            return backend.getFontFallback(id);
+            case TEXT: getText(id);
+            case BYTES: getBytes(id);
+            case IMAGE: getImage(id);
+            case AUDIO: getAudio(id);
+            case VIDEO: getVideo(id);
+            case FONT: getFont(id);
+            default: null;
         }
     }
 
     /**
-	 * Check if the given asset exists
+	 * Check if the given asset exists in the file system
 	 * (If using multiple mods, it will return true if ANY of the mod folders contains this file)
 	 * @param	id
 	 * @return
 	 */
-    public function fileExists(id:String)
+    private function check(id:String)
     {
         if(ignoredFiles.length > 0 && ignoredFiles.indexOf(id) != -1) return false;
         var exists = false;
@@ -238,12 +325,12 @@ class PolymodAssetLibrary
 		}
 		if (fallBackToDefault)
 		{
-            return backend.checkTypeFallback(id);
+            return backend.checkType(id, FALLBACK);
 		}
 		return null;
     }
 
-    public function checkDirectly(dir:String,id:String):Bool
+    public function checkDirectly(id:String, dir:String):Bool
     {
         id = Util.stripAssetsPrefix(id);
 		if (dir == null || dir == "")
@@ -260,4 +347,39 @@ class PolymodAssetLibrary
 		}
 		return false;
     }
+
+    /**
+	 * Get the filename of the given asset id
+	 * (If using multiple mods, it will check all the mod folders for this file, and return the LAST one found)
+	 * @param	id
+	 * @return
+	 */
+	private function file(id:String, theDir:String = ""):String
+	{
+		id = Util.stripAssetsPrefix(id);
+		
+		if (theDir != "")
+		{
+			return theDir + Util.sl() + id;
+		}
+		else if (dirs == null)
+		{
+			return dir + Util.sl() + id;
+		}
+		else
+		{
+			var theFile = "";
+			for (d in dirs)
+			{
+				var thePath = d + Util.sl() + id;
+				
+                if(fileSystem.exists(thePath))
+                {
+					theFile = thePath;
+				}
+			}
+			return theFile;
+		}
+		return id;
+	}   
 }

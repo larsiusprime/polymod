@@ -40,44 +40,6 @@ class PolymodAssets
     public static function getFont(id:String) { return library.getFont(id); }
 }
 
-typedef ModAssetLibraryParams = {
-   	/**
-   	 * which framework you intend to use
-   	 */
-    ?framework:Framework,
-
-   	/**
-	 * full path to the mod's root directory
-	 */
-	dir:String,
-
-	/**
-	 * (optional) if we can't find something, should we try the default asset library?
-	 */
-	//?fallback:AssetLibrary,
-
-	/**
-	 * (optional) to combine mods, provide multiple paths to several mod's root directories.
-	 * This takes precedence over the "Dir" parameter and the order matters -- mod files will load from first to last, with last taking precedence
-	 */
-	?dirs:Array<String>,
-
-	/**
-	 * (optional) formatting rules for merging various data formats
-	 */
-	?mergeRules:MergeRules,
-
-	/**
- 	 * (optional) list of files it ignore in this mod asset library (get the fallback version instead)
-	 */
-	 ?ignoredFiles:Array<String>,
-
-     /**
-      * (optional) your own 
-      */
-     ?customBackend:Class<IBackend>;
-}
-
 enum Framework
 {
     NME;
