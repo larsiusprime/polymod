@@ -1,5 +1,6 @@
 package polymod.backends;
 
+import polymod.PolymodAssets.AssetType in PolymodAssetType;
 #if openfl
     import flash.display.BitmapData;
     import haxe.xml.Fast;
@@ -14,9 +15,6 @@ package polymod.backends;
     import lime.utils.Bytes;
     import openfl.errors.Error;
     import polymod.library.Util.MergeRules;
-    #if sys
-    import sys.FileSystem;
-    #end
     #if unifill
     import unifill.Unifill;
     #end
@@ -32,14 +30,28 @@ package polymod.backends;
 #else
     typedef OpenFLAssetLibrary = Dynamic;
 #end
-import polymod.PolymodAssets.AssetType in PolymodAssetType;
 
 class OpenFLBackend implements IBackend extends OpenFLAssetLibrary
 {
-    public var modLibrary:OpenFLAssetLibrary;
-    public var fallback:OpenFLAssetLibrary;
-    
-    private var hasFallback:Bool = false;
+    //STATIC:
+
+    private static var defaultAssetLibrary:OpenFLAssetLibrary = null;
+    private static function getDefaultAssetLibrary()
+    {
+        if(defaultAssetLibrary == null)
+        {
+            defaultAssetLibrary = LimeAssets.getLibrary("default");
+        }
+        return defaultAssetLibrary;
+    }
+
+    private static function restoreDefaultAssetLibrary()
+    {
+        if(defaultAssetLibrary != null)
+        {
+            LimeAssets.registerLibrary("default", defaultAssetLibrary);
+        }
+    }
 
     private static function limeAssetTypeToPolymod(type:AssetType):PolymodAssetType;
     {
@@ -73,14 +85,19 @@ class OpenFLBackend implements IBackend extends OpenFLAssetLibrary
         }
     }
 
-    public function new (fallback:OpenFLAssetLibrary) 
+    //Instance:
+    public var modLibrary(default, null):OpenFLAssetLibrary;
+    public var fallback(default, null):AssetLibrary;
+    public var hasFallback(default, null):Bool = false;
+
+    public function new () 
     {
         #if !openfl
         throw "OpenFLBackend: needs the openfl library!";
         #end
         modLibrary = new OpenFLAssetLibrary();
-        this.fallback = fallback;
-        hasFallback = this.fallback != null;
+        fallback = getDefaultAssetLibrary();
+        hasFallback = fallback != null;
     }
 
     public function exists(id:String, type:PolymodAssetType, useFallback:Fallback=false):Bool
@@ -180,6 +197,25 @@ class OpenFLBackend implements IBackend extends OpenFLAssetLibrary
     public function getVideoFromBytes (bytes:Bytes):Bytes
     {
         return bytes;
+    }
+
+    public function clearCache()
+    {
+        if (defaultAssetLibrary != null)
+        {
+            for (key in LimeAssets.cache.audio.keys())
+			{
+				LimeAssets.cache.audio.remove(key);
+			}
+			for (key in LimeAssets.cache.font.keys())
+			{
+				LimeAssets.cache.font.remove(key);
+			}
+			for (key in LimeAssets.cache.image.keys())
+			{
+				LimeAssets.cache.image.remove(key);
+            }
+        }
     }
 }
 

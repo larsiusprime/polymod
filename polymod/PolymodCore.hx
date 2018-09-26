@@ -28,6 +28,12 @@ import polymod.library.SemanticVersion;
 import polymod.library.Util.MergeRules;
 
 typedef PolymodParams = {
+	
+	/**
+     * the Haxe framework you're using (OpenFL, HEAPS, Kha, NME, etc..)
+     */
+    framework:Framework,
+	
 	/**
 	 * root directory of all mods
 	 */
@@ -62,7 +68,12 @@ typedef PolymodParams = {
 	/**
 	 * (optional) list of filenames to ignore in mods
 	 */
-	?ignoredFiles:Array<String>
+	?ignoredFiles:Array<String>,
+
+	 /**
+      * (optional) your own 
+      */
+     ?customBackend:Class<IBackend>
 }
 
 /**
@@ -72,9 +83,104 @@ typedef PolymodParams = {
 class PolymodCore
 {
 	public static var onError:PolymodError->Void = null;
-	private static var defaultLibrary:AssetLibrary = null;
-	private static var modLibrary:ModAssetLibrary = null;
+	private static var library:PolymodAssetLibrary = null;
+	
+	/**
+	 * Initializes the chosen mod or mods.
+	 * @param	params initialization parameters
+	 * @return	an array of metadata entries for successfully loaded mods
+	 */
+	public static function init(params:PolymodParams):Array<ModMetadata>
+	{
+		onError = params.errorCallback;
 
+		var modRoot = params.modRoot;
+		var dirs = params.dirs;
+
+		var apiVersion:SemanticVersion = null;
+		try
+		{
+			var apiStr = params.apiVersion;
+			if(apiStr == null || apiStr == ""){
+				apiStr = "*.*.*";
+			}
+			apiVersion = SemanticVersion.fromString(apiStr);
+		}
+		catch(msg:Dynamic)
+		{
+			error(PARSE_API_VERSION,"Error parsing api version: ("+Std.string(msg)+")");
+			return [];
+		}
+
+		var modMeta = [];
+		var modVers = [];
+
+		if(params.modVersions != null)
+		{
+			for(str in params.modVersions)
+			{
+				var semVer = null;
+				try
+				{
+					semVer = SemanticVersion.fromString(str);
+				}
+				catch(msg:Dynamic)
+				{
+					error(PARAM_MOD_VERSION,"There was an error with one of the mod version patterns you provided: " + msg);
+					semVer = SemanticVersion.fromString("*.*.*");
+				}
+				modVers.push(semVer);
+			}
+		}
+
+		for(i in 0...dirs.length)
+		{
+			if(dirs[i] != null)
+			{
+				var origDir = dirs[i];
+				dirs[i] = modRoot + "/" + dirs[i];
+				var meta:ModMetadata = getMetadata(dirs[i]);
+
+				if(meta != null)
+				{
+					meta.id = origDir;
+					var apiScore = meta.apiVersion.checkCompatibility(apiVersion);
+					if(apiScore < 3)
+					{
+						error(VERSION_CONFLICT_API, "Mod \""+origDir+"\" was built for incompatible API version " + meta.apiVersion.toString() + ", current API version is " + params.apiVersion.toString());
+					}
+					var modVer = modVers.length > i ? modVers[i] : null;
+					if(modVer != null)
+					{
+						var score = modVer.checkCompatibility(meta.modVersion);
+						if(score < 3)
+						{
+							error(VERSION_CONFLICT_MOD, "Mod pack wants version " + modVer.toString() + " of mod("+meta.id+"), found incompatible version " + meta.modVersion.toString() + " instead");
+						}
+					}
+					modMeta.push(meta);
+				}
+			}
+		}
+
+		PolymodAssets.init({
+			framework:params.framework,
+			dirs:dirs,
+			mergeRules:params.mergeRules,
+			ignoredFiles:params.ignoredFiles,
+			customBackend:params.customBackend
+		});
+
+		/*
+		if(Assets.exists("_polymod_pack.txt"))
+		{
+			initModPack(params);
+		}
+		*/
+
+		return modMeta;
+	}
+	
 	public static function getDefaultIgnoreList():Array<String>
 	{
 		return ["_polymod_meta.json","_polymod_icon.png","_polymod_pack.txt","ASSET_LICENSE.txt","CODE_LICENSE.txt","LICENSE.txt"];
@@ -144,121 +250,6 @@ class PolymodCore
 		return modMeta;
 	}
 
-	/**
-	 * Initializes the chosen mod or mods.
-	 * @param	params initialization parameters
-	 * @return	an array of metadata entries for successfully loaded mods
-	 */
-	public static function init(params:PolymodParams):Array<ModMetadata>
-	{
-		onError = params.errorCallback;
-
-		var modRoot = params.modRoot;
-		var dirs = params.dirs;
-
-		if (modRoot == null || dirs == null || dirs.length == 0)
-		{
-			if (defaultLibrary != null)
-			{
-				PolymodAssets.registerLibrary("default", defaultLibrary);
-			}
-			else
-			{
-				return [];
-			}
-		}
-
-		if (defaultLibrary == null)
-		{
-			defaultLibrary = PolymodAssets.getLibrary("default");
-		}
-
-		clearCache();
-
-		var apiVersion:SemanticVersion = null;
-		try
-		{
-			var apiStr = params.apiVersion;
-			if(apiStr == null || apiStr == ""){
-				apiStr = "*.*.*";
-			}
-			apiVersion = SemanticVersion.fromString(apiStr);
-		}
-		catch(msg:Dynamic)
-		{
-			error(PARSE_API_VERSION,"Error parsing api version: ("+Std.string(msg)+")");
-			return [];
-		}
-
-		var modMeta = [];
-		var modVers = [];
-
-		if(params.modVersions != null)
-		{
-			for(str in params.modVersions)
-			{
-				var semVer = null;
-				try
-				{
-					semVer = SemanticVersion.fromString(str);
-				}
-				catch(msg:Dynamic)
-				{
-					error(PARAM_MOD_VERSION,"There was an error with one of the mod version patterns you provided: " + msg);
-					semVer = SemanticVersion.fromString("*.*.*");
-				}
-				modVers.push(semVer);
-			}
-		}
-
-		for(i in 0...dirs.length)
-		{
-			if(dirs[i] != null)
-			{
-				var origDir = dirs[i];
-				dirs[i] = modRoot + "/" + dirs[i];
-				var meta:ModMetadata = getMetadata(dirs[i]);
-
-				if(meta != null)
-				{
-					meta.id = origDir;
-					var apiScore = meta.apiVersion.checkCompatibility(apiVersion);
-					if(apiScore < 3)
-					{
-						error(VERSION_CONFLICT_API, "Mod \""+origDir+"\" was built for incompatible API version " + meta.apiVersion.toString() + ", current API version is " + params.apiVersion.toString());
-					}
-					var modVer = modVers.length > i ? modVers[i] : null;
-					if(modVer != null)
-					{
-						var score = modVer.checkCompatibility(meta.modVersion);
-						if(score < 3)
-						{
-							error(VERSION_CONFLICT_MOD, "Mod pack wants version " + modVer.toString() + " of mod("+meta.id+"), found incompatible version " + meta.modVersion.toString() + " instead");
-						}
-					}
-					modMeta.push(meta);
-				}
-			}
-		}
-
-		modLibrary = new ModAssetLibrary({
-			dir:null,
-			fallback:defaultLibrary,
-			dirs:dirs,
-			mergeRules:params.mergeRules,
-			ignoredFiles:params.ignoredFiles
-		});
-		PolymodAssets.registerLibrary("default", modLibrary);
-		/*
-		if(Assets.exists("_polymod_pack.txt"))
-		{
-			initModPack(params);
-		}
-		*/
-
-		return modMeta;
-	}
-
 	public static function error(code:PolymodErrorCode, message:String)
 	{
 		if(onError != null)
@@ -281,6 +272,14 @@ class PolymodCore
 		{
 			onError(new PolymodError(PolymodErrorType.NOTICE, code, message));
 		}
+	}
+
+	private static function getFileSystem()
+	{
+		#if sys
+		return new SysFileSystem();
+		#end
+		return null;
 	}
 
 	private static function getMetadata(dir:String):ModMetadata

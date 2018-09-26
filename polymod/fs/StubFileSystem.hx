@@ -1,6 +1,7 @@
 package polymod.fs;
 
-class StubFileSystem {
+class StubFileSystem
+{
     public static inline function exists( path: String )
         return false;
 
@@ -11,6 +12,9 @@ class StubFileSystem {
         return [];
 
     public static inline function getFileContent( path: String )
+        return null;
+
+    public static inline function getFileBytes( path: String )
         return null;
 
     public static inline function readDirectoryRecursive( path: String )

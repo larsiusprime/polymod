@@ -6,24 +6,16 @@ import polymod.PolymodAssets.ModAssetLibraryParams;
 
 typedef PolymodAssetLibraryParams = {
    
+    /**
+     * the backend used to fetch your default assets
+     */
     backend:IBackend,
-    fileSystem:IFileSystem,
 
    	/**
-	 * full path to the mod's root directory
-	 */
-	dir:String,
-
-	/**
-	 * (optional) if we can't find something, should we try the default asset library?
-	 */
-	//?fallback:AssetLibrary,
-
-	/**
-	 * (optional) to combine mods, provide multiple paths to several mod's root directories.
+	 * paths to each mod's root directories.
 	 * This takes precedence over the "Dir" parameter and the order matters -- mod files will load from first to last, with last taking precedence
 	 */
-	?dirs:Array<String>,
+	dirs:Array<String>,
 
 	/**
 	 * (optional) formatting rules for merging various data formats
@@ -33,22 +25,15 @@ typedef PolymodAssetLibraryParams = {
 	/**
  	 * (optional) list of files it ignore in this mod asset library (get the fallback version instead)
 	 */
-	 ?ignoredFiles:Array<String>,
-
-     /**
-      * (optional) your own 
-      */
-     ?customBackend:Class<IBackend>
+	?ignoredFiles:Array<String>
 }
 
 class PolymodAssetLibrary
 {
-    private var backend:IBackend;
-    private var fileSystem:IFileSystem;
-
+    public var backend(default, null):IBackend;
+    
     private var type(default, null) = new Map<String, AssetType>();
 
-	private var dir:String;
 	private var dirs:Array<String> = null;
 	private var fallBackToDefault:Bool = true;
 	private var mergeRules:MergeRules = null;
@@ -56,17 +41,12 @@ class PolymodAssetLibrary
 
     public function new(params:ModAssetLibraryParams)
     {
-        this.backend = params.backend;
-        this.fileSystem = params.fileSystem;
-        dir = params.dir;
-        if (params.dirs != null)
-        {
-            dirs = params.dirs;
-        }
+        backend = params.backend;
+        dirs = params.dirs;
         mergeRules = params.mergeRules;
         ignoredFiles = params.ignoredFiles != null ? params.ignoredFiles.copy() : [];
         fallbackToDefault = backend.fallback != null;
-        init();
+        backend.clearCache();
     }
 
     public function exists(id:String, type:AssetType)
@@ -74,7 +54,7 @@ class PolymodAssetLibrary
         var e = check(id, type);
         if (!e && fallBackToDefault)
         {
-            return fallback.exists(id, type);
+            return backend.exists(id, type, FALLBACK);
         }
         return e;
     }
@@ -84,7 +64,7 @@ class PolymodAssetLibrary
         //TODO: cache audio
         if (check(id))
         {
-            return backend.getAudioFromBytes(fileSystem.getBytes(file(id));
+            return backend.getAudioFromBytes(PolymodFileSystem.getFileBytes(file(id));
         }
         else if (fallbackToDefault)
         {
@@ -97,7 +77,7 @@ class PolymodAssetLibrary
         //TODO: cache bytes
         if (check(id))
         {
-            return fileSystem.getBytes(file(id));
+            return PolymodFileSystem.getFileBytes(file(id));
         }
         else if (fallbackToDefault)
         {
@@ -117,7 +97,7 @@ class PolymodAssetLibrary
 		
 		if (checkDirectly(id, directory))
 		{
-            bytes = fileSystem.getBytes(file(id, directory));
+            bytes = PolymodFileSystem.getFileBytes(file(id, directory));
 		}
 		else if (fallBackToDefault)
 		{
@@ -141,7 +121,7 @@ class PolymodAssetLibrary
         //TODO: cache font
         if (check(id))
 		{
-            return backend.getFontFromBytes(fileSystem.getBytes(file(id)));
+            return backend.getFontFromBytes(PolymodFileSystem.getFileBytes(file(id)));
 		}
 		else if (fallBackToDefault)
 		{
@@ -190,8 +170,7 @@ class PolymodAssetLibrary
 
         if (modText != null)
         {
-            var theDirs = dirs != null ? dirs : [dir];
-            modText = Util.mergeAndAppendText(modText, id, theDirs, getTextDirectly, mergeRules);
+            modText = Util.mergeAndAppendText(modText, id, dirs, getTextDirectly, mergeRules);
         }
         return modText;
     }
@@ -202,7 +181,7 @@ class PolymodAssetLibrary
 
         if (check(id))
         {
-            return backend.getVideoFromBytes(fileSystem.getBytes(file(id));
+            return backend.getVideoFromBytes(PolymodFileSystem.getFileBytes(file(id));
         }
         else if (fallbackToDefault)
         {
@@ -294,13 +273,13 @@ class PolymodAssetLibrary
         id = Util.stripAssetsPrefix(id);
         if (dirs == null)
         {
-            exists = fileSystem.exists(dir + Util.sl() + id);
+            exists = PolymodFileSystem.exists(dir + Util.sl() + id);
         }
         else
         {
             for (d in dirs)
             {
-                exists = fileSystem.exists(d + Util.sl() + id);
+                exists = PolymodFileSystem.exists(d + Util.sl() + id);
                 {
                     exists = true;
                 }
@@ -335,12 +314,12 @@ class PolymodAssetLibrary
         id = Util.stripAssetsPrefix(id);
 		if (dir == null || dir == "")
 		{
-            return fileSystem.exists(id);
+            return PolymodFileSystem.exists(id);
 		}
 		else
 		{
 			var thePath = Util.uCombine([dir, Util.sl(), id]);
-			if (fileSystem.exists(thePath))
+			if (PolymodFileSystem.exists(thePath))
 			{
 				return true;
 			}
@@ -373,7 +352,7 @@ class PolymodAssetLibrary
 			{
 				var thePath = d + Util.sl() + id;
 				
-                if(fileSystem.exists(thePath))
+                if(PolymodFileSystem.exists(thePath))
                 {
 					theFile = thePath;
 				}

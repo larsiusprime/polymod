@@ -24,6 +24,8 @@ interface IBackend
     public function getFontFromBytes(bytes:Bytes);
     public function getAudioFromBytes(bytes:Bytes);
     public function getVideoFromBytes(bytes:Bytes);
+
+    public function clearCache();
     
     /*
     //Asynchronous asset fetch from modified set:

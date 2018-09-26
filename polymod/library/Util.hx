@@ -23,11 +23,8 @@
 
 package polymod.library;
 
-#if sys
-import sys.FileSystem;
-#end
-
 import polymod.PolymodCore;
+import polymod.fs.PolymodFileSystem;
 import polymod.PolymodCore.PolymodError;
 import polymod.PolymodCore.PolymodErrorType;
 import polymod.library.CSV.CSVParseFormat;
@@ -536,7 +533,7 @@ class Util
 		#if sys
 		id = stripAssetsPrefix(id);
 		var thePath = uCombine([theDir, sl(), special, sl(), id]);
-		return FileSystem.exists(thePath);
+		return PolymodFileSystem.exists(thePath);
 		#else
 		return false;
 		#end
@@ -561,17 +558,16 @@ class Util
 
 	private static function _readDirectoryRecursive(str:String):Array<String>
 	{
-		#if sys
-		if (FileSystem.exists(str) && FileSystem.isDirectory(str))
+		if (PolymodFileSystem.exists(str) && PolymodFileSystem.isDirectory(str))
 		{
-			var all = FileSystem.readDirectory(str);
+			var all = PolymodFileSystem.readDirectory(str);
 			if (all == null) return [];
 			var results = [];
 			for (thing in all)
 			{
 				if (thing == null) continue;
 				var pathToThing = str + sl() + thing;
-				if (FileSystem.isDirectory(pathToThing))
+				if (PolymodFileSystem.isDirectory(pathToThing))
 				{
 					var subs = _readDirectoryRecursive(pathToThing);
 					if (subs != null)

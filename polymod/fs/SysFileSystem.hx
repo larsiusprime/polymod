@@ -1,7 +1,10 @@
 package polymod.fs;
 
 // #if sys
-class SysFileSystem {
+class SysFileSystem
+{
+    public function new(){};
+
     public static inline function exists( path: String )
         return sys.FileSystem.exists(path);
 
@@ -12,7 +15,10 @@ class SysFileSystem {
         return sys.FileSystem.readDirectory(path);
 
     public static inline function getFileContent( path: String )
-        return sys.File.getContent(path);
+        return sys.io.File.getContent(path);
+
+    public static inline function getFileBytes( path: String )
+        return sys.io.File.getBytes(path);
 
     public static function readDirectoryRecursive( path: String ) // TODO (DK) move Util.hx code here?
         return [];

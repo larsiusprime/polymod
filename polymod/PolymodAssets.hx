@@ -2,24 +2,53 @@ package polymod;
 
 import polymod.backends.IBackend;
 
+typedef PolymodAssetsParams = {
+   
+    /**
+     * the Haxe framework you're using (OpenFL, HEAPS, Kha, NME, etc..)
+     */
+    framework:Framework,
+
+    /**
+	 * paths to each mod's root directories.
+	 * This takes precedence over the "Dir" parameter and the order matters -- mod files will load from first to last, with last taking precedence
+	 */
+	dirs:Array<String>,
+
+	/**
+	 * (optional) formatting rules for merging various data formats
+	 */
+	?mergeRules:MergeRules,
+
+	/**
+ 	 * (optional) list of files it ignore in this mod asset library (get the fallback version instead)
+	 */
+	?ignoredFiles:Array<String>,
+
+     /**
+      * (optional) your own 
+      */
+    ?customBackend:Class<IBackend>
+}
+
 class PolymodAssets
 {
     private static var library:PolymodAssetLibrary;
 
-    public static function init(params:ModAssetLibraryParams)
+    public static function init(params:PolymodAssetsParams):PolymodAssetLibrary
     {
         var framework:Framework = params.framework != null ? params.framework : UNKNOWN;
         backend = switch(framework)
         {
-            case NME: new NMEBackend(params);
-            case LIME: new LimeBackend(params);
-            case OPENFL: new OpenFLBackend(params);
-            case HEAPS: new HEAPSBackend(params);
-            case KHA: new KhaBackend(params);
+            //case NME: new NMEBackend();
+            //case LIME: new LimeBackend();
+            case OPENFL: new OpenFLBackend();
+            //case HEAPS: new HEAPSBackend();
+            //case KHA: new KhaBackend();
             case CUSTOM: 
                 if(params.customBackend != null)
                 {
-                    return Type.createInstance(params.customBackend, [params]);
+                    return Type.createInstance(params.customBackend);
                 }
                 else
                 {
@@ -28,7 +57,16 @@ class PolymodAssets
                 return null;
             default: null;
         }
-        library = new PolymodAssetLibrary(backend, params);
+
+        library = new PolymodAssetLibrary({
+            backend:backend,
+            fallback:params.fallback,
+            dirs:params.dirs,
+            mergeRules:params.mergeRules,
+            ignoredFiles:params.ignoredFiles
+        });
+
+        return library;
     }
 
     public static function getAsset(id:String, type:AssetType) { return library.getAsset(id, type); }
