@@ -1,5 +1,3 @@
-package polymod.fs;
-
 /**
  * Copyright (c) 2018 Level Up Labs, LLC
  * 
@@ -22,8 +20,10 @@ package polymod.fs;
  * THE SOFTWARE.
  * 
  */
+
+package polymod.fs;
  
- class PolymodFileSystem
+class PolymodFileSystem
 {
     public static inline function exists( path: String )
     {
