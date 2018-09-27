@@ -540,49 +540,22 @@ class Util
 
 	}
 
-	public static function readDirectoryRecursive(str:String):Array<String>
+	public static function pathJoin(a:String, b:String):String
 	{
-		var all = _readDirectoryRecursive(str);
-		for (i in 0...all.length)
+		var aSlash = (uLastIndexOf(a,"/") == uLength(a) -1 || uLastIndexOf(a,"\\") == uLength(a) -1);
+		var bSlash = (uIndexOf(b,"/") == 0 || uIndexOf(b,"\\") == 0);
+		var str = "";
+		if(aSlash || bSlash)
 		{
-			var f = all[i];
-			var stri = uIndexOf(f, str + "/");
-			if (stri == 0)
-			{
-				f = uSubstr(f, uLength(str+"/"), uLength(f));
-				all[i] = f;
-			}
+			str = Util.uCombine([a,b]);
 		}
-		return all;
-	}
-
-	private static function _readDirectoryRecursive(str:String):Array<String>
-	{
-		if (PolymodFileSystem.exists(str) && PolymodFileSystem.isDirectory(str))
+		else
 		{
-			var all = PolymodFileSystem.readDirectory(str);
-			if (all == null) return [];
-			var results = [];
-			for (thing in all)
-			{
-				if (thing == null) continue;
-				var pathToThing = str + sl() + thing;
-				if (PolymodFileSystem.isDirectory(pathToThing))
-				{
-					var subs = _readDirectoryRecursive(pathToThing);
-					if (subs != null)
-					{
-						results = results.concat(subs);
-					}
-				}
-				else
-				{
-					results.push(pathToThing);
-				}
-			}
-			return results;
+			str = Util.uCombine([a,sl(),b]);
 		}
-		return [];
+		str = uSplitReplace(str, "\\", "/");
+		str = uSplitReplace(str, "//", "/");
+		return str;
 	}
 
 	public static function sl():String

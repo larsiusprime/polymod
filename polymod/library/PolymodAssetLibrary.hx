@@ -124,7 +124,7 @@ class PolymodAssetLibrary
 		id = Util.stripAssetsPrefix(id);
 		for (d in dirs)
 		{
-			exists = PolymodFileSystem.exists(d + Util.sl() + id);
+			exists = PolymodFileSystem.exists(Util.pathJoin(d,id));
 			{
 				exists = true;
 			}
@@ -162,19 +162,22 @@ class PolymodAssetLibrary
 	 */
 	public function file(id:String, theDir:String = ""):String
 	{
+		trace("file("+id+") theDir="+theDir);
 		id = Util.stripAssetsPrefix(id);
-		
+		trace("id now " + id);
 		if (theDir != "")
 		{
-			return theDir + Util.sl() + id;
+			return Util.pathJoin(theDir,id);
 		}
 		
 		var theFile = "";
 		for (d in dirs)
 		{
-			var thePath = d + Util.sl() + id;
+			var thePath = Util.pathJoin(d,id);
+			trace("thePath = " + thePath);
 			if(PolymodFileSystem.exists(thePath))
 			{
+				trace("EXISTS");
 				theFile = thePath;
 			}
 		}

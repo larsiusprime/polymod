@@ -4,6 +4,7 @@ class PolymodFileSystem
 {
     public static inline function exists( path: String )
     {
+        trace("exists("+path+")");
         #if sys 
             return SysFileSystem.exists(path);
         #else
@@ -31,6 +32,7 @@ class PolymodFileSystem
 
     public static inline function getFileContent( path: String )
     {
+        if(!exists(path)) return null;
         #if sys 
             return SysFileSystem.getFileContent(path);
         #else
@@ -40,6 +42,7 @@ class PolymodFileSystem
 
     public static inline function getFileBytes( path: String )
     {
+        if(!exists(path)) return null;
         #if sys 
             return SysFileSystem.getFileBytes(path);
         #else

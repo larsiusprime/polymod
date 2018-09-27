@@ -75,7 +75,6 @@ class OpenFLBackend implements IBackend
 	{
 		fallback = getDefaultAssetLibrary();
 		modLibrary = new OpenFLModLibrary(this);
-		trace("fallback = " + fallback);
 		LimeAssets.registerLibrary("default", modLibrary);
 	}
 
@@ -163,7 +162,14 @@ class OpenFLModLibrary extends AssetLibrary
 		b = backend;
 		p = b.polymodLibrary;
 		fallback = b.fallback;
+		hasFallback = fallback != null;
 		super();
+	}
+
+	public override function getAsset(id:String, type:String):Dynamic {
+
+		trace("getAsset("+id+","+type+")");
+		return super.getAsset(id,type);
 	}
 
 	public override function exists (id:String, type:String):Bool
@@ -184,7 +190,9 @@ class OpenFLModLibrary extends AssetLibrary
 
 	public override function getBytes (id:String):Bytes
 	{
-		trace("getBytes("+id+")");
+		trace("getBytes("+id+") check = " + p.check(id));
+		var file = p.file(id);
+		trace("file = " + file + " FileSystem.exists("+file+") = " + sys.FileSystem.exists(file));
 		if (p.check(id))
 			return PolymodFileSystem.getFileBytes(p.file(id));
 		else if(hasFallback)
@@ -336,13 +344,17 @@ class OpenFLModLibrary extends AssetLibrary
 
 	public override function list (type:String):Array<String>
 	{
+		trace("list("+type+") " + hasFallback);
 		var otherList = hasFallback ? fallback.list(type) : [];
 		
 		var requestedType = type != null ? cast (type, AssetType) : null;
 		var items = [];
 		
+		trace("otherList = " + otherList);
+
 		for (id in p.type.keys ())
 		{
+			trace("id = " + id);
 			if (id.indexOf("_append") == 0 || id.indexOf("_merge") == 0) continue;
 			if (requestedType == null || exists (id, requestedType))
 			{
