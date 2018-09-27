@@ -21,7 +21,7 @@
  * 
  */
 
-package;
+package samples.heaps;
 
 import h2d.Sprite;
 import h2d.Text;

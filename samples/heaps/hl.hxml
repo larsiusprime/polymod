@@ -2,7 +2,7 @@
 -lib hlsdl
 -lib polymod
 -hl demo.hl
--main Main
+-main samples.heaps.Main
 -D windowSize=1024x768
 -cp ../..
 -cp .

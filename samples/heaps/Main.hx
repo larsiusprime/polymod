@@ -21,6 +21,8 @@
  * 
  */
 
+package samples.heaps;
+
 import hxd.App;
 
 class Main extends hxd.App
