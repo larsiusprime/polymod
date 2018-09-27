@@ -1,9 +1,7 @@
 package;
 
-import openfl.Assets;
 import openfl.display.Sprite;
 import openfl.Lib;
-import polymod.library.ModAssetLibrary;
 import polymod.Polymod;
 
 /**
@@ -35,7 +33,7 @@ class Main extends Sprite
 	private function loadMods(dirs:Array<String>)
 	{
 		var modRoot = "../../../mods/";
-		Polymod.init({
+		var results = Polymod.init({
 			modRoot:modRoot,
 			dirs:dirs,
 			errorCallback:onError,

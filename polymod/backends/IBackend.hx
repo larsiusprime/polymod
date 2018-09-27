@@ -1,32 +1,20 @@
 package polymod.backends;
 
+import haxe.io.Bytes;
 import polymod.PolymodAssets.PolymodAssetType;
+import polymod.library.PolymodAssetLibrary;
 
 interface IBackend
 {
-    //Check if the base asset set has a type defined for this asset
-    
-    public function checkType(id:String, useFallback:Fallback):Bool;
-    public function exists(id:String, type:AssetType, useFallback:Fallback):Bool;
-    public function getPath(id:String, useFallback:Fallback):String;
-    public function isLocal(id:String, type:AssetType, useFallback:Fallback):Bool;
-    public function list(id:String, type:AssetType, useFallback:Fallback):Bool;
-    
-    //Synchronous asset fetch from modified set:
-    public function getText(id:String, useFallback:Fallback):String;
-    public function getBytes(id:String, useFallback:Fallback);
-    public function getImage(id:String, useFallback:Fallback);
-    public function getFont(id:String, useFallback:Fallback);
-    public function getAudio(id:String, useFallback:Fallback);
-    public function getVideo(id:String, useFallback:Fallback);
+    public var polymodLibrary:PolymodAssetLibrary;
 
-    public function getImageFromBytes(bytes:Bytes);
-    public function getFontFromBytes(bytes:Bytes);
-    public function getAudioFromBytes(bytes:Bytes);
-    public function getVideoFromBytes(bytes:Bytes);
+    public function init():Void;
 
-    public function clearCache();
-    
+    public function clearCache():Void;
+    public function exists(id:String, type:PolymodAssetType):Bool;
+
+    public function getBytes(id:String):Bytes;
+    public function getText(id:String):String;
     /*
     //Asynchronous asset fetch from modified set:
     public function loadText(id:String):String;
@@ -46,7 +34,7 @@ interface IBackend
     */
 }
 
-@:enum abstract Fallback(Bool) to Bool
+@:enum abstract Fallback(Bool) from Bool to Bool
 {
     var FALLBACK = true;
     var DEFAULT = false;

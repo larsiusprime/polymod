@@ -7,7 +7,6 @@ import openfl.display.Sprite;
 import openfl.text.TextField;
 import openfl.text.TextFormatAlign;
 import openfl.utils.AssetType;
-import polymod.library.ModAssetLibrary;
 import sys.FileSystem;
 
 /**

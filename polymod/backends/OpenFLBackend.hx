@@ -1,209 +1,109 @@
 package polymod.backends;
 
-import polymod.PolymodAssets.AssetType in PolymodAssetType;
+import haxe.xml.Fast;
+import haxe.xml.Printer;
+import polymod.Polymod;
+import polymod.Polymod.PolymodError;
+import polymod.PolymodAssets.PolymodAssetType;
+import polymod.library.Util.MergeRules;
+import polymod.library.PolymodAssetLibrary;
+import polymod.backends.IBackend.Fallback;
+import polymod.fs.PolymodFileSystem;
+import polymod.library.Util;
+#if unifill
+import unifill.Unifill;
+#end
 #if openfl
-    import flash.display.BitmapData;
-    import haxe.xml.Fast;
-    import haxe.xml.Printer;
-    import lime.app.Future;
-    import lime.utils.Assets in LimeAssets;
-    import openfl.utils.Assets in OpenFLAssets;
-    import openfl.display.AssetLibrary in OpenFLAssetLibrary;
-    import lime.net.HTTPRequest;
-    import lime.graphics.Image;
-    import lime.text.Font;
-    import lime.utils.Bytes;
-    import openfl.errors.Error;
-    import polymod.library.Util.MergeRules;
-    #if unifill
-    import unifill.Unifill;
-    #end
-    #if (openfl >= "8.0.0")
-    import lime.utils.AssetLibrary;
-    import lime.media.AudioBuffer;
-    import lime.utils.AssetType;
-    #else
-    import lime.Assets.AssetLibrary;
-    import lime.audio.AudioBuffer;
-    import lime.Assets.AssetType;
-    #end
+	import lime.app.Future;
+	import lime.utils.Assets in LimeAssets;
+	import openfl.errors.Error;
+	import openfl.utils.Assets in OpenFLAssets;
+	import openfl.utils.AssetLibrary;
+	import openfl.display.BitmapData;
+	import lime.net.HTTPRequest;
+	import lime.graphics.Image;
+	import lime.text.Font;
+	import lime.utils.Bytes;
+	#if (openfl >= "8.0.0")
+	import lime.utils.AssetLibrary;
+	import lime.media.AudioBuffer;
+	import lime.utils.AssetType;
+	#else
+	import lime.Assets.AssetType;
+	import lime.Assets.AssetLibrary;
+	import lime.audio.AudioBuffer;
+	#end
 #else
-    typedef OpenFLAssetLibrary = Dynamic;
+	typedef AssetLibrary = Dynamic;
 #end
 
-class OpenFLBackend implements IBackend extends OpenFLAssetLibrary
+class OpenFLBackend implements IBackend
 {
-    //STATIC:
+	//STATIC:
+	private static var defaultAssetLibrary:AssetLibrary = null;
+	private static function getDefaultAssetLibrary()
+	{
+		if(defaultAssetLibrary == null)
+		{
+			defaultAssetLibrary = LimeAssets.getLibrary("default");
+		}
+		return defaultAssetLibrary;
+	}
 
-    private static var defaultAssetLibrary:OpenFLAssetLibrary = null;
-    private static function getDefaultAssetLibrary()
-    {
-        if(defaultAssetLibrary == null)
-        {
-            defaultAssetLibrary = LimeAssets.getLibrary("default");
-        }
-        return defaultAssetLibrary;
-    }
+	private static function restoreDefaultAssetLibrary()
+	{
+		if(defaultAssetLibrary != null)
+		{
+			LimeAssets.registerLibrary("default", defaultAssetLibrary);
+		}
+	}
 
-    private static function restoreDefaultAssetLibrary()
-    {
-        if(defaultAssetLibrary != null)
-        {
-            LimeAssets.registerLibrary("default", defaultAssetLibrary);
-        }
-    }
 
-    private static function limeAssetTypeToPolymod(type:AssetType):PolymodAssetType;
-    {
-        return switch(type)
-        {
-            case BINARY: PolymodAssetType.BYTES;
-            case FONT: PolymodAssetType.FONT;
-            case IMAGE: PolymodAssetType.IMAGE;
-            case MUSIC: PolymodAssetType.AUDIO_MUSIC;
-            case SOUND: PolymodAssetType.AUDIO_SOUND;
-            case MANIFEST: PolymodAssetType.MANIFEST;
-            case TEMPLATE: PolymodAssetType.TEMPLATE;
-            case TEXT: PolymodAssetType.TEXT;
-            default: PolymodAssetType.UNKNOWN;
-        }
-    }
+	//Instance:
+	public var polymodLibrary:PolymodAssetLibrary;
+	public var modLibrary(default, null):AssetLibrary;
+	public var fallback(default, null):AssetLibrary;
+	
+	public function new ()
+	{
+		#if !openfl
+		Polymod.error(FAILED_CREATE_BACKEND, "OpenFLBackend requested, but openfl library wasn't found!");
+		#end
+	}
 
-    private static function polymodAssetTypeToLime(type:PolymodAssetType):AssetType;
-    {
-        return switch(type)
-        {
-            case PolymodAssetType.BYTES: BINARY;
-            case PolymodAssetType.FONT : FONT;
-            case PolymodAssetType.IMAGE : IMAGE;
-            case PolymodAssetType.AUDIO_MUSIC : MUSIC;
-            case PolymodAssetType.AUDIO_SOUND : SOUND;
-            case PolymodAssetType.MANIFEST : MANIFEST;
-            case PolymodAssetType.TEMPLATE : TEMPLATE;
-            case PolymodAssetType.TEXT : TEXT;
-            default: PolymodAssetType.UNKNOWN;
-        }
-    }
+	public function init()
+	{
+		fallback = getDefaultAssetLibrary();
+		modLibrary = new OpenFLModLibrary(this);
+		trace("fallback = " + fallback);
+		LimeAssets.registerLibrary("default", modLibrary);
+	}
 
-    //Instance:
-    public var modLibrary(default, null):OpenFLAssetLibrary;
-    public var fallback(default, null):AssetLibrary;
-    public var hasFallback(default, null):Bool = false;
+	public function exists(id:String, type:PolymodAssetType):Bool
+	{
+		return modLibrary.exists(id, OpenFLModLibrary.PolyToLime(type));
+	}
 
-    public function new () 
-    {
-        #if !openfl
-        throw "OpenFLBackend: needs the openfl library!";
-        #end
-        modLibrary = new OpenFLAssetLibrary();
-        fallback = getDefaultAssetLibrary();
-        hasFallback = fallback != null;
-    }
+	public function getPath(id:String):String
+	{
+		return modLibrary.getPath(id);
+	}
 
-    public function exists(id:String, type:PolymodAssetType, useFallback:Fallback=false):Bool
-    {
-        if(!useFallback) return modLibary.exists(id, polymodAssetTypeToLime(type));
-        if(!hasFallback) return false;
-        return fallback.exists(id, polymodAssetTypeToLime(type));
-    }
+	public function getBytes(id:String):Bytes
+	{
+		return modLibrary.getBytes(id);
+	}
 
-    public function getPath(id:String, useFallback:Fallback=false):String
-    {
-        if(!useFallback) return modLibrary.getPath(id);
-        if(!hasFallback) return false;
-        return fallback.getPath(id);
-    }
+	public function getText(id:String):String
+	{
+		return modLibrary.getText(id);
+	}
 
-    public function checkType(id:String, useFallback:Fallback=false):PolymodAssetType
-    {
-        var type:AssetType = AssetType.BINARY;
-        if(!useFallback)
-        {
-            type = @:privateAccess modLibrary.types.get(id);
-        }
-        else
-        {
-            if(!hasFallback) return PolymodAssetType.UNKNOWN;
-            type = @:privateAccess fallback.types.get(id);
-        }
-        return limeAssetTypeToPolymod(type);
-    }
-
-    public function isLocal(id:String, type:PolymodAssetType, useFallback:Fallback=false):Bool
-    {
-        if(!useFallback) return modLibrary.isLocal(id, polymodAssetTypeToLime(type));
-        if(!hasFallback) return false;
-        return fallback.isLocal(id, polymodAssetTypeToLime(type));
-    }
-
-    public function getText (id:String, useFallback:Bool=false):String
-    {
-        if(!useFallback) return modLibrary.getText(id);
-        if(!hasFallback) return false;
-        return fallback.getText(id);
-    }
-    
-    public function getBytes (id:String, useFallback:Fallback=false)
-    {
-        if(!useFallback) return modLibrary.getBytes(id);
-        if(!hasFallback) return false;
-        return fallback.getBytes(id);
-    }
-    
-    public function getImage (id:String, useFallback:Fallback=false)
-    {
-        if(!useFallback) return modLibrary.getImage(id);
-        if(!hasFallback) return false;
-        return fallback.getImage(id);
-    }
-
-    public function getFont (id:String, useFallback:Fallback=false)
-    {
-        if(!useFallback) return modLibrary.getFont(id);
-        if(!hasFallback) return false;
-        return fallback.getFont(id);
-    }
-
-    public function getAudio (id:String, useFallback:Fallback=false)
-    {
-        if(!useFallback) return modLibrary.getAudioBuffer(id);
-        if(!hasFallback) return false;
-        return fallback.getAudioBuffer(id);
-    }
-
-    public function getVideo (id:String, useFallback:Fallback=false)
-    {
-        //should put a warning here probably
-        if(!useFallback) return modLibrary.getBytes(id);
-        if(!hasFallback) return false;
-        return fallback.getBytes(id);
-    }
-
-    public function getImageFromBytes (bytes:Bytes):Image
-    {
-        return Image.fromBytes(bytes);
-    }
-
-    public function getFontFromBytes (bytes:Bytes):Font
-    {
-        return Font.fromBytes(bytes);
-    }
-
-    public function getAudioFromBytes (bytes:Bytes):AudioBuffer
-    {
-        return AudioBuffer.fromFile(bytes);
-    }
-
-    public function getVideoFromBytes (bytes:Bytes):Bytes
-    {
-        return bytes;
-    }
-
-    public function clearCache()
-    {
-        if (defaultAssetLibrary != null)
-        {
-            for (key in LimeAssets.cache.audio.keys())
+	public function clearCache()
+	{
+		if (defaultAssetLibrary != null)
+		{
+			for (key in LimeAssets.cache.audio.keys())
 			{
 				LimeAssets.cache.audio.remove(key);
 			}
@@ -214,8 +114,253 @@ class OpenFLBackend implements IBackend extends OpenFLAssetLibrary
 			for (key in LimeAssets.cache.image.keys())
 			{
 				LimeAssets.cache.image.remove(key);
-            }
-        }
-    }
+			}
+		}
+	}
 }
 
+class OpenFLModLibrary extends AssetLibrary
+{
+	public static function LimeToPoly(type:AssetType):PolymodAssetType
+	{
+		return switch(type)
+		{
+			case AssetType.BINARY: PolymodAssetType.BYTES;
+			case AssetType.FONT: PolymodAssetType.FONT;
+			case AssetType.IMAGE: PolymodAssetType.IMAGE;
+			case AssetType.MUSIC: PolymodAssetType.AUDIO_MUSIC;
+			case AssetType.SOUND: PolymodAssetType.AUDIO_SOUND;
+			case AssetType.MANIFEST: PolymodAssetType.MANIFEST;
+			case AssetType.TEMPLATE: PolymodAssetType.TEMPLATE;
+			case AssetType.TEXT: PolymodAssetType.TEXT;
+			default: PolymodAssetType.UNKNOWN;
+		}
+	}
+
+	public static function PolyToLime(type:PolymodAssetType):AssetType
+	{
+		return switch(type)
+		{
+			case PolymodAssetType.BYTES: AssetType.BINARY;
+			case PolymodAssetType.FONT : AssetType.FONT;
+			case PolymodAssetType.IMAGE : AssetType.IMAGE;
+			case PolymodAssetType.AUDIO_MUSIC : AssetType.MUSIC;
+			case PolymodAssetType.AUDIO_SOUND : AssetType.SOUND;
+			case PolymodAssetType.MANIFEST : AssetType.MANIFEST;
+			case PolymodAssetType.TEMPLATE : AssetType.TEMPLATE;
+			case PolymodAssetType.TEXT : AssetType.TEXT;
+			default: AssetType.BINARY;
+		}
+	}
+
+	var b:OpenFLBackend;
+	var p:PolymodAssetLibrary;
+	var fallback:AssetLibrary;
+	var hasFallback:Bool = false;
+	
+	public function new(backend:OpenFLBackend)
+	{
+		b = backend;
+		p = b.polymodLibrary;
+		fallback = b.fallback;
+		super();
+	}
+
+	public override function exists (id:String, type:String):Bool
+	{
+		var e = p.check(id, LimeToPoly(cast type));
+		if (!e && hasFallback) return fallback.exists(id, type);
+		return e;
+	}
+
+	public override function getAudioBuffer (id:String):AudioBuffer
+	{
+		if (p.check(id))
+			return AudioBuffer.fromBytes(PolymodFileSystem.getFileBytes(p.file(id)));
+		else if(hasFallback)
+			return fallback.getAudioBuffer(id);
+		return null;
+	}
+
+	public override function getBytes (id:String):Bytes
+	{
+		trace("getBytes("+id+")");
+		if (p.check(id))
+			return PolymodFileSystem.getFileBytes(p.file(id));
+		else if(hasFallback)
+			return fallback.getBytes(id);
+		return null;
+	}
+
+	public override function getFont (id:String):Font
+	{
+		if (p.check(id))
+			return Font.fromBytes(PolymodFileSystem.getFileBytes(p.file(id)));
+		else if(hasFallback)
+			return fallback.getFont(id);
+		return null;
+	}
+
+	public override function getImage (id:String):Image
+	{
+		trace("getImage("+id+") p.check("+id+") = " + p.check(id));
+		if (p.check(id)){
+			return Image.fromBytes(PolymodFileSystem.getFileBytes(p.file(id)));
+		}
+		else if(hasFallback)
+		{
+			return fallback.getImage(id);
+		}
+		return null;
+	}
+
+	public override function getPath (id:String):String
+	{
+		if (p.check(id))
+			return p.file(id);
+		else if(hasFallback)
+			return fallback.getPath(id);
+		return null;
+	}
+
+	public override function getText (id:String):String
+	{
+		var modText = null;
+		if (p.check(id))
+			modText = super.getText(id);
+		else if(hasFallback)
+			modText = fallback.getText(id);
+		
+		if (modText != null)
+			modText = p.mergeAndAppendText(modText, id);
+		
+		return modText;
+	}
+
+	public override function loadBytes (id:String):Future<Bytes> 
+	{
+		//TODO: filesystem
+		if (p.check(id))
+		{
+			return Bytes.loadFromFile (p.file(id));
+		}
+		else if(hasFallback)
+		{
+			return fallback.loadBytes(id);
+		}
+		return Bytes.loadFromFile("");
+	}
+
+	public override function loadFont(id:String):Future<Font>
+	{
+		//TODO: filesystem
+		if (p.check(id))
+		{
+			#if (js && html5)
+			return Font.loadFromName (paths.get (p.file(id)));
+			#else
+			return Font.loadFromFile (paths.get (p.file(id)));
+			#end
+		}
+		else if(hasFallback)
+		{
+			return fallback.loadFont(id);
+		}
+		#if (js && html5)
+		return Font.loadFromName (paths.get (""));
+		#else
+		return Font.loadFromFile (paths.get (""));
+		#end
+	}
+
+	public override function loadImage(id:String):Future<Image>
+	{
+		//TODO: filesystem
+		if (p.check(id))
+		{
+			return Image.loadFromFile(p.file(id));
+		}
+		else if(hasFallback)
+		{
+			return fallback.loadImage(id);
+		}
+		return Image.loadFromFile("");
+	}
+
+	public override function loadAudioBuffer(id:String)
+	{
+		//TODO: filesystem
+		if (p.check(id))
+		{
+			//return 
+			if (pathGroups.exists(p.file(id)))
+			{
+				return AudioBuffer.loadFromFiles (pathGroups.get(p.file(id)));
+			}
+			else
+			{
+				return AudioBuffer.loadFromFile(paths.get(p.file(id)));
+			}
+		}
+		else if(hasFallback)
+		{
+			return fallback.loadAudioBuffer(id);
+		}
+		return AudioBuffer.loadFromFile("");
+	}
+
+	public override function loadText(id:String):Future<String>
+	{
+		//TODO: FileSystem
+		if (p.check(id))
+		{
+			var request = new HTTPRequest<String> ();
+			return request.load (paths.get (p.file(id)));
+		}
+		else if(hasFallback)
+		{	
+			return fallback.loadText(id);
+		}
+		var request = new HTTPRequest<String> ();
+		return request.load ("");
+	}
+
+	public override function isLocal (id:String, type:String):Bool
+	{
+		if (p.check(id))
+			return true;
+		else if(hasFallback)
+			return fallback.isLocal(id, type);
+		return false;
+	}
+
+	public override function list (type:String):Array<String>
+	{
+		var otherList = hasFallback ? fallback.list(type) : [];
+		
+		var requestedType = type != null ? cast (type, AssetType) : null;
+		var items = [];
+		
+		for (id in p.type.keys ())
+		{
+			if (id.indexOf("_append") == 0 || id.indexOf("_merge") == 0) continue;
+			if (requestedType == null || exists (id, requestedType))
+			{
+				items.push (id);
+			}
+		}
+		
+		for (otherId in otherList)
+		{
+			if (items.indexOf(otherId) == -1)
+			{
+				if (requestedType == null || fallback.exists(otherId, type))
+				{
+					items.push(otherId);
+				}
+			}
+		}
+		
+		return items;
+	}
+}

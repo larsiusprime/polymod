@@ -1,6 +1,10 @@
 package polymod;
 
+import polymod.Polymod.PolymodErrorCode;
 import polymod.backends.IBackend;
+import polymod.Polymod.Framework;
+import polymod.library.Util.MergeRules;
+import polymod.library.PolymodAssetLibrary;
 
 typedef PolymodAssetsParams = {
    
@@ -33,75 +37,105 @@ typedef PolymodAssetsParams = {
 
 class PolymodAssets
 {
-    private static var library:PolymodAssetLibrary;
+    /**PUBLIC STATIC**/
 
     public static function init(params:PolymodAssetsParams):PolymodAssetLibrary
     {
-        var framework:Framework = params.framework != null ? params.framework : UNKNOWN;
-        backend = switch(framework)
+        var framework:Framework = params.framework;
+        if(framework == null)
         {
-            //case NME: new NMEBackend();
-            //case LIME: new LimeBackend();
-            case OPENFL: new OpenFLBackend();
-            //case HEAPS: new HEAPSBackend();
-            //case KHA: new KhaBackend();
+            framework = autoDetectFramework();
+            Polymod.notice(PolymodErrorCode.FRAMEWORK_AUTODETECT, " going with " + framework);
+        }
+        var backend = switch(framework)
+        {
+            //case NME: new polymod.backends.NMEBackend();
+            //case LIME: new polymod.backends.LimeBackend();
+            case OPENFL: new polymod.backends.OpenFLBackend();
+            //case HEAPS: new polymod.backends.HEAPSBackend();
+            //case KHA: new polymod.backends.KhaBackend();
             case CUSTOM: 
                 if(params.customBackend != null)
                 {
-                    return Type.createInstance(params.customBackend);
+                    Type.createInstance(params.customBackend,[]);
                 }
                 else
                 {
-                    throw "params.customBackend was not defined!";
+                    Polymod.error(PolymodErrorCode.UNDEFINED_CUSTOM_BACKEND, "params.customBackend was not defined!");
+                    null;
                 }
-                return null;
             default: null;
+        }
+        if(backend == null)
+        {
+            Polymod.error(PolymodErrorCode.FAILED_CREATE_BACKEND, "could not create a backend for framework("+framework+")!");
+            return null;
         }
 
         library = new PolymodAssetLibrary({
             backend:backend,
-            fallback:params.fallback,
             dirs:params.dirs,
             mergeRules:params.mergeRules,
             ignoredFiles:params.ignoredFiles
         });
 
+        backend.init();
+
         return library;
     }
 
-    public static function getAsset(id:String, type:AssetType) { return library.getAsset(id, type); }
     public static function getText(id:String):String { return library.getText(id); }
-    public static function getBytes(id:String) { return library.getBytes(id); }
-    public static function getImage(id:String) { return library.getImage(id); }
-    public static function getAudio(id:String) { return library.getAudio(id); }
-    public static function getVideo(id:String) { return library.getVideo(id); }
-    public static function getFont(id:String) { return library.getFont(id); }
+
+    /**PRIVATE STATIC**/
+
+    private static var library:PolymodAssetLibrary;
+
+    private static function autoDetectFramework():Framework
+    {
+        #if heaps
+        return HEAPS;
+        #end
+        #if nme
+        return NME;
+        #end
+        #if openfl
+        return OPENFL;
+        #end
+        #if lime
+        return LIME;
+        #end
+        #if kha
+        return KHA;
+        #end
+        return UNKNOWN;
+    }
+
 }
 
-enum Framework
+@:enum abstract PolymodAssetType(String) from String to String
 {
-    NME;
-    LIME;
-    OPENFL;
-    HEAPS;
-    KHA;
-    CUSTOM;
-    UNKNOWN;
-}
+    var BYTES = "BYTES";
+    var TEXT = "TEXT";
+    var IMAGE = "IMAGE";
+    var VIDEO = "VIDEO";
+    var FONT = "FONT";
+    var AUDIO_GENERIC = "AUDIO_GENERIC";
+    var AUDIO_MUSIC = "AUDIO_MUSIC";
+    var AUDIO_SOUND = "AUDIO_SOUND";
+    var MANIFEST = "MANIFEST";
+    var TEMPLATE = "TEMPLATE";
+    var UNKNOWN = "UNKNOWN";
 
-enum AssetType
-{
-    BYTES;
-    TEXT;
-    IMAGE;
-    VIDEO;
-    FONT;
-    AUDIO_GENERIC;
-    AUDIO_MUSIC;
-    AUDIO_SOUND;
-    MANIFEST;
-    TEMPLATE;
-    UNKNOWN;
+    public static function fromString(str:String):PolymodAssetType
+    {
+        str = str.toUpperCase();
+        switch(str)
+        {
+            case BYTES,TEXT,IMAGE,VIDEO,FONT,AUDIO_GENERIC,AUDIO_MUSIC,AUDIO_SOUND,MANIFEST,TEMPLATE,UNKNOWN: return str;
+            default: return UNKNOWN;
+        }
+        return UNKNOWN;
+    }
 }
 
 enum TextFileFormat

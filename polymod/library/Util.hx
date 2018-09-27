@@ -23,10 +23,10 @@
 
 package polymod.library;
 
-import polymod.PolymodCore;
+import polymod.Polymod;
 import polymod.fs.PolymodFileSystem;
-import polymod.PolymodCore.PolymodError;
-import polymod.PolymodCore.PolymodErrorType;
+import polymod.Polymod.PolymodError;
+import polymod.Polymod.PolymodErrorType;
 import polymod.library.CSV.CSVParseFormat;
 
 #if unifill
@@ -100,7 +100,7 @@ class Util
 			var csvFormat = (mergeRules != null ? mergeRules.csv : null);
 			if(csvFormat == null)
 			{
-				PolymodCore.warning("no_csv_format", "No CSV format provided, using default parse format, there could be problems!");
+				Polymod.warning("no_csv_format", "No CSV format provided, using default parse format, there could be problems!");
 				csvFormat = new CSVParseFormat(",",true);
 			}
 			return mergeCSV(baseText, mergeText, id, csvFormat);
@@ -582,7 +582,6 @@ class Util
 			}
 			return results;
 		}
-		#end
 		return [];
 	}
 

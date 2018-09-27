@@ -23,16 +23,16 @@
 
 package polymod;
 
+import polymod.backends.IBackend;
 import polymod.library.JsonHelp;
 import polymod.library.SemanticVersion;
 import polymod.library.Util.MergeRules;
+import polymod.library.PolymodAssetLibrary;
+import polymod.fs.PolymodFileSystem;
+import polymod.PolymodAssets.PolymodAssetType;
 
 typedef PolymodParams = {
 	
-	/**
-     * the Haxe framework you're using (OpenFL, HEAPS, Kha, NME, etc..)
-     */
-    framework:Framework,
 	
 	/**
 	 * root directory of all mods
@@ -45,7 +45,12 @@ typedef PolymodParams = {
 	dirs:Array<String>,
 
 	/**
-	 * semantic version of your game's Modding API (will generate errors & warnings)
+	 * (optional) the Haxe framework you're using (OpenFL, HEAPS, Kha, NME, etc..). If not provided, Polymod will attempt to determine this automatically
+	 */
+	?framework:Framework,
+	
+	/**
+	 * (optional) semantic version of your game's Modding API (will generate errors & warnings)
 	 */
 	?apiVersion:String,
 
@@ -76,11 +81,22 @@ typedef PolymodParams = {
      ?customBackend:Class<IBackend>
 }
 
+enum Framework
+{
+	NME;
+	LIME;
+	OPENFL;
+	HEAPS;
+	KHA;
+	CUSTOM;
+	UNKNOWN;
+}
+
 /**
  * ...
  * @author
  */
-class PolymodCore
+class Polymod
 {
 	public static var onError:PolymodError->Void = null;
 	private static var library:PolymodAssetLibrary = null;
@@ -101,7 +117,8 @@ class PolymodCore
 		try
 		{
 			var apiStr = params.apiVersion;
-			if(apiStr == null || apiStr == ""){
+			if(apiStr == null || apiStr == "")
+			{
 				apiStr = "*.*.*";
 			}
 			apiVersion = SemanticVersion.fromString(apiStr);
@@ -277,7 +294,7 @@ class PolymodCore
 	private static function getFileSystem()
 	{
 		#if sys
-		return new SysFileSystem();
+		return new polymod.fs.SysFileSystem();
 		#end
 		return null;
 	}
@@ -346,14 +363,14 @@ class PolymodCore
 
 	/**
 	 * Provide a list of assets included in or modified by the mod(s)
-	 * @param type the type of asset you want (lime.utils.AssetType)
+	 * @param type the type of asset you want (lime.utils.PolymodAssetType)
 	 * @return Array<String> a list of assets of the matching type
 	 */
-	public static function listModFiles(type:AssetType=null):Array<String>
+	public static function listModFiles(type:PolymodAssetType=null):Array<String>
 	{
-		if(modLibrary != null)
+		if(library != null)
 		{
-			return modLibrary.listModFiles(type);
+			return library.listModFiles(type);
 		}
 		return [];
 	}
@@ -403,14 +420,6 @@ class PolymodCore
 		}
 		return null;
 	}
-
-	private static function clearCache()
-	{
-		if (defaultLibrary != null)
-		{
-			PolymodAssets.clearCache();
-		}
-	}
 }
 
 class ModMetadata
@@ -444,7 +453,7 @@ class ModMetadata
 		}
 		catch(msg:Dynamic)
 		{
-			PolymodCore.error(PARSE_MOD_API_VERSION,"Error parsing api version: ("+Std.string(msg)+") _polymod_meta.json was : " + str);
+			Polymod.error(PARSE_MOD_API_VERSION,"Error parsing api version: ("+Std.string(msg)+") _polymod_meta.json was : " + str);
 			return null;
 		}
 		try
@@ -453,7 +462,7 @@ class ModMetadata
 		}
 		catch(msg:Dynamic)
 		{
-			PolymodCore.error(PARSE_MOD_VERSION,"Error parsing mod version: ("+Std.string(msg)+") _polymod_meta.json was : " + str);
+			Polymod.error(PARSE_MOD_VERSION,"Error parsing mod version: ("+Std.string(msg)+") _polymod_meta.json was : " + str);
 			return null;
 		}
 		m.license = JsonHelp.str(json, "license");
@@ -494,4 +503,7 @@ enum PolymodErrorType
 	var VERSION_CONFLICT_MOD:String = "version_conflict_mod";
 	var VERSION_CONFLICT_API:String = "version_conflict_api";
 	var PARAM_MOD_VERSION:String = "param_mod_version";
+	var FRAMEWORK_AUTODETECT:String = "framework_autodetect";
+	var UNDEFINED_CUSTOM_BACKEND:String = "undefined_custom_backend";
+	var FAILED_CREATE_BACKEND:String = "failed_create_backend";
 }
