@@ -21,7 +21,7 @@
  * 
  */
  
- package polymod.library;
+ package polymod.util;
 
 import haxe.xml.Fast;
 import haxe.xml.Printer;

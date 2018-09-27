@@ -21,7 +21,7 @@
  * 
  */
 
-package polymod.library;
+package polymod.util;
 
 class CSVParseFormat
 {

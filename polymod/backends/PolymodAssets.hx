@@ -1,10 +1,10 @@
-package polymod;
+package polymod.backends;
 
 import polymod.Polymod.PolymodErrorCode;
 import polymod.backends.IBackend;
 import polymod.Polymod.Framework;
-import polymod.library.Util.MergeRules;
-import polymod.library.PolymodAssetLibrary;
+import polymod.util.Util.MergeRules;
+import polymod.backends.PolymodAssetLibrary;
 
 typedef PolymodAssetsParams = {
    

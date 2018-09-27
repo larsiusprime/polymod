@@ -21,7 +21,7 @@
  * 
  */
 
-package polymod.library;
+package polymod.util;
 
 /**
  * A simple TSV (tab separated values) structure

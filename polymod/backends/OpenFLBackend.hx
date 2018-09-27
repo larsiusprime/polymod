@@ -4,12 +4,11 @@ import haxe.xml.Fast;
 import haxe.xml.Printer;
 import polymod.Polymod;
 import polymod.Polymod.PolymodError;
-import polymod.PolymodAssets.PolymodAssetType;
-import polymod.library.Util.MergeRules;
-import polymod.library.PolymodAssetLibrary;
-import polymod.backends.IBackend.Fallback;
 import polymod.fs.PolymodFileSystem;
-import polymod.library.Util;
+import polymod.util.Util;
+import polymod.util.Util.MergeRules;
+import polymod.backends.PolymodAssetLibrary;
+import polymod.backends.PolymodAssets.PolymodAssetType;
 #if unifill
 import unifill.Unifill;
 #end

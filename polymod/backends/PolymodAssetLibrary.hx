@@ -1,9 +1,10 @@
-package polymod.library;
+package polymod.backends;
 
 import polymod.backends.IBackend;
-import polymod.PolymodAssets.PolymodAssetType;
+import polymod.backends.PolymodAssets.PolymodAssetType;
 import polymod.Polymod.Framework;
-import polymod.library.Util.MergeRules;
+import polymod.util.Util;
+import polymod.util.Util.MergeRules;
 import polymod.fs.PolymodFileSystem;
 
 typedef PolymodAssetLibraryParams = {

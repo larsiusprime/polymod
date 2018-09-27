@@ -21,13 +21,13 @@
  *
  */
 
-package polymod.library;
+package polymod.util;
 
 import polymod.Polymod;
 import polymod.fs.PolymodFileSystem;
 import polymod.Polymod.PolymodError;
 import polymod.Polymod.PolymodErrorType;
-import polymod.library.CSV.CSVParseFormat;
+import polymod.util.CSV.CSVParseFormat;
 
 #if unifill
 import unifill.Unifill;

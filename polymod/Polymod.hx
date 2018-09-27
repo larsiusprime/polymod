@@ -23,13 +23,14 @@
 
 package polymod;
 
-import polymod.backends.IBackend;
-import polymod.library.JsonHelp;
-import polymod.library.SemanticVersion;
-import polymod.library.Util.MergeRules;
-import polymod.library.PolymodAssetLibrary;
 import polymod.fs.PolymodFileSystem;
-import polymod.PolymodAssets.PolymodAssetType;
+import polymod.util.JsonHelp;
+import polymod.util.SemanticVersion;
+import polymod.util.Util.MergeRules;
+import polymod.backends.IBackend;
+import polymod.backends.PolymodAssets;
+import polymod.backends.PolymodAssetLibrary;
+import polymod.backends.PolymodAssets.PolymodAssetType;
 
 typedef PolymodParams = {
 	

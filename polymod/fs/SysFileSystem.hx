@@ -1,6 +1,6 @@
 package polymod.fs;
 
-import polymod.library.Util;
+import polymod.util.Util;
 
 // #if sys
 class SysFileSystem
