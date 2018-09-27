@@ -1,7 +1,7 @@
 package;
-import flash.display.DisplayObject;
-import flash.text.TextFieldType;
 import openfl.Assets;
+import openfl.display.DisplayObject;
+import openfl.text.TextFieldType;
 import openfl.display.Bitmap;
 import openfl.display.Sprite;
 import openfl.text.TextField;

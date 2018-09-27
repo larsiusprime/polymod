@@ -1,10 +1,7 @@
 package demo;
 
-import openfl.Assets;
-import lime.utils.AssetType;
-import openfl.display.Sprite;
 import openfl.Lib;
-import polymod.library.ModAssetLibrary;
+import openfl.display.Sprite;
 import polymod.Polymod;
 import polymod.hscript.HScriptConfig;
 import openfl.events.KeyboardEvent;

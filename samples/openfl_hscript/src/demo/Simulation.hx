@@ -1,7 +1,7 @@
 package demo;
 
-import flash.display.DisplayObject;
-import flash.text.TextFieldType;
+import openfl.display.DisplayObject;
+import openfl.text.TextFieldType;
 import openfl.Assets;
 import openfl.Lib;
 import openfl.display.Bitmap;
@@ -11,7 +11,6 @@ import openfl.text.TextField;
 import openfl.text.TextFormatAlign;
 import openfl.utils.AssetType;
 import openfl.events.Event;
-import polymod.library.ModAssetLibrary;
 import sys.FileSystem;
 
 /**
