@@ -34,7 +34,7 @@ class PolymodAssetLibrary
 {
 	public var backend(default, null):IBackend;
 	
-	public var type(default, null) = new Map<String, PolymodAssetType>();
+	public var type(default, null):Map<String, PolymodAssetType>;
 
 	public var dirs:Array<String> = null;
 	private var mergeRules:MergeRules = null;
@@ -48,6 +48,7 @@ class PolymodAssetLibrary
 		mergeRules = params.mergeRules;
 		ignoredFiles = params.ignoredFiles != null ? params.ignoredFiles.copy() : [];
 		backend.clearCache();
+		init();
 	}
 
 	public function exists(id:String, type:PolymodAssetType)
@@ -124,14 +125,14 @@ class PolymodAssetLibrary
 		id = Util.stripAssetsPrefix(id);
 		for (d in dirs)
 		{
-			exists = PolymodFileSystem.exists(Util.pathJoin(d,id));
+			if(PolymodFileSystem.exists(Util.pathJoin(d, id)))
 			{
 				exists = true;
 			}
 		}
 		if (exists && type != null && type != PolymodAssetType.BYTES)
 		{
-			exists = (this.type.get(id) == type);
+			exists = (this.type.get(file(id)) == type);
 		}
 		return exists;
 	}
@@ -162,9 +163,7 @@ class PolymodAssetLibrary
 	 */
 	public function file(id:String, theDir:String = ""):String
 	{
-		trace("file("+id+") theDir="+theDir);
 		id = Util.stripAssetsPrefix(id);
-		trace("id now " + id);
 		if (theDir != "")
 		{
 			return Util.pathJoin(theDir,id);
@@ -174,13 +173,68 @@ class PolymodAssetLibrary
 		for (d in dirs)
 		{
 			var thePath = Util.pathJoin(d,id);
-			trace("thePath = " + thePath);
 			if(PolymodFileSystem.exists(thePath))
 			{
-				trace("EXISTS");
 				theFile = thePath;
 			}
 		}
 		return theFile;
+	}
+
+	
+	private function init()
+	{
+		type = new Map<String,PolymodAssetType>();
+		if (dirs != null)
+		{
+			for (d in dirs)
+			{
+				_initMod(d);
+			}
+		}
+	}
+
+	private function _initMod(d:String):Void
+	{
+		if (d == null) return;
+		
+		var all:Array<String> = null;
+		
+		if (d == "" || d == null)
+		{
+			all = [];
+		}
+		
+		try
+		{
+			if (PolymodFileSystem.exists(d))
+			{
+				all = PolymodFileSystem.readDirectoryRecursive(d);
+			}
+			else
+			{
+				all = [];
+			}
+		}
+		catch (msg:Dynamic)
+		{
+			throw ("ModAssetLibrary._initMod(" + d + ") failed : " + msg);
+		}
+
+		for (f in all)
+		{
+			var doti = Util.uLastIndexOf(f,".");
+			var ext:String = doti != -1 ? f.substring(doti+1) : "";
+			ext = ext.toLowerCase();
+			var assetType = switch(ext)
+			{
+				case "mp3", "ogg", "wav": PolymodAssetType.AUDIO_GENERIC;
+				case "jpg", "png":PolymodAssetType.IMAGE;
+				case "txt", "xml", "json", "tsv", "csv", "mpf", "tsx", "tmx", "vdf": PolymodAssetType.TEXT;
+				case "ttf", "otf": PolymodAssetType.FONT;
+				default: PolymodAssetType.BYTES;
+			}
+			type.set(f,assetType);
+		}
 	}
 }

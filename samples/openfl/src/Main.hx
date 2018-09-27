@@ -32,8 +32,6 @@ class Main extends Sprite
 	
 	private function loadMods(dirs:Array<String>)
 	{
-		trace("FileSystem.exists(../../../mods) = " + sys.FileSystem.exists("../../../mods"));
-		
 		var modRoot = "../../../mods/";
 		var results = Polymod.init({
 			modRoot:modRoot,

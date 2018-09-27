@@ -4,7 +4,6 @@ class PolymodFileSystem
 {
     public static inline function exists( path: String )
     {
-        trace("exists("+path+")");
         #if sys 
             return SysFileSystem.exists(path);
         #else

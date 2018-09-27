@@ -130,7 +130,6 @@ class Demo extends Sprite
 		var yy = 10;
 
 		var images = Assets.list(AssetType.IMAGE);
-		trace("assets.list images = " + images);
 		images.sort(function(a:String, b:String):Int{
 			if (a < b) return -1;
 			if (a > b) return  1;
@@ -139,7 +138,6 @@ class Demo extends Sprite
 		
 		for (image in images)
 		{
-			trace("about to call Assets.getBitmapData("+image+")");
 			var bData = Assets.getBitmapData(image);
 			var bmp = new Bitmap(bData);
 			bmp.x = xx;

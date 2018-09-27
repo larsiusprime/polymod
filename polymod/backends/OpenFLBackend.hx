@@ -115,6 +115,7 @@ class OpenFLBackend implements IBackend
 				LimeAssets.cache.image.remove(key);
 			}
 		}
+		openfl.Assets.cache.clear();
 	}
 }
 
@@ -145,6 +146,7 @@ class OpenFLModLibrary extends AssetLibrary
 			case PolymodAssetType.IMAGE : AssetType.IMAGE;
 			case PolymodAssetType.AUDIO_MUSIC : AssetType.MUSIC;
 			case PolymodAssetType.AUDIO_SOUND : AssetType.SOUND;
+			case PolymodAssetType.AUDIO_GENERIC : AssetType.SOUND;
 			case PolymodAssetType.MANIFEST : AssetType.MANIFEST;
 			case PolymodAssetType.TEMPLATE : AssetType.TEMPLATE;
 			case PolymodAssetType.TEXT : AssetType.TEXT;
@@ -155,7 +157,8 @@ class OpenFLModLibrary extends AssetLibrary
 	var b:OpenFLBackend;
 	var p:PolymodAssetLibrary;
 	var fallback:AssetLibrary;
-	var hasFallback:Bool = false;
+	var hasFallback:Bool;
+	var type(default, null):Map<String,AssetType>;
 	
 	public function new(backend:OpenFLBackend)
 	{
@@ -166,9 +169,13 @@ class OpenFLModLibrary extends AssetLibrary
 		super();
 	}
 
-	public override function getAsset(id:String, type:String):Dynamic {
-
-		trace("getAsset("+id+","+type+")");
+	public override function getAsset(id:String, type:String):Dynamic
+	{
+		var e = p.check(id, LimeToPoly(cast type));
+		if (!e && hasFallback)
+		{
+			return fallback.getAsset(id, type);
+		}
 		return super.getAsset(id,type);
 	}
 
@@ -190,9 +197,7 @@ class OpenFLModLibrary extends AssetLibrary
 
 	public override function getBytes (id:String):Bytes
 	{
-		trace("getBytes("+id+") check = " + p.check(id));
 		var file = p.file(id);
-		trace("file = " + file + " FileSystem.exists("+file+") = " + sys.FileSystem.exists(file));
 		if (p.check(id))
 			return PolymodFileSystem.getFileBytes(p.file(id));
 		else if(hasFallback)
@@ -211,14 +216,10 @@ class OpenFLModLibrary extends AssetLibrary
 
 	public override function getImage (id:String):Image
 	{
-		trace("getImage("+id+") p.check("+id+") = " + p.check(id));
-		if (p.check(id)){
+		if (p.check(id))
 			return Image.fromBytes(PolymodFileSystem.getFileBytes(p.file(id)));
-		}
 		else if(hasFallback)
-		{
 			return fallback.getImage(id);
-		}
 		return null;
 	}
 
@@ -235,12 +236,16 @@ class OpenFLModLibrary extends AssetLibrary
 	{
 		var modText = null;
 		if (p.check(id))
+		{
 			modText = super.getText(id);
+		}
 		else if(hasFallback)
 			modText = fallback.getText(id);
 		
 		if (modText != null)
-			modText = p.mergeAndAppendText(modText, id);
+		{
+			modText = p.mergeAndAppendText(id, modText);
+		}
 		
 		return modText;
 	}
@@ -344,17 +349,13 @@ class OpenFLModLibrary extends AssetLibrary
 
 	public override function list (type:String):Array<String>
 	{
-		trace("list("+type+") " + hasFallback);
 		var otherList = hasFallback ? fallback.list(type) : [];
 		
 		var requestedType = type != null ? cast (type, AssetType) : null;
 		var items = [];
 		
-		trace("otherList = " + otherList);
-
 		for (id in p.type.keys ())
 		{
-			trace("id = " + id);
 			if (id.indexOf("_append") == 0 || id.indexOf("_merge") == 0) continue;
 			if (requestedType == null || exists (id, requestedType))
 			{
