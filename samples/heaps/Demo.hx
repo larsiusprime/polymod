@@ -23,7 +23,12 @@
 
 package samples.heaps;
 
+import hxd.Res;
 import h2d.Sprite;
+import h2d.Tile;
+import h2d.Bitmap;
+import h2d.Text;
+import h2d.Text.Align;
 import h2d.Scene;
 
 class Demo extends Sprite
@@ -122,7 +127,7 @@ class Demo extends Sprite
 		var files = [];
 		for(asset in path)
 		{
-			files.push(asset.path);		
+			files.push(asset.path);
 		};
 		return files;
 	}
@@ -140,9 +145,9 @@ class Demo extends Sprite
 		});
 		for (image in images)
 		{
-			var spr = new h2d.Sprite(this);
-			var tile = hxd.Res.loader.load(image).toTile();
-			var bmp = new h2d.Bitmap(tile, spr);
+			var spr = new Sprite(this);
+			var tile = Res.loader.load(image).toTile();
+			var bmp = new Bitmap(tile, spr);
 			bmp.x = 0;
 			bmp.y = 0;
 			spr.x = xx;
@@ -169,7 +174,7 @@ class Demo extends Sprite
 		for (t in texts)
 		{
 			var isXML:Bool = false;
-			var align:h2d.Text.Align = Center;
+			var align:Align = Center;
 			var theWidth = 150;
 			if (t.indexOf("xml") != -1)
 			{
@@ -201,26 +206,26 @@ class Demo extends Sprite
 		}
 	}
 
-	private function getBox(width:Int,height:Int,border:Int,color1:Int=0x000000,color2:Int=0xFFFFFF):h2d.Sprite
+	private function getBox(width:Int,height:Int,border:Int,color1:Int=0x000000,color2:Int=0xFFFFFF):Sprite
 	{
-		var spr = new h2d.Sprite(this);
+		var spr = new Sprite(this);
 		spr.x = 0;
 		spr.y = 0;
-		var col1 = h2d.Tile.fromColor(color1,width,height);
-		var bmp = new h2d.Bitmap(col1,spr);
+		var col1 = Tile.fromColor(color1,width,height);
+		var bmp = new Bitmap(col1,spr);
 		bmp.x = 0;
 		bmp.y = 0;
-		var col2 = h2d.Tile.fromColor(color2,width-2,height-2);
-		var bmp2 = new h2d.Bitmap(col2,spr);
+		var col2 = Tile.fromColor(color2,width-2,height-2);
+		var bmp2 = new Bitmap(col2,spr);
 		bmp2.x = border;
 		bmp2.y = border;
 		return spr;
 	}
 
-	private function getText(align:h2d.Text.Align):h2d.Text
+	private function getText(align:Align):Text
 	{
-		var font = hxd.Res.customFont.toFont();
-		var text = new h2d.Text(font, this);
+		var font = Res.customFont.toFont();
+		var text = new Text(font, this);
 		text.textColor = 0x000000;
 		text.scale(1);
 		text.textAlign = align;

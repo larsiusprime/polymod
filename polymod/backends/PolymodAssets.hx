@@ -75,7 +75,7 @@ class PolymodAssets
             //case NME: new polymod.backends.NMEBackend();
             //case LIME: new polymod.backends.LimeBackend();
             case OPENFL: new polymod.backends.OpenFLBackend();
-            //case HEAPS: new polymod.backends.HEAPSBackend();
+            case HEAPS: new polymod.backends.HEAPSBackend();
             //case KHA: new polymod.backends.KhaBackend();
             case CUSTOM: 
                 if(params.customBackend != null)
