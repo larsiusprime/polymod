@@ -38,4 +38,6 @@ interface IBackend
 
     public function getBytes(id:String):Bytes;
     public function getText(id:String):String;
+
+    public function stripAssetsPrefix(id:String):String;
 }

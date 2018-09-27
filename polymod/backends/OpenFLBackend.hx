@@ -21,7 +21,7 @@
  * 
  */
  
- package polymod.backends;
+package polymod.backends;
 
 import haxe.xml.Fast;
 import haxe.xml.Printer;
@@ -93,12 +93,7 @@ class OpenFLBackend implements IBackend
 	public var modLibrary(default, null):AssetLibrary;
 	public var fallback(default, null):AssetLibrary;
 	
-	public function new ()
-	{
-		#if !openfl
-		Polymod.error(FAILED_CREATE_BACKEND, "OpenFLBackend requested, but openfl library wasn't found!");
-		#end
-	}
+	public function new (){}
 
 	public function init()
 	{
@@ -145,6 +140,15 @@ class OpenFLBackend implements IBackend
 			}
 		}
 		openfl.Assets.cache.clear();
+	}
+
+	public function stripAssetsPrefix(id:String):String
+	{
+		if (Util.uIndexOf(id, "assets/") == 0)
+		{
+			id = Util.uSubstring(id, 7);
+		}
+		return id;
 	}
 }
 

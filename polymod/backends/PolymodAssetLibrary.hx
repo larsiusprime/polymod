@@ -146,7 +146,7 @@ class PolymodAssetLibrary
 	{
 		if(ignoredFiles.length > 0 && ignoredFiles.indexOf(id) != -1) return false;
 		var exists = false;
-		id = Util.stripAssetsPrefix(id);
+		id = backend.stripAssetsPrefix(id);
 		for (d in dirs)
 		{
 			if(PolymodFileSystem.exists(Util.pathJoin(d, id)))
@@ -163,7 +163,7 @@ class PolymodAssetLibrary
 
 	public function checkDirectly(id:String, dir:String):Bool
 	{
-		id = Util.stripAssetsPrefix(id);
+		id = backend.stripAssetsPrefix(id);
 		if (dir == null || dir == "")
 		{
 			return PolymodFileSystem.exists(id);
@@ -187,7 +187,7 @@ class PolymodAssetLibrary
 	 */
 	public function file(id:String, theDir:String = ""):String
 	{
-		id = Util.stripAssetsPrefix(id);
+		id = backend.stripAssetsPrefix(id);
 		if (theDir != "")
 		{
 			return Util.pathJoin(theDir,id);
