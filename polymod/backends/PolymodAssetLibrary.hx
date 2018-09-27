@@ -75,11 +75,6 @@ class PolymodAssetLibrary
 		init();
 	}
 
-	public function exists(id:String, type:PolymodAssetType)
-	{
-		return backend.exists(id, type);
-	}
-
 	public function mergeAndAppendText(id:String, modText:String):String
 	{
 		modText = Util.mergeAndAppendText(modText, id, dirs, getTextDirectly, mergeRules);
@@ -127,7 +122,7 @@ class PolymodAssetLibrary
 		for (id in this.type.keys ())
 		{
 			if (id.indexOf("_append") == 0 || id.indexOf("_merge") == 0) continue;
-			if (type == null || type == BYTES || backend.exists (id, type))
+			if (type == null || type == BYTES || check (id, type))
 			{
 				items.push (id);
 			}

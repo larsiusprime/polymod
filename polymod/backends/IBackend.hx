@@ -34,8 +34,6 @@ interface IBackend
     public function init():Void;
 
     public function clearCache():Void;
-    public function exists(id:String, type:PolymodAssetType):Bool;
-
     public function getBytes(id:String):Bytes;
     public function getText(id:String):String;
 

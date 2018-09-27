@@ -70,7 +70,7 @@ class PolymodAssets
             framework = autoDetectFramework();
             Polymod.notice(PolymodErrorCode.FRAMEWORK_AUTODETECT, " going with " + framework);
         }
-        var backend = switch(framework)
+        var backend:IBackend = switch(framework)
         {
             //case NME: new polymod.backends.NMEBackend();
             //case LIME: new polymod.backends.LimeBackend();

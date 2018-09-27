@@ -102,16 +102,6 @@ class OpenFLBackend implements IBackend
         LimeAssets.registerLibrary("default", modLibrary);
     }
 
-    public function exists(id:String, type:PolymodAssetType):Bool
-    {
-        return modLibrary.exists(id, OpenFLModLibrary.PolyToLime(type));
-    }
-
-    public function getPath(id:String):String
-    {
-        return modLibrary.getPath(id);
-    }
-
     public function getBytes(id:String):Bytes
     {
         return modLibrary.getBytes(id);
