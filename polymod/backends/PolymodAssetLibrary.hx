@@ -156,7 +156,8 @@ class PolymodAssetLibrary
 		}
 		if (exists && type != null && type != PolymodAssetType.BYTES)
 		{
-			exists = (this.type.get(file(id)) == type);
+			var otherType = this.type.get(id);
+			exists = (otherType == type);
 		}
 		return exists;
 	}
@@ -244,7 +245,6 @@ class PolymodAssetLibrary
 		{
 			throw ("ModAssetLibrary._initMod(" + d + ") failed : " + msg);
 		}
-
 		for (f in all)
 		{
 			var doti = Util.uLastIndexOf(f,".");

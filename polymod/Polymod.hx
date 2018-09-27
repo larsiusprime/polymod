@@ -26,6 +26,7 @@ package polymod;
 import polymod.fs.PolymodFileSystem;
 import polymod.util.JsonHelp;
 import polymod.util.SemanticVersion;
+import polymod.util.Util;
 import polymod.util.Util.MergeRules;
 import polymod.backends.IBackend;
 import polymod.backends.PolymodAssets;
@@ -113,7 +114,6 @@ class Polymod
 
         var modRoot = params.modRoot;
         var dirs = params.dirs;
-
         var apiVersion:SemanticVersion = null;
         try
         {
@@ -156,7 +156,7 @@ class Polymod
             if(dirs[i] != null)
             {
                 var origDir = dirs[i];
-                dirs[i] = modRoot + "/" + dirs[i];
+                dirs[i] = Util.pathJoin(modRoot,dirs[i]);
                 var meta:ModMetadata = getMetadata(dirs[i]);
 
                 if(meta != null)

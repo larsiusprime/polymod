@@ -553,6 +553,12 @@ class Util
 		{
 			str = Util.uCombine([a,sl(),b]);
 		}
+		str = cleanSlashes(str);
+		return str;
+	}
+
+	public static function cleanSlashes(str:String):String
+	{
 		str = uSplitReplace(str, "\\", "/");
 		str = uSplitReplace(str, "//", "/");
 		return str;
