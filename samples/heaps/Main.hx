@@ -75,6 +75,7 @@ class Main extends hxd.App
             errorCallback:onError,
             ignoredFiles:Polymod.getDefaultIgnoreList()
         });
+        hxd.Res.initEmbed();
     }
 
     private function onError(error:PolymodError)

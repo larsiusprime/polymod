@@ -341,27 +341,6 @@ class Polymod
         return null;
     }
 
-    // TODO (DK) shouldn't be publicly exposed IMO?
-    /**
-     * Get the asset library that Polymod uses as a fallback for assets your
-     * mod doesn't provide
-     * @return AssetLibrary
-     */
-    // public static function getDefaultLibrary():AssetLibrary
-    // {
-    // 	return defaultLibrary;
-    // }
-
-    // TODO (DK) shouldn't be publicly exposed IMO?
-    /**
-     * Get the mod asset library that Polymod sets as your default asset library
-     * @return ModAssetLibrary
-     */
-    // public static function getModLibrary():ModAssetLibrary
-    // {
-    // 	return modLibrary;
-    // }
-
     /**
      * Provide a list of assets included in or modified by the mod(s)
      * @param type the type of asset you want (lime.utils.PolymodAssetType)

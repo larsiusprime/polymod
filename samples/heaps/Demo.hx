@@ -74,7 +74,6 @@ class Demo extends Sprite
 			widgets.push(w);
 			xx += (72 + 10);
 		}
-		
 		updateWidgets();
 	}
 	
@@ -137,7 +136,7 @@ class Demo extends Sprite
 		var xx = 10;
 		var yy = 10;
 		
-		var images = list("img");	
+		var images = list("img");
 		images.sort(function(a:String, b:String):Int{
 			if (a < b) return -1;
 			if (a > b) return  1;

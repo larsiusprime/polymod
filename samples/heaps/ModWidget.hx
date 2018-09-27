@@ -117,10 +117,10 @@ class ModWidget extends Sprite
 	{
 		active = !active;
 		status.text = active ? "active" : "inactive";
-		/*if (callback != null)
+		if (callback != null)
 		{
 			callback(this, 0);
-		}*/
+		}
 	}
 	
 	private function onMove(i:Int)

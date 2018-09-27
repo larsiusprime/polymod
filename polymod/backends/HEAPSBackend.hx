@@ -23,6 +23,7 @@
  
 package polymod.backends;
 
+import haxe.io.Bytes;
 import haxe.xml.Fast;
 import haxe.xml.Printer;
 import polymod.Polymod;
@@ -36,8 +37,13 @@ import polymod.backends.PolymodAssets.PolymodAssetType;
 import unifill.Unifill;
 #end
 #if heaps
-    import heaps.hxd.Res.Loader;
-    import heaps.hxd.FileSystem;
+    import hxd.Res;
+    import hxd.res.Any;
+    import hxd.res.Loader;
+    import hxd.fs.FileEntry;
+    import hxd.fs.FileSystem;
+    import hxd.fs.LocalFileSystem;
+    import hxd.fs.BytesFileSystem.BytesFileEntry;
 #end
 
 #if !heaps
@@ -50,24 +56,24 @@ class HEAPSBackend extends StubBackend
     }
 }
 #else
-class HeapsBackend implements IBackend
+class HEAPSBackend implements IBackend
 {
     //STATIC:
-    private static var defaultLoader:Loader = null;
-    private static function getDefaultLoader()
+    public var defaultLoader:Loader = null;
+    private function getDefaultLoader()
     {
         if(defaultLoader == null)
         {
             var loader = Res.loader;
             if(Std.is(loader, HEAPSModLoader) == false)
             {
-                defaultLoader = load;
+                defaultLoader = loader;
             }
         }
         return defaultLoader;
     }
 
-    private static function restoreDefaultLoader()
+    private function restoreDefaultLoader()
     {
         if(defaultLoader != null)
         {
@@ -77,36 +83,27 @@ class HeapsBackend implements IBackend
 
     //Instance:
     public var polymodLibrary:PolymodAssetLibrary;
-    public var modLoader(default, null):Loader;
+    public var modLoader(default, null):HEAPSModLoader;
     public var fallback(default, null):Loader;
     
     public function new (){}
 
     public function init()
     {
+        trace("init heaps backend");
         fallback = getDefaultLoader();
         modLoader = new HEAPSModLoader(this);
         Res.loader = modLoader;
     }
 
-    public function exists(id:String, type:PolymodAssetType):Bool
-    {
-        return modLibrary.exists(id, HEAPSModLoader.PolyToHEAPS(type));
-    }
-
-    public function getPath(id:String):String
-    {
-        return modLibrary.getPath(id);
-    }
-
     public function getBytes(id:String):Bytes
     {
-        return modLibrary.getBytes(id);
+        return modLoader.load(id).entry.getBytes();
     }
 
     public function getText(id:String):String
     {
-        return modLibrary.getText(id);
+        return modLoader.loadText(id).toText();
     }
 
     public function clearCache()
@@ -115,68 +112,20 @@ class HeapsBackend implements IBackend
         {
             defaultLoader.cleanCache();
         }
-        /*
-        if (defaultAssetLibrary != null)
-        {
-            for (key in LimeAssets.cache.audio.keys())
-            {
-                LimeAssets.cache.audio.remove(key);
-            }
-            for (key in LimeAssets.cache.font.keys())
-            {
-                LimeAssets.cache.font.remove(key);
-            }
-            for (key in LimeAssets.cache.image.keys())
-            {
-                LimeAssets.cache.image.remove(key);
-            }
-        }
-        openfl.Assets.cache.clear();
-        */
+    }
+
+    public function stripAssetsPrefix(id:String):String
+    {
+        return id;
     }
 }
 
 class HEAPSModLoader extends Loader
 {
-    public static function HEAPSToPoly(type:ResType):PolymodAssetType
-    {
-        return switch(type)
-        {
-            case ResType.BYTES: PolymodAssetType.BYTES;
-            case ResType.MODEL: PolymodAssetType.MODEL;
-            case ResType.TEXTURE: PolymodAssetType.TEXTURE;
-            case ResType.TILE: PolymodAssetType.TILE;
-            case ResType.TEXT: PolymodAssetType.TEXT;
-            case ResType.IMAGE: PolymodAssetType.IMAGE;
-            case ResType.SOUND: PolymodAssetType.AUIDO_GENERIC;
-            case ResType.PREFAB: PolymodAssetType.PREFAB;
-            default: PolymodAssetType.UNKNOWN;
-        }
-    }
-
-    public static function PolyToLime(type:PolymodAssetType):AssetType
-    {
-        return switch(type)
-        {
-            case PolymodAssetType.BYTES: ResType.BYTES;
-            case PolymodAssetType.MODEL: ResType.MODEL;
-            case PolymodAssetType.TEXTURE: ResType.TEXTURE;
-            case PolymodAssetType.TILE: ResType.TILE;
-            case PolymodAssetType.TEXT: ResType.TEXT;
-            case PolymodAssetType.IMAGE : ResType.IMAGE;
-            case PolymodAssetType.AUDIO_SOUND : ResType.SOUND;
-            case PolymodAssetType.AUDIO_MUSIC : ResType.SOUND;
-            case PolymodAssetType.AUDIO_GENERIC : ResType.SOUND;
-            case PolymodAssetType.PREFAB : ResType.PREFAB;
-            default: ResType.UNKNOWN;
-        }
-    }
-
     var b:HEAPSBackend;
     var p:PolymodAssetLibrary;
     var fallback:Loader;
     var hasFallback:Bool;
-    var type(default, null):Map<String,ResType>;
     
     public function new(backend:HEAPSBackend)
     {
@@ -184,248 +133,91 @@ class HEAPSModLoader extends Loader
         p = b.polymodLibrary;
         fallback = b.fallback;
         hasFallback = fallback != null;
-        var fileSystem = new HEAPSModFileSystem();
-        super(fs);
+        var fileSystem = new ModFileSystem(p);
+        super(fileSystem);
     }
 
-
-    /*
-    public override function getAsset(id:String, type:String):Dynamic
+    public override function exists(path:String):Bool
     {
-        var e = p.check(id, HEAPSToPoly(cast type));
-        if (!e && hasFallback)
-        {
-            return fallback.getAsset(id, type);
-        }
-        return super.getAsset(id,type);
-    }
-
-    public override function exists (id:String, type:String):Bool
-    {
-        var e = p.check(id, HEAPSToPoly(cast type));
-        if (!e && hasFallback) return fallback.exists(id, type);
+        var e = p.check(path);
+        if (!e && hasFallback) return fallback.exists(path);
         return e;
     }
 
-    public override function getAudioBuffer (id:String):AudioBuffer
+    public override function load(path:String):Any
     {
-        if (p.check(id))
-            return AudioBuffer.fromBytes(PolymodFileSystem.getFileBytes(p.file(id)));
-        else if(hasFallback)
-            return fallback.getAudioBuffer(id);
-        return null;
+        trace("load("+path+")");
+        if(p.getExtensionType(path) == TEXT)
+        {
+            return loadText(path);
+        }
+        var e = p.check(path);
+        trace("e = " + e);
+        if (!e && hasFallback)
+        {
+            trace("load from fallback");
+            var result = fallback.load(path);
+            trace('result = ' + result);
+            trace("entry = " + result.entry);
+            return result;
+        }
+        trace("load from super");
+        return super.load(path);
     }
 
-    public override function getBytes (id:String):Bytes
-    {
-        var file = p.file(id);
-        if (p.check(id))
-            return PolymodFileSystem.getFileBytes(p.file(id));
-        else if(hasFallback)
-            return fallback.getBytes(id);
-        return null;
-    }
-
-    public override function getFont (id:String):Font
-    {
-        if (p.check(id))
-            return Font.fromBytes(PolymodFileSystem.getFileBytes(p.file(id)));
-        else if(hasFallback)
-            return fallback.getFont(id);
-        return null;
-    }
-
-    public override function getImage (id:String):Image
-    {
-        if (p.check(id))
-            return Image.fromBytes(PolymodFileSystem.getFileBytes(p.file(id)));
-        else if(hasFallback)
-            return fallback.getImage(id);
-        return null;
-    }
-
-    public override function getPath (id:String):String
-    {
-        if (p.check(id))
-            return p.file(id);
-        else if(hasFallback)
-            return fallback.getPath(id);
-        return null;
-    }
-
-    public override function getText (id:String):String
+    public function loadText (path:String):Any
     {
         var modText = null;
-        if (p.check(id))
+        if (p.check(path))
         {
-            modText = super.getText(id);
+            modText = load(path).toText();
         }
         else if(hasFallback)
-            modText = fallback.getText(id);
+        {
+            modText = fallback.load(path).toText();
+        }
         
         if (modText != null)
         {
-            modText = p.mergeAndAppendText(id, modText);
+            modText = p.mergeAndAppendText(path, modText);
         }
-        
-        return modText;
+        return new Any(this, new BytesFileEntry(path, Bytes.ofString(modText)));
     }
-
-    public override function loadBytes (id:String):Future<Bytes> 
-    {
-        //TODO: filesystem
-        if (p.check(id))
-        {
-            return Bytes.loadFromFile (p.file(id));
-        }
-        else if(hasFallback)
-        {
-            return fallback.loadBytes(id);
-        }
-        return Bytes.loadFromFile("");
-    }
-
-    public override function loadFont(id:String):Future<Font>
-    {
-        //TODO: filesystem
-        if (p.check(id))
-        {
-            #if (js && html5)
-            return Font.loadFromName (paths.get (p.file(id)));
-            #else
-            return Font.loadFromFile (paths.get (p.file(id)));
-            #end
-        }
-        else if(hasFallback)
-        {
-            return fallback.loadFont(id);
-        }
-        #if (js && html5)
-        return Font.loadFromName (paths.get (""));
-        #else
-        return Font.loadFromFile (paths.get (""));
-        #end
-    }
-
-    public override function loadImage(id:String):Future<Image>
-    {
-        //TODO: filesystem
-        if (p.check(id))
-        {
-            return Image.loadFromFile(p.file(id));
-        }
-        else if(hasFallback)
-        {
-            return fallback.loadImage(id);
-        }
-        return Image.loadFromFile("");
-    }
-
-    public override function loadAudioBuffer(id:String)
-    {
-        //TODO: filesystem
-        if (p.check(id))
-        {
-            //return 
-            if (pathGroups.exists(p.file(id)))
-            {
-                return AudioBuffer.loadFromFiles (pathGroups.get(p.file(id)));
-            }
-            else
-            {
-                return AudioBuffer.loadFromFile(paths.get(p.file(id)));
-            }
-        }
-        else if(hasFallback)
-        {
-            return fallback.loadAudioBuffer(id);
-        }
-        return AudioBuffer.loadFromFile("");
-    }
-
-    public override function loadText(id:String):Future<String>
-    {
-        //TODO: FileSystem
-        if (p.check(id))
-        {
-            var request = new HTTPRequest<String> ();
-            return request.load (paths.get (p.file(id)));
-        }
-        else if(hasFallback)
-        {	
-            return fallback.loadText(id);
-        }
-        var request = new HTTPRequest<String> ();
-        return request.load ("");
-    }
-
-    public override function isLocal (id:String, type:String):Bool
-    {
-        if (p.check(id))
-            return true;
-        else if(hasFallback)
-            return fallback.isLocal(id, type);
-        return false;
-    }
-
-    public override function list (type:String):Array<String>
-    {
-        var otherList = hasFallback ? fallback.list(type) : [];
-        
-        var requestedType = type != null ? cast (type, AssetType) : null;
-        var items = [];
-        
-        for (id in p.type.keys ())
-        {
-            if (id.indexOf("_append") == 0 || id.indexOf("_merge") == 0) continue;
-            if (requestedType == null || exists (id, requestedType))
-            {
-                items.push (id);
-            }
-        }
-        
-        for (otherId in otherList)
-        {
-            if (items.indexOf(otherId) == -1)
-            {
-                if (requestedType == null || fallback.exists(otherId, type))
-                {
-                    items.push(otherId);
-                }
-            }
-        }
-        
-        return items;
-    }
-    */
 }
 
-class HEAPSModFileSystem implements FileSystem
+class ModFileSystem implements FileSystem
 {
-    super();
-}
+    var p:PolymodAssetLibrary;
+    var b:HEAPSBackend;
 
-@:enum abstract ResType(String) from String to String
-{
-    var BYTES = "BYTES";
-    var MODEL = "MODEL";
-    var TEXTURE = "TEXTURE";
-    var TEXT = "TEXT";
-    var TILE = "TILE";
-    var IMAGE = "IMAGE";
-    var SOUND = "SOUND";
-    var PREFAB = "PREFAB";
-    var UNKNOWN = "UNKNOWN";
-
-    public static function fromString(str:String):ResType
+    public function new(polymodAssetLibrary:PolymodAssetLibrary)
     {
-        str = str.toUpperCase();
-        switch(str)
-        {
-            case BYTES, MODEL, TEXTURE, TEXT, TILE, IMAGE, SOUND, PREFAB, UNKNOWN: return str;
-            default: return UNKNOWN;
-        }
-        return UNKNOWN;
+        p = polymodAssetLibrary;
+        b = cast p.backend;
+    }
+
+    public function getRoot():FileEntry
+    {
+        return b.defaultLoader.fs.getRoot();
+    }
+
+    public function get(path:String):FileEntry
+    {
+        trace("get("+path+") --> " + p.file(path));
+        var file = p.file(path);
+        var bytes = PolymodFileSystem.getFileBytes(file);
+        return new BytesFileEntry(path, bytes);
+    }
+    
+    public function exists( path : String ) : Bool
+    {
+        return b.modLoader.exists(path);
+    }
+
+    public function dispose() : Void
+    {
+        p = null;
+        b = null;
     }
 }
 #end
