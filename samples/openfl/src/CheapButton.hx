@@ -23,12 +23,12 @@
  
 package;
 
+import openfl.text.TextField;
+import openfl.display.Sprite;
+import openfl.display.Bitmap;
 import openfl.display.BitmapData;
 import openfl.display.DisplayObject;
-import openfl.text.TextField;
-import openfl.display.Bitmap;
 import openfl.display.DisplayObjectContainer;
-import openfl.display.Sprite;
 import openfl.events.MouseEvent;
 import openfl.text.TextFormatAlign;
 
