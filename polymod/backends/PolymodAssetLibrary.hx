@@ -21,8 +21,9 @@
  * 
  */
  
- package polymod.backends;
+package polymod.backends;
 
+import haxe.io.Bytes;
 import polymod.backends.IBackend;
 import polymod.backends.PolymodAssets.PolymodAssetType;
 import polymod.Polymod.Framework;
@@ -118,10 +119,9 @@ class PolymodAssetLibrary
         return null;
     }
 
-    public function getText (id:String):String
-    {
-        return backend.getText(id);
-    }
+    public function exists (id:String):Bool { return backend.exists(id); }
+    public function getText (id:String):String { return backend.getText(id); }
+    public function getBytes (id:String):Bytes { return backend.getBytes(id); }
 
     public function listModFiles (type:PolymodAssetType):Array<String>
     {

@@ -91,7 +91,7 @@ class OpenFLBackend implements IBackend
 
     //Instance:
     public var polymodLibrary:PolymodAssetLibrary;
-    public var modLibrary(default, null):AssetLibrary;
+    public var modLibrary(default, null):OpenFLModLibrary;
     public var fallback(default, null):AssetLibrary;
     
     public function new (){}
@@ -110,6 +110,11 @@ class OpenFLBackend implements IBackend
         modLibrary.destroy();
         modLibrary = null;
         fallback = null;
+    }
+
+    public function exists(id:String):Bool
+    {
+        return modLibrary.exists(id, null);
     }
 
     public function getBytes(id:String):Bytes

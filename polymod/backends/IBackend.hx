@@ -35,6 +35,8 @@ interface IBackend
     public function destroy():Void;
 
     public function clearCache():Void;
+    
+    public function exists(id:String):Bool;
     public function getBytes(id:String):Bytes;
     public function getText(id:String):String;
 

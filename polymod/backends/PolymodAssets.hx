@@ -21,8 +21,9 @@
  * 
  */
  
- package polymod.backends;
+package polymod.backends;
 
+import haxe.io.Bytes;
 import polymod.Polymod.PolymodErrorCode;
 import polymod.backends.IBackend;
 import polymod.Polymod.Framework;
@@ -107,6 +108,8 @@ class PolymodAssets
         return library;
     }
 
+    public static function exists(id:String):Bool { return library.exists(id); }
+    public static function getBytes(id:String):Bytes { return library.getBytes(id); }
     public static function getText(id:String):String { return library.getText(id); }
 
     /**PRIVATE STATIC**/

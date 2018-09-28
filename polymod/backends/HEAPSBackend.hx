@@ -105,6 +105,11 @@ class HEAPSBackend implements IBackend
         polymodLibrary = null;
     }
 
+    public function exists(id:String):Bool
+    {
+        return modLoader.exists(id);
+    }
+
     public function getBytes(id:String):Bytes
     {
         return modLoader.load(id).entry.getBytes();

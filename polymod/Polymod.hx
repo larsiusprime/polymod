@@ -23,6 +23,7 @@
 
 package polymod;
 
+import haxe.io.Bytes;
 import polymod.fs.PolymodFileSystem;
 import polymod.util.JsonHelp;
 import polymod.util.SemanticVersion;
@@ -189,12 +190,11 @@ class Polymod
             customBackend:params.customBackend
         });
 
-        /*
-        if(Assets.exists("_polymod_pack.txt"))
+        
+        if(PolymodAssets.exists(("_polymod_pack.txt")))
         {
             initModPack(params);
         }
-        */
 
         return modMeta;
     }
@@ -306,9 +306,9 @@ class Polymod
         {
             var meta:ModMetadata = null;
 
-            var metaFile = dir+"/_polymod_meta.json";
-            var iconFile = dir+"/_polymod_icon.png";
-            var packFile = dir+"/_polymod_pack.txt";
+            var metaFile = Util.pathJoin(dir,"_polymod_meta.json");
+            var iconFile = Util.pathJoin(dir,"_polymod_icon.png");
+            var packFile = Util.pathJoin(dir,"_polymod_pack.txt");
             if(!PolymodFileSystem.exists(metaFile))
             {
                 warning(MISSING_META,"Could not find mod metadata file: \""+metaFile+"\"");
@@ -324,7 +324,8 @@ class Polymod
             }
             else
             {
-                // meta.icon = BitmapData.fromFile(iconFile); // TODO (DK)
+                var iconBytes = PolymodFileSystem.getFileBytes(iconFile);
+                meta.icon = iconBytes;
             }
             if(PolymodFileSystem.exists(packFile))
             {
@@ -357,7 +358,6 @@ class Polymod
 
     /***PRIVATE***/
 
-    // TODO (DK)
     private static function initModPack(params:PolymodParams)
     {
         var polymodpack:String = PolymodAssets.getText("_polymod_pack.txt");
@@ -412,7 +412,7 @@ class ModMetadata
     public var modVersion:SemanticVersion;
     public var license:String;
     public var licenseRef:String;
-    // public var icon:BitmapData; // TODO (DK)
+    public var icon:Bytes;
     public var isModPack:Bool;
     public var modPack:{mods:Array<String>,versions:Array<String>};
 
