@@ -35,7 +35,7 @@ import polymod.backends.PolymodAssets.PolymodAssetType;
 #if unifill
 import unifill.Unifill;
 #end
-#if openfl
+#if (openfl && !nme)
     import lime.app.Future;
     import lime.utils.Assets in LimeAssets;
     import openfl.errors.Error;
@@ -57,7 +57,7 @@ import unifill.Unifill;
     #end
 #end
 
-#if !openfl
+#if (!openfl || nme)
 class OpenFLBackend extends StubBackend
 {
     public function new()
@@ -67,6 +67,7 @@ class OpenFLBackend extends StubBackend
     }
 }
 #else
+#if !nme
 class OpenFLBackend implements IBackend
 {
     //STATIC:
@@ -423,4 +424,5 @@ class OpenFLModLibrary extends AssetLibrary
         return items;
     }
 }
+#end
 #end

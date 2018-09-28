@@ -118,13 +118,13 @@ class PolymodAssets
         #if heaps
         return HEAPS;
         #end
-        #if nme
+        #if nme 
         return NME;
         #end
-        #if openfl
+        #if (openfl && !nme)
         return OPENFL;
         #end
-        #if lime
+        #if (lime && !nme)
         return LIME;
         #end
         #if kha
