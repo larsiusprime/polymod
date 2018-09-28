@@ -180,7 +180,11 @@ class Demo extends Sprite
 		var yy = 10;
 		
 		var texts = list("data");
-		
+		texts.sort(function(a:String,b:String):Int{
+			if(a < b) return -1;
+			if(a > b) return  1;
+			return 0;
+		});
 		for (t in texts)
 		{
 			var isXML:Bool = false;

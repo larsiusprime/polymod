@@ -84,6 +84,7 @@ class PolymodAssetLibrary
 
     public function getExtensionType(ext:String):PolymodAssetType
     {
+        ext = ext.toLowerCase();
         if(extensions.exists(ext) == false) return BYTES;
         return extensions.get(ext);
     }

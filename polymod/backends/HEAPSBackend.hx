@@ -162,10 +162,15 @@ class HEAPSModLoader extends Loader
 
     public override function load(path:String):Any
     {
-        if(p.getExtensionType(path) == TEXT)
+        if(p.getExtensionType(Util.uExtension(path)) == TEXT)
         {
             return loadText(path);
         }
+        return loadBytes(path);
+    }
+
+    private function loadBytes(path:String):Any
+    {
         var e = p.check(path);
         if (!e && hasFallback)
         {
@@ -180,7 +185,7 @@ class HEAPSModLoader extends Loader
         var modText = null;
         if (p.check(path))
         {
-            modText = load(path).toText();
+            modText = loadBytes(path).toText();
         }
         else if(hasFallback)
         {
