@@ -6,3 +6,9 @@ samples/openfl_hscript/bin/
 samples/openfl_hscript/dump/
 
 samples/openfl_hscript/pages/
+
+samples/heaps/demo\.hl
+
+*.hl
+
+samples/nme/Export/

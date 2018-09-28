@@ -1,7 +1,12 @@
 # Polymod
 An atomic modding framework for Haxe games
 
-## Basic sample:  
+# Backends
+
+- [OpenFL](https://github.com/sh-dave/polymod-openfl.git)
+- [Kha (wip)](https://github.com/sh-dave/polymod-kha.git)
+
+## Basic sample:
 ![A visual preview of the polymod OpenFL sample](preview.gif)
 
 # Contents
@@ -106,7 +111,7 @@ NOTE: Currently this data structure just supports some basic hints for how to pa
 
 ### `ignoredFiles:Array<String>`
 It's common to put some basic metadata files in the root directory of mods, but you might want to keep those from actually winding up as valid assets in the game/app itself. This is also useful for disallowing changes to particular key files. If you define this array, Polymod will not include any file that matches one of these filenames in your final asset library. If you want to exclude Polymod's default recommended metadata files from asset library ingestion, you can call `Polymod.getDefaultIgnoreList()`, which returns these files:
- 
+
  * `_polymod_meta.json`
  * `_polymod_icon.png`
  * `_polymod_pack.txt`
@@ -156,8 +161,8 @@ Hello from my mod!
 This is mostly meant for XML and CSV/TSV files. Say you have a big complicated XML file at `data/stuff.xml` with lots of nodes:
 
 ```xml
-<?xml version="1.0" encoding="utf-8" ?>  
-<data> 
+<?xml version="1.0" encoding="utf-8" ?>
+<data>
    <!--lots of complicated stuff-->
    <mode id="difficulty" values="easy"/>
    <!--even more complicated stuff-->
@@ -167,8 +172,8 @@ This is mostly meant for XML and CSV/TSV files. Say you have a big complicated X
 And you want it to say this instead:
 
 ```xml
-<?xml version="1.0" encoding="utf-8" ?>  
-<data> 
+<?xml version="1.0" encoding="utf-8" ?>
+<data>
    <!--lots of complicated stuff-->
    <mode id="difficulty" values="super_hard"/>
    <!--even more complicated stuff-->
@@ -178,7 +183,7 @@ And you want it to say this instead:
 Basically we want to change this one tag from this:
 
 ```xml
-<mode id="difficulty" values="easy"/> 
+<mode id="difficulty" values="easy"/>
 ```
 
 to this:
@@ -188,8 +193,8 @@ to this:
 
 This is the file you would put in `<modroot>/_merge/data/stuff.xml`:
 ```xml
-<?xml version="1.0" encoding="utf-8" ?>  
-<data>  
+<?xml version="1.0" encoding="utf-8" ?>
+<data>
     <mode id="difficulty" values="super_hard">
         <merge key="id" value="difficulty"/>
     </mode>
@@ -212,7 +217,7 @@ As soon as it finds the first match, it stops and merges the payload with the sp
 
 CSV and TSV files can be merged as well, but no logic needs to be supplied. In this case, the mod loader will look for any rows in the base file whose first cell matches the same value as those in the merge file, and replace them with the rows from the merge file.
 
-TODO: Merge logic for JSON is currently planned but not yet supported.  
+TODO: Merge logic for JSON is currently planned but not yet supported.
 TODO: Advanced merge logic for CSV/TSV (specify a field other than the one at index 0 as the primary merge key) is not yet supported.
 
 ## Metadata
@@ -243,7 +248,7 @@ And this file indicates that the mod is a mod pack:
 
 ## Mod packs
 
-If a mod includes the file `_polymod_pack.txt` in the root directory, it will be treated not as a regular mod, but as a *mod pack*, ie, a collection of mods. This text file is a simple comma-separated list of mod directory names (relative to the root mod directory). 
+If a mod includes the file `_polymod_pack.txt` in the root directory, it will be treated not as a regular mod, but as a *mod pack*, ie, a collection of mods. This text file is a simple comma-separated list of mod directory names (relative to the root mod directory).
 
 **NOTE:** *If a mod contains a mod pack list, ALL other files will be ignored.*
 
@@ -251,7 +256,7 @@ Let's say you have a mod called `stuff` that contains this `_polymod_pack.txt`:
 
 `foo,bar,abc,xyz`
 
-Loading `stuff` will cause Polymod to load those four mods in the specified order. 
+Loading `stuff` will cause Polymod to load those four mods in the specified order.
 
 You can also indicate specific versions of mods:
 
@@ -278,7 +283,7 @@ There are two ways to support scripting using Polymod:
 You don't need a dedicated scripting framework to get moddable scripts. So long as your script files are part of your asset library, they can be replaced or modified like any other text file, and it doesn't even matter what scripting language you choose. This is a potential [footgun](https://en.wiktionary.org/wiki/footgun) for newcomers, however, so unless you already know what you're doing, I generally recommend using Polymod's built-in support for scripting.
 
 ## Use Polymod's `HScriptable` interface
-Polymod provides an optional interface called `HScriptable` that will use some macro magic to automatically bind targeted functions to [hscript](https://github.com/HaxeFoundation/hscript) scripts. 
+Polymod provides an optional interface called `HScriptable` that will use some macro magic to automatically bind targeted functions to [hscript](https://github.com/HaxeFoundation/hscript) scripts.
 
 _NOTE: Big thanks to [Jeff Ward](https://github.com/jcward) for making this possible!_
 
@@ -382,7 +387,7 @@ if(bee.flower == null)
 {
     bee.turnsSearching++;
     bee.flower = getRandomFlower();
-    
+
     if(bee.flower != null && bee.flower.pollen == 0)
     {
         bee.flower == null;
@@ -444,7 +449,7 @@ The actual script is a simple one-liner:
 "Honey collected: " + value;
 ```
 
-The script simply composes a string, and the function takes the result and updates a text field. 
+The script simply composes a string, and the function takes the result and updates a text field.
 
 What makes this work is that the macro automatically injects the script logic at the beginning of the `@:hscript`-tagged function, before any other code in the function body. Then it defines two new local variables: `script_result` and `script_error`, both of type `Dynamic`. In this particular function, we feed `script_result` into `score.text`.
 
@@ -478,7 +483,7 @@ Handling errors at all is purely optional, but recommended.
 
 ### 1. Loose, flat files
 
-Mods work best when modders can rely entirely on replace and append logic. The easiest way to facilitate this is to leave files separated out one by one rather than all glommed together. For instance, it's way easier to replace just one character sprite if each character sprite sheet is its own file, rather than all of them being packed together in one. Although a modder can easily copy and paste the packed file, make a change, and add it to their mod as a replacement, this becomes fragile in two ways: 
+Mods work best when modders can rely entirely on replace and append logic. The easiest way to facilitate this is to leave files separated out one by one rather than all glommed together. For instance, it's way easier to replace just one character sprite if each character sprite sheet is its own file, rather than all of them being packed together in one. Although a modder can easily copy and paste the packed file, make a change, and add it to their mod as a replacement, this becomes fragile in two ways:
 
 1. If the base game updates that file (say parts other than what the modder changed), the mod will now have an old version of it, even though they only intended to modify one part of it.
 2. If two modders want to change different in-game objects that reside in the same file, and they both use replace logic, their changes will override each other and only one will be resolved in the final asset set.
@@ -539,7 +544,7 @@ If your mod doesn't include a license, it's in a legal gray area. By default, an
 
 It gets even worse if other people want to include your mod in theirs, or build off of it. To foster a collaborative modding community, I strongly recommend using open licenses such as these:
 
-[Creative Commons Attribution 4.0](https://creativecommons.org/licenses/by/4.0/) -- for assets and data, etc.  
+[Creative Commons Attribution 4.0](https://creativecommons.org/licenses/by/4.0/) -- for assets and data, etc.
 [MIT License](https://opensource.org/licenses/MIT) -- for code/script files, etc.
 
 ### 3. It doesn't have to be big

@@ -1,0 +1,9 @@
+-lib heaps
+-lib hlsdl
+-lib polymod
+-hl demo.hl
+-main samples.heaps.Main
+-D windowSize=1024x768
+-cp ../..
+-cp .
+-lib hxbit
