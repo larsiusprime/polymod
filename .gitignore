@@ -10,3 +10,5 @@ samples/openfl_hscript/pages/
 samples/heaps/demo\.hl
 
 *.hl
+
+samples/nme/Export/
