@@ -33,11 +33,11 @@ Easy enough. But what if you want players to be able to use multiple mods togeth
 
 Polymod solves both problems.
 
-First, it **overrides your lime/OpenFL Asset library** with a custom one pointed at a mod folder (or folders) somewhere on the user's hard drive. Whenever you request an asset via `Assets.getBitmapData()` call or whatever, the custom library first checks if the mod has a modified version of this file. If it does, it returns the mod's modified version. If it doesn't, it falls through to the default asset library (the assets included with the game).
+First, it **overrides your framework's asset system** with a custom one pointed at a mod folder (or folders) somewhere on the user's hard drive. Whenever you request an asset via `Assets.getBitmapData()` or `Res.loader.load()` call or whatever, the custom backend first checks if the mod has a modified version of this file. If it does, it returns the mod's modified version. If it doesn't, it falls through to the default asset system (the assets included with the game).
 
 Second, it **combines mods atomically**. Instead of supplying one mod folder, you can provide several. Polymod will go through each folder in turn and apply the changes from each mod, automatically joining them into one combined mod at runtime. Note that this means that the order you load the mods in matters, in the case that they have overlapping changes.
 
-Polymod currently works with OpenFL desktop* target only but could be expanded to support other frameworks and targets if there's interest.
+Polymod currently works with [OpenFL](https://www.openfl.org) and [HEAPS](https://www.heaps.io) desktop* targets, but will soon support other frameworks and targets.
 
 \**`sys` target, technically. Any target with a File System.*
 
@@ -50,7 +50,7 @@ Replace logic works on any asset format.
 Append logic works only on text assets.
 Merge logic is currently supported for plaintext (TXT), CSV, TSV, and XML asset formats only. Support for JSON is planned.
 
-A sample for the OpenFL framework is provided.
+Samples for the OpenFL and HEAPS frameworks are provided.
 
 # Usage
 
@@ -74,9 +74,17 @@ Be sure to call `Polymod.init()` before you load any assets. Also note that call
 
 After that, you just load your assets as normal:
 
+OpenFL:
 ```haxe
-var myImage = Assets.getBitmapData("myImage.png"); //either the default asset or the one overriden by a mod
+var myImage = Assets.getBitmapData("myImage.png");
 ```
+
+HEAPS:
+```haxe
+Res.loader.load("myImage.png");
+```
+
+This will return either the default asset, or a modified version if it's been replaced by a loaded mod.
 
 ## Optional init parameters
 
