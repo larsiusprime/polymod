@@ -42,6 +42,7 @@ import unifill.Unifill;
     import hxd.res.Loader;
     import hxd.fs.FileEntry;
     import hxd.fs.FileSystem;
+    import hxd.fs.LoadedBitmap;
     import hxd.fs.LocalFileSystem;
     import hxd.fs.BytesFileSystem.BytesFileEntry;
 #end
@@ -90,7 +91,6 @@ class HEAPSBackend implements IBackend
 
     public function init()
     {
-        trace("init heaps backend");
         fallback = getDefaultLoader();
         modLoader = new HEAPSModLoader(this);
         Res.loader = modLoader;
@@ -162,22 +162,16 @@ class HEAPSModLoader extends Loader
 
     public override function load(path:String):Any
     {
-        trace("load("+path+")");
         if(p.getExtensionType(path) == TEXT)
         {
             return loadText(path);
         }
         var e = p.check(path);
-        trace("e = " + e);
         if (!e && hasFallback)
         {
-            trace("load from fallback");
             var result = fallback.load(path);
-            trace('result = ' + result);
-            trace("entry = " + result.entry);
             return result;
         }
-        trace("load from super");
         return super.load(path);
     }
 
@@ -197,24 +191,140 @@ class HEAPSModLoader extends Loader
         {
             modText = p.mergeAndAppendText(path, modText);
         }
-        return new Any(this, new ModFileEntry(path, Bytes.ofString(modText)));
+        return new Any(this, new BytesFileEntry(path, Bytes.ofString(modText)));
     }
 }
 
 class ModFileEntry extends BytesFileEntry
 {
-    public function new(path:String, bytes:Bytes)
+    var fullFilePath:String;
+    var fs:ModFileSystem;
+    var p:PolymodAssetLibrary;
+    var b:HEAPSBackend;
+    var inited:Bool = false;
+
+    public function new(path:String, bytes:Bytes, fs:ModFileSystem, fullFilePath:String)
     {
-        var stack:String = haxe.CallStack.toString(haxe.CallStack.callStack());
-        //trace("new ModFileEntry("+path+","+bytes+") caller = " + stack);
+        this.fullFilePath = fullFilePath;
+        this.fs = fs;
+        p = fs.p;
+        b = cast fs.b;
         super(path, bytes);
+    }
+
+    private function isPathADirectory(str:String)
+    {
+        if(PolymodFileSystem.exists(str) && PolymodFileSystem.isDirectory(str)) return true;
+        var entry = b.fallback.fs.get(str);
+        if(entry != null && entry.isDirectory) return true;
+        return false;
+    }
+
+    public override function iterator():hxd.impl.ArrayIterator<FileEntry>
+    {
+        var arr:Array<FileEntry> = [];
+
+        var otherList = [];
+        var fallbackEntry = b.fallback.fs.get(fullFilePath);
+        for(otherEntry in fallbackEntry.iterator())
+        {
+            otherList.push(otherEntry);
+        }
+        
+        var isDir = isPathADirectory(path);
+        var dirPath = isDir ? path : Util.uPathPop(fullFilePath);
+        
+        var itemPaths = [];
+        for (id in p.type.keys ())
+        {
+            if (id.indexOf(dirPath) != 0) continue;
+            if (id.indexOf("_append") == 0 || id.indexOf("_merge") == 0) continue;
+            if (p.ignoredFiles.indexOf(id) != -1) continue;
+            if (PolymodFileSystem.isDirectory(id)) continue;
+            arr.push(new ModFileEntry(id, null, fs, id));
+            itemPaths.push(id);
+        }
+        
+        for (otherEntry in otherList)
+        {
+            if(itemPaths.indexOf(otherEntry.path) == -1)
+            {
+                var otherPath = otherEntry.path;
+                var nextPath = Util.pathJoin(fullFilePath,otherPath);
+                arr.push(new ModFileEntry(otherPath, null, fs, nextPath));
+            }
+        }
+
+        return new hxd.impl.ArrayIterator(arr);
+    }
+
+    public override function get(name:String):FileEntry
+    {
+        var nextPath = Util.pathJoin(fullFilePath,name);
+        return new ModFileEntry(name, null, fs, nextPath);
+    }
+
+    private inline function initBytes()
+    {
+        if(inited == false && bytes == null)
+        {
+            resolveBytes();
+            inited = true;
+        }
+    }
+
+    private function resolveBytes()
+    {
+        var file = p.file(path);
+        bytes = PolymodFileSystem.getFileBytes(file);
+        if(bytes == null)
+        {
+            var entry = b.fallback.fs.get(path);
+            bytes = entry.getBytes();
+        }
+    }
+
+    override function getSign():Int
+    {
+        initBytes();
+        return super.getSign();
+    }
+
+    override function getBytes():Bytes
+    {
+        initBytes();
+        return super.getBytes();
+    }
+
+    override function readByte():Int
+    {
+        initBytes();
+        return super.readByte();
+    }
+
+    override function read(out:Bytes, pos:Int, size:Int)
+    {
+        initBytes();
+        return super.read(out, pos, size);
+    }
+
+    override function loadBitmap(onLoaded:LoadedBitmap->Void):Void
+    {
+        initBytes();
+        return super.loadBitmap(onLoaded);
+    }
+
+    override function get_size()
+    {
+        initBytes();
+        return super.get_size();
     }
 }
 
 class ModFileSystem implements FileSystem
 {
-    var p:PolymodAssetLibrary;
-    var b:HEAPSBackend;
+    public var p:PolymodAssetLibrary;
+    public var b:HEAPSBackend;
 
     public function new(polymodAssetLibrary:PolymodAssetLibrary)
     {
@@ -224,12 +334,11 @@ class ModFileSystem implements FileSystem
 
     public function getRoot():FileEntry
     {
-        return HEAPSBackend.defaultLoader.fs.getRoot();
+        return new ModFileEntry("", null, this, "");
     }
 
     public function get(path:String):FileEntry
     {
-        trace("get("+path+") --> " + p.file(path));
         var file = p.file(path);
         var bytes = PolymodFileSystem.getFileBytes(file);
         if(bytes == null)
@@ -237,7 +346,7 @@ class ModFileSystem implements FileSystem
             var entry = b.fallback.fs.get(path);
             return entry;
         }
-        var modEntry = new ModFileEntry(path, bytes);
+        var modEntry = new ModFileEntry(path, bytes, this, path);
         return modEntry;
     }
     

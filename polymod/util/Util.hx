@@ -684,6 +684,19 @@ class Util
 		#end
 	}
 
+	public static function uPathPop(str:String):String
+	{
+		#if unifill
+		var path = Unifill.uSplit(str,"/");
+		path.pop();
+		return path.join("/");
+		#else
+		var path = str.split("/");
+		path.pop();
+		return path.join("/");
+		#end
+	}
+
 	public static function uSplit(str:String, substr:String):Array<String>
 	{
 		#if unifill

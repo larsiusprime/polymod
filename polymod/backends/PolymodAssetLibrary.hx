@@ -61,8 +61,8 @@ class PolymodAssetLibrary
     public var type(default, null):Map<String, PolymodAssetType>;
     
     public var dirs:Array<String> = null;
+    public var ignoredFiles:Array<String> = null;
     private var mergeRules:MergeRules = null;
-    private var ignoredFiles:Array<String> = null;
     private var extensions:Map<String,PolymodAssetType>;
 
     public function new(params:PolymodAssetLibraryParams)
