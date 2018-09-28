@@ -81,7 +81,7 @@ var myImage = Assets.getBitmapData("myImage.png");
 
 HEAPS:
 ```haxe
-Res.loader.load("myImage.png");
+var myImage = Res.loader.load("myImage.png");
 ```
 
 This will return either the default asset, or a modified version if it's been replaced by a loaded mod.
