@@ -59,8 +59,8 @@ class HEAPSBackend extends StubBackend
 class HEAPSBackend implements IBackend
 {
     //STATIC:
-    public var defaultLoader:Loader = null;
-    private function getDefaultLoader()
+    public static var defaultLoader:Loader = null;
+    private static function getDefaultLoader()
     {
         if(defaultLoader == null)
         {
@@ -73,7 +73,7 @@ class HEAPSBackend implements IBackend
         return defaultLoader;
     }
 
-    private function restoreDefaultLoader()
+    private static function restoreDefaultLoader()
     {
         if(defaultLoader != null)
         {
@@ -94,6 +94,15 @@ class HEAPSBackend implements IBackend
         fallback = getDefaultLoader();
         modLoader = new HEAPSModLoader(this);
         Res.loader = modLoader;
+    }
+
+    public function destroy()
+    {
+        restoreDefaultLoader();
+        modLoader.destroy();
+        modLoader = null;
+        fallback = null;
+        polymodLibrary = null;
     }
 
     public function getBytes(id:String):Bytes
@@ -135,6 +144,13 @@ class HEAPSModLoader extends Loader
         hasFallback = fallback != null;
         var fileSystem = new ModFileSystem(p);
         super(fileSystem);
+    }
+
+    public function destroy()
+    {
+        b = null;
+        p = null;
+        fallback = null;
     }
 
     public override function exists(path:String):Bool
@@ -181,7 +197,17 @@ class HEAPSModLoader extends Loader
         {
             modText = p.mergeAndAppendText(path, modText);
         }
-        return new Any(this, new BytesFileEntry(path, Bytes.ofString(modText)));
+        return new Any(this, new ModFileEntry(path, Bytes.ofString(modText)));
+    }
+}
+
+class ModFileEntry extends BytesFileEntry
+{
+    public function new(path:String, bytes:Bytes)
+    {
+        var stack:String = haxe.CallStack.toString(haxe.CallStack.callStack());
+        //trace("new ModFileEntry("+path+","+bytes+") caller = " + stack);
+        super(path, bytes);
     }
 }
 
@@ -198,7 +224,7 @@ class ModFileSystem implements FileSystem
 
     public function getRoot():FileEntry
     {
-        return b.defaultLoader.fs.getRoot();
+        return HEAPSBackend.defaultLoader.fs.getRoot();
     }
 
     public function get(path:String):FileEntry
@@ -206,7 +232,13 @@ class ModFileSystem implements FileSystem
         trace("get("+path+") --> " + p.file(path));
         var file = p.file(path);
         var bytes = PolymodFileSystem.getFileBytes(file);
-        return new BytesFileEntry(path, bytes);
+        if(bytes == null)
+        {
+            var entry = b.fallback.fs.get(path);
+            return entry;
+        }
+        var modEntry = new ModFileEntry(path, bytes);
+        return modEntry;
     }
     
     public function exists( path : String ) : Bool

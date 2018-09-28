@@ -23,6 +23,7 @@
  
 package samples.heaps;
 
+import hxd.Res;
 import h2d.Sprite;
 import h2d.Text;
 import h2d.Scene;
@@ -52,10 +53,6 @@ class CheapButton extends Sprite
 		super(spr);
 		
 		this.callback = callback;
-		
-		//var img = Tile.fromColor(0xFF0000, 72, 32);
-		//var spr = new Sprite(this);
-		//var bmp = new Bitmap(img, spr);
 
 		var img = Tile.fromColor(0xC0C0C0, 72, 32);
 		var img2 = Tile.fromColor(0xD0D0D0, 72, 32);
@@ -152,8 +149,8 @@ class CheapButton extends Sprite
 
 	private function getText(align:h2d.Text.Align):h2d.Text
 	{
-		var font = hxd.Res.customFont.toFont();
-		var text = new h2d.Text(font, this);
+		var font = Res.customFont.toFont();
+		var text = new Text(font, this);
 		text.textColor = 0x000000;
 		text.scale(1);
 		text.textAlign = align;

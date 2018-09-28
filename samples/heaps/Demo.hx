@@ -35,6 +35,8 @@ class Demo extends Sprite
 {
 	private var widgets:Array<ModWidget>=[];
 	private var callback:Array<String>->Void;
+	private var sprites:Array<Sprite>=[];
+	private var texts:Array<Text>=[];
 
 	public function new(scene:Scene, callback:Array<String>->Void) 
 	{
@@ -48,16 +50,25 @@ class Demo extends Sprite
 
 	public function destroy()
 	{
+		remove();
 		removeChildren();
-		for (w in widgets)
-		{
-			w.destroy();
-		}
+		sprites = null;
+		texts = null;
 		callback = null;
 	}
 	
 	public function refresh()
 	{
+		for (spr in sprites)
+		{
+			spr.removeChildren();
+			spr.remove();
+		}
+		for (txt in texts)
+		{
+			txt.removeChildren();
+			txt.remove();
+		}
 		drawImages();
 		drawText();
 	}
@@ -120,7 +131,7 @@ class Demo extends Sprite
 
 	private function list(str:String):Array<String>
 	{
-		var loader = hxd.Res.loader;
+		var loader = Res.loader;
 		var root = loader.fs.getRoot();
 		var path = root.get(str);
 		var files = [];
@@ -144,7 +155,7 @@ class Demo extends Sprite
 		});
 		for (image in images)
 		{
-			var spr = new Sprite(this);
+			var spr = getSprite();
 			var tile = Res.loader.load(image).toTile();
 			var bmp = new Bitmap(tile, spr);
 			bmp.x = 0;
@@ -191,7 +202,7 @@ class Demo extends Sprite
 			text.y = yy;
 			text.maxWidth = theWidth;
 			
-			var str = hxd.Res.loader.load(t).toText();
+			var str = Res.loader.load(t).toText();
 			
 			text.text = (str != null ? str : "null");
 			
@@ -207,7 +218,7 @@ class Demo extends Sprite
 
 	private function getBox(width:Int,height:Int,border:Int,color1:Int=0x000000,color2:Int=0xFFFFFF):Sprite
 	{
-		var spr = new Sprite(this);
+		var spr = getSprite();
 		spr.x = 0;
 		spr.y = 0;
 		var col1 = Tile.fromColor(color1,width,height);
@@ -228,6 +239,14 @@ class Demo extends Sprite
 		text.textColor = 0x000000;
 		text.scale(1);
 		text.textAlign = align;
+		texts.push(text);
 		return text;
+	}
+
+	private function getSprite():Sprite
+	{
+		var sprite = new Sprite(this);
+		sprites.push(sprite);
+		return sprite;
 	}
 }

@@ -102,6 +102,15 @@ class OpenFLBackend implements IBackend
         LimeAssets.registerLibrary("default", modLibrary);
     }
 
+    public function destroy()
+    {
+        restoreDefaultAssetLibrary();
+        polymodLibrary = null;
+        modLibrary.destroy();
+        modLibrary = null;
+        fallback = null;
+    }
+
     public function getBytes(id:String):Bytes
     {
         return modLibrary.getBytes(id);
@@ -190,6 +199,14 @@ class OpenFLModLibrary extends AssetLibrary
         fallback = b.fallback;
         hasFallback = fallback != null;
         super();
+    }
+
+    public function destroy()
+    {
+        b = null;
+        p = null;
+        fallback = null;
+        type = null;
     }
 
     public override function getAsset(id:String, type:String):Dynamic

@@ -33,6 +33,7 @@ class StubBackend implements IBackend
     public function new() {}
 
     public function init():Void {}
+    public function destroy():Void {}
 
     public function clearCache():Void {}
     public function exists(id:String, type:PolymodAssetType):Bool { return false; }

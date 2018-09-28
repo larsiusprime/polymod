@@ -31,7 +31,7 @@ class Main extends hxd.App
 {
     static function main()
     {
-        hxd.Res.initEmbed();
+        hxd.Res.initLocal();
         new Main();
     }
 
@@ -75,7 +75,6 @@ class Main extends hxd.App
             errorCallback:onError,
             ignoredFiles:Polymod.getDefaultIgnoreList()
         });
-        hxd.Res.initEmbed();
     }
 
     private function onError(error:PolymodError)

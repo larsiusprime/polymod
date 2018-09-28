@@ -107,6 +107,7 @@ class ModWidget extends Sprite
 	public function destroy()
 	{
 		callback = null;
+		remove();
 		removeChildren();
 		button.destroy();
 		moveLeft.destroy();

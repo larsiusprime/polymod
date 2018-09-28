@@ -32,6 +32,7 @@ interface IBackend
     public var polymodLibrary:PolymodAssetLibrary;
 
     public function init():Void;
+    public function destroy():Void;
 
     public function clearCache():Void;
     public function getBytes(id:String):Bytes;
