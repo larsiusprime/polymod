@@ -42,7 +42,7 @@ First, it **overrides your framework's asset system** with a custom one pointed 
 
 Second, it **combines mods atomically**. Instead of supplying one mod folder, you can provide several. Polymod will go through each folder in turn and apply the changes from each mod, automatically joining them into one combined mod at runtime. Note that this means that the order you load the mods in matters, in the case that they have overlapping changes.
 
-Polymod currently works with [OpenFL](https://www.openfl.org) and (soon) [HEAPS](https://www.heaps.io) desktop* targets, but will eventually also support other frameworks and targets.
+Polymod currently works with [OpenFL](https://www.openfl.org) and [HEAPS](https://www.heaps.io) desktop* targets, but will eventually also support other frameworks and targets.
 
 \**`sys` target, technically. Any target with a File System.*
 
