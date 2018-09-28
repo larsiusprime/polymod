@@ -1,10 +1,13 @@
 # Polymod
 An atomic modding framework for Haxe games
 
-# Backends
+# Supported Frameworks
 
-- [OpenFL](https://github.com/sh-dave/polymod-openfl.git)
-- [Kha (wip)](https://github.com/sh-dave/polymod-kha.git)
+- OpenFL
+- HEAPS
+- KHA (Coming Soon)
+- NME (Coming Soon)
+- Lime (Coming Soon)
 
 ## Basic sample:
 ![A visual preview of the polymod OpenFL sample](preview.gif)
