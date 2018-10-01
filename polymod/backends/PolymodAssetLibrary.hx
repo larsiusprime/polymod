@@ -155,10 +155,10 @@ class PolymodAssetLibrary
      */
     public function check(id:String, type:PolymodAssetType=null)
     {
-        var otherType = getType(id);
-        var exists = false;
-        if (otherType != null && type != null && type != PolymodAssetType.BYTES)
+        var exists = _checkExists(id);
+        if (exists && type != null && type != PolymodAssetType.BYTES)
         {
+            var otherType = this.type.get(id);
             exists = (otherType == type);
         }
         return exists;
@@ -166,16 +166,7 @@ class PolymodAssetLibrary
 
     public function getType(id:String):PolymodAssetType
     {
-        if(ignoredFiles.length > 0 && ignoredFiles.indexOf(id) != -1) return null;
-        var exists = false;
-        id = backend.stripAssetsPrefix(id);
-        for (d in dirs)
-        {
-            if(PolymodFileSystem.exists(Util.pathJoin(d, id)))
-            {
-                exists = true;
-            }
-        }
+        var exists = _checkExists(id);
         if (exists)
         {
             return this.type.get(id);
@@ -227,7 +218,21 @@ class PolymodAssetLibrary
         return theFile;
     }
 
-    
+    private function _checkExists(id:String):Bool
+    {
+        if(ignoredFiles.length > 0 && ignoredFiles.indexOf(id) != -1) return null;
+        var exists = false;
+        id = backend.stripAssetsPrefix(id);
+        for (d in dirs)
+        {
+            if(PolymodFileSystem.exists(Util.pathJoin(d, id)))
+            {
+                exists = true;
+            }
+        }
+        return exists;
+    }
+
     private function init()
     {
         type = new Map<String,PolymodAssetType>();
