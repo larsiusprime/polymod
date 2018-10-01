@@ -89,6 +89,21 @@ class NMEBackend implements IBackend
         {
             nme.Assets.info.set(key, modAssets.get(key));
         }
+
+        for (key in nme.Assets.info.keys())
+        {
+            var info = nme.Assets.info.get(key);
+            if(info.type == TEXT){
+                var origText = PolymodAssets.getText(key);
+                var newText = polymodLibrary.mergeAndAppendText(key, origText);
+                if(origText != newText)
+                {
+                    var byteArray = nme.utils.ByteArray.fromBytes(Bytes.ofString(newText));
+                    info.setCache(byteArray, true);
+                    info.isResource = false;
+                }
+            }
+        }
     }
 
     public function destroy()
@@ -155,7 +170,11 @@ class NMEBackend implements IBackend
             var assetInfo = Assets.info.get(key);
             if(assetInfo != null && assetInfo.type == AssetType.IMAGE)
             {
-                Assets.cache.removeBitmapData(assetInfo.path);
+                if(assetInfo.type == AssetType.IMAGE)
+                {
+                    Assets.cache.removeBitmapData(assetInfo.path);
+                }
+                assetInfo.cache = null;
             }
         }
     }
