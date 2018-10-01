@@ -73,7 +73,7 @@ class PolymodAssets
         }
         var backend:IBackend = switch(framework)
         {
-            //case NME: new polymod.backends.NMEBackend();
+            case NME: new polymod.backends.NMEBackend();
             //case LIME: new polymod.backends.LimeBackend();
             case OPENFL: new polymod.backends.OpenFLBackend();
             case HEAPS: new polymod.backends.HEAPSBackend();
@@ -94,6 +94,11 @@ class PolymodAssets
         {
             Polymod.error(PolymodErrorCode.FAILED_CREATE_BACKEND, "could not create a backend for framework("+framework+")!");
             return null;
+        }
+
+        if(library != null)
+        {
+            library.destroy();
         }
 
         library = new PolymodAssetLibrary({

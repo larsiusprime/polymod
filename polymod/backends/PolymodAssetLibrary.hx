@@ -77,6 +77,14 @@ class PolymodAssetLibrary
         init();
     }
 
+    public function destroy()
+    {
+        if(backend != null)
+        {
+            backend.destroy();
+        }
+    }
+
     public function mergeAndAppendText(id:String, modText:String):String
     {
         modText = Util.mergeAndAppendText(modText, id, dirs, getTextDirectly, mergeRules);
@@ -123,7 +131,7 @@ class PolymodAssetLibrary
     public function getText (id:String):String { return backend.getText(id); }
     public function getBytes (id:String):Bytes { return backend.getBytes(id); }
 
-    public function listModFiles (type:PolymodAssetType):Array<String>
+    public function listModFiles (type:PolymodAssetType=null):Array<String>
     {
         var items = [];
         
@@ -147,22 +155,23 @@ class PolymodAssetLibrary
      */
     public function check(id:String, type:PolymodAssetType=null)
     {
-        if(ignoredFiles.length > 0 && ignoredFiles.indexOf(id) != -1) return false;
-        var exists = false;
-        id = backend.stripAssetsPrefix(id);
-        for (d in dirs)
-        {
-            if(PolymodFileSystem.exists(Util.pathJoin(d, id)))
-            {
-                exists = true;
-            }
-        }
+        var exists = _checkExists(id);
         if (exists && type != null && type != PolymodAssetType.BYTES)
         {
             var otherType = this.type.get(id);
             exists = (otherType == type);
         }
         return exists;
+    }
+
+    public function getType(id:String):PolymodAssetType
+    {
+        var exists = _checkExists(id);
+        if (exists)
+        {
+            return this.type.get(id);
+        }
+        return null;
     }
 
     public function checkDirectly(id:String, dir:String):Bool
@@ -209,7 +218,21 @@ class PolymodAssetLibrary
         return theFile;
     }
 
-    
+    private function _checkExists(id:String):Bool
+    {
+        if(ignoredFiles.length > 0 && ignoredFiles.indexOf(id) != -1) return false;
+        var exists = false;
+        id = backend.stripAssetsPrefix(id);
+        for (d in dirs)
+        {
+            if(PolymodFileSystem.exists(Util.pathJoin(d, id)))
+            {
+                exists = true;
+            }
+        }
+        return exists;
+    }
+
     private function init()
     {
         type = new Map<String,PolymodAssetType>();
