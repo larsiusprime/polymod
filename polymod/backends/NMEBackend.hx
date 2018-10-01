@@ -93,14 +93,31 @@ class NMEBackend implements IBackend
         for (key in nme.Assets.info.keys())
         {
             var info = nme.Assets.info.get(key);
-            if(info.type == TEXT){
-                var origText = PolymodAssets.getText(key);
-                var newText = polymodLibrary.mergeAndAppendText(key, origText);
-                if(origText != newText)
+            if(info.type == TEXT)
+            {
+                if(info.isResource)
                 {
-                    var byteArray = nme.utils.ByteArray.fromBytes(Bytes.ofString(newText));
-                    info.setCache(byteArray, true);
-                    info.isResource = false;
+                    var origText = PolymodAssets.getText(key);
+                    var newText = polymodLibrary.mergeAndAppendText(key, origText);
+                    if(origText != newText)
+                    {
+                        var byteArray = nme.utils.ByteArray.fromBytes(Bytes.ofString(newText));
+                        info.setCache(byteArray, true);
+                        info.isResource = false;
+                    }
+                }
+                else
+                {
+                    nme.Assets.byteFactory.set( info.path, function(){
+                        var bytes = PolymodFileSystem.getFileBytes(key);
+                        var origText = Std.string(bytes);
+                        var newText = polymodLibrary.mergeAndAppendText(key, origText);
+                        if(origText != newText)
+                        {
+                            return nme.utils.ByteArray.fromBytes(Bytes.ofString(newText));
+                        }
+                        return nme.utils.ByteArray.fromBytes(Bytes.ofString(origText));
+                    });
                 }
             }
         }
