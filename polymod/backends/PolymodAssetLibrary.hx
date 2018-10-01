@@ -77,6 +77,14 @@ class PolymodAssetLibrary
         init();
     }
 
+    public function destroy()
+    {
+        if(backend != null)
+        {
+            backend.destroy();
+        }
+    }
+
     public function mergeAndAppendText(id:String, modText:String):String
     {
         modText = Util.mergeAndAppendText(modText, id, dirs, getTextDirectly, mergeRules);
@@ -123,7 +131,7 @@ class PolymodAssetLibrary
     public function getText (id:String):String { return backend.getText(id); }
     public function getBytes (id:String):Bytes { return backend.getBytes(id); }
 
-    public function listModFiles (type:PolymodAssetType):Array<String>
+    public function listModFiles (type:PolymodAssetType=null):Array<String>
     {
         var items = [];
         
@@ -147,7 +155,18 @@ class PolymodAssetLibrary
      */
     public function check(id:String, type:PolymodAssetType=null)
     {
-        if(ignoredFiles.length > 0 && ignoredFiles.indexOf(id) != -1) return false;
+        var otherType = getType(id);
+        var exists = false;
+        if (otherType != null && type != null && type != PolymodAssetType.BYTES)
+        {
+            exists = (otherType == type);
+        }
+        return exists;
+    }
+
+    public function getType(id:String):PolymodAssetType
+    {
+        if(ignoredFiles.length > 0 && ignoredFiles.indexOf(id) != -1) return null;
         var exists = false;
         id = backend.stripAssetsPrefix(id);
         for (d in dirs)
@@ -157,12 +176,11 @@ class PolymodAssetLibrary
                 exists = true;
             }
         }
-        if (exists && type != null && type != PolymodAssetType.BYTES)
+        if (exists)
         {
-            var otherType = this.type.get(id);
-            exists = (otherType == type);
+            return this.type.get(id);
         }
-        return exists;
+        return null;
     }
 
     public function checkDirectly(id:String, dir:String):Bool

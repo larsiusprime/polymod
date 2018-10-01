@@ -38,7 +38,6 @@ import nme.text.TextFormatAlign;
  */
 class CheapButton extends Sprite
 {
-
 	public function new(str:String, callback:Void->Void=null)
 	{
 		super();
@@ -88,50 +87,48 @@ class CheapButton extends Sprite
 			this.down = this.up;
 		}
 		
-		addEventListener(MouseEvent.MOUSE_OVER, onOver, false, 0, true);
-		addEventListener(MouseEvent.MOUSE_OUT, onUp, false, 0, true);
-		addEventListener(MouseEvent.MOUSE_DOWN, onDown, false, 0, true);
-		addEventListener(MouseEvent.MOUSE_UP, onClick, false, 0, true);
+		addEventListener(MouseEvent.MOUSE_OVER, onOver);
+		addEventListener(MouseEvent.MOUSE_OUT, onUp);
+		addEventListener(MouseEvent.MOUSE_DOWN, onDown);
+		addEventListener(MouseEvent.MOUSE_UP, onUp);
+		addEventListener(MouseEvent.CLICK, onClick);
 		
 		onUp(null);
 	}
 	
 	public function destroy()
 	{
-		removeEventListener(MouseEvent.MOUSE_OVER, onOver, false);
-		removeEventListener(MouseEvent.MOUSE_OUT, onUp, false);
-		removeEventListener(MouseEvent.MOUSE_DOWN, onDown, false);
-		removeEventListener(MouseEvent.MOUSE_UP, onClick, false);
+		removeEventListener(MouseEvent.MOUSE_OVER, onOver);
+		removeEventListener(MouseEvent.MOUSE_OUT, onUp);
+		removeEventListener(MouseEvent.MOUSE_DOWN, onDown);
+		removeEventListener(MouseEvent.MOUSE_UP, onUp);
+		removeEventListener(MouseEvent.CLICK, onClick);
 		removeChildren();
 		callback = null;
 	}
 	
 	private function onUp(m:MouseEvent)
 	{
-		trace("onUp");
 		down.visible = over.visible = false;
 		up.visible = true;
 	}
 	
 	private function onClick(m:MouseEvent)
 	{
-		trace("onClick");
 		onOver(m);
-		if (callback != null) callback();
 	}
 	
 	private function onOver(m:MouseEvent)
 	{
-		trace("onOver");
 		down.visible = up.visible = false;
 		over.visible = true;
 	}
 	
 	private function onDown(m:MouseEvent)
 	{
-		trace("onDown");
 		over.visible = up.visible = false;
 		down.visible = true;
+		if (callback != null) callback();
 	}
 	
 	private function text():TextField
