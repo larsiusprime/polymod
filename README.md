@@ -4,8 +4,8 @@ An atomic modding framework for Haxe games/apps.
 Supports these frameworks:
 - OpenFL
 - HEAPS
+- NME
 - KHA (Coming Soon)
-- NME (Coming Soon)
 - Lime (Coming Soon)
 - Custom (provide your own backend)
 
