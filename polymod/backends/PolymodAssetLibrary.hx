@@ -220,7 +220,7 @@ class PolymodAssetLibrary
 
     private function _checkExists(id:String):Bool
     {
-        if(ignoredFiles.length > 0 && ignoredFiles.indexOf(id) != -1) return null;
+        if(ignoredFiles.length > 0 && ignoredFiles.indexOf(id) != -1) return false;
         var exists = false;
         id = backend.stripAssetsPrefix(id);
         for (d in dirs)
