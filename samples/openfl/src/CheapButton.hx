@@ -38,6 +38,9 @@ import openfl.text.TextFormatAlign;
  */
 class CheapButton extends Sprite
 {
+	private var upT:TextField;
+	private var overT:TextField;
+	private var downT:TextField;
 
 	public function new(str:String, callback:Void->Void=null)
 	{
@@ -61,9 +64,9 @@ class CheapButton extends Sprite
 		over.addChild(overB);
 		down.addChild(downB);
 		
-		var upT = text();
-		var overT = text();
-		var downT = text();
+		upT = text();
+		overT = text();
+		downT = text();
 		
 		upT.text = str;
 		overT.text = str;
@@ -96,6 +99,13 @@ class CheapButton extends Sprite
 		onUp(null);
 	}
 	
+	public function setText(str:String)
+	{
+		upT.text = str;
+		overT.text = str;
+		downT.text = str;
+	}
+
 	public function destroy()
 	{
 		removeEventListener(MouseEvent.MOUSE_OVER, onOver, false);

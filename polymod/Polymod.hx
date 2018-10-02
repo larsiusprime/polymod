@@ -484,6 +484,7 @@ enum PolymodErrorType
     var VERSION_CONFLICT_API:String = "version_conflict_api";
     var PARAM_MOD_VERSION:String = "param_mod_version";
     var FRAMEWORK_AUTODETECT:String = "framework_autodetect";
+    var FRAMEWORK_INIT:String = "framework_init";
     var UNDEFINED_CUSTOM_BACKEND:String = "undefined_custom_backend";
     var FAILED_CREATE_BACKEND:String = "failed_create_backend";
 }

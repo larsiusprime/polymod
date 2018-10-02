@@ -26,6 +26,7 @@ package;
 import openfl.display.Sprite;
 import openfl.Lib;
 import polymod.Polymod;
+import polymod.Polymod.Framework;
 
 /**
  * ...
@@ -55,12 +56,14 @@ class Main extends Sprite
 	
 	private function loadMods(dirs:Array<String>)
 	{
+		var framework = Demo.usingOpenFL ? Framework.OPENFL : Framework.LIME;
 		var modRoot = "../../../mods/";
 		var results = Polymod.init({
 			modRoot:modRoot,
 			dirs:dirs,
 			errorCallback:onError,
-			ignoredFiles:Polymod.getDefaultIgnoreList()
+			ignoredFiles:Polymod.getDefaultIgnoreList(),
+			framework:framework
 		});
 	}
 

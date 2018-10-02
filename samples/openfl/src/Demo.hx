@@ -23,10 +23,12 @@
 
 package;
 
+import lime.utils.Assets;
 import openfl.Assets;
 import openfl.display.DisplayObject;
 import openfl.text.TextFieldType;
 import openfl.display.Bitmap;
+import openfl.display.BitmapData;
 import openfl.display.Sprite;
 import openfl.text.TextField;
 import openfl.text.TextFormatAlign;
@@ -42,6 +44,8 @@ class Demo extends Sprite
 	private var widgets:Array<ModWidget>=[];
 	private var callback:Array<String>->Void;
 	private var stuff:Array<Dynamic> = [];
+	private var limeToggle:CheapButton;
+	public static var usingOpenFL(default,null):Bool = true;
 	
 	public function new(callback:Array<String>->Void) 
 	{
@@ -94,6 +98,42 @@ class Demo extends Sprite
 		}
 		
 		updateWidgets();
+		addToggle();
+	}
+
+	private function addToggle()
+	{
+		var limeLabel = getText(LEFT);
+		limeLabel.x = 10;
+		limeLabel.y = 400;
+		limeLabel.text = "Asset System:";
+		
+		limeToggle = new CheapButton(usingOpenFL ? "openfl" : "lime", onToggleOpenFL);
+		limeToggle.x = 10;
+		limeToggle.y = 420;
+		
+		addChild(limeLabel);
+		addChild(limeToggle);
+	}
+
+	private function onToggleOpenFL()
+	{
+		usingOpenFL = !usingOpenFL;
+
+		if(usingOpenFL)
+		{
+			limeToggle.setText("openfl");
+		}
+		else
+		{
+			limeToggle.setText("lime");
+		}
+
+		reloadMods();
+		visible = false;
+		haxe.Timer.delay(function(){
+			visible = true;
+		},10);
 	}
 	
 	private function updateWidgets()
@@ -132,6 +172,12 @@ class Demo extends Sprite
 			other.y = oldY;
 		}
 		
+		reloadMods();
+		updateWidgets();
+	}
+
+	private function reloadMods()
+	{
 		if (callback != null)
 		{
 			var theMods = [];
@@ -144,8 +190,33 @@ class Demo extends Sprite
 			}
 			callback(theMods);
 		}
-		
-		updateWidgets();
+	}
+
+	private function AssetsList(type:Dynamic)
+	{
+		if(usingOpenFL)
+			return openfl.utils.Assets.list(cast type);
+		else
+			return lime.utils.Assets.list(cast type);
+	}
+
+	private function AssetsGetBitmapData(str:String)
+	{
+		if(usingOpenFL)
+			return openfl.utils.Assets.getBitmapData(str);
+		else
+		{
+			var img = lime.utils.Assets.getImage(str);
+			return BitmapData.fromImage(img);
+		}
+	}
+
+	private function AssetsGetText(str:String)
+	{
+		if(usingOpenFL)
+			return openfl.utils.Assets.getText(str);
+		else
+			return lime.utils.Assets.getText(str);
 	}
 	
 	private function drawImages()
@@ -153,7 +224,7 @@ class Demo extends Sprite
 		var xx = 10;
 		var yy = 10;
 
-		var images = Assets.list(AssetType.IMAGE);
+		var images = AssetsList(AssetType.IMAGE);
 		images.sort(function(a:String, b:String):Int{
 			if (a < b) return -1;
 			if (a > b) return  1;
@@ -162,7 +233,7 @@ class Demo extends Sprite
 		
 		for (image in images)
 		{
-			var bData = Assets.getBitmapData(image);
+			var bData = AssetsGetBitmapData(image);
 			var bmp = new Bitmap(bData);
 			bmp.x = xx;
 			bmp.y = yy;
@@ -188,7 +259,7 @@ class Demo extends Sprite
 		var xx = 350;
 		var yy = 10;
 		
-		var texts = Assets.list(AssetType.TEXT);
+		var texts = AssetsList(AssetType.TEXT);
 		
 		for (t in texts)
 		{
@@ -213,7 +284,7 @@ class Demo extends Sprite
 			text.wordWrap = true;
 			text.multiline = true;
 			
-			var str = Assets.getText(t);
+			var str = AssetsGetText(t);
 			text.text = (str != null ? str : "null");
 			
 			var caption = getText();
