@@ -391,7 +391,7 @@ class XMLParseFormat implements BaseParseFormat //<Xml>
     public var stripHeaders:Array<String>;
     public var stripFooters:Array<String>;
     
-    public function new(prettyPrint:Bool=true, headers:Array<String>=null, footers:Array<String>=null)
+    public function new(prettyPrint:Bool=false, headers:Array<String>=null, footers:Array<String>=null)
     {
         if(headers == null) headers = [];
         if(footers == null) footers = [];
