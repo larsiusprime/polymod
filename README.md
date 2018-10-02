@@ -5,9 +5,9 @@ Supports these frameworks:
 - OpenFL
 - HEAPS
 - NME
-- KHA (Coming Soon)
-- Lime (Coming Soon)
+- Lime (with or without OpenFL)
 - Custom (provide your own backend)
+- KHA (Coming Soon)
 
 ## Basic sample:
 ![A visual preview of the polymod OpenFL sample](preview.gif)
@@ -45,7 +45,7 @@ First, it **overrides your framework's asset system** with a custom one pointed 
 
 Second, it **combines mods atomically**. Instead of supplying one mod folder, you can provide several. Polymod will go through each folder in turn and apply the changes from each mod, automatically joining them into one combined mod at runtime. Note that this means that the order you load the mods in matters, in the case that they have overlapping changes.
 
-Polymod currently works with [OpenFL](https://www.openfl.org), [NME](https://github.com/haxenme/nme), and [HEAPS](https://www.heaps.io) desktop* targets, but will eventually also support other frameworks and targets.
+Polymod currently works with [OpenFL](https://www.openfl.org), [lime](https://github.com/openfl/lime), [NME](https://github.com/haxenme/nme), and [HEAPS](https://www.heaps.io) desktop* targets, and will eventually support other frameworks and targets.
 
 \**`sys` target, technically. Any target with a File System.*
 
@@ -58,9 +58,9 @@ Replace logic works on any asset format.
 Append logic works only on text assets.
 Merge logic is currently supported for plaintext (TXT), CSV, TSV, and XML asset formats only. Support for JSON is planned.
 
-Samples for the OpenFL and HEAPS frameworks are provided.
+Samples for the OpenFL, Lime, NME, and HEAPS frameworks are provided.
 
-# Usage
+# Basic Usage
 
 Loading one mod:
 ```haxe
@@ -82,9 +82,14 @@ Be sure to call `Polymod.init()` before you load any assets. Also note that call
 
 After that, you just load your assets as normal:
 
-OpenFL:
+OpenFL / NME:
 ```haxe
 var myImage = Assets.getBitmapData("myImage.png");
+```
+
+Lime:
+```haxe
+var myImage = Assets.getImage("myImage.png");
 ```
 
 HEAPS:
