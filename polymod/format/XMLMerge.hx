@@ -21,7 +21,7 @@
  * 
  */
  
- package polymod.util;
+ package polymod.format;
 
 import haxe.xml.Fast;
 import haxe.xml.Printer;
@@ -131,7 +131,6 @@ class XMLMerge
 							{
 								return;
 							}
-							//mergeXMLWork(a, b);
 						}
 					}
 					if (keyValues != null && keyValues.length % 2 == 0 && keyValues.length >= 2)
@@ -152,8 +151,10 @@ class XMLMerge
 				else
 				{
 					//descend upon all children
-					for (aEl in a.elements()){
-						for (bEl in b.elements()){
+					for (aEl in a.elements())
+					{
+						for (bEl in b.elements())
+						{
 							mergeXML(aEl, bEl, allSigs, mergeMap);
 						}
 					}
@@ -248,8 +249,9 @@ class XMLMerge
 			{
 				var aArr = a.get(bkey);
 				var bArr = b.get(bkey);
-				for(bVal in bArr){
-					aArr.push(bVal);    
+				for(bVal in bArr)
+				{
+					aArr.push(bVal);
 				}
 			}
 			else

@@ -38,25 +38,30 @@ typedef PolymodAssetsParams = {
     framework:Framework,
 
     /**
-	 * paths to each mod's root directories.
-	 * This takes precedence over the "Dir" parameter and the order matters -- mod files will load from first to last, with last taking precedence
-	 */
-	dirs:Array<String>,
+     * paths to each mod's root directories.
+     * This takes precedence over the "Dir" parameter and the order matters -- mod files will load from first to last, with last taking precedence
+     */
+    dirs:Array<String>,
 
-	/**
-	 * (optional) formatting rules for merging various data formats
-	 */
-	?mergeRules:MergeRules,
+    /**
+     * (optional) formatting rules for merging various data formats
+     */
+    ?mergeRules:MergeRules,
 
-	/**
- 	 * (optional) list of files it ignore in this mod asset library (get the fallback version instead)
-	 */
-	?ignoredFiles:Array<String>,
+    /**
+      * (optional) list of files it ignore in this mod asset library (get the fallback version instead)
+     */
+    ?ignoredFiles:Array<String>,
 
-     /**
-      * (optional) your own 
+    /**
+      * (optional) your own custom backend for handling assets
       */
-    ?customBackend:Class<IBackend>
+    ?customBackend:Class<IBackend>,
+
+    /**
+     * (optional) maps file extensions to asset types. This ensures e.g. text files with unfamiliar extensions are handled properly.
+     */
+    ?extensionMap:Map<String,PolymodAssetType>
 }
 
 class PolymodAssets
@@ -109,7 +114,8 @@ class PolymodAssets
             backend:backend,
             dirs:params.dirs,
             mergeRules:params.mergeRules,
-            ignoredFiles:params.ignoredFiles
+            ignoredFiles:params.ignoredFiles,
+            extensionMap:params.extensionMap
         });
 
         backend.init();
@@ -171,14 +177,4 @@ class PolymodAssets
         }
         return UNKNOWN;
     }
-}
-
-enum TextFileFormat
-{
-    PLAINTEXT;
-    LINES;
-    CSV;
-    TSV;
-    XML;
-    JSON;
 }

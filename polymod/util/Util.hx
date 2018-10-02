@@ -35,11 +35,6 @@ import unifill.Unifill;
 
 import haxe.Utf8;
 
-typedef MergeRules =
-{
-	?csv:CSVParseFormat
-}
-
 class Util
 {
 
@@ -113,210 +108,7 @@ class Util
 		return baseText;
 	}
 
-	private static function mergeCSV(a:String, b:String, id:String, format:CSVParseFormat)
-	{
-		var aCSV = CSV.parseWithFormat(a, format);
-		var bCSV = CSV.parseWithFormat(b, format);
-
-		for (row in bCSV.grid)
-		{
-			var flag = row.length > 0 ? row[0] : "";
-			if (flag != "")
-			{
-				for (i in 0...aCSV.grid.length)
-				{
-					var otherRow = aCSV.grid[i];
-					var otherFlag = otherRow[0];
-					if (flag == otherFlag)
-					{
-						for (j in 0...row.length)
-						{
-							if (j < otherRow.length)
-							{
-								otherRow[j] = row[j];
-							}
-						}
-					}
-				}
-			}
-		}
-
-		var result = printCSV(aCSV, format);
-
-		return result;
-	}
-
-	private static function mergeTSV(a:String, b:String, id:String):String
-	{
-		var aTSV = TSV.parse(a);
-		var bTSV = TSV.parse(b);
-
-		for (row in bTSV.grid)
-		{
-			var flag = row.length > 0 ? row[0] : "";
-			if (flag != "")
-			{
-				for (i in 0...aTSV.grid.length)
-				{
-					var otherRow = aTSV.grid[i];
-					var otherFlag = otherRow[0];
-					if (flag == otherFlag)
-					{
-						for (j in 0...row.length)
-						{
-							if (j < otherRow.length)
-							{
-								otherRow[j] = row[j];
-							}
-						}
-					}
-				}
-			}
-		}
-
-		var result = printTSV(aTSV);
-
-		return result;
-	}
-
-	public static function printCSV(csv:CSV, format:CSVParseFormat):String
-	{
-		var buf = new StringBuf();
-
-		var delimeter = format.delimeter;
-		var lf = 0x0A;
-		var dq = 0x22;
-
-		for (i in 0...csv.fields.length)
-		{
-			buf.add(csv.fields[i]);
-			if (i != csv.fields.length - 1)
-			{
-				buf.add(delimeter);
-			}
-		}
-
-		var strSoFar = buf.toString();
-
-		if (strSoFar.indexOf("\n") == -1)
-		{
-			buf.add(Std.string("\r\n"));
-		}
-
-		var grid = csv.grid;
-
-		for (iy in 0...grid.length)
-		{
-			var row = grid[iy];
-			for (ix in 0...row.length)
-			{
-				var cell = row[ix];
-				if(format.quotedCells){
-					buf.addChar(dq);
-				}
-				Utf8.iter(cell, function(char:Int)
-				{
-					buf.addChar(char);
-				});
-				if(format.quotedCells){
-					buf.addChar(dq);
-				}
-				if (ix != row.length - 1)
-				{
-					buf.add(delimeter);
-				}
-			}
-			if (iy != grid.length -1)
-			{
-				buf.add(Std.string("\r\n"));
-			}
-		}
-
-		return buf.toString();
-	}
-
-	public static function printTSV(tsv:TSV):String
-	{
-		var buf = new StringBuf();
-
-		var tab = 0x09;
-		var lf = 0x0A;
-
-		for (i in 0...tsv.fields.length)
-		{
-			buf.add(tsv.fields[i]);
-			if (i != tsv.fields.length - 1)
-			{
-				buf.addChar(tab);
-			}
-		}
-
-		var strSoFar = buf.toString();
-
-		if (strSoFar.indexOf("\n") == -1)
-		{
-			buf.add(Std.string("\r\n"));
-		}
-
-		var grid = tsv.grid;
-
-		for (iy in 0...grid.length)
-		{
-			var row = grid[iy];
-			for (ix in 0...row.length)
-			{
-				var cell = row[ix];
-				Utf8.iter(cell, function(char:Int)
-				{
-					buf.addChar(char);
-				});
-				if (ix != row.length - 1)
-				{
-					buf.addChar(tab);
-				}
-			}
-			if (iy != grid.length -1)
-			{
-				buf.add(Std.string("\r\n"));
-			}
-		}
-
-		return buf.toString();
-	}
-
-	public static function mergeXML(a:String, b:String, id:String):String
-	{
-		var ax:Xml = null;
-		var bx:Xml = null;
-
-		try
-		{
-			ax = Xml.parse(a);
-			bx = Xml.parse(b);
-		}
-		catch (msg:Dynamic)
-		{
-			throw "Error parsing XML files during merge (" + id + ") " + msg;
-		}
-
-		try
-		{
-			XMLMerge.mergeXMLNodes(ax, bx);
-		}
-		catch (msg:Dynamic)
-		{
-			throw "Error combining XML files during merge (" + id + ") " + msg;
-		}
-
-		if (ax == null)
-		{
-			return a;
-		}
-
-		var result = haxe.xml.Printer.print(ax);
-
-		return result;
-	}
+	
 
 	public static function appendText(baseText:String, id:String, theDir:String, getModText:String->String->String):String
 	{
@@ -381,6 +173,31 @@ class Util
 		}
 
 		return baseText;
+	}
+
+	public static function appendCSVOrTSV(baseText:String, appendText:String)
+	{
+		var lastChar = uCharAt(baseText, uLength(baseText) - 1);
+        var lastLastChar = uCharAt(baseText, uLength(baseText) - 1);
+        var joiner = "";
+        var endLine = "\n";
+        var crIndex = uIndexOf(baseText, "\r");
+        var lfIndex = uIndexOf(baseText, "\n");
+
+        if (crIndex != -1 && lfIndex == crIndex + 1)
+        {
+            endLine = "\r\n";
+        }
+
+        if (lastChar != "\n")
+        {
+            joiner = endLine;
+        }
+
+        var otherEndline = endLine == "\n" ? "\r\n" : "\n";
+        appendText = uSplitReplace(appendText, otherEndline, endLine);
+        
+        return uCombine([baseText, joiner, appendText]);
 	}
 
 	public static function appendSpecialXML(a:String, b:String, headers:Array<String>, footers:Array<String>):String
@@ -636,12 +453,28 @@ class Util
 		#end
 	}
 
+	public static function uJoin(arr:Array<String>, token:String):String
+	{
+		var sb = new StringBuf();
+		var i = 0;
+		for (str in arr)
+		{
+			sb.add(str);
+			if(i != arr.length-1)
+			{
+				sb.add(token);
+			}
+			i++;
+		}
+		return sb.toString();
+	}
+
 	public static function uCombine(arr:Array<String>):String
 	{
 		var sb = new StringBuf();
 		for (str in arr)
 		{
-			sb.add(Std.string(str));
+			sb.add(str);
 		}
 		return sb.toString();
 	}

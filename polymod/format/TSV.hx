@@ -21,7 +21,7 @@
  * 
  */
 
-package polymod.util;
+package polymod.format;
 
 /**
  * A simple TSV (tab separated values) structure
@@ -30,7 +30,6 @@ package polymod.util;
 
 class TSV extends CSV
 {
-
 	/**
 	 * Parses TSV formatted string into a useable data structure
 	 * Endline format will be auto-detected: a single "\r\n" will make it split lines based on windows

@@ -79,9 +79,14 @@ typedef PolymodParams = {
     ?ignoredFiles:Array<String>,
 
      /**
-      * (optional) your own 
+      * (optional) your own custom backend for handling assets
       */
-     ?customBackend:Class<IBackend>
+     ?customBackend:Class<IBackend>,
+
+     /**
+      * (optional) a map that tells Polymod which assets are of which type. This ensures e.g. text files with unfamiliar extensions are handled properly.
+      */
+      ?extensionMap:Map<String,PolymodAssetType>
 }
 
 enum Framework
@@ -187,7 +192,8 @@ class Polymod
             dirs:dirs,
             mergeRules:params.mergeRules,
             ignoredFiles:params.ignoredFiles,
-            customBackend:params.customBackend
+            customBackend:params.customBackend,
+            extensionMap:params.extensionMap
         });
 
         
@@ -487,4 +493,5 @@ enum PolymodErrorType
     var FRAMEWORK_INIT:String = "framework_init";
     var UNDEFINED_CUSTOM_BACKEND:String = "undefined_custom_backend";
     var FAILED_CREATE_BACKEND:String = "failed_create_backend";
+    var MERGE:String = "merge_error";
 }
