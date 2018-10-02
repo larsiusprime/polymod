@@ -27,7 +27,11 @@ import polymod.Polymod;
 import polymod.fs.PolymodFileSystem;
 import polymod.Polymod.PolymodError;
 import polymod.Polymod.PolymodErrorType;
-import polymod.util.CSV.CSVParseFormat;
+import polymod.format.CSV;
+import polymod.format.ParseRules;
+import polymod.format.ParseRules.CSVParseFormat;
+import polymod.format.ParseRules.TextFileFormat;
+import polymod.format.BaseParseFormat;
 
 #if unifill
 import unifill.Unifill;
@@ -38,7 +42,7 @@ import haxe.Utf8;
 class Util
 {
 
-	public static function mergeAndAppendText(baseText:String, id:String, dirs:Array<String>, getModText:String->String->String, mergeRules:MergeRules=null):String
+	public static function mergeAndAppendText(baseText:String, id:String, dirs:Array<String>, getModText:String->String->String, parseRules:ParseRules=null):String
 	{
 		var text = baseText;
 
@@ -46,12 +50,11 @@ class Util
 		{
 			if (hasMerge(id, d))
 			{
-				text = mergeText(text, id, d, getModText, mergeRules);
-				text = mergeText(text, id, d, getModText, mergeRules);
+				text = mergeText(text, id, d, getModText, parseRules);
 			}
 			if (hasAppend(id, d))
 			{
-				text = appendText(text, id, d, getModText);
+				text = appendText(text, id, d, getModText, parseRules);
 			}
 		}
 
@@ -71,111 +74,39 @@ class Util
 	 * @return
 	 */
 
-	public static function mergeText(baseText:String, id:String, theDir:String = "", getModText:String->String->String, mergeRules:MergeRules=null):String
+	public static function mergeText(baseText:String, id:String, theDir:String = "", getModText:String->String->String, parseRules:ParseRules=null):String
 	{
 		var extension = uExtension(id, true);
-
 		id = stripAssetsPrefix(id);
-
 		var mergeFile = "_merge" + sl() + id;
-
-		if (extension == "xml")
+		var format:BaseParseFormat = parseRules.get(extension);
+		if(format != null)
 		{
 			var mergeText = getModText(mergeFile, theDir);
-			return mergeXML(baseText, mergeText, id);
+			return format.merge(baseText, mergeText, id);
 		}
-		else if (extension == "tsv")
+		else
 		{
-			var mergeText = getModText(mergeFile, theDir);
-			return mergeTSV(baseText, mergeText, id);
+			Polymod.error(MERGE,"Could not merge file ("+id+"), no parse format was specified for extension ("+extension+").");
+			return baseText;
 		}
-		else if (extension == "csv")
-		{
-			var mergeText = getModText(mergeFile, theDir);
-			var csvFormat = (mergeRules != null ? mergeRules.csv : null);
-			if(csvFormat == null)
-			{
-				Polymod.warning("no_csv_format", "No CSV format provided, using default parse format, there could be problems!");
-				csvFormat = new CSVParseFormat(",",true);
-			}
-			return mergeCSV(baseText, mergeText, id, csvFormat);
-		}
-		else if (extension == "txt")
-		{
-
-		}
-
 		return baseText;
 	}
 
-	
-
-	public static function appendText(baseText:String, id:String, theDir:String, getModText:String->String->String):String
+	public static function appendText(baseText:String, id:String, theDir:String, getModText:String->String->String, parseRules:ParseRules=null):String
 	{
 		var extension = uExtension(id, true);
-
 		id = stripAssetsPrefix(id);
-
-		if (extension == "xml")
+		var format:BaseParseFormat = parseRules.get(extension);
+		if(format != null)
 		{
-			var appendText = getModText("_append" + sl() + id, theDir);
-
-			switch(id)
-			{
-				/*
-				//game-specific cruft from defender's quest
-				case "game_progression.xml":
-					return appendSpecialXML(baseText, appendText, ["<plotlines>"], ["</plotlines>"]);
-				*/
-				default:
-					return appendXML(baseText, appendText);
-			}
+			var appendText = getModText(Util.pathJoin("_append",id), theDir);
+			return format.append(baseText, appendText, id);
 		}
-		else if(extension == "csv" || extension == "tsv" || extension == "txt")
-		{
-			var appendText = getModText("_append" + sl() + id, theDir);
-
-			var lastChar = uCharAt(baseText, uLength(baseText) - 1);
-			var lastLastChar = uCharAt(baseText, uLength(baseText) - 1);
-			var joiner = "";
-
-			var endLine = "\n";
-
-			var crIndex = uIndexOf(baseText, "\r");
-			var lfIndex = uIndexOf(baseText, "\n");
-
-			if (crIndex != -1)
-			{
-				if (lfIndex == crIndex + 1)
-				{
-					endLine = "\r\n";
-				}
-			}
-
-			if (lastChar != "\n")
-			{
-				joiner = endLine;
-			}
-
-			if (extension == "tsv" || extension == "csv")
-			{
-				var otherEndline = endLine == "\n" ? "\r\n" : "\n";
-				appendText = uSplitReplace(appendText, otherEndline, endLine);
-			}
-
-			var returnText = uCombine([baseText, joiner, appendText]);
-
-			return returnText;
-		}
-		else if (extension == "json")
-		{
-			//TODO
-		}
-
 		return baseText;
 	}
 
-	public static function appendCSVOrTSV(baseText:String, appendText:String)
+	public static function appendCSVOrTSV(baseText:String, appendText:String, id:String)
 	{
 		var lastChar = uCharAt(baseText, uLength(baseText) - 1);
         var lastLastChar = uCharAt(baseText, uLength(baseText) - 1);

@@ -24,12 +24,12 @@
 package polymod.backends;
 
 import haxe.io.Bytes;
+import polymod.fs.PolymodFileSystem;
+import polymod.util.Util;
 import polymod.backends.IBackend;
 import polymod.backends.PolymodAssets.PolymodAssetType;
+import polymod.format.ParseRules;
 import polymod.Polymod.Framework;
-import polymod.util.Util;
-import polymod.util.Util.MergeRules;
-import polymod.fs.PolymodFileSystem;
 
 typedef PolymodAssetLibraryParams = {
    
@@ -45,14 +45,19 @@ typedef PolymodAssetLibraryParams = {
     dirs:Array<String>,
 
     /**
-     * (optional) formatting rules for merging various data formats
+     * (optional) formatting rules for parsing various data formats
      */
-    ?mergeRules:MergeRules,
+    ?parseRules:ParseRules,
 
     /**
-      * (optional) list of files it ignore in this mod asset library (get the fallback version instead)
+    * (optional) list of files it ignore in this mod asset library (get the fallback version instead)
      */
-    ?ignoredFiles:Array<String>
+    ?ignoredFiles:Array<String>,
+    
+    /**
+     * (optional) maps file extensions to asset types. This ensures e.g. text files with unfamiliar extensions are handled properly.
+     */
+    ?extensionMap:Map<String,PolymodAssetType>
 }
 
 class PolymodAssetLibrary
@@ -63,7 +68,7 @@ class PolymodAssetLibrary
     
     public var dirs:Array<String> = null;
     public var ignoredFiles:Array<String> = null;
-    private var mergeRules:MergeRules = null;
+    private var parseRules:ParseRules = null;
     private var extensions:Map<String,PolymodAssetType>;
 
     public function new(params:PolymodAssetLibraryParams)
@@ -71,7 +76,7 @@ class PolymodAssetLibrary
         backend = params.backend;
         backend.polymodLibrary = this;
         dirs = params.dirs;
-        mergeRules = params.mergeRules;
+        parseRules = params.parseRules;
         ignoredFiles = params.ignoredFiles != null ? params.ignoredFiles.copy() : [];
         backend.clearCache();
         init();
@@ -87,7 +92,7 @@ class PolymodAssetLibrary
 
     public function mergeAndAppendText(id:String, modText:String):String
     {
-        modText = Util.mergeAndAppendText(modText, id, dirs, getTextDirectly, mergeRules);
+        modText = Util.mergeAndAppendText(modText, id, dirs, getTextDirectly, parseRules);
         return modText;
     }
 
@@ -238,6 +243,7 @@ class PolymodAssetLibrary
         type = new Map<String,PolymodAssetType>();
         extensions = new Map<String,PolymodAssetType>();
         initExtensions();
+        if (parseRules == null) parseRules = ParseRules.getDefault();
         if (dirs != null)
         {
             for (d in dirs)

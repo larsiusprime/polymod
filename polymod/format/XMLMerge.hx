@@ -25,6 +25,7 @@
 
 import haxe.xml.Fast;
 import haxe.xml.Printer;
+import polymod.util.Util;
 
 /**
  * ...

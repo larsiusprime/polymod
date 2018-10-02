@@ -23,6 +23,8 @@
 
 package polymod.format;
 
+import polymod.format.ParseRules.CSVParseFormat;
+
 /**
  * A simple CSV (comma separated values) structure
  * @author Lars Doucet

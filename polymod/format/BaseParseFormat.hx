@@ -1,10 +1,10 @@
 package polymod.format;
 
-class  BaseParseFormat<T>
+import polymod.format.ParseRules.TextFileFormat;
+
+interface BaseParseFormat
 {
-    public var format:TextFileFormat;
-    public function parse(str:String):T { return null; }
-    public function append(baseText:String, mergeText:String):String { return baseText; }
-    public function merge(baseText:String, mergeText:String):String { return baseText; }
-    public function print(data:T):String { return null; }
+    public var format(default, null):TextFileFormat;
+    public function append(baseText:String, mergeText:String, id:String):String;// { return baseText; }
+    public function merge(baseText:String, mergeText:String, id:String):String;// { return baseText; }
 }

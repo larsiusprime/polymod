@@ -27,7 +27,7 @@ import haxe.io.Bytes;
 import polymod.Polymod.PolymodErrorCode;
 import polymod.backends.IBackend;
 import polymod.Polymod.Framework;
-import polymod.util.Util.MergeRules;
+import polymod.format.ParseRules;
 import polymod.backends.PolymodAssetLibrary;
 
 typedef PolymodAssetsParams = {
@@ -44,9 +44,9 @@ typedef PolymodAssetsParams = {
     dirs:Array<String>,
 
     /**
-     * (optional) formatting rules for merging various data formats
+     * (optional) parsing rules for various data formats
      */
-    ?mergeRules:MergeRules,
+    ?parseRules:ParseRules,
 
     /**
       * (optional) list of files it ignore in this mod asset library (get the fallback version instead)
@@ -113,7 +113,7 @@ class PolymodAssets
         library = new PolymodAssetLibrary({
             backend:backend,
             dirs:params.dirs,
-            mergeRules:params.mergeRules,
+            parseRules:params.parseRules,
             ignoredFiles:params.ignoredFiles,
             extensionMap:params.extensionMap
         });

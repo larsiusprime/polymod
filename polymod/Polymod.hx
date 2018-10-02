@@ -25,10 +25,10 @@ package polymod;
 
 import haxe.io.Bytes;
 import polymod.fs.PolymodFileSystem;
-import polymod.util.JsonHelp;
 import polymod.util.SemanticVersion;
 import polymod.util.Util;
-import polymod.util.Util.MergeRules;
+import polymod.format.JsonHelp;
+import polymod.format.ParseRules;
 import polymod.backends.IBackend;
 import polymod.backends.PolymodAssets;
 import polymod.backends.PolymodAssetLibrary;
@@ -69,9 +69,9 @@ typedef PolymodParams = {
     ?modVersions:Array<String>,
 
     /**
-     * (optional) rules for merging various data formats
+     * (optional) parsing rules for various data formats
      */
-    ?mergeRules:MergeRules,
+    ?parseRules:ParseRules,
 
     /**
      * (optional) list of filenames to ignore in mods
@@ -190,7 +190,7 @@ class Polymod
         PolymodAssets.init({
             framework:params.framework,
             dirs:dirs,
-            mergeRules:params.mergeRules,
+            parseRules:params.parseRules,
             ignoredFiles:params.ignoredFiles,
             customBackend:params.customBackend,
             extensionMap:params.extensionMap
