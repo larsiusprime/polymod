@@ -54,12 +54,14 @@ class Main extends Sprite
 	{
 		var text = new TextField();
 		text.height = 16;
+		text.width = 300;
 		addChild(text);
 		text.y = Lib.current.stage.stageHeight-text.height;
 		text.text = "Press 1, 2, 3, or 4 to toggle a mod";
 
 		var text2 = new TextField();
 		text2.height = 16;
+		text2.width = 300;
 		addChild(text2);
 		text2.y = text.y-text.height;
 		var str = "";
