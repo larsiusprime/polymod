@@ -23,6 +23,7 @@
 
 package polymod.format;
 
+import haxe.Json;
 import polymod.Polymod;
 import polymod.Polymod.PolymodError;
 import polymod.Polymod.PolymodErrorType;
@@ -51,7 +52,7 @@ class ParseRules
             case CSV: new CSVParseFormat(",",true);
             case TSV: new TSVParseFormat();
             case XML: new XMLParseFormat();
-            //case JSON: new JSONParseFormat();
+            case JSON: new JSONParseFormat();
             case LINES: new LinesParseFormat(EndLineType.LF);
             case PLAINTEXT: new PlainTextParseFormat();
             default: new PlainTextParseFormat();
@@ -75,7 +76,7 @@ class ParseRules
         rules.addFormat("csv", new CSVParseFormat(",",true));
         rules.addFormat("tsv", new TSVParseFormat());
         rules.addFormat("xml", new XMLParseFormat());
-        //rules.addFormat("json", new JSonParseFormat());
+        rules.addFormat("json", new JSONParseFormat());
         rules.addFormat("txt", new PlainTextParseFormat());
         return rules;
     }
@@ -451,18 +452,17 @@ class XMLParseFormat implements BaseParseFormat //<Xml>
     }
 }
 
-/*
-class JSONParseFormat extends BaseParseFormat<Json>
+class JSONParseFormat implements BaseParseFormat
 {
+    public var format:TextFileFormat;
     public var space(default, null):String;
     public var replacer(default, null):Dynamic->Dynamic->Dynamic;
 
-    public function new(spacer:String, replacer:Dynamic->Dynamic->Dynamic=null)
+    public function new(space:String="", replacer:Dynamic->Dynamic->Dynamic=null)
     {
         this.replacer = replacer;
-        this.spacer = spacer;
+        this.space = space;
         format = JSON;
-        super();
     }
 
     public function parse(str:String):Json
@@ -470,7 +470,7 @@ class JSONParseFormat extends BaseParseFormat<Json>
         return Json.parse(str);
     }
 
-    public function append(baseText:String, appendText:String):String
+    public function append(baseText:String, appendText:String, id:String):String
     {
         var lastBracket = Util.uLastIndexOf(baseText,"}");
         var baseFirst = Util.uSubstr(baseText,0,lastBracket);
@@ -482,27 +482,26 @@ class JSONParseFormat extends BaseParseFormat<Json>
         
         if(injectText == null || injectText == "") return baseText;
         
-        var whiteSpace = [32,10,13,9]; //" ","\n","\r","\t"
-        var justWhiteSpace = true;
+        //var whiteSpace = [32,10,13,9]; //" ","\n","\r","\t"
         
-        var i:Int = 0;
-        Utf8.iter(baseText, function(c:Int){
-            if(i == 0) continue;
-            if(whiteSpace.indexOf(c) == -1)
-            {
-                justWhiteSpace = false;
-                return;
-            }
-            if(i >= lastBracket) return;
-        })
+        baseFirst = Util.uTrimFinalEndlines(baseFirst);
+        injectText = Util.uTrimFinalEndlines(injectText);
+        injectText = Util.uTrimFirstEndlines(injectText);
+        baseEnd = Util.uTrimFinalEndlines(baseEnd);
 
-        var comma = justWhiteSpace ? "" : ",";
-    
-        return baseFirst + comma + injectText + baseEnd;
+        var comma = ",";
+
+        var finalValue = baseFirst + comma + "\n" + injectText + baseEnd;
+
+        trace(finalValue);
+
+        return finalValue;
     }
 
     public function merge(baseText:String, mergeText:String, id:String):String
     {
+        return baseText;
+        /*
         //var json1:String = '{"stuff":["a","b","c","d"],"things":{"numbers":[1,2,3,4,5]}}';
         //var json2:String = '{"merge":[{"target":"things.numbers[2]","payload":{"message":"free puppies!"}},{"target":"things.extra","payload":{"alert":"free kittens!"}}]}';
         
@@ -528,8 +527,10 @@ class JSONParseFormat extends BaseParseFormat<Json>
         }
 
         print(base);
+        */
     }
 
+    /*
     private function _mergeJson(base:Dynamic, entry:JsonMergeEntry, id:String):Dynamic
     {
         var sig = _getTargetSignature(entry.target);
@@ -691,6 +692,7 @@ class JSONParseFormat extends BaseParseFormat<Json>
         }
         return result;
     }
+    */
 
     public function print(data:Json):String
     {
@@ -711,7 +713,6 @@ typedef JsonMergeEntry = {
 typedef JsonMergeStruct = {
     merge:Array<JsonMergeEntry>
 }
-*/
 
 class PlainTextParseFormat implements BaseParseFormat //<String>
 {
