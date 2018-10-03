@@ -1,4 +1,8 @@
 {
-	"merge":"object_1",
-	"payload":{"value":"sunflower"}
+	"merge":[
+		{
+			"target":"object_1",
+			"payload":{"value":"sunflower"}
+		}
+	]
 }
