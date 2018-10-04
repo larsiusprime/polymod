@@ -78,15 +78,15 @@ typedef PolymodParams = {
      */
     ?ignoredFiles:Array<String>,
 
-     /**
-      * (optional) your own custom backend for handling assets
-      */
-     ?customBackend:Class<IBackend>,
+    /**
+     * (optional) your own custom backend for handling assets
+     */
+    ?customBackend:Class<IBackend>,
 
-     /**
-      * (optional) a map that tells Polymod which assets are of which type. This ensures e.g. text files with unfamiliar extensions are handled properly.
-      */
-      ?extensionMap:Map<String,PolymodAssetType>
+    /**
+     * (optional) a map that tells Polymod which assets are of which type. This ensures e.g. text files with unfamiliar extensions are handled properly.
+     */
+    ?extensionMap:Map<String,PolymodAssetType>
 }
 
 enum Framework

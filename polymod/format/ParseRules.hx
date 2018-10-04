@@ -85,7 +85,7 @@ class ParseRules
 class CSVParseFormat implements BaseParseFormat
 {
     public var format(default, null):TextFileFormat;
-    public var isSimpleMode(default,null):Bool;
+    public var isSimpleMode(get,null):Bool;
     public var delimeter:String;
     public var quotedCells:Bool;
 
@@ -94,10 +94,11 @@ class CSVParseFormat implements BaseParseFormat
         format = TextFileFormat.CSV;
         this.delimeter = delimeter;
         this.quotedCells = quotedCells;
-        if(this.delimeter == "," && quotedCells == false)
-        {
-            isSimpleMode = true;
-        }
+    }
+
+    private function get_isSimpleMode():Bool
+    {
+        return (delimeter == "," && quotedCells == false);
     }
 
     public function parse(str:String):CSV
