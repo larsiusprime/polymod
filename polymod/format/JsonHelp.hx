@@ -21,7 +21,7 @@
  * 
  */
  
-package polymod.util;
+package polymod.format;
 
 class JsonHelp
 {

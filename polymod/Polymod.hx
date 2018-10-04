@@ -25,10 +25,10 @@ package polymod;
 
 import haxe.io.Bytes;
 import polymod.fs.PolymodFileSystem;
-import polymod.util.JsonHelp;
 import polymod.util.SemanticVersion;
 import polymod.util.Util;
-import polymod.util.Util.MergeRules;
+import polymod.format.JsonHelp;
+import polymod.format.ParseRules;
 import polymod.backends.IBackend;
 import polymod.backends.PolymodAssets;
 import polymod.backends.PolymodAssetLibrary;
@@ -69,19 +69,24 @@ typedef PolymodParams = {
     ?modVersions:Array<String>,
 
     /**
-     * (optional) rules for merging various data formats
+     * (optional) parsing rules for various data formats
      */
-    ?mergeRules:MergeRules,
+    ?parseRules:ParseRules,
 
     /**
      * (optional) list of filenames to ignore in mods
      */
     ?ignoredFiles:Array<String>,
 
-     /**
-      * (optional) your own 
-      */
-     ?customBackend:Class<IBackend>
+    /**
+     * (optional) your own custom backend for handling assets
+     */
+    ?customBackend:Class<IBackend>,
+
+    /**
+     * (optional) a map that tells Polymod which assets are of which type. This ensures e.g. text files with unfamiliar extensions are handled properly.
+     */
+    ?extensionMap:Map<String,PolymodAssetType>
 }
 
 enum Framework
@@ -185,9 +190,10 @@ class Polymod
         PolymodAssets.init({
             framework:params.framework,
             dirs:dirs,
-            mergeRules:params.mergeRules,
+            parseRules:params.parseRules,
             ignoredFiles:params.ignoredFiles,
-            customBackend:params.customBackend
+            customBackend:params.customBackend,
+            extensionMap:params.extensionMap
         });
 
         
@@ -487,4 +493,5 @@ enum PolymodErrorType
     var FRAMEWORK_INIT:String = "framework_init";
     var UNDEFINED_CUSTOM_BACKEND:String = "undefined_custom_backend";
     var FAILED_CREATE_BACKEND:String = "failed_create_backend";
+    var MERGE:String = "merge_error";
 }

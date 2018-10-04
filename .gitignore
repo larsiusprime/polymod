@@ -12,3 +12,7 @@ samples/heaps/demo\.hl
 *.hl
 
 samples/nme/Export/
+
+samples/openfl/dump/neko/lime/_internal/unifill/
+
+samples/openfl/dump/neko/openfl/geom/

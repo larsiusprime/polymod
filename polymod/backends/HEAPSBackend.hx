@@ -30,7 +30,6 @@ import polymod.Polymod;
 import polymod.Polymod.PolymodError;
 import polymod.fs.PolymodFileSystem;
 import polymod.util.Util;
-import polymod.util.Util.MergeRules;
 import polymod.backends.PolymodAssetLibrary;
 import polymod.backends.PolymodAssets.PolymodAssetType;
 #if unifill

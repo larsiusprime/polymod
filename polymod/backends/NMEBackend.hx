@@ -29,7 +29,6 @@ import polymod.Polymod;
 import polymod.Polymod.PolymodError;
 import polymod.fs.PolymodFileSystem;
 import polymod.util.Util;
-import polymod.util.Util.MergeRules;
 import polymod.backends.PolymodAssetLibrary;
 import polymod.backends.PolymodAssets.PolymodAssetType;
 #if unifill
@@ -108,8 +107,17 @@ class NMEBackend implements IBackend
                 }
                 else
                 {
+                    var modFile = polymodLibrary.file(key);
                     nme.Assets.byteFactory.set( info.path, function(){
-                        var bytes = PolymodFileSystem.getFileBytes(key);
+                        var bytes = null;
+                        if(PolymodFileSystem.exists(modFile))
+                        {
+                            bytes = PolymodFileSystem.getFileBytes(modFile);
+                        }
+                        else
+                        {
+                            bytes = PolymodFileSystem.getFileBytes(key);
+                        }
                         var origText = Std.string(bytes);
                         var newText = polymodLibrary.mergeAndAppendText(key, origText);
                         if(origText != newText)

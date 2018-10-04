@@ -256,16 +256,22 @@ class Demo extends Sprite
 	
 	private function drawText()
 	{
-		var xx = 350;
+		var xx = 500;
 		var yy = 10;
 		
 		var texts = AssetsList(AssetType.TEXT);
+
+		texts.sort(function(a:String,b:String){
+			if(a < b) return -1;
+			if(a > b) return  1;
+			return 0;
+		});
 		
 		for (t in texts)
 		{
 			var isXML:Bool = false;
 			var align = TextFormatAlign.CENTER;
-			if (t.indexOf("xml") != -1)
+			if (t.indexOf("xml") != -1 || t.indexOf("json") != -1)
 			{
 				isXML = true;
 				align = TextFormatAlign.LEFT;
@@ -276,11 +282,7 @@ class Demo extends Sprite
 			text.y = yy;
 			text.height = 100;
 			text.border = true;
-			text.width = 150;
-			if (isXML)
-			{
-				text.width = 250;
-			}
+			text.width = 250;
 			text.wordWrap = true;
 			text.multiline = true;
 			
@@ -298,7 +300,7 @@ class Demo extends Sprite
 			stuff.push(text);
 			stuff.push(caption);
 			
-			xx += Std.int(text.width + 10);
+			yy += Std.int(text.height + 35);
 		}
 	}
 	

@@ -21,25 +21,9 @@
  * 
  */
 
-package polymod.util;
+package polymod.format;
 
-class CSVParseFormat
-{
-	public var isSimpleMode(default,null):Bool;
-	public var delimeter:String;
-	public var quotedCells:Bool;
-
-	public function new(delimeter:String, quotedCells:Bool)
-	{
-		this.delimeter = delimeter;
-		this.quotedCells = quotedCells;
-		if(this.delimeter == "," && quotedCells == false)
-		{
-			isSimpleMode = true;
-		}
-	}
-}
-
+import polymod.format.ParseRules.CSVParseFormat;
 
 /**
  * A simple CSV (comma separated values) structure
