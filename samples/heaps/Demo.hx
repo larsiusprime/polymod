@@ -176,7 +176,7 @@ class Demo extends Sprite
 
 	private function drawText()
 	{
-		var xx = 350;
+		var xx = 500;
 		var yy = 10;
 		
 		var texts = list("data");
@@ -190,11 +190,11 @@ class Demo extends Sprite
 			var isXML:Bool = false;
 			var align:Align = Center;
 			var theWidth = 150;
-			if (t.indexOf("xml") != -1)
+			if (t.indexOf("xml") != -1 || t.indexOf("json") != -1)
 			{
 				isXML = true;
 				align = Left;
-				theWidth = 250;
+				theWidth = 350;
 			}
 			
 			var textBox = getBox(theWidth, 152, 1);
@@ -212,11 +212,11 @@ class Demo extends Sprite
 			
 			var caption = getText(Center);
 			caption.x = xx;
-			caption.y = 150 + caption.textHeight;
+			caption.y = yy + 152 + caption.textHeight;
 			caption.text = t;
 			caption.maxWidth = text.maxWidth;
 			
-			xx += Std.int(text.maxWidth + 10);
+			yy += Std.int(152 + caption.textHeight + 35);
 		}
 	}
 

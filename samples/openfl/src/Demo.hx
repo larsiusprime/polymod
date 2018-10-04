@@ -300,7 +300,6 @@ class Demo extends Sprite
 			stuff.push(text);
 			stuff.push(caption);
 			
-			//xx += Std.int(text.width + 10);
 			yy += Std.int(text.height + 35);
 		}
 	}
