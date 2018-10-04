@@ -556,8 +556,7 @@ class JSONParseFormat implements BaseParseFormat
         {
             Polymod.error(MERGE,"JSON merge error ("+id+"): merge file must contain a single top-level array named \"merge\"!");
         }
-        var final = print(base);
-        return final;
+        return print(base);
     }
 
     private function _mergeJson(base:Dynamic, entry:JsonMergeEntry, id:String):Dynamic
