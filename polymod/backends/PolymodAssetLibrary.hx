@@ -78,6 +78,7 @@ class PolymodAssetLibrary
         dirs = params.dirs;
         parseRules = params.parseRules;
         ignoredFiles = params.ignoredFiles != null ? params.ignoredFiles.copy() : [];
+        extensions = params.extensionMap;
         backend.clearCache();
         init();
     }
@@ -255,27 +256,36 @@ class PolymodAssetLibrary
 
     private function initExtensions()
     {
-        extensions.set("mp3", AUDIO_GENERIC);
-        extensions.set("ogg", AUDIO_GENERIC);
-        extensions.set("wav", AUDIO_GENERIC);
-        extensions.set("jpg", IMAGE);
-        extensions.set("png", IMAGE);
-        extensions.set("gif", IMAGE);
-        extensions.set("tga", IMAGE);
-        extensions.set("bmp", IMAGE);
-        extensions.set("tif", IMAGE);
-        extensions.set("tiff", IMAGE);
-        extensions.set("txt", TEXT);
-        extensions.set("xml", TEXT);
-        extensions.set("json", TEXT);
-        extensions.set("csv", TEXT);
-        extensions.set("tsv", TEXT);
-        extensions.set("mpf", TEXT);
-        extensions.set("tsx", TEXT);
-        extensions.set("tmx", TEXT);
-        extensions.set("vdf", TEXT);
-        extensions.set("ttf", FONT);
-        extensions.set("otf", FONT);
+       if(extensions == null) extensions = new Map<String, PolymodAssetType>();
+        _extensionSet("mp3", AUDIO_GENERIC);
+        _extensionSet("ogg", AUDIO_GENERIC);
+        _extensionSet("wav", AUDIO_GENERIC);
+        _extensionSet("jpg", IMAGE);
+        _extensionSet("png", IMAGE);
+        _extensionSet("gif", IMAGE);
+        _extensionSet("tga", IMAGE);
+        _extensionSet("bmp", IMAGE);
+        _extensionSet("tif", IMAGE);
+        _extensionSet("tiff", IMAGE);
+        _extensionSet("txt", TEXT);
+        _extensionSet("xml", TEXT);
+        _extensionSet("json", TEXT);
+        _extensionSet("csv", TEXT);
+        _extensionSet("tsv", TEXT);
+        _extensionSet("mpf", TEXT);
+        _extensionSet("tsx", TEXT);
+        _extensionSet("tmx", TEXT);
+        _extensionSet("vdf", TEXT);
+        _extensionSet("ttf", FONT);
+        _extensionSet("otf", FONT);
+    }
+
+    private function _extensionSet(str:String, type:PolymodAssetType)
+    {
+        if(extensions.exists(str) == false)
+        {
+            extensions.set(str, type);
+        }
     }
 
     private function initMod(d:String):Void
