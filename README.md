@@ -78,6 +78,8 @@ Polymod.init({
  });
 ```
 
+**NOTE**: *On mac, the default application working directory is `<APPLICATION_NAME>.app/Contents/Resources`, which differs from Mac and Linux. If you hard code the search path for your game's mod directory, be sure to account for this difference when targeting the Mac platform.`
+
 Be sure to call `Polymod.init()` before you load any assets. Also note that calling `Polymod.init()` will clear your Asset cache.
 
 After that, you just load your assets as normal:
