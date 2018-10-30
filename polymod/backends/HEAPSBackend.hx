@@ -369,5 +369,16 @@ class ModFileSystem implements FileSystem
         p = null;
         b = null;
     }
+
+    public function dir( path : String ): Array<FileEntry>
+    {
+        var names = PolymodFileSystem.readDirectory(path);
+        var arr = [];
+        for(name in names)
+        {
+            arr.push(get(name));
+        }
+        return arr;
+    }
 }
 #end
