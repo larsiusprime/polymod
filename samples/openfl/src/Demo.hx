@@ -82,6 +82,10 @@ class Demo extends Sprite
 	private function makeButtons()
 	{
 		var modDir:String = "../../../mods";
+		#if mac
+		//account for <APPLICATION>.app/Contents/Resources
+		modDir = "../../../../../../mods";
+		#end
 		var mods = FileSystem.readDirectory(modDir);
 		var xx = 10;
 		var yy = 200;

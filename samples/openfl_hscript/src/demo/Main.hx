@@ -121,6 +121,9 @@ class Main extends Sprite
 	private function loadMods()
 	{
 		var modRoot = "../../../mods/";
+		#if mac
+		modRoot = "../../../../../../mods/";
+		#end
 		activeMods = Polymod.init({
 			modRoot:modRoot,
 			dirs:mods.copy(),

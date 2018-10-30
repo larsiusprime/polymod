@@ -56,8 +56,14 @@ class ModWidget extends DisplayObjectContainer
 		status.text = "inactive";
 		
 		var button = new CheapButton(str, onClick);
-		moveLeft = new CheapButton("←", onMove.bind(-1));
-		moveRight = new CheapButton("→", onMove.bind(1));
+		var left = "←";
+		var right = "→";
+		#if mac
+		left = "<--";
+		right = "-->";
+		#end
+		moveLeft = new CheapButton(left, onMove.bind(-1));
+		moveRight = new CheapButton(right, onMove.bind(1));
 		
 		addChild(status);
 		addChild(button);

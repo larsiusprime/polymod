@@ -58,6 +58,10 @@ class Main extends Sprite
 	{
 		var framework = Demo.usingOpenFL ? Framework.OPENFL : Framework.LIME;
 		var modRoot = "../../../mods/";
+		#if mac
+		//account for <APPLICATION>.app/Contents/Resources
+		var modRoot = "../../../../../../mods";
+		#end
 		var results = Polymod.init({
 			modRoot:modRoot,
 			dirs:dirs,
