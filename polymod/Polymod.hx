@@ -23,6 +23,7 @@
 
 package polymod;
 
+import haxe.Json;
 import haxe.io.Bytes;
 import polymod.fs.PolymodFileSystem;
 import polymod.util.SemanticVersion;
@@ -423,6 +424,19 @@ class ModMetadata
     public var modPack:{mods:Array<String>,versions:Array<String>};
 
     public function new(){}
+
+    public function toJsonStr():String
+    {
+        var json = {};
+		Reflect.setField(json, "title", title);
+		Reflect.setField(json, "description", description);
+		Reflect.setField(json, "author", author);
+		Reflect.setField(json, "api_version", apiVersion.toString());
+		Reflect.setField(json, "mod_version", modVersion.toString());
+		Reflect.setField(json, "license", license);
+		Reflect.setField(json, "license_ref", licenseRef);
+		return Json.stringify(json, null, "    ");
+    }
 
     public static function fromJsonStr(str:String)
     {
