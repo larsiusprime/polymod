@@ -58,6 +58,24 @@ class JsonHelp
 		}
 		if(Math.isNaN(f)) return defaultValue;
 		return f;
+		
+		
+	}
+	
+	 public static function mapStr(json:Dynamic, field:String):Map<String,String>
+	{
+		var map:Map<String,String> = new Map<String,String>();
+		if (json == null || field == "" || field == null) return map;
+		var val = null;
+		if(Reflect.hasField(json,field)) val = Reflect.field(json, field);
+		if(val != null)
+		{
+			for (field in Reflect.fields(val)){
+				var fieldVal = Reflect.field(val, field);
+				map.set(field, Std.string(fieldVal));
+			}
+		}
+		return map;
 	}
 
 	public static function str(json:Dynamic, field:String, defaultValue:String=""):String

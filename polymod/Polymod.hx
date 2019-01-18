@@ -25,6 +25,7 @@ package polymod;
 
 import haxe.Json;
 import haxe.io.Bytes;
+import polymod.Polymod.ModMetadata;
 import polymod.fs.PolymodFileSystem;
 import polymod.util.SemanticVersion;
 import polymod.util.Util;
@@ -421,7 +422,8 @@ class ModMetadata
     public var licenseRef:String;
     public var icon:Bytes;
     public var isModPack:Bool;
-    public var modPack:{mods:Array<String>,versions:Array<String>};
+    public var modPack:{mods:Array<String>, versions:Array<String>};
+    public var metaData:Map<String,String>;
 
     public function new(){}
 
@@ -435,6 +437,11 @@ class ModMetadata
 		Reflect.setField(json, "mod_version", modVersion.toString());
 		Reflect.setField(json, "license", license);
 		Reflect.setField(json, "license_ref", licenseRef);
+		var meta = {};
+		for (key in metaData.keys()){
+			Reflect.setField(meta, key, metaData.get(key));
+		}
+		Reflect.setField(json, "metadata", meta);
 		return Json.stringify(json, null, "    ");
     }
 
@@ -467,6 +474,7 @@ class ModMetadata
         }
         m.license = JsonHelp.str(json, "license");
         m.licenseRef = JsonHelp.str(json, "license_ref");
+        m.metaData = JsonHelp.mapStr(json, "metadata");
         return m;
     }
 }
