@@ -136,7 +136,7 @@ class CSVParseFormat implements BaseParseFormat
 			}
 			catch(msg:Dynamic)
 			{
-				Polymod.error(MERGE,"CSV Merge error ("+id+") : " + msg);
+				Polymod.error(APPEND,"CSV Append error ("+id+") : " + msg);
 				return baseText;
 			}
 			
@@ -149,6 +149,19 @@ class CSVParseFormat implements BaseParseFormat
 			if (lastEndLine == finalLength - 1 || lastEndLine == finalLength - 2){
 				finalText = Util.uSubstr(finalText, 0, finalLength - Util.uLength(endLine));
 				addFinalEndline = true;
+			}
+			
+			var compareFields = 0;
+			for (i in 0...baseCSV.fields.length){
+				var baseField = baseCSV.fields[i];
+				var appendFieldExists = appendCSV.fields.indexOf(baseField) != -1;
+				if (appendFieldExists) compareFields++;
+			}
+			
+			if (lookForHeaders){
+				if (compareFields < Std.int(baseCSV.fields.length/2)){
+					Polymod.error(APPEND, "Mod file(" + id + ") is missing most or all of the expected header fields", INIT);
+				}
 			}
 			
 			var missingFields = [];
