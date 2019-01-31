@@ -88,6 +88,7 @@ class CSVParseFormat implements BaseParseFormat
     public var isSimpleMode(get,null):Bool;
     public var delimeter:String;
     public var quotedCells:Bool;
+    public var lookForHeaders:Bool;
 
     public function new(delimeter:String, quotedCells:Bool)
     {
@@ -108,8 +109,75 @@ class CSVParseFormat implements BaseParseFormat
 
     public function append(baseText:String, appendText:String, id:String):String
     {
-        return Util.appendCSVOrTSV(baseText, appendText, id);
-    }
+		var endLine:String = "\n";
+		if (baseText.indexOf("\r\n") != -1){
+			endLine = "\r\n";
+		}
+		if (lookForHeaders)
+		{
+			var baseCSV:polymod.format.CSV;
+			var appendCSV:polymod.format.CSV;
+			
+			//Strip of a trailing endline from append if there is one
+			var appendEndLine = "\n";
+			if(appendText.indexOf("\r\n") != -1){
+				appendEndLine = "\r\n";
+			}
+			var appendLength = Util.uLength(appendText);
+			var appendLast = Util.uLastIndexOf(appendText, appendEndLine);
+			if (appendLast == appendLength - 1 || appendLast == appendLength - 2){
+				appendText = Util.uSubstr(appendText, 0, appendLength - Util.uLength(appendEndLine));
+			}
+			
+			try
+			{
+				baseCSV = polymod.format.CSV.parseWithFormat(baseText, this);
+				appendCSV = polymod.format.CSV.parseWithFormat(appendText, this);
+			}
+			catch(msg:Dynamic)
+			{
+				Polymod.error(MERGE,"CSV Merge error ("+id+") : " + msg);
+				return baseText;
+			}
+			
+			var finalText:String = baseText;
+			var finalLength = Util.uLength(finalText);
+			
+			var lastEndLine = Util.uLastIndexOf(finalText, endLine);
+			var addFinalEndline = false;
+			
+			if (lastEndLine == finalLength - 1 || lastEndLine == finalLength - 2){
+				finalText = Util.uSubstr(finalText, 0, finalLength - Util.uLength(endLine));
+				addFinalEndline = true;
+			}
+			
+			for (r in 0...appendCSV.grid.length){
+				var line = "";
+				for (bi in 0...baseCSV.fields.length){
+					var baseField = baseCSV.fields[bi];
+					var appendField = appendCSV.fields.indexOf(baseField);
+					if (appendField != -1){
+						var appendValue = appendCSV.grid[r][appendField];
+						if (appendValue == null){
+							appendValue = "";
+						}
+						line += appendValue;
+					}
+					if(bi != baseCSV.fields.length-1){
+						line += delimeter;
+					}
+				}
+				finalText += endLine + line;
+			}
+			
+			if (addFinalEndline){
+				finalText += endLine;
+			}
+			
+			return finalText;
+		}
+		return Util.appendCSVOrTSV(baseText, appendText, id);
+	}
 
     public function merge(baseText:String, mergeText:String, id:String):String
     {

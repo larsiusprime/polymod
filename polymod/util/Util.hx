@@ -105,7 +105,7 @@ class Util
         }
         return baseText;
     }
-
+    
     public static function appendCSVOrTSV(baseText:String, appendText:String, id:String)
     {
         var lastChar = uCharAt(baseText, uLength(baseText) - 1);

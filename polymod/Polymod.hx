@@ -134,7 +134,7 @@ class Polymod
         }
         catch(msg:Dynamic)
         {
-            error(PARSE_API_VERSION,"Error parsing api version: ("+Std.string(msg)+")");
+            error(PARSE_API_VERSION,"Error parsing api version: ("+Std.string(msg)+")", INIT);
             return [];
         }
 
@@ -152,7 +152,7 @@ class Polymod
                 }
                 catch(msg:Dynamic)
                 {
-                    error(PARAM_MOD_VERSION,"There was an error with one of the mod version patterns you provided: " + msg);
+                    error(PARAM_MOD_VERSION,"There was an error with one of the mod version patterns you provided: " + msg, INIT);
                     semVer = SemanticVersion.fromString("*.*.*");
                 }
                 modVers.push(semVer);
@@ -173,15 +173,30 @@ class Polymod
                     var apiScore = meta.apiVersion.checkCompatibility(apiVersion);
                     if(apiScore < 3)
                     {
-                        error(VERSION_CONFLICT_API, "Mod \""+origDir+"\" was built for incompatible API version " + meta.apiVersion.toString() + ", current API version is " + params.apiVersion.toString());
+                        error(VERSION_CONFLICT_API, "Mod \""+origDir+"\" was built for incompatible API version " + meta.apiVersion.toString() + ", current API version is " + params.apiVersion.toString(), INIT);
                     }
-                    var modVer = modVers.length > i ? modVers[i] : null;
+					else
+					{
+						if (apiVersion.major == 0)
+						{
+							//if we're in pre-release
+							if (apiVersion.minor != meta.apiVersion.minor)
+							{
+								warning(
+									VERSION_PRERELEASE_API, 
+									"Modding API is in pre-release, some things might have changed!\n" + "Mod \"" + origDir + "\" was built for API version " + meta.apiVersion.toString() + ", current API version is " + apiVersion.toString(),
+									INIT
+								);
+							}
+						}
+					}
+					var modVer = modVers.length > i ? modVers[i] : null;
                     if(modVer != null)
                     {
                         var score = modVer.checkCompatibility(meta.modVersion);
                         if(score < 3)
                         {
-                            error(VERSION_CONFLICT_MOD, "Mod pack wants version " + modVer.toString() + " of mod("+meta.id+"), found incompatible version " + meta.modVersion.toString() + " instead");
+                            error(VERSION_CONFLICT_MOD, "Mod pack wants version " + modVer.toString() + " of mod("+meta.id+"), found incompatible version " + meta.modVersion.toString() + " instead", INIT);
                         }
                     }
                     modMeta.push(meta);
@@ -229,7 +244,7 @@ class Polymod
         }
         catch(msg:Dynamic)
         {
-            error(PARSE_API_VERSION,"Error parsing api version: ("+Std.string(msg)+")");
+            error(PARSE_API_VERSION,"Error parsing api version: ("+Std.string(msg)+")", SCAN);
             return [];
         }
 
@@ -266,8 +281,27 @@ class Polymod
                     var apiScore = meta.apiVersion.checkCompatibility(apiVersion);
                     if(apiScore < 3)
                     {
-                        error(VERSION_CONFLICT_API, "Mod \""+origDir+"\" was built for incompatible API version " + meta.apiVersion.toString() + ", current API version is " + apiVersion.toString());
+                        error(
+							VERSION_CONFLICT_API,
+							"Mod \"" + origDir + "\" was built for incompatible API version " + meta.apiVersion.toString() + ", current API version is " + apiVersion.toString(),
+							SCAN
+						);
                     }
+					else
+					{
+						if (apiVersion.major == 0)
+						{
+							//if we're in pre-release
+							if (apiVersion.minor != meta.apiVersion.minor)
+							{
+								warning(
+									VERSION_PRERELEASE_API, 
+									"Modding API is in pre-release, some things might have changed!\n" + "Mod \"" + origDir + "\" was built for API version " + meta.apiVersion.toString() + ", current API version is " + apiVersion.toString(),
+									SCAN
+								);
+							}
+						}
+					}
                     modMeta.push(meta);
                 }
             }
@@ -276,27 +310,27 @@ class Polymod
         return modMeta;
     }
 
-    public static function error(code:PolymodErrorCode, message:String)
+    public static function error(code:PolymodErrorCode, message:String, origin:PolymodErrorOrigin=UNKNOWN)
     {
         if(onError != null)
         {
-            onError(new PolymodError(PolymodErrorType.ERROR, code, message));
+            onError(new PolymodError(PolymodErrorType.ERROR, code, message, origin));
         }
     }
 
-    public static function warning(code:PolymodErrorCode, message:String)
+    public static function warning(code:PolymodErrorCode, message:String, origin:PolymodErrorOrigin=UNKNOWN)
     {
         if(onError != null)
         {
-            onError(new PolymodError(PolymodErrorType.WARNING, code, message));
+            onError(new PolymodError(PolymodErrorType.WARNING, code, message, origin));
         }
     }
 
-    public static function notice(code:PolymodErrorCode, message:String)
+    public static function notice(code:PolymodErrorCode, message:String, origin:PolymodErrorOrigin=UNKNOWN)
     {
         if(onError != null)
         {
-            onError(new PolymodError(PolymodErrorType.NOTICE, code, message));
+            onError(new PolymodError(PolymodErrorType.NOTICE, code, message, origin));
         }
     }
 
@@ -484,13 +518,22 @@ class PolymodError
     public var severity:PolymodErrorType;
     public var code:String;
     public var message:String;
+	public var origin:PolymodErrorOrigin;
 
-    public function new(severity:PolymodErrorType, code:PolymodErrorCode, message:String)
+    public function new(severity:PolymodErrorType, code:PolymodErrorCode, message:String, origin:PolymodErrorOrigin)
     {
         this.severity = severity;
         this.code = code;
         this.message = message;
+		this.origin = origin;
     }
+}
+
+@:enum abstract PolymodErrorOrigin(String) from String to String
+{
+	var SCAN:String = "scan";
+	var INIT:String = "init";
+	var UNKNOWN:String = "unknown";
 }
 
 enum PolymodErrorType
@@ -510,6 +553,7 @@ enum PolymodErrorType
     var MISSING_ICON:String = "missing_icon";
     var VERSION_CONFLICT_MOD:String = "version_conflict_mod";
     var VERSION_CONFLICT_API:String = "version_conflict_api";
+    var VERSION_PRERELEASE_API:String = "version_prerelease_api";
     var PARAM_MOD_VERSION:String = "param_mod_version";
     var FRAMEWORK_AUTODETECT:String = "framework_autodetect";
     var FRAMEWORK_INIT:String = "framework_init";
