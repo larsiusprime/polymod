@@ -560,4 +560,5 @@ enum PolymodErrorType
     var UNDEFINED_CUSTOM_BACKEND:String = "undefined_custom_backend";
     var FAILED_CREATE_BACKEND:String = "failed_create_backend";
     var MERGE:String = "merge_error";
+    var APPEND:String = "append_error";
 }

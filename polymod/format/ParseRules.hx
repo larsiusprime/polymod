@@ -151,6 +151,8 @@ class CSVParseFormat implements BaseParseFormat
 				addFinalEndline = true;
 			}
 			
+			var missingFields = [];
+			
 			for (r in 0...appendCSV.grid.length){
 				var line = "";
 				for (bi in 0...baseCSV.fields.length){
@@ -163,6 +165,11 @@ class CSVParseFormat implements BaseParseFormat
 						}
 						line += appendValue;
 					}
+					else{
+						if (missingFields.indexOf(baseField) == -1){
+							missingFields.push(baseField);
+						}
+					}
 					if(bi != baseCSV.fields.length-1){
 						line += delimeter;
 					}
@@ -172,6 +179,10 @@ class CSVParseFormat implements BaseParseFormat
 			
 			if (addFinalEndline){
 				finalText += endLine;
+			}
+			
+			for(baseField in missingFields){
+				Polymod.warning(PolymodErrorCode.APPEND, "Mod file(" + id + ") missing expected field \"" + baseField + "\", values will default to empty string.", INIT);
 			}
 			
 			return finalText;
