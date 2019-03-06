@@ -58,7 +58,7 @@ class LimeBackend extends StubBackend
     public function new()
     {
         super();
-        Polymod.error(FAILED_CREATE_BACKEND,"OpenFLBackend requires the openfl library, did you forget to install it?"); 
+        Polymod.error(FAILED_CREATE_BACKEND,"LimeBackend requires the lime library, did you forget to install it?"); 
     }
 }
 #else
