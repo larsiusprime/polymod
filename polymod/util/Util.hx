@@ -79,7 +79,13 @@ class Util
         var extension = uExtension(id, true);
         id = stripAssetsPrefix(id);
         var mergeFile = "_merge" + sl() + id;
-        var format:BaseParseFormat = parseRules.get(extension);
+        // try the path first
+        var format:BaseParseFormat = parseRules.get(id);
+        if(format == null) 
+        {
+            // try the extension then
+            format = parseRules.get(extension);
+        }
         if(format != null)
         {
             var mergeText = getModText(mergeFile, theDir);
@@ -97,7 +103,13 @@ class Util
     {
         var extension = uExtension(id, true);
         id = stripAssetsPrefix(id);
-        var format:BaseParseFormat = parseRules.get(extension);
+        // try the path first
+        var format:BaseParseFormat = parseRules.get(id);
+        if(format == null) 
+        {
+            // try the extension then
+            format = parseRules.get(extension);
+        }
         if(format != null)
         {
             var appendText = getModText(Util.pathJoin("_append",id), theDir);
