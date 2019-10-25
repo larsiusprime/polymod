@@ -40,5 +40,8 @@ interface IBackend
     public function getBytes(id:String):Bytes;
     public function getText(id:String):String;
 
+    public function getPath(id:String):String;
+    public function list(type:PolymodAssetType=null):Array<String>;
+
     public function stripAssetsPrefix(id:String):String;
 }

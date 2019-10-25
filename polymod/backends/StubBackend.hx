@@ -41,5 +41,8 @@ class StubBackend implements IBackend
     public function getBytes(id:String):Bytes { return null; }
     public function getText(id:String):String { return null; }
 
+    public function getPath(id:String):String { return null; }
+    public function list(type:PolymodAssetType=null):Array<String> { return []; }
+
     public function stripAssetsPrefix(id:String):String { return id; }
 }
