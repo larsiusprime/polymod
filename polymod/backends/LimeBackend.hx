@@ -122,6 +122,16 @@ class LimeBackend implements IBackend
         return modLibrary.getText(id);
     }
 
+    public function getPath(id:String):String
+    {
+        return modLibrary.getPath(id);
+    }
+
+    public function list(type:PolymodAssetType=null):Array<String>
+    {
+        return modLibrary.list(type);
+    }
+
     public function clearCache()
     {
         if (defaultAssetLibrary != null)

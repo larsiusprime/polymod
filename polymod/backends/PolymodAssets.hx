@@ -126,6 +126,9 @@ class PolymodAssets
     public static function exists(id:String):Bool { return library.exists(id); }
     public static function getBytes(id:String):Bytes { return library.getBytes(id); }
     public static function getText(id:String):String { return library.getText(id); }
+    public static function getPath(id:String):String { return library.getPath(id); }
+
+    public static function list(type:PolymodAssetType=null):Array<String> { return library.list(type); }
 
     /**PRIVATE STATIC**/
 
