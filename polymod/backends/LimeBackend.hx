@@ -129,7 +129,7 @@ class LimeBackend implements IBackend
 
     public function list(type:PolymodAssetType=null):Array<String>
     {
-        return modLibrary.list(type);
+        return modLibrary.list(type == null ? null : LimeModLibrary.PolyToLime(type));
     }
 
     public function clearCache()
