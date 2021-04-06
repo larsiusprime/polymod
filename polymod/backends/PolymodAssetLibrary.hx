@@ -136,6 +136,9 @@ class PolymodAssetLibrary
     public function exists (id:String):Bool { return backend.exists(id); }
     public function getText (id:String):String { return backend.getText(id); }
     public function getBytes (id:String):Bytes { return backend.getBytes(id); }
+    public function getPath(id:String):String { return backend.getPath(id); }
+
+    public function list(type:PolymodAssetType=null):Array<String> { return backend.list(type); }
 
     public function listModFiles (type:PolymodAssetType=null):Array<String>
     {

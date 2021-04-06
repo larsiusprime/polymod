@@ -70,6 +70,11 @@ class ParseRules
         formats.set(extension, format);
     }
 
+    public function addFile(path:String, format:BaseParseFormat) 
+    {
+        formats.set(path, format);
+    }
+
     public static function getDefault():ParseRules
     {
         var rules = new ParseRules();
