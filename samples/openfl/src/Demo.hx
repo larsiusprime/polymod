@@ -284,7 +284,7 @@ class Demo extends Sprite
 			var text = getText(align);
 			text.x = xx;
 			text.y = yy;
-			text.height = 100;
+			text.height = 150;
 			text.border = true;
 			text.width = 250;
 			text.wordWrap = true;

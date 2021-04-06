@@ -608,7 +608,7 @@ class JSONParseFormat implements BaseParseFormat
 
     public function merge(baseText:String, mergeText:String, id:String):String
     {
-        var base:Dynamic = null;
+		var base:Dynamic = null;
         var merge:JsonMergeStruct = null;
 
         try
@@ -632,12 +632,12 @@ class JSONParseFormat implements BaseParseFormat
 		
         if(Reflect.hasField(merge,"merge"))
         {
-            if(Std.is(merge.merge,Array))
+			if(Std.is(merge.merge,Array))
             {
-                var merge:Array<JsonMergeEntry> = merge.merge;
-                for(entry in merge)
+			    var merge:Array<JsonMergeEntry> = merge.merge;
+			    for(entry in merge)
                 {
-                    var target = null;
+			        var target = null;
                     var payload = null;
 
                     target = entry.target;
@@ -659,7 +659,7 @@ class JSONParseFormat implements BaseParseFormat
 
     private function _mergeJson(base:Dynamic, entry:JsonMergeEntry, id:String):Dynamic
     {
-        var sig = _getTargetSignature(entry.target);
+		var sig = _getTargetSignature(entry.target);
         var obj = base;
         var currTarget = sig[0];
         if(currTarget == null)
@@ -730,7 +730,7 @@ class JSONParseFormat implements BaseParseFormat
 
     private function _inject(obj:Dynamic, target:String, arrIndex:Int, payload:Dynamic, signatureSoFar:String="")
     {
-        if(arrIndex == -1)
+		if(arrIndex == -1)
         {
             if(Reflect.hasField(obj,target))
             {
@@ -763,60 +763,45 @@ class JSONParseFormat implements BaseParseFormat
     
     private function _mergeObjects(a:Dynamic, b:Dynamic, signatureSoFar:String=""):Dynamic
     {
-        if(Std.is(a,Array) && Std.is(b,Array))
+		 if(Std.is(a,Array) && Std.is(b,Array))
         {
             //if they are both arrays, stomp with b's values
             return b;
         }
         else if(!Std.is(a,Array) && !Std.is(b,Array))
         {
-            //if they are both objects, merge their values
-            for(field in Reflect.fields(b))
-            {
-                if(Reflect.hasField(a,field))
-                {
-                    //a and b share a field in common
-                    var aValue = Reflect.field(a, field);
-                    var bValue = Reflect.field(b, field);
-                    if(Std.is(aValue, Array) && Std.is(bValue, Array))
-                    {
-                        //if they are both arrays, stomp with b's values
-                        Reflect.setField(a, field, bValue);
-                    }
-                    else if(!Std.is(aValue, Array) && !Std.is(bValue, Array))
-                    {
-                        var aPrimitive = isPrimitive(a);
-                        var bPrimitive = isPrimitive(b);
-                        if(aPrimitive && bPrimitive)
-                        {
-                            //If they are both primitives, stomp with b
-                            return bValue;
-                        }
-                        else if(aPrimitive != bPrimitive)
-                        {
-                            //if they are incompatible, stomp with a
-                            return aValue;
-                        }
-                        
-                        //if they are both objects, merge them recursively
-                        var mergedValue = copyVal(_mergeObjects(aValue, bValue, signatureSoFar+"."+field));
-                        Reflect.setField(a, field, mergedValue);
-                        return a;
-                    }
-                    else
-                    {
-                        //if the types don't match, we can't merge this bit
-                        var aArr:String = Std.is(aValue,Array) ? "array" : "object";
-                        var bArr:String = Std.is(bValue,Array) ? "array" : "object";
-                        Polymod.warning(MERGE,"Can't merge field ("+field+") @ ("+signatureSoFar+") because base is ("+aArr+") but payload is ("+bArr+")");
-                    }
-                }
-                else
-                {
-                    //b has a field that a doesn't have, add it to a
-                    Reflect.setField(a, field, Reflect.field(b, field));
-                }
-            }
+			var aPrimitive = isPrimitive(a);
+			var bPrimitive = isPrimitive(b);
+			if(aPrimitive && bPrimitive)
+			{
+				//if they are both primitives, stomp with b
+				return b;
+			}
+			else if(aPrimitive != bPrimitive)
+			{
+				//if they are incompatible, stomp with a
+				return a;
+			}
+			else
+			{
+				//if they are both objects, merge their values
+				for(field in Reflect.fields(b))
+				{
+					if(Reflect.hasField(a,field))
+					{
+						//If a & b share a field, merge that field recursively
+						var aValue = Reflect.field(a,field);
+						var bValue = Reflect.field(b,field);
+						var mergedValue = copyVal(_mergeObjects(aValue, bValue, signatureSoFar+"."+field));
+						Reflect.setField(a, field, mergedValue);
+					}
+					else
+					{
+						//If b has a field that a doesn't have, add it to a
+						Reflect.setField(a, field, Reflect.field(b, field));
+					}
+				}
+			}
         }
         else
         {
@@ -953,9 +938,9 @@ class JSONParseFormat implements BaseParseFormat
         return result;
     }
 
-    public function print(data:Json):String
+    public function print(data:Dynamic):String
     {
-        return Json.stringify(data, replacer, space);
+        return haxe.Json.stringify(data, replacer, space);
     }
 }
 

@@ -1,16 +1,6 @@
 {
-	"merge":[
-		{
-			"target":"object_0",
-			"payload":{"value":"pineapple"},
-		},
-		{
-			"target":"object_1",
-			"payload":{"value":"apple"},
-		},
-		{
-			"target":"object_2",
-			"payload":{"value":"bread"},
-		}
-	]
+	"object_0":{"value":"pineapple"},
+	"object_1":{"value":"apple"},
+	"object_2":{"value":"bread"},
+	"nested":{"object":{"array":["a","b","c"]}}
 }
