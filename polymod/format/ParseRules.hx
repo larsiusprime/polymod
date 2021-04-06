@@ -572,7 +572,7 @@ class JSONParseFormat implements BaseParseFormat
         format = JSON;
     }
 
-    public function parse(str:String):Json
+    public function parse(str:String):Dynamic
     {
         return Json.parse(str);
     }
@@ -624,7 +624,7 @@ class JSONParseFormat implements BaseParseFormat
             Polymod.error(MERGE,"JSON merge error ("+id+"): couldn't parse merge text! : " + msg);
             return baseText;
         }
-        
+		
         if(Reflect.hasField(merge,"merge"))
         {
             if(Std.is(merge.merge,Array))
