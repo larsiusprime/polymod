@@ -26,6 +26,7 @@ package polymod.backends;
 import haxe.xml.Fast;
 import haxe.xml.Printer;
 import polymod.Polymod;
+import polymod.Polymod.FrameworkParams;
 import polymod.Polymod.PolymodError;
 import polymod.fs.PolymodFileSystem;
 import polymod.util.Util;
@@ -63,7 +64,7 @@ class NMEBackend implements IBackend
 
     public function new (){}
 
-    public function init()
+    public function init(?params:FrameworkParams)
     {
         restoreDefaultAssets();
 

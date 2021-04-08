@@ -168,7 +168,7 @@ class PolymodAssetLibrary
         if (exists && type != null && type != PolymodAssetType.BYTES)
         {
             var otherType = this.type.get(id);
-            exists = (otherType == type || otherType == PolymodAssetType.BYTES);
+            exists = (otherType == type || otherType == PolymodAssetType.BYTES || otherType == null || otherType == "");
         }
         return exists;
     }

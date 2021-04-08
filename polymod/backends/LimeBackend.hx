@@ -26,6 +26,7 @@ package polymod.backends;
 import haxe.xml.Fast;
 import haxe.xml.Printer;
 import polymod.Polymod;
+import polymod.Polymod.FrameworkParams;
 import polymod.Polymod.PolymodError;
 import polymod.fs.PolymodFileSystem;
 import polymod.util.Util;
@@ -66,75 +67,167 @@ class LimeBackend extends StubBackend
 class LimeBackend implements IBackend
 {
     //STATIC:
-    private static var defaultAssetLibrary:AssetLibrary = null;
-    private static function getDefaultAssetLibrary()
+    
+    private static var defaultAssetLibraries:Map<String, AssetLibrary>;
+    
+    /**
+     * Find all the registered access libraries and store keyed references to them
+     */
+    private static function getDefaultAssetLibraries()
     {
-        if(defaultAssetLibrary == null)
+        if(defaultAssetLibraries == null)
         {
-            defaultAssetLibrary = Assets.getLibrary("default");
-        }
-        return defaultAssetLibrary;
-    }
+            defaultAssetLibraries = new Map<String,AssetLibrary>();
 
-    private static function restoreDefaultAssetLibrary()
+            //I don't like having to do this but there's no other way, hope the internals don't change!
+            var libraries = @:privateAccess lime.utils.Assets.libraries;
+
+            //Find every asset library and make a copy of it
+            for(key in libraries.keys())
+            {
+                defaultAssetLibraries.set(key, lime.utils.Assets.getLibrary(key));
+            }
+        }
+        return defaultAssetLibraries;
+    }
+    
+    /**
+     * Re-register all the asset libraries recorded by `getDefaultAssetLibraries()`
+     */
+    private static function restoreDefaultAssetLibraries()
     {
-        if(defaultAssetLibrary != null)
+        if(defaultAssetLibraries != null)
         {
-            Assets.registerLibrary("default", defaultAssetLibrary);
+            for(key in defaultAssetLibraries.keys())
+            {
+                Assets.registerLibrary(key, defaultAssetLibraries.get(key));
+            }
         }
     }
 
     //Instance:
     public var polymodLibrary:PolymodAssetLibrary;
-    public var modLibrary(default, null):LimeModLibrary;
-    public var fallback(default, null):AssetLibrary;
+    public var modLibraries(default, null):Map<String,LimeModLibrary>;
     
     public function new (){}
 
-    public function init()
+    public function init(?params:FrameworkParams)
     {
-        fallback = getDefaultAssetLibrary();
-        modLibrary = new LimeModLibrary(this);
-        Assets.registerLibrary("default", modLibrary);
+        //Get all the default asset libraries:
+        var defaultLibraries = getDefaultAssetLibraries();
+
+        modLibraries = new Map<String,LimeModLibrary>();
+        
+        var hasMoreThanDefault = false;
+        for(key in defaultLibraries.keys())
+        {
+            if(key != "default")
+            {
+                hasMoreThanDefault = true;
+                break;
+            }
+        }
+
+        if(hasMoreThanDefault && params.assetLibraryPaths == null)
+        {
+            Polymod.error(
+                PolymodErrorCode.LIME_MISSING_ASSET_LIBRARY_INFO, 
+                "Your Lime/OpenFL configuration is using custom asset libraries, but you have not provided any frameworkParams in Polymod.init() that tells Polymod which asset libraries to expect and what their mod sub-directory prefixes should be.",
+                PolymodErrorOrigin.INIT
+            );
+            return;
+        }
+
+        //Wrap each asset library in `LimeModLibrary`, register it with Lime, and store it here
+        for(key in defaultLibraries.keys())
+        {
+            var pathPrefix = "";
+            if(hasMoreThanDefault)
+            {
+                if(!params.assetLibraryPaths.exists(key) && key != "default")
+                {
+                    Polymod.error(
+                        PolymodErrorCode.LIME_MISSING_ASSET_LIBRARY_REFERENCE,
+                        "Your Lime/OpenFL configuration is using custom asset libraries, and you provided frameworkParams in Polymod.init(), but we couldn't find a match for this asset library: ("+key+")",
+                        PolymodErrorOrigin.INIT
+                    );
+                    return;
+                }
+                else
+                {
+                    if(key == "default")
+                    {
+                        pathPrefix = "";
+                    }
+                    else
+                    {
+                        pathPrefix = params.assetLibraryPaths.get(key);
+                    }
+                }
+            }
+            var fallbackLibrary = defaultLibraries.get(key);
+            var modLibrary = new LimeModLibrary(this, fallbackLibrary, pathPrefix);
+            modLibraries.set(key, modLibrary);
+        }
+
+        for(key in modLibraries.keys())
+        {
+            Assets.registerLibrary(key, modLibraries.get(key));
+        }
     }
 
     public function destroy()
     {
-        restoreDefaultAssetLibrary();
         polymodLibrary = null;
-        modLibrary.destroy();
-        modLibrary = null;
-        fallback = null;
+        restoreDefaultAssetLibraries();
+        for(key in modLibraries.keys()){
+            var modLibrary = modLibraries.get(key);
+            modLibrary.destroy();
+            modLibraries.remove(key);
+        }
+        modLibraries = null;
     }
 
     public function exists(id:String):Bool
     {
-        return modLibrary.exists(id, null);
+        var symbol = new IdAndLibrary(id, modLibraries);
+        var e = symbol.library.exists(symbol.modId, null);
+        return e;
     }
 
     public function getBytes(id:String):Bytes
     {
-        return modLibrary.getBytes(id);
+        var symbol = new IdAndLibrary(id, modLibraries);
+        var bytes = symbol.library.getBytes(symbol.modId);
+        return bytes;
     }
 
     public function getText(id:String):String
     {
-        return modLibrary.getText(id);
+        var symbol = new IdAndLibrary(id, modLibraries);
+        var text = symbol.library.getText(symbol.modId);
+        return text;
     }
 
     public function getPath(id:String):String
     {
-        return modLibrary.getPath(id);
+        var symbol = new IdAndLibrary(id, modLibraries);
+        var path = symbol.library.getPath(symbol.modId);
+        return path;
     }
 
     public function list(type:PolymodAssetType=null):Array<String>
     {
-        return modLibrary.list(type == null ? null : LimeModLibrary.PolyToLime(type));
+        var arr = [];
+        for (modLibrary in modLibraries){
+            arr = arr.concat(modLibrary.list(type == null ? null : LimeModLibrary.PolyToLime(type)));
+        }
+        return arr;
     }
 
     public function clearCache()
     {
-        if (defaultAssetLibrary != null)
+        if (defaultAssetLibraries != null)
         {
             for (key in Assets.cache.audio.keys())
             {
@@ -196,18 +289,20 @@ class LimeModLibrary extends AssetLibrary
         }
     }
 
+    public var pathPrefix:String;
     var b:LimeBackend;
     var p:PolymodAssetLibrary;
     var fallback:AssetLibrary;
     var hasFallback:Bool;
     var type(default, null):Map<String,AssetType>;
     
-    public function new(backend:LimeBackend)
+    public function new(backend:LimeBackend, fallback:AssetLibrary, ?pathPrefix:String="")
     {
         b = backend;
         p = b.polymodLibrary;
-        fallback = b.fallback;
-        hasFallback = fallback != null;
+        this.pathPrefix = pathPrefix;
+        this.fallback = fallback;
+        hasFallback = this.fallback != null;
         super();
     }
 
@@ -221,7 +316,8 @@ class LimeModLibrary extends AssetLibrary
 
     public override function getAsset(id:String, type:String):Dynamic
     {
-        var e = p.check(id, LimeToPoly(cast type));
+        var symbol = new IdAndLibrary(id, this);
+        var e = p.check(symbol.modId, LimeToPoly(cast type));
         if (type == TEXT)
         {
             return getText(id);
@@ -230,20 +326,23 @@ class LimeModLibrary extends AssetLibrary
         {
             return fallback.getAsset(id, type);
         }
-        return super.getAsset(id,type);
+        return super.getAsset(id, type);
     }
 
     public override function exists (id:String, type:String):Bool
     {
-        var e = p.check(id, LimeToPoly(cast type));
-        if (!e && hasFallback) return fallback.exists(id, type);
+        var symbol = new IdAndLibrary(id, this);
+        var e = p.check(symbol.modId, LimeToPoly(cast type));
+        if(!e && hasFallback)
+            return fallback.exists(id, type);
         return e;
     }
 
     public override function getAudioBuffer (id:String):AudioBuffer
     {
-        if (p.check(id))
-            return AudioBuffer.fromBytes(PolymodFileSystem.getFileBytes(p.file(id)));
+        var symbol = new IdAndLibrary(id, this);
+        if (p.check(symbol.modId))
+            return AudioBuffer.fromBytes(PolymodFileSystem.getFileBytes(p.file(symbol.modId)));
         else if(hasFallback)
             return fallback.getAudioBuffer(id);
         return null;
@@ -251,18 +350,20 @@ class LimeModLibrary extends AssetLibrary
 
     public override function getBytes (id:String):Bytes
     {
-        var file = p.file(id);
-        if (p.check(id))
-            return PolymodFileSystem.getFileBytes(p.file(id));
-        else if(hasFallback)
+        var symbol = new IdAndLibrary(id, this);
+        var file = p.file(symbol.modId);
+        if (p.check(symbol.modId))
+            return PolymodFileSystem.getFileBytes(p.file(symbol.modId));
+        else if (hasFallback)
             return fallback.getBytes(id);
         return null;
     }
-
+    
     public override function getFont (id:String):Font
     {
-        if (p.check(id))
-            return Font.fromBytes(PolymodFileSystem.getFileBytes(p.file(id)));
+        var symbol = new IdAndLibrary(id, this);
+        if (p.check(symbol.modId))
+            return Font.fromBytes(PolymodFileSystem.getFileBytes(p.file(symbol.modId)));
         else if(hasFallback)
             return fallback.getFont(id);
         return null;
@@ -270,8 +371,14 @@ class LimeModLibrary extends AssetLibrary
 
     public override function getImage (id:String):Image
     {
-        if (p.check(id))
-            return Image.fromBytes(PolymodFileSystem.getFileBytes(p.file(id)));
+        var symbol = new IdAndLibrary(id, this);
+        if (p.check(symbol.modId))
+        if (p.check(symbol.modId)){
+            if(id.indexOf("newgrounds") != -1){
+                var bytes = PolymodFileSystem.getFileBytes(p.file(symbol.modId));
+            }
+            return Image.fromBytes(PolymodFileSystem.getFileBytes(p.file(symbol.modId)));
+        }
         else if(hasFallback)
             return fallback.getImage(id);
         return null;
@@ -279,8 +386,9 @@ class LimeModLibrary extends AssetLibrary
 
     public override function getPath (id:String):String
     {
-        if (p.check(id))
-            return p.file(id);
+        var symbol = new IdAndLibrary(id, this);
+        if (p.check(symbol.modId))
+            return p.file(symbol.modId);
         else if(hasFallback)
             return fallback.getPath(id);
         return null;
@@ -288,10 +396,11 @@ class LimeModLibrary extends AssetLibrary
 
     public override function getText (id:String):String
     {
+        var symbol = new IdAndLibrary(id, this);
         var modText = null;
-        if (p.check(id))
+        if (p.check(symbol.modId))
         {
-            modText = super.getText(id);
+            modText = super.getText(symbol.modId);
         }
         else if(hasFallback)
         {
@@ -300,6 +409,7 @@ class LimeModLibrary extends AssetLibrary
         
         if (modText != null)
         {
+            //TODO: this is going to be a pain for games with asset libraries
             modText = p.mergeAndAppendText(id, modText);
         }
         
@@ -308,10 +418,11 @@ class LimeModLibrary extends AssetLibrary
 
     public override function loadBytes (id:String):Future<Bytes> 
     {
-        //TODO: filesystem
-        if (p.check(id))
+        var symbol = new IdAndLibrary(id, this);
+       //TODO: filesystem
+        if (p.check(symbol.modId))
         {
-            return Bytes.loadFromFile (p.file(id));
+            return Bytes.loadFromFile (p.file(symbol.modId));
         }
         else if(hasFallback)
         {
@@ -322,13 +433,14 @@ class LimeModLibrary extends AssetLibrary
 
     public override function loadFont(id:String):Future<Font>
     {
+        var symbol = new IdAndLibrary(id, this);
         //TODO: filesystem
-        if (p.check(id))
+        if (p.check(symbol.modId))
         {
             #if (js && html5)
-            return Font.loadFromName (paths.get (p.file(id)));
+            return Font.loadFromName (paths.get (p.file(symbol.modId)));
             #else
-            return Font.loadFromFile (paths.get (p.file(id)));
+            return Font.loadFromFile (paths.get (p.file(symbol.modId)));
             #end
         }
         else if(hasFallback)
@@ -344,10 +456,11 @@ class LimeModLibrary extends AssetLibrary
 
     public override function loadImage(id:String):Future<Image>
     {
+        var symbol = new IdAndLibrary(id, this);
         //TODO: filesystem
-        if (p.check(id))
+        if (p.check(symbol.modId))
         {
-            return Image.loadFromFile(p.file(id));
+            return Image.loadFromFile(p.file(symbol.modId));
         }
         else if(hasFallback)
         {
@@ -358,17 +471,18 @@ class LimeModLibrary extends AssetLibrary
 
     public override function loadAudioBuffer(id:String)
     {
+        var symbol = new IdAndLibrary(id, this);
         //TODO: filesystem
-        if (p.check(id))
+        if (p.check(symbol.modId))
         {
             //return 
-            if (pathGroups.exists(p.file(id)))
+            if (pathGroups.exists(p.file(symbol.modId)))
             {
-                return AudioBuffer.loadFromFiles (pathGroups.get(p.file(id)));
+                return AudioBuffer.loadFromFiles (pathGroups.get(p.file(symbol.modId)));
             }
             else
             {
-                return AudioBuffer.loadFromFile(paths.get(p.file(id)));
+                return AudioBuffer.loadFromFile(paths.get(p.file(symbol.modId)));
             }
         }
         else if(hasFallback)
@@ -380,14 +494,15 @@ class LimeModLibrary extends AssetLibrary
 
     public override function loadText(id:String):Future<String>
     {
-        //TODO: FileSystem
-        if (p.check(id))
+        var symbol = new IdAndLibrary(id, this);
+         //TODO: FileSystem
+        if (p.check(symbol.modId))
         {
             var request = new HTTPRequest<String> ();
-            return request.load (paths.get (p.file(id)));
+            return request.load (paths.get (p.file(symbol.modId)));
         }
         else if(hasFallback)
-        {	
+        {    
             return fallback.loadText(id);
         }
         var request = new HTTPRequest<String> ();
@@ -396,7 +511,8 @@ class LimeModLibrary extends AssetLibrary
 
     public override function isLocal (id:String, type:String):Bool
     {
-        if (p.check(id))
+        var symbol = new IdAndLibrary(id, this);
+        if (p.check(symbol.modId))
             return true;
         else if(hasFallback)
             return fallback.isLocal(id, type);
@@ -432,6 +548,51 @@ class LimeModLibrary extends AssetLibrary
         
         return items;
     }
+}
+
+/**
+ * This helper class helps me deal with all the path nonsense of custom asset library asset calls
+ * e.g. asking library "foo" for "bar.png" will result in:
+ *   id = "foo:bar.png"
+ *   lib = "foo"
+ *   library = the "foo" library
+ *   nakedId = "bar.png"
+ *   modId = "foo/bar.png" (assuming "foo" is the mod path prefix for the "foo" library)
+ *   fallbackId = "foo:bar.png" 
+ */
+private class IdAndLibrary
+{
+    public var library(default, null):LimeModLibrary;
+    public var lib(default, null):String;
+	public var modId(default, null):String;
+    public var nakedId(default, null):String;
+    public var fallbackId(default, null):String;
+
+	public inline function new(id:String, ?libs:Map<String,LimeModLibrary>, ?l:LimeModLibrary)
+	{
+        fallbackId = id;
+		var colonIndex = id.indexOf(":");
+		lib = id.substring(0, colonIndex);
+		nakedId = id.substring(colonIndex + 1);
+        if(l != null){
+            library = l;
+        }else if(libs != null){
+            if(lib == "" || lib == null){
+                lib = "default";
+            }
+            library = libs.get(lib);
+        }
+        if(library != null && library.pathPrefix != null && library.pathPrefix != ""){
+            modId = library.pathPrefix + "/" + nakedId;
+        }
+        modId = nakedId;
+	}
+
+    // public inline function isLocal(?type)
+    //     return library.isLocal(id, type)
+
+    // public inline function exists(?type)
+    //     return library.exists(id, type)
 }
 #end
 #end
