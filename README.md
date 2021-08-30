@@ -13,7 +13,8 @@ To use this, you need to do the following:
     nodeIntegration: true, // required for file system access
     contextIsolation: false // required for file system access
   }
-})```
+})
+```
 
 Doing so will enable your mods for unembedded assets.
 
