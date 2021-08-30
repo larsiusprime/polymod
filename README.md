@@ -1,5 +1,5 @@
 # OpenFL With Node for Polymod
-A fork of larsiusprime's Polymod code that adds modding support for OpenFL applications wrapped with Electron (or, really, using Node).
+A fork of larsiusprime's Polymod code that adds modding support for OpenFL HTML5 applications wrapped with Electron (or, really, just using Node).
 
 To use this, you need to do the following:
 - Enable the Node file system by including the compiler flag `nodefs` in your project (if you do this in the project.xml, best to add this flag before including the polymod library).
