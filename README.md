@@ -3,7 +3,7 @@ A fork of larsiusprime's Polymod code that adds modding support for OpenFL appli
 
 To use this, you need to do the following:
 - Enable the Node file system by including the compiler flag "nodefs" in your project (if you do this in the project.xml, best to add this flag before including the polymod library).
-- Specify Framework.OPENFL_WITH_NODE as your framework.
+- Specify Framework.OPENFL_WITH_NODE as your framework with you call PolyMod.init(...).
 
 Doing so will enable your mods for unembedded assets.
 
