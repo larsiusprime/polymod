@@ -5,7 +5,8 @@ To use this, you need to do the following:
 - Enable the Node file system by including the compiler flag `nodefs` in your project (if you do this in the project.xml, best to add this flag before including the polymod library).
 - Specify `Framework.OPENFL_WITH_NODE` as your framework with you call `PolyMod.init(...)`.
 - In your Electron app's main JavaScript file, make sure to add `nodeIntegration: true` and `contextIsolation: false` in the `webPreferences` like so:
-```const win = new BrowserWindow({
+```JavaScript
+const win = new BrowserWindow({
   width: 1600,
   height: 900,
   useContentSize: true,
