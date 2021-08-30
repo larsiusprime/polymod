@@ -84,7 +84,7 @@ class PolymodAssets
         {
             case NME: new polymod.backends.NMEBackend();
             case OPENFL: new polymod.backends.OpenFLBackend();
-			case OPENFL_WITH_NODE: new polymod.backends.OpenFLWithNodeBackend();
+            case OPENFL_WITH_NODE: new polymod.backends.OpenFLWithNodeBackend();
             case LIME: new polymod.backends.LimeBackend();
             case HEAPS: new polymod.backends.HEAPSBackend();
             //case KHA: new polymod.backends.KhaBackend();
