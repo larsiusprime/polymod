@@ -1,3 +1,14 @@
+# OpenFL With Node for Polymod
+A fork of larsiusprime's Polymod code that adds modding support for OpenFL applications wrapped with Electron (or, really, using Node).
+
+To use this, you need to do the following:
+- Enable the Node file system by including the compiler flag "nodefs" in your project (if you do this in the project.xml, best to add this flag before including the polymod library).
+- Specify Framework.OPENFL_WITH_NODE as your framework.
+
+Doing so will enable your mods for unembedded assets.
+
+If you want to also allow mods for assets that are embedded (loaded when the application initially starts up), you should listen for the OpenFLWithNodeBackend.FINISHED_PRELOADING_ASSETS event to be dispatched from OpenFLWithNodeBackend.dispatcher first before fully firing up your app.
+
 # Polymod
 An atomic modding framework for Haxe games/apps.
 

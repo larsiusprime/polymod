@@ -96,6 +96,7 @@ enum Framework
     NME;
     LIME;
     OPENFL;
+	OPENFL_WITH_NODE;
     HEAPS;
     KHA;
     CUSTOM;
