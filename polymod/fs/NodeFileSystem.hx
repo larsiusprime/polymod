@@ -30,7 +30,7 @@ import js.Lib;
 
 class NodeFileSystem
 {
-	// hack to make sure NodeUtils.initNodeFunctions is called
+	// hack to make sure NodeUtils.injectJSCode is called
 	private static var _jsCodeInjected:Bool = injectJSCode();
 	
 	// -----------------------------------------------------------------------------------------------
