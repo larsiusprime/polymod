@@ -60,9 +60,11 @@ class NodeFileSystem
 		jsCode.push("		var entries = _nodefs.readdirSync(path, { withFileTypes:true } );");
 		jsCode.push("		for ( var i = 0; i < entries.length; ++i ) {");
 		jsCode.push("			var entryPath = path + entries[i].name;");
-		jsCode.push("			dirContents.push( entryPath );");
 		jsCode.push("			if ( entries[i].isDirectory() && recursive ) {");
 		jsCode.push("				getDirectoryContents( entryPath, true, dirContents );");
+		jsCode.push("			}");
+		jsCode.push("			else {");
+		jsCode.push("				dirContents.push( entryPath );");
 		jsCode.push("			}");
 		jsCode.push("		}");
 		jsCode.push("	}");
@@ -114,6 +116,17 @@ class NodeFileSystem
 	}
 	
 	// -----------------------------------------------------------------------------------------------
+	public static function santizePaths( path:String, directories:Array<String> ):Void
+	{
+		for ( i in 0...directories.length ) {
+			directories[i] = StringTools.replace(directories[i], path, "");
+			if ( directories[i].charAt(0) == "/") {
+				directories[i] = directories[i].substr(1);
+			}
+		}
+	}
+	
+	// -----------------------------------------------------------------------------------------------
     public static inline function exists( path: String ):Bool {
         return callFunc("exists", path);
 	}
@@ -125,7 +138,9 @@ class NodeFileSystem
 	
 	// -----------------------------------------------------------------------------------------------
     public static inline function readDirectory( path: String ):Array<String> {
-        return callFunc("readDirectory", path);
+        var arr:Array<String> = callFunc("readDirectory", path);
+		santizePaths(path, arr);
+        return arr;
 	}
 	
 	// -----------------------------------------------------------------------------------------------
@@ -142,14 +157,7 @@ class NodeFileSystem
 	// -----------------------------------------------------------------------------------------------
     public static inline function readDirectoryRecursive( path: String ):Array<String> {
 		var arr:Array<String> = callFunc("readDirectoryRecursive", path);
-		
-		for ( i in 0...arr.length ) {
-			arr[i] = StringTools.replace(arr[i], path, "");
-			if ( arr[i].charAt(0) == "/") {
-				arr[i] = arr[i].substr(1);
-			}
-		}
-		
+		santizePaths(path, arr);
         return arr;
 	}
 }
