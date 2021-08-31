@@ -105,9 +105,11 @@ class OpenFLWithNodeBackend extends OpenFLBackend
 	// -----------------------------------------------------------------------------------------------
 	override public function init()
     {
-        fallback = Assets.getLibrary("default");
-        modLibrary = new OpenFLNodeModLibrary(this);
+        fallback = LimeBackend.getDefaultAssetLibrary();
+        var ml:OpenFLNodeModLibrary = new OpenFLNodeModLibrary(this);
+        modLibrary = ml;
         Assets.registerLibrary("default", modLibrary);
+		ml.preloadAssets();
     }
 	
 	// -----------------------------------------------------------------------------------------------
@@ -142,14 +144,13 @@ class OpenFLNodeModLibrary extends LimeModLibrary
 	public function new(backend:OpenFLWithNodeBackend)
     {
 		super(backend);
-		preloadAssets();
 	}
 	
 	// -----------------------------------------------------------------------------------------------
 	/**
 	 * Checks to see what assets were preloaded and if there are any corresponding mod assets to load in their place.
 	 */
-	private function preloadAssets():Void
+	public function preloadAssets():Void
 	{
 		var imagesToPreload:Array<String> = [];
 		var audioToPreload:Array<String> = [];
@@ -160,28 +161,28 @@ class OpenFLNodeModLibrary extends LimeModLibrary
 		if ( hasFallback ) {
 			for ( s in fallback.cachedImages.keys() )
 			{
-				if ( p.check(s) ) {
+				if ( p.check(s) && p.exists(s) ) {
 					imagesToPreload.push(s);
 				}
 			}
 			
 			for ( s in fallback.cachedAudioBuffers.keys() )
 			{
-				if ( p.check(s) ) {
+				if ( p.check(s) && p.exists(s) ) {
 					audioToPreload.push(s);
 				}
 			}
 			
 			for ( s in fallback.cachedText.keys() )
 			{
-				if ( p.check(s) ) {
+				if ( p.check(s) && p.exists(s) ) {
 					textToPreload.push(s);
 				}
 			}
 			
 			for ( s in fallback.cachedFonts.keys() )
 			{
-				if ( p.check(s) ) {
+				if ( p.check(s) && p.exists(s) ) {
 					fontsToPreload.push(s);
 				}
 			}
