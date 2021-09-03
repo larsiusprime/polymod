@@ -22,8 +22,7 @@
  */
  
  package polymod.format;
-
-import haxe.xml.Fast;
+import haxe.xml.Access;
 import haxe.xml.Printer;
 import polymod.util.Util;
 
@@ -186,7 +185,7 @@ class XMLMerge
 			map = mergeMapsDestructively(map, subMap);
 			var sig = getNodeSignature(el);
 		
-			var f:haxe.xml.Fast = new haxe.xml.Fast(el);
+			var f:haxe.xml.Access = new haxe.xml.Access(el);
 			if(f.hasNode.merge)
 			{
 				if(map.exists(sig) == false)
