@@ -339,6 +339,8 @@ class Polymod
     {
         #if sys
         return new polymod.fs.SysFileSystem();
+		#elseif nodefs // is this necessary? It doesn't look like this function gets called
+		return new polymod.fs.NodeFileSystem();
         #end
         return null;
     }
