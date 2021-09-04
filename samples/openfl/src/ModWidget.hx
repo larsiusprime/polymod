@@ -24,7 +24,7 @@
 package;
 
 import flash.text.TextField;
-import openfl.display.DisplayObjectContainer;
+import openfl.display.Sprite;
 import openfl.events.MouseEvent;
 import openfl.text.TextFormatAlign;
 
@@ -32,7 +32,7 @@ import openfl.text.TextFormatAlign;
  * ...
  * @author 
  */
-class ModWidget extends DisplayObjectContainer
+class ModWidget extends Sprite
 {
 	public var active(default, null):Bool;
 	public var mod(default, null):String;
