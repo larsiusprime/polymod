@@ -290,7 +290,7 @@ class Util
 
     public static function hasSpecial(id:String, special:String = "", theDir:String = ""):Bool
     {
-        #if sys
+        #if (sys || nodefs)
         id = stripAssetsPrefix(id);
         var thePath = uCombine([theDir, sl(), special, sl(), id]);
         return PolymodFileSystem.exists(thePath);
