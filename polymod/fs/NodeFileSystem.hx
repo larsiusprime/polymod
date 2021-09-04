@@ -33,6 +33,8 @@ class NodeFileSystem
 	// hack to make sure NodeUtils.injectJSCode is called
 	private static var _jsCodeInjected:Bool = injectJSCode();
 	
+	public function new() {}
+	
 	// -----------------------------------------------------------------------------------------------
 	// -----------------------------------------------------------------------------------------------
 	/**
