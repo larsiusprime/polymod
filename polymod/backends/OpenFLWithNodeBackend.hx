@@ -1,4 +1,6 @@
 package polymod.backends;
+import lime.utils.Bytes;
+import lime.app.Future;
 import lime.graphics.Image;
 import lime.media.AudioBuffer;
 import lime.text.Font;
@@ -7,6 +9,7 @@ import lime.utils.Assets;
 import openfl.events.Event;
 import openfl.events.EventDispatcher;
 import polymod.backends.LimeBackend.LimeModLibrary;
+import polymod.fs.PolymodFileSystem;
 
 /**
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -55,7 +58,7 @@ import polymod.backends.LimeBackend.LimeModLibrary;
 /**
  * @author Tamar Curry
  */
-#if (!openfl || nme)
+#if (!openfl || !nodefs || nme)
 class OpenFLWithNodeBackend extends StubBackend
 {
 	/**
@@ -71,7 +74,11 @@ class OpenFLWithNodeBackend extends StubBackend
     public function new()
     {
         super();
-        Polymod.error(FAILED_CREATE_BACKEND,"OpenFLWithNodeBackend requires the openfl library, did you forget to install it?"); 
+		#if !openfl
+        Polymod.error(FAILED_CREATE_BACKEND, "OpenFLWithNodeBackend requires the openfl library, did you forget to install it?"); 
+		#elseif !nodefs
+		Polymod.error(FAILED_CREATE_BACKEND, "OpenFLWithNodeBackend requires the nodefs flag to be defined."); 
+		#end
     }
 	
 	// -----------------------------------------------------------------------------------------------
@@ -133,8 +140,8 @@ class OpenFLNodeModLibrary extends LimeModLibrary
 {
 	private var _imagePreloadCount:Int;
 	private var _audioPreloadCount:Int;
-	private var _textPreloadCount:Int;
 	private var _fontPreloadCount:Int;
+	private var _binaryPreloadCount:Int;
 	
 	// -----------------------------------------------------------------------------------------------
 	/**
@@ -152,47 +159,51 @@ class OpenFLNodeModLibrary extends LimeModLibrary
 	 */
 	public function preloadAssets():Void
 	{
-		var imagesToPreload:Array<String> = [];
-		var audioToPreload:Array<String> = [];
-		var textToPreload:Array<String> = [];
-		var fontsToPreload:Array<String> = [];
+		var imagesToPreload:Array<String> 	= [];
+		var textToPreload:Array<String> 	= [];
+		var fontsToPreload:Array<String> 	= [];
+		var audioToPreload:Array<String> 	= [];
+		var binaryToPreload:Array<String> 	= [];
 		
-		// if any embedded assets have been loaded already, attempt to load any replacements
-		if ( hasFallback ) {
-			for ( s in fallback.cachedImages.keys() )
-			{
-				if ( p.check(s) && p.exists(s) ) {
-					imagesToPreload.push(s);
-				}
+		var t:AssetType;
+		
+		// grab the preloaded assets from the fallback and load any replacement assets immediately
+		for ( s in fallback.preload.keys() ) {
+			
+			if ( !p.check(s) ) {
+				continue;
 			}
 			
-			for ( s in fallback.cachedAudioBuffers.keys() )
-			{
-				if ( p.check(s) && p.exists(s) ) {
-					audioToPreload.push(s);
-				}
-			}
+			t = fallback.types.get(s);
 			
-			for ( s in fallback.cachedText.keys() )
-			{
-				if ( p.check(s) && p.exists(s) ) {
-					textToPreload.push(s);
-				}
+			if ( t == AssetType.IMAGE ) {
+				imagesToPreload.push(s);
 			}
-			
-			for ( s in fallback.cachedFonts.keys() )
-			{
-				if ( p.check(s) && p.exists(s) ) {
-					fontsToPreload.push(s);
-				}
+			else if ( t == AssetType.TEXT ) {
+				textToPreload.push(s);
+			}
+			else if ( t == AssetType.FONT ) {
+				fontsToPreload.push(s);
+			}
+			else if ( t == AssetType.SOUND || t == AssetType.MUSIC ) {
+				audioToPreload.push(s);
+			}
+			else if ( t == AssetType.BINARY ) {
+				binaryToPreload.push(s);
 			}
 		}
 		
 		_imagePreloadCount 	= imagesToPreload.length;
 		_audioPreloadCount 	= audioToPreload.length;
-		_textPreloadCount 	= textToPreload.length;
 		_fontPreloadCount 	= fontsToPreload.length;
+		_binaryPreloadCount = binaryToPreload.length;
 		
+		// text can be loaded immediately
+		for ( s in textToPreload ) {
+			cachedText.set( s, PolymodFileSystem.getFileContent( p.getPath(s) ) );
+		}
+		
+		// every other asset should go through the usual load process given how loading assets works in HTML5 builds
 		for ( s in imagesToPreload ) {
 			loadImage(s).onComplete( onImagePreloaded );
 		}
@@ -201,12 +212,12 @@ class OpenFLNodeModLibrary extends LimeModLibrary
 			loadAudioBuffer(s).onComplete( onAudioPreloaded );
 		}
 		
-		for ( s in textToPreload ) {
-			loadText(s).onComplete( onTextPreloaded );
-		}
-		
 		for ( s in fontsToPreload ) {
 			loadFont(s).onComplete( onFontPreloaded );
+		}
+		
+		for ( s in binaryToPreload ) {
+			loadBytes(s).onComplete( onBinaryPreloaded );
 		}
 		
 		checkIfPreloadFinished();
@@ -236,12 +247,12 @@ class OpenFLNodeModLibrary extends LimeModLibrary
 	
 	// -----------------------------------------------------------------------------------------------
 	/**
-	 * Callback for text that is preloading.
+	 * Callback for font that is preloading.
 	 * @param	x
 	 */
-	private function onTextPreloaded(x:String):Void
+	private function onFontPreloaded(x:Font):Void
 	{
-		--_textPreloadCount;
+		--_fontPreloadCount;
 		checkIfPreloadFinished();
 	}
 	
@@ -250,9 +261,9 @@ class OpenFLNodeModLibrary extends LimeModLibrary
 	 * Callback for font that is preloading.
 	 * @param	x
 	 */
-	private function onFontPreloaded(x:Font):Void
+	private function onBinaryPreloaded(x:Bytes):Void
 	{
-		--_fontPreloadCount;
+		--_binaryPreloadCount;
 		checkIfPreloadFinished();
 	}
 	
@@ -266,8 +277,8 @@ class OpenFLNodeModLibrary extends LimeModLibrary
 		var isFinished:Bool = true;
 		isFinished = isFinished && _imagePreloadCount <= 0;
 		isFinished = isFinished && _audioPreloadCount <= 0;
-		isFinished = isFinished && _textPreloadCount <= 0;
 		isFinished = isFinished && _fontPreloadCount <= 0;
+		isFinished = isFinished && _binaryPreloadCount <= 0;
 		
 		if ( isFinished ) {
 			OpenFLWithNodeBackend.dispatcher.dispatchEvent( new Event(OpenFLWithNodeBackend.FINISHED_PRELOADING_ASSETS) );
@@ -291,6 +302,41 @@ class OpenFLNodeModLibrary extends LimeModLibrary
     }
 	
 	// -----------------------------------------------------------------------------------------------
+    public override function getText (id:String):String
+    {
+        var modText:String = null;
+		
+		if (p.check(id))
+        {
+			modText = cachedText.get( id );
+		}
+		else if ( hasFallback ) {
+			var path:String = fallback.paths.get(id);
+			// check the file name for "?" and remove anything after it
+			var qIndex:Int = path != null ? path.lastIndexOf("?") : -1;
+			if ( qIndex > -1 ) {
+				path = path.substr(0, qIndex);
+			}
+			modText = PolymodFileSystem.getFileContent( path );
+		}
+		
+		if ( modText != null ) {
+			modText = p.mergeAndAppendText(id, modText);
+		}
+		else {
+			modText = "";
+		}
+        
+        return modText;
+    }
+	
+	// -----------------------------------------------------------------------------------------------
+	override public function loadText(id:String):Future<String> 
+	{
+		return Future.withValue( getText(id) );
+	}
+	
+	// -----------------------------------------------------------------------------------------------
 	/**
 	 * Checks if the specified asset has already been loaded.
 	 * Copied from the origina isLocal function in lime.utils.AssetLibrary
@@ -304,20 +350,20 @@ class OpenFLNodeModLibrary extends LimeModLibrary
 		{
 			return true;
 		}
-
+		
 		var requestedType = type != null ? cast(type, AssetType) : null;
-
+		
 		return switch (requestedType)
 		{
 			case IMAGE:
 				cachedImages.exists(id);
-
+			
 			case MUSIC, SOUND:
 				cachedAudioBuffers.exists(id);
-
+			
 			case FONT:
 				cachedFonts.exists(id);
-
+			
 			default: cachedBytes.exists(id) || cachedText.exists(id);
 		}
 	}
