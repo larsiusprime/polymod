@@ -76,11 +76,11 @@ class PolymodFileSystem
     public static inline function getFileBytes( path: String )
     {
         if (!exists(path)) {
-			return null;
+            return null;
         }
 		
         #if nodefs
-			return NodeFileSystem.getFileBytes(path);
+            return NodeFileSystem.getFileBytes(path);
         #elseif sys
             return SysFileSystem.getFileBytes(path);
         #else
@@ -91,7 +91,7 @@ class PolymodFileSystem
     public static inline function readDirectoryRecursive( path: String )
     {
         #if nodefs
-			return NodeFileSystem.readDirectoryRecursive(path);
+            return NodeFileSystem.readDirectoryRecursive(path);
         #elseif sys
             return SysFileSystem.readDirectoryRecursive(path);
         #else
