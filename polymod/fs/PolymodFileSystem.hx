@@ -77,7 +77,7 @@ class PolymodFileSystem
     {
         if (!exists(path)) {
 			return null;
-		}
+        }
 		
         #if nodefs
 			return NodeFileSystem.getFileBytes(path);
