@@ -27,8 +27,8 @@ class PolymodFileSystem
 {
     public static inline function exists( path: String )
     {
-		#if nodefs
-			return NodeFileSystem.exists(path);
+        #if nodefs
+            return NodeFileSystem.exists(path);
         #elseif sys
             return SysFileSystem.exists(path);
         #else
@@ -39,7 +39,7 @@ class PolymodFileSystem
     public static inline function isDirectory( path: String )
     {
         #if nodefs
-			return NodeFileSystem.isDirectory(path);
+            return NodeFileSystem.isDirectory(path);
         #elseif sys
             return SysFileSystem.isDirectory(path);
         #else
@@ -50,7 +50,7 @@ class PolymodFileSystem
     public static inline function readDirectory( path: String ) : Array<String>
     {
         #if nodefs
-			return NodeFileSystem.readDirectory(path);
+            return NodeFileSystem.readDirectory(path);
         #elseif sys
             return SysFileSystem.readDirectory(path);
         #else
@@ -61,11 +61,11 @@ class PolymodFileSystem
     public static inline function getFileContent( path: String )
     {
         if (!exists(path)) {
-			return null;
-		}
+            return null;
+        }
 		
         #if nodefs
-			return NodeFileSystem.getFileContent(path);
+            return NodeFileSystem.getFileContent(path);
         #elseif sys
             return SysFileSystem.getFileContent(path);
         #else
