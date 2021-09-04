@@ -22,12 +22,14 @@
  */
 
 package polymod.fs;
- 
+
 class PolymodFileSystem
 {
     public static inline function exists( path: String )
     {
-        #if sys 
+		#if nodefs
+			return NodeFileSystem.exists(path);
+        #elseif sys
             return SysFileSystem.exists(path);
         #else
             return StubFileSystem.exists(path);
@@ -36,7 +38,9 @@ class PolymodFileSystem
 
     public static inline function isDirectory( path: String )
     {
-        #if sys 
+        #if nodefs
+			return NodeFileSystem.isDirectory(path);
+        #elseif sys
             return SysFileSystem.isDirectory(path);
         #else
             return StubFileSystem.isDirectory(path);
@@ -45,7 +49,9 @@ class PolymodFileSystem
 
     public static inline function readDirectory( path: String ) : Array<String>
     {
-        #if sys 
+        #if nodefs
+			return NodeFileSystem.readDirectory(path);
+        #elseif sys
             return SysFileSystem.readDirectory(path);
         #else
             return StubFileSystem.readDirectory(path);
@@ -54,8 +60,13 @@ class PolymodFileSystem
 
     public static inline function getFileContent( path: String )
     {
-        if(!exists(path)) return null;
-        #if sys 
+        if (!exists(path)) {
+			return null;
+		}
+		
+        #if nodefs
+			return NodeFileSystem.getFileContent(path);
+        #elseif sys
             return SysFileSystem.getFileContent(path);
         #else
             return StubFileSystem.getFileContent(path);
@@ -64,8 +75,13 @@ class PolymodFileSystem
 
     public static inline function getFileBytes( path: String )
     {
-        if(!exists(path)) return null;
-        #if sys 
+        if (!exists(path)) {
+			return null;
+		}
+		
+        #if nodefs
+			return NodeFileSystem.getFileBytes(path);
+        #elseif sys
             return SysFileSystem.getFileBytes(path);
         #else
             return StubFileSystem.getFileBytes(path);
@@ -74,7 +90,9 @@ class PolymodFileSystem
 
     public static inline function readDirectoryRecursive( path: String )
     {
-        #if sys 
+        #if nodefs
+			return NodeFileSystem.readDirectoryRecursive(path);
+        #elseif sys
             return SysFileSystem.readDirectoryRecursive(path);
         #else
             return StubFileSystem.readDirectoryRecursive(path);
