@@ -24,6 +24,8 @@
 	<assets path="assets/img" rename="img" />
 	<assets path="assets/data" rename="data" />
 	
+	<template path="js/main.js" rename="main.js" if="html5" />
+	
 	<!-- optimize output
 	<haxeflag name="-dce full" /> -->
 	
