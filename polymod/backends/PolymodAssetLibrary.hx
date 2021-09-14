@@ -245,7 +245,6 @@ class PolymodAssetLibrary
     private function init()
     {
         type = new Map<String,PolymodAssetType>();
-        extensions = new Map<String,PolymodAssetType>();
         initExtensions();
         if (parseRules == null) parseRules = ParseRules.getDefault();
         if (dirs != null)
