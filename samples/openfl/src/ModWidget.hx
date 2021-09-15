@@ -37,12 +37,12 @@ class ModWidget extends DisplayObjectContainer
 	public var active(default, null):Bool;
 	public var mod(default, null):String;
 	
-	private var status:TextField;
+	public var status:TextField;
 	private var callback:ModWidget->Int->Void;
 	
-	private var button:CheapButton;
-	private var moveLeft:CheapButton;
-	private var moveRight:CheapButton;
+	public var button:CheapButton;
+	public var moveLeft:CheapButton;
+	public var moveRight:CheapButton;
 	
 	public function new(str:String, callback:ModWidget->Int->Void=null)
 	{
@@ -55,7 +55,7 @@ class ModWidget extends DisplayObjectContainer
 		status = text();
 		status.text = "inactive";
 		
-		var button = new CheapButton(str, onClick);
+		button = new CheapButton(str, onClick);
 		var left = "←";
 		var right = "→";
 		#if mac
@@ -69,9 +69,18 @@ class ModWidget extends DisplayObjectContainer
 		addChild(button);
 		addChild(moveLeft);
 		addChild(moveRight);
+	}
+	
+	public function fixButtons()
+	{
+		button.x = x;
+		button.y = y;
 		
+		status.x = x;
 		status.y = button.y + button.height + 10;
 		
+		moveLeft.x = x;
+		moveRight.x = x;
 		moveLeft.y = status.y + status.height + 10;
 		moveRight.y = moveLeft.y + moveLeft.height + 4;
 	}
