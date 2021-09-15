@@ -185,8 +185,8 @@ class XMLMerge
 			var subMap = getNodeMergeMap(el, addToArray);
 			map = mergeMapsDestructively(map, subMap);
 			var sig = getNodeSignature(el);
-		
-			var f:haxe.xml.Fast = new haxe.xml.Fast(el);
+			
+			var f:haxe.xml.Access = new haxe.xml.Access(el);
 			if(f.hasNode.merge)
 			{
 				if(map.exists(sig) == false)

@@ -34,7 +34,7 @@ import polymod.util.Util;
 import unifill.Unifill;
 #end
 
-import haxe.Utf8;
+import UnicodeString;
 
 class ParseRules
 {
@@ -284,10 +284,7 @@ class CSVParseFormat implements BaseParseFormat
                 {
                     buf.addChar(dq);
                 }
-                Utf8.iter(cell, function(char:Int)
-                {
-                    buf.addChar(char);
-                });
+                buf.add(cell);
                 if(quotedCells)
                 {
                     buf.addChar(dq);
@@ -383,10 +380,7 @@ class TSVParseFormat implements BaseParseFormat
             for (ix in 0...row.length)
             {
                 var cell = row[ix];
-                Utf8.iter(cell, function(char:Int)
-                {
-                    buf.addChar(char);
-                });
+                buf.add(cell);
                 if (ix != row.length - 1)
                 {
                     buf.addChar(tab);
@@ -632,7 +626,7 @@ class JSONParseFormat implements BaseParseFormat
 		
         if(Reflect.hasField(merge,"merge"))
         {
-			if(Std.is(merge.merge,Array))
+			if(Std.isOfType(merge.merge,Array))
             {
 			    var merge:Array<JsonMergeEntry> = merge.merge;
 			    for(entry in merge)
@@ -745,7 +739,7 @@ class JSONParseFormat implements BaseParseFormat
         }
         else
         {
-            if(Std.is(obj,Array))
+            if(Std.isOfType(obj,Array))
             {
                 var arr:Array<Dynamic> = cast obj;
                 if(arr.length > arrIndex)
@@ -763,12 +757,12 @@ class JSONParseFormat implements BaseParseFormat
     
     private function _mergeObjects(a:Dynamic, b:Dynamic, signatureSoFar:String=""):Dynamic
     {
-		 if(Std.is(a,Array) && Std.is(b,Array))
+		 if(Std.isOfType(a,Array) && Std.isOfType(b,Array))
         {
             //if they are both arrays, stomp with b's values
             return b;
         }
-        else if(!Std.is(a,Array) && !Std.is(b,Array))
+        else if(!Std.isOfType(a,Array) && !Std.isOfType(b,Array))
         {
 			var aPrimitive = isPrimitive(a);
 			var bPrimitive = isPrimitive(b);
@@ -806,8 +800,8 @@ class JSONParseFormat implements BaseParseFormat
         else
         {
             //if they're incompatible types, return a
-            var aArr = Std.is(a,Array) ? "array" : "object";
-            var bArr = Std.is(b,Array) ? "array" : "object";
+            var aArr = Std.isOfType(a,Array) ? "array" : "object";
+            var bArr = Std.isOfType(b,Array) ? "array" : "object";
             Polymod.warning(MERGE,"JSON can't merge @ ("+signatureSoFar+") because base is ("+aArr+") but payload is ("+bArr+")");
         }
         return a;
@@ -816,20 +810,20 @@ class JSONParseFormat implements BaseParseFormat
     private function copyVal(a:Dynamic):Dynamic
     {
         var b:Dynamic = null;
-        if(Std.is(a,Int)) b = Std.int(a);
-        if(Std.is(a,Float)) b = cast(a,Float);
-        if(Std.is(a,String)) b = Std.string(b);
-        if(Std.is(a,Bool)) b = (a == true);
+        if(Std.isOfType(a,Int)) b = Std.int(a);
+        if(Std.isOfType(a,Float)) b = cast(a,Float);
+        if(Std.isOfType(a,String)) b = Std.string(b);
+        if(Std.isOfType(a,Bool)) b = (a == true);
         else b = Std.string(a);
         return b;
     }
 
     private function isPrimitive(a:Dynamic):Bool
     {
-        if(Std.is(a,String)) return true;
-        if(Std.is(a,Float)) return true;
-        if(Std.is(a,Int)) return true;
-        if(Std.is(a,Bool)) return true;
+        if(Std.isOfType(a,String)) return true;
+        if(Std.isOfType(a,Float)) return true;
+        if(Std.isOfType(a,Int)) return true;
+        if(Std.isOfType(a,Bool)) return true;
         return false;
     }
 
@@ -860,7 +854,7 @@ class JSONParseFormat implements BaseParseFormat
         if(target.arrayIndeces.length > 0)
         {
             struct.next = next;
-            if(Std.is(next,Array))
+            if(Std.isOfType(next,Array))
             {
                 var arr:Array<Dynamic> = cast next;
                 var arrIndeces = target.arrayIndeces.copy();
@@ -875,7 +869,7 @@ class JSONParseFormat implements BaseParseFormat
                         next = arr[arrIndex];
                         struct.next = next;
                         struct.arrIndex = arrIndex;
-                        if(Std.is(next,Array))
+                        if(Std.isOfType(next,Array))
                         {
                             arr = cast next;
                         }
