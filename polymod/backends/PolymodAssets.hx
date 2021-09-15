@@ -27,6 +27,7 @@ import haxe.io.Bytes;
 import polymod.Polymod.PolymodErrorCode;
 import polymod.backends.IBackend;
 import polymod.Polymod.Framework;
+import polymod.Polymod.FrameworkParams;
 import polymod.format.ParseRules;
 import polymod.backends.PolymodAssetLibrary;
 
@@ -36,6 +37,11 @@ typedef PolymodAssetsParams = {
      * the Haxe framework you're using (OpenFL, HEAPS, Kha, NME, etc..)
      */
     framework:Framework,
+
+    /**
+     * (optional) any specific settings for your particular Framework
+     */
+    frameworkParams:FrameworkParams,
 
     /**
      * paths to each mod's root directories.
@@ -70,7 +76,7 @@ class PolymodAssets
 
     public static function init(params:PolymodAssetsParams):PolymodAssetLibrary
     {
-        var framework:Framework = params.framework;
+		var framework:Framework = params.framework;
         if(framework == null)
         {
             framework = autoDetectFramework();
@@ -118,7 +124,7 @@ class PolymodAssets
             extensionMap:params.extensionMap
         });
 
-        backend.init();
+        backend.init(params.frameworkParams);
 
         return library;
     }

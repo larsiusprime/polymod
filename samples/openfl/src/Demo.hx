@@ -98,7 +98,13 @@ class Demo extends Sprite
 			widgets.push(w);
 			
 			xx += Std.int(w.width) + 10;
-			addChild(w);
+			
+			w.fixButtons();
+			
+			addChild(w.button);
+			addChild(w.status);
+			addChild(w.moveLeft);
+			addChild(w.moveRight);
 		}
 		
 		updateWidgets();
@@ -174,6 +180,9 @@ class Demo extends Sprite
 			
 			other.x = oldX;
 			other.y = oldY;
+			
+			w.fixButtons();
+			other.fixButtons();
 		}
 		
 		reloadMods();

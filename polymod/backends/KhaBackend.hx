@@ -21,20 +21,24 @@
  * 
  */
  
- package polymod.backends;
+package polymod.backends;
 
-#if kha
-#end
-
-class KhaBackend implements IBackend
+#if !kha
+class KhaBackend extends StubBackend
 {
-    #if kha
-    function new() {}
-    #else
-    function new()
+    public function new()
     {
-        throw "KhaBackend: needs the kha library!";
+        super();
+        Polymod.error(FAILED_CREATE_BACKEND,"KhaBackend requires the kha library, did you forget to install it?"); 
     }
-    #end
 }
-
+#else
+class KhaBackend extends StubBackend
+{
+    public function new()
+    {
+        super();
+        Polymod.error(FAILED_CREATE_BACKEND,"Kha support in Polymod has not been implemented yet"); 
+    }
+}
+#end

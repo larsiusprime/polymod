@@ -24,6 +24,7 @@
  package polymod.backends;
 
 import haxe.io.Bytes;
+import polymod.Polymod.FrameworkParams;
 import polymod.backends.PolymodAssets.PolymodAssetType;
 import polymod.backends.PolymodAssetLibrary;
 
@@ -31,7 +32,7 @@ interface IBackend
 {
     public var polymodLibrary:PolymodAssetLibrary;
 
-    public function init():Void;
+    public function init(?params:FrameworkParams):Void;
     public function destroy():Void;
 
     public function clearCache():Void;

@@ -55,6 +55,11 @@ typedef PolymodParams = {
     ?framework:Framework,
     
     /**
+     * (optional) any specific settings for your particular Framework
+     */
+     ?frameworkParams:FrameworkParams,
+
+    /**
      * (optional) semantic version of your game's Modding API (will generate errors & warnings)
      */
     ?apiVersion:String,
@@ -88,7 +93,19 @@ typedef PolymodParams = {
     /**
      * (optional) a map that tells Polymod which assets are of which type. This ensures e.g. text files with unfamiliar extensions are handled properly.
      */
-    ?extensionMap:Map<String,PolymodAssetType>
+    ?extensionMap:Map<String,PolymodAssetType>,
+}
+
+/**
+ * Any framework-specific settings
+ * Right now this is only used to specify asset library paths for the Lime/OpenFL framework but we'll add more framework-specific settings here as neeeded
+ */
+typedef FrameworkParams = {
+
+     /**
+      * (optional) if you're using Lime/OpenFL AND you're using custom or non-default asset libraries, then you must provide a key=>value store mapping the name of each asset library to a path prefix in your mod structure
+      */
+     ?assetLibraryPaths:Map<String,String>
 }
 
 enum Framework
@@ -210,7 +227,8 @@ class Polymod
             parseRules:params.parseRules,
             ignoredFiles:params.ignoredFiles,
             customBackend:params.customBackend,
-            extensionMap:params.extensionMap
+            extensionMap:params.extensionMap,
+            frameworkParams:params.frameworkParams
         });
 
         
@@ -561,4 +579,6 @@ enum PolymodErrorType
     var FAILED_CREATE_BACKEND:String = "failed_create_backend";
     var MERGE:String = "merge_error";
     var APPEND:String = "append_error";
+    var LIME_MISSING_ASSET_LIBRARY_INFO = "lime_missing_asset_library_info";
+    var LIME_MISSING_ASSET_LIBRARY_REFERENCE = "lime_missing_asset_library_reference";
 }
