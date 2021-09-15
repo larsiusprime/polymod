@@ -245,7 +245,6 @@ class PolymodAssetLibrary
     private function init()
     {
         type = new Map<String,PolymodAssetType>();
-        extensions = new Map<String,PolymodAssetType>();
         initExtensions();
         if (parseRules == null) parseRules = ParseRules.getDefault();
         if (dirs != null)
@@ -259,7 +258,7 @@ class PolymodAssetLibrary
 
     private function initExtensions()
     {
-       if(extensions == null) extensions = new Map<String, PolymodAssetType>();
+        extensions = new Map<String,PolymodAssetType>();
         _extensionSet("mp3", AUDIO_GENERIC);
         _extensionSet("ogg", AUDIO_GENERIC);
         _extensionSet("wav", AUDIO_GENERIC);
