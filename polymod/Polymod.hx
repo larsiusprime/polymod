@@ -221,15 +221,15 @@ class Polymod
             }
         }
 
-        PolymodAssets.init({
-            framework:params.framework,
-            dirs:dirs,
-            parseRules:params.parseRules,
-            ignoredFiles:params.ignoredFiles,
-            customBackend:params.customBackend,
-            extensionMap:params.extensionMap,
-            frameworkParams:params.frameworkParams
-        });
+		library = PolymodAssets.init({
+			framework: params.framework,
+			dirs: dirs,
+			parseRules: params.parseRules,
+			ignoredFiles: params.ignoredFiles,
+			customBackend: params.customBackend,
+			extensionMap: params.extensionMap,
+			frameworkParams: params.frameworkParams
+		});
 
         
         if(PolymodAssets.exists(("_polymod_pack.txt")))
