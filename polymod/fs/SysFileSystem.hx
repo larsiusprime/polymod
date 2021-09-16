@@ -21,34 +21,107 @@
  * 
  */
  
- package polymod.fs;
-
+package polymod.fs;
+ 
+#if sys
+import polymod.Polymod.ModMetadata;
 import polymod.util.Util;
 
-// #if sys
-class SysFileSystem
+class SysFileSystem implements IFileSystem
 {
-    public function new(){};
+	public var modRoot(default, null):String;
 
-    public static inline function exists( path: String )
-    {
-        return sys.FileSystem.exists(path);
-    }
+	public function new( modRoot: String )
+	{
+		this.modRoot = modRoot;
+	}
 
-    public static inline function isDirectory( path: String )
-        return sys.FileSystem.isDirectory(path);
+	public inline function exists( path: String )
+	{
+		return sys.FileSystem.exists(path);
+	}
 
-    public static inline function readDirectory( path: String )
-        return sys.FileSystem.readDirectory(path);
+	public inline function isDirectory( path: String )
+		return sys.FileSystem.isDirectory(path);
 
-    public static inline function getFileContent( path: String )
-        return sys.io.File.getContent(path);
+	public inline function readDirectory( path: String )
+		return sys.FileSystem.readDirectory(path);
 
-    public static inline function getFileBytes( path: String )
-        return sys.io.File.getBytes(path);
+	public inline function getFileContent( path: String )
+	{
+		if (!exists(path))
+			return null;
+		return sys.io.File.getContent(path);
+	}
 
-    public static function readDirectoryRecursive( path: String ):Array<String>
-    {
+	public inline function getFileBytes( path: String )
+	{
+		if (!exists(path))
+			return null;
+		return sys.io.File.getBytes(path);
+	}
+
+	public function scanMods()
+	{
+		var dirs = readDirectory(modRoot);
+		var l = dirs.length;
+		for (i in 0...l)
+		{
+			var j = l - i - 1;
+			var dir = dirs[j];
+			var testDir = modRoot + "/" + dir;
+			if (!isDirectory(testDir) || !exists(testDir))
+			{
+				dirs.splice(j, 1);
+			}
+		}
+		return dirs;
+	}
+
+	public function getMetadata(modId:String)
+	{
+		if (exists(modId))
+		{
+			var meta:ModMetadata = null;
+
+			var metaFile = Util.pathJoin(modId, "_polymod_meta.json");
+			var iconFile = Util.pathJoin(modId, "_polymod_icon.png");
+			var packFile = Util.pathJoin(modId, "_polymod_pack.txt");
+			if (!exists(metaFile))
+			{
+				Polymod.warning(MISSING_META, "Could not find mod metadata file: \"" + metaFile + "\"");
+			}
+			else
+			{
+				var metaText = getFileContent(metaFile);
+				meta = ModMetadata.fromJsonStr(metaText);
+			}
+			if (!exists(iconFile))
+			{
+				Polymod.warning(MISSING_ICON, "Could not find mod icon file: \"" + iconFile + "\"");
+			}
+			else
+			{
+				var iconBytes = getFileBytes(iconFile);
+				meta.icon = iconBytes;
+			}
+			if (exists(packFile))
+			{
+				meta.isModPack = true;
+				var packText = getFileContent(packFile);
+				meta.modPack = @:privateAccess Polymod.getModPack(packText);
+			}
+			return meta;
+		}
+		else
+		{
+			Polymod.error(MISSING_MOD, "Could not find mod directory: \"" + modId + "\"");
+		}
+		return null;
+	}
+
+	public function readDirectoryRecursive( path: String ):Array<String>
+	{
 		var all = _readDirectoryRecursive(path);
 		for (i in 0...all.length)
 		{
@@ -63,18 +136,18 @@ class SysFileSystem
 		return all;
 	}
 
-	private static function _readDirectoryRecursive(str:String):Array<String>
+	private function _readDirectoryRecursive( str: String ):Array<String>
 	{
-		if (PolymodFileSystem.exists(str) && PolymodFileSystem.isDirectory(str))
+		if (exists(str) && isDirectory(str))
 		{
-			var all = PolymodFileSystem.readDirectory(str);
+			var all = readDirectory(str);
 			if (all == null) return [];
 			var results = [];
 			for (thing in all)
 			{
 				if (thing == null) continue;
 				var pathToThing = Util.pathJoin(str,thing);
-				if (PolymodFileSystem.isDirectory(pathToThing))
+				if (isDirectory(pathToThing))
 				{
 					var subs = _readDirectoryRecursive(pathToThing);
 					if (subs != null)
@@ -92,4 +165,4 @@ class SysFileSystem
 		return [];
 	}
 }
-// #end
+#end

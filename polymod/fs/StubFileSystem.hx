@@ -23,23 +23,35 @@
  
  package polymod.fs;
 
-class StubFileSystem
+/**
+ * This stub file system returns false for all requests.
+ * This is used when the actual file system can't be accessed.
+ */
+class StubFileSystem implements IFileSystem
 {
-    public static inline function exists( path: String )
+    public function new() { }
+
+    public inline function exists( path: String )
         return false;
 
-    public static inline function isDirectory( path: String )
+    public inline function isDirectory( path: String )
         return false;
 
-    public static inline function readDirectory( path: String ) : Array<String>
+    public inline function readDirectory( path: String ) : Array<String>
         return [];
 
-    public static inline function getFileContent( path: String )
+    public inline function getFileContent( path: String )
         return null;
 
-    public static inline function getFileBytes( path: String )
+    public inline function getFileBytes( path: String )
         return null;
 
-    public static inline function readDirectoryRecursive( path: String )
+    public inline function readDirectoryRecursive( path: String )
         return [];
+
+    public inline function scanMods()
+        return [];
+
+    public inline function getMetadata( modId: String )
+        return null;
 }

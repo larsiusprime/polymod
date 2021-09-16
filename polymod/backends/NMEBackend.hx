@@ -28,7 +28,6 @@ import haxe.xml.Printer;
 import polymod.Polymod;
 import polymod.Polymod.FrameworkParams;
 import polymod.Polymod.PolymodError;
-import polymod.fs.PolymodFileSystem;
 import polymod.util.Util;
 import polymod.backends.PolymodAssetLibrary;
 import polymod.backends.PolymodAssets.PolymodAssetType;
@@ -111,13 +110,13 @@ class NMEBackend implements IBackend
                     var modFile = polymodLibrary.file(key);
                     nme.Assets.byteFactory.set( info.path, function(){
                         var bytes = null;
-                        if(PolymodFileSystem.exists(modFile))
+                        if(p.fileSystem.exists(modFile))
                         {
-                            bytes = PolymodFileSystem.getFileBytes(modFile);
+                            bytes = p.fileSystem.getFileBytes(modFile);
                         }
                         else
                         {
-                            bytes = PolymodFileSystem.getFileBytes(key);
+                            bytes = p.fileSystem.getFileBytes(key);
                         }
                         var origText = Std.string(bytes);
                         var newText = polymodLibrary.mergeAndAppendText(key, origText);

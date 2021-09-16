@@ -28,7 +28,6 @@ import haxe.xml.Printer;
 import polymod.Polymod;
 import polymod.Polymod.FrameworkParams;
 import polymod.Polymod.PolymodError;
-import polymod.fs.PolymodFileSystem;
 import polymod.util.Util;
 import polymod.backends.PolymodAssetLibrary;
 import polymod.backends.PolymodAssets.PolymodAssetType;
@@ -342,7 +341,7 @@ class LimeModLibrary extends AssetLibrary
     {
         var symbol = new IdAndLibrary(id, this);
         if (p.check(symbol.modId))
-            return AudioBuffer.fromBytes(PolymodFileSystem.getFileBytes(p.file(symbol.modId)));
+            return AudioBuffer.fromBytes(p.fileSystem.getFileBytes(p.file(symbol.modId)));
         else if(hasFallback)
             return fallback.getAudioBuffer(id);
         return null;
@@ -353,7 +352,7 @@ class LimeModLibrary extends AssetLibrary
         var symbol = new IdAndLibrary(id, this);
         var file = p.file(symbol.modId);
         if (p.check(symbol.modId))
-            return PolymodFileSystem.getFileBytes(p.file(symbol.modId));
+            return p.fileSystem.getFileBytes(p.file(symbol.modId));
         else if (hasFallback)
             return fallback.getBytes(id);
         return null;
@@ -363,7 +362,7 @@ class LimeModLibrary extends AssetLibrary
     {
         var symbol = new IdAndLibrary(id, this);
         if (p.check(symbol.modId))
-            return Font.fromBytes(PolymodFileSystem.getFileBytes(p.file(symbol.modId)));
+            return Font.fromBytes(p.fileSystem.getFileBytes(p.file(symbol.modId)));
         else if(hasFallback)
             return fallback.getFont(id);
         return null;
@@ -375,9 +374,9 @@ class LimeModLibrary extends AssetLibrary
         if (p.check(symbol.modId))
         if (p.check(symbol.modId)){
             if(id.indexOf("newgrounds") != -1){
-                var bytes = PolymodFileSystem.getFileBytes(p.file(symbol.modId));
+                var bytes = p.fileSystem.getFileBytes(p.file(symbol.modId));
             }
-            return Image.fromBytes(PolymodFileSystem.getFileBytes(p.file(symbol.modId)));
+            return Image.fromBytes(p.fileSystem.getFileBytes(p.file(symbol.modId)));
         }
         else if(hasFallback)
             return fallback.getImage(id);

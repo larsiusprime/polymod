@@ -23,13 +23,12 @@
  
 package polymod.backends;
 
+import polymod.fs.IFileSystem;
 import haxe.io.Bytes;
-import polymod.fs.PolymodFileSystem;
 import polymod.util.Util;
 import polymod.backends.IBackend;
 import polymod.backends.PolymodAssets.PolymodAssetType;
 import polymod.format.ParseRules;
-import polymod.Polymod.Framework;
 
 typedef PolymodAssetLibraryParams = {
    
@@ -43,6 +42,10 @@ typedef PolymodAssetLibraryParams = {
      * This takes precedence over the "Dir" parameter and the order matters -- mod files will load from first to last, with last taking precedence
      */
     dirs:Array<String>,
+	/**
+	 * the file system used to fetch your mod assets from storage
+	 */
+	fileSystem:IFileSystem,
 
     /**
      * (optional) formatting rules for parsing various data formats
@@ -63,6 +66,7 @@ typedef PolymodAssetLibraryParams = {
 class PolymodAssetLibrary
 {
     public var backend(default, null):IBackend;
+    public var fileSystem(default, null):IFileSystem;
     
     public var type(default, null):Map<String, PolymodAssetType>;
     
@@ -74,6 +78,7 @@ class PolymodAssetLibrary
     public function new(params:PolymodAssetLibraryParams)
     {
         backend = params.backend;
+        fileSystem = params.fileSystem;
         backend.polymodLibrary = this;
         dirs = params.dirs;
         parseRules = params.parseRules;
@@ -93,7 +98,7 @@ class PolymodAssetLibrary
 
     public function mergeAndAppendText(id:String, modText:String):String
     {
-        modText = Util.mergeAndAppendText(modText, id, dirs, getTextDirectly, parseRules);
+        modText = Util.mergeAndAppendText(modText, id, dirs, getTextDirectly, fileSystem, parseRules);
         return modText;
     }
 
@@ -115,7 +120,7 @@ class PolymodAssetLibrary
         var bytes = null;
         if (checkDirectly(id, directory))
         {
-            bytes = PolymodFileSystem.getFileBytes(file(id, directory));
+            bytes = fileSystem.getFileBytes(file(id, directory));
         }
         else
         {
@@ -188,12 +193,12 @@ class PolymodAssetLibrary
         id = backend.stripAssetsPrefix(id);
         if (dir == null || dir == "")
         {
-            return PolymodFileSystem.exists(id);
+            return fileSystem.exists(id);
         }
         else
         {
             var thePath = Util.uCombine([dir, Util.sl(), id]);
-            if (PolymodFileSystem.exists(thePath))
+            if (fileSystem.exists(thePath))
             {
                 return true;
             }
@@ -219,7 +224,7 @@ class PolymodAssetLibrary
         for (d in dirs)
         {
             var thePath = Util.pathJoin(d,id);
-            if(PolymodFileSystem.exists(thePath))
+            if(fileSystem.exists(thePath))
             {
                 theFile = thePath;
             }
@@ -234,7 +239,7 @@ class PolymodAssetLibrary
         id = backend.stripAssetsPrefix(id);
         for (d in dirs)
         {
-            if(PolymodFileSystem.exists(Util.pathJoin(d, id)))
+            if(fileSystem.exists(Util.pathJoin(d, id)))
             {
                 exists = true;
             }
@@ -303,9 +308,9 @@ class PolymodAssetLibrary
         
         try
         {
-            if (PolymodFileSystem.exists(d))
+            if (fileSystem.exists(d))
             {
-                all = PolymodFileSystem.readDirectoryRecursive(d);
+                all = fileSystem.readDirectoryRecursive(d);
             }
             else
             {

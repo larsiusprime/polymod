@@ -23,6 +23,9 @@
  
 package polymod.backends;
 
+import polymod.fs.SysFileSystem;
+import polymod.fs.StubFileSystem;
+import polymod.fs.IFileSystem;
 import haxe.io.Bytes;
 import polymod.Polymod.PolymodErrorCode;
 import polymod.backends.IBackend;
@@ -37,6 +40,11 @@ typedef PolymodAssetsParams = {
      * the Haxe framework you're using (OpenFL, HEAPS, Kha, NME, etc..)
      */
     framework:Framework,
+
+	/**
+	 * the file system to use to access mods.
+	 */
+	fileSystem:IFileSystem,
 
     /**
      * (optional) any specific settings for your particular Framework
@@ -121,7 +129,8 @@ class PolymodAssets
             dirs:params.dirs,
             parseRules:params.parseRules,
             ignoredFiles:params.ignoredFiles,
-            extensionMap:params.extensionMap
+            extensionMap:params.extensionMap,
+            fileSystem:params.fileSystem,
         });
 
         backend.init(params.frameworkParams);

@@ -23,8 +23,8 @@
 
 package polymod.util;
 
+import polymod.fs.IFileSystem;
 import polymod.Polymod;
-import polymod.fs.PolymodFileSystem;
 import polymod.Polymod.PolymodError;
 import polymod.Polymod.PolymodErrorType;
 import polymod.format.CSV;
@@ -42,17 +42,17 @@ import haxe.Utf8;
 class Util
 {
 
-    public static function mergeAndAppendText(baseText:String, id:String, dirs:Array<String>, getModText:String->String->String, parseRules:ParseRules=null):String
+    public static function mergeAndAppendText(baseText:String, id:String, dirs:Array<String>, getModText:String->String->String, fileSystem:IFileSystem, parseRules:ParseRules=null):String
     {
         var text = baseText;
 
         for (d in dirs)
         {
-            if (hasMerge(id, d))
+            if (fileSystem.exists(pathMerge(id, d)))
             {
                 text = mergeText(text, id, d, getModText, parseRules);
             }
-            if (hasAppend(id, d))
+            if (fileSystem.exists(pathAppend(id, d)))
             {
                 text = appendText(text, id, d, getModText, parseRules);
             }
@@ -269,15 +269,15 @@ class Util
         return txt;
     }
 
-    public static inline function hasMerge(id:String, theDir:String = ""):Bool
-    {
-        return hasSpecial(id, "_merge", theDir);
-    }
+	public static inline function pathMerge(id:String, theDir:String = ""):String
+	{
+		return pathSpecial(id, "_merge", theDir);
+	}
 
-    private static inline function hasAppend(id:String, theDir:String = ""):Bool
-    {
-        return hasSpecial(id, "_append", theDir);
-    }
+	private static inline function pathAppend(id:String, theDir:String = ""):String
+	{
+		return pathSpecial(id, "_append", theDir);
+	}
 
     public static inline function stripAssetsPrefix(id:String):String
     {
@@ -288,15 +288,16 @@ class Util
         return id;
     }
 
-    public static function hasSpecial(id:String, special:String = "", theDir:String = ""):Bool
-    {
-        #if sys
-        id = stripAssetsPrefix(id);
-        var thePath = uCombine([theDir, sl(), special, sl(), id]);
-        return PolymodFileSystem.exists(thePath);
-        #else
-        return false;
-        #end
+	public static function pathSpecial(id:String, special:String = "", theDir:String = ""):String
+	{
+		#if sys
+		id = stripAssetsPrefix(id);
+		var thePath = uCombine([theDir, sl(), special, sl(), id]);
+		return thePath;
+		#else
+		return "";
+		#end
+	}
 
     }
 

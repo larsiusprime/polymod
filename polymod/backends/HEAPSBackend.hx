@@ -28,7 +28,6 @@ import haxe.xml.Fast;
 import haxe.xml.Printer;
 import polymod.Polymod;
 import polymod.Polymod.PolymodError;
-import polymod.fs.PolymodFileSystem;
 import polymod.util.Util;
 import polymod.backends.PolymodAssetLibrary;
 import polymod.backends.PolymodAssets.PolymodAssetType;
@@ -223,7 +222,7 @@ class ModFileEntry extends BytesFileEntry
 
     private function isPathADirectory(str:String)
     {
-        if(PolymodFileSystem.exists(str) && PolymodFileSystem.isDirectory(str)) return true;
+        if(p.fileSystem.exists(str) && p.fileSystem.isDirectory(str)) return true;
         var entry = b.fallback.fs.get(str);
         if(entry != null && entry.isDirectory) return true;
         return false;
@@ -249,7 +248,7 @@ class ModFileEntry extends BytesFileEntry
             if (id.indexOf(dirPath) != 0) continue;
             if (id.indexOf("_append") == 0 || id.indexOf("_merge") == 0) continue;
             if (p.ignoredFiles.indexOf(id) != -1) continue;
-            if (PolymodFileSystem.isDirectory(id)) continue;
+            if (p.fileSystem.isDirectory(id)) continue;
             arr.push(new ModFileEntry(id, null, fs, id));
             itemPaths.push(id);
         }
@@ -285,7 +284,7 @@ class ModFileEntry extends BytesFileEntry
     private function resolveBytes()
     {
         var file = p.file(path);
-        bytes = PolymodFileSystem.getFileBytes(file);
+        bytes = p.fileSystem.getFileBytes(file);
         if(bytes == null)
         {
             var entry = b.fallback.fs.get(path);
@@ -349,7 +348,7 @@ class ModFileSystem implements FileSystem
     public function get(path:String):FileEntry
     {
         var file = p.file(path);
-        var bytes = PolymodFileSystem.getFileBytes(file);
+        var bytes = p.fileSystem.getFileBytes(file);
         if(bytes == null)
         {
             var entry = b.fallback.fs.get(path);
@@ -372,7 +371,7 @@ class ModFileSystem implements FileSystem
 
     public function dir( path : String ): Array<FileEntry>
     {
-        var names = PolymodFileSystem.readDirectory(path);
+        var names = p.fileSystem.readDirectory(path);
         var arr = [];
         for(name in names)
         {

@@ -27,7 +27,6 @@ import haxe.Json;
 import polymod.Polymod;
 import polymod.Polymod.PolymodError;
 import polymod.Polymod.PolymodErrorType;
-import polymod.fs.PolymodFileSystem;
 import polymod.util.Util;
 
 #if unifill

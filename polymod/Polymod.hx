@@ -23,10 +23,9 @@
 
 package polymod;
 
+import polymod.fs.IFileSystem;
 import haxe.Json;
 import haxe.io.Bytes;
-import polymod.Polymod.ModMetadata;
-import polymod.fs.PolymodFileSystem;
 import polymod.util.SemanticVersion;
 import polymod.util.Util;
 import polymod.format.JsonHelp;
@@ -94,6 +93,10 @@ typedef PolymodParams = {
      * (optional) a map that tells Polymod which assets are of which type. This ensures e.g. text files with unfamiliar extensions are handled properly.
      */
     ?extensionMap:Map<String,PolymodAssetType>,
+	/**
+	 * (optional) your own custom backend for accessing the file system
+	 */
+	?customFilesystem:Class<IFileSystem>,
 }
 
 /**
@@ -158,6 +161,19 @@ class Polymod
         var modMeta = [];
         var modVers = [];
 
+        var fileSystem = if (params.customFilesystem != null)
+        {
+          Type.createInstance(params.customFilesystem, []);
+        }
+        else
+        {
+          #if sys
+          new polymod.fs.SysFileSystem(params.modRoot);
+          #else
+          new polymod.fs.StubFileSystem();
+          #end
+        }
+
         if(params.modVersions != null)
         {
             for(str in params.modVersions)
@@ -182,7 +198,7 @@ class Polymod
             {
                 var origDir = dirs[i];
                 dirs[i] = Util.pathJoin(modRoot,dirs[i]);
-                var meta:ModMetadata = getMetadata(dirs[i]);
+                var meta:ModMetadata = fileSystem.getMetadata(dirs[i]);
 
                 if(meta != null)
                 {
@@ -228,7 +244,8 @@ class Polymod
 			ignoredFiles: params.ignoredFiles,
 			customBackend: params.customBackend,
 			extensionMap: params.extensionMap,
-			frameworkParams: params.frameworkParams
+			frameworkParams: params.frameworkParams,
+			fileSystem: fileSystem,
 		});
 
         
@@ -252,7 +269,7 @@ class Polymod
      * @param errorCallback (optional) callback for any errors generated during scanning
      * @return Array<ModMetadata>
      */
-    public static function scan(modRoot:String, ?apiVersionStr:String="*.*.*", ?errorCallback:PolymodError->Void):Array<ModMetadata>
+    public static function scan(modRoot:String, ?apiVersionStr:String="*.*.*", ?errorCallback:PolymodError->Void, ?fileSystem:IFileSystem):Array<ModMetadata>
     {
         onError = errorCallback;
         var apiVersion:SemanticVersion = null;
@@ -266,20 +283,28 @@ class Polymod
             return [];
         }
 
+        if (fileSystem == null) {
+          #if sys
+          fileSystem = new polymod.fs.SysFileSystem();
+          #else
+          fileSystem = new polymod.fs.StubFileSystem();
+          #end
+        }
+
         var modMeta = [];
 
-        if(!PolymodFileSystem.exists(modRoot) || !PolymodFileSystem.isDirectory(modRoot))
+        if(!fileSystem.exists(modRoot) || !fileSystem.isDirectory(modRoot))
         {
             return modMeta;
         }
-        var dirs = PolymodFileSystem.readDirectory(modRoot);
+        var dirs = fileSystem.readDirectory(modRoot);
         var l = dirs.length;
         for(i in 0...l)
         {
             var j = l-i-1;
             var dir = dirs[j];
             var testDir = modRoot+"/"+dir;
-            if(!PolymodFileSystem.isDirectory(testDir) || !PolymodFileSystem.exists(testDir))
+            if(!fileSystem.isDirectory(testDir) || !fileSystem.exists(testDir))
             {
                 dirs.splice(j,1);
             }
@@ -350,56 +375,6 @@ class Polymod
         {
             onError(new PolymodError(PolymodErrorType.NOTICE, code, message, origin));
         }
-    }
-
-    private static function getFileSystem()
-    {
-        #if sys
-        return new polymod.fs.SysFileSystem();
-        #end
-        return null;
-    }
-
-    private static function getMetadata(dir:String):ModMetadata
-    {
-        if(PolymodFileSystem.exists(dir))
-        {
-            var meta:ModMetadata = null;
-
-            var metaFile = Util.pathJoin(dir,"_polymod_meta.json");
-            var iconFile = Util.pathJoin(dir,"_polymod_icon.png");
-            var packFile = Util.pathJoin(dir,"_polymod_pack.txt");
-            if(!PolymodFileSystem.exists(metaFile))
-            {
-                warning(MISSING_META,"Could not find mod metadata file: \""+metaFile+"\"");
-            }
-            else
-            {
-                var metaText = PolymodFileSystem.getFileContent(metaFile);
-                meta = ModMetadata.fromJsonStr(metaText);
-            }
-            if(!PolymodFileSystem.exists(iconFile))
-            {
-                warning(MISSING_ICON,"Could not find mod icon file: \""+iconFile+"\"");
-            }
-            else
-            {
-                var iconBytes = PolymodFileSystem.getFileBytes(iconFile);
-                meta.icon = iconBytes;
-            }
-            if(PolymodFileSystem.exists(packFile))
-            {
-                meta.isModPack = true;
-                var packText = PolymodFileSystem.getFileContent(packFile);
-                meta.modPack = getModPack(packText);
-            }
-            return meta;
-        }
-        else
-        {
-            error(MISSING_MOD,"Could not find mod directory: \""+dir+"\"");
-        }
-        return null;
     }
 
     /**
