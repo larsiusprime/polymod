@@ -34,19 +34,19 @@ import openfl.text.TextField;
  * ...
  * @author 
  */
-class Main extends Sprite 
+class Main extends Sprite
 {
-	private var sim:Simulation=null;
+	private var sim:Simulation = null;
 	private var mods:Array<String> = null;
 	private var activeMods:Array<ModMetadata> = [];
-	
-	public function new() 
+
+	public function new()
 	{
 		HScriptConfig.rootPath = "data/scripts/";
 		super();
 		mods = [];
 		loadDemo();
-		Lib.current.stage.addEventListener(KeyboardEvent.KEY_DOWN,onKeyDown);
+		Lib.current.stage.addEventListener(KeyboardEvent.KEY_DOWN, onKeyDown);
 		setupText();
 	}
 
@@ -56,40 +56,46 @@ class Main extends Sprite
 		text.height = 16;
 		text.width = 300;
 		addChild(text);
-		text.y = Lib.current.stage.stageHeight-text.height;
+		text.y = Lib.current.stage.stageHeight - text.height;
 		text.text = "Press 1, 2, 3, or 4 to toggle a mod";
 
 		var text2 = new TextField();
 		text2.height = 16;
 		text2.width = 300;
 		addChild(text2);
-		text2.y = text.y-text.height;
+		text2.y = text.y - text.height;
 		var str = "";
-		for(mod in activeMods)
+		for (mod in activeMods)
 		{
-			if(str != "") str += ",";
+			if (str != "")
+				str += ",";
 			str += mod.title;
 		}
 		text2.text = "Current mods: " + str;
 	}
-	
+
 	private function onKeyDown(e:KeyboardEvent)
 	{
 		var char = String.fromCharCode(e.keyCode);
-		switch(char)
+		switch (char)
 		{
-			case "R": reset();
-			case "1": toggleMod("mod1");
-			case "2": toggleMod("mod2");
-			case "3": toggleMod("mod3");
-			case "4": toggleMod("mod4");
-			default: //donothing
+			case "R":
+				reset();
+			case "1":
+				toggleMod("mod1");
+			case "2":
+				toggleMod("mod2");
+			case "3":
+				toggleMod("mod3");
+			case "4":
+				toggleMod("mod4");
+			default: // donothing
 		}
 	}
 
 	private function toggleMod(str:String)
 	{
-		if(mods.indexOf(str) == -1)
+		if (mods.indexOf(str) == -1)
 		{
 			mods.push(str);
 		}
@@ -104,7 +110,7 @@ class Main extends Sprite
 	{
 		sim.destroy();
 		removeChild(sim);
-		for(i in 0...numChildren)
+		for (i in 0...numChildren)
 		{
 			removeChildAt(0);
 		}
@@ -125,10 +131,10 @@ class Main extends Sprite
 		modRoot = "../../../../../../mods/";
 		#end
 		activeMods = Polymod.init({
-			modRoot:modRoot,
-			dirs:mods.copy(),
-			errorCallback:onError,
-			ignoredFiles:Polymod.getDefaultIgnoreList()
+			modRoot: modRoot,
+			dirs: mods.copy(),
+			errorCallback: onError,
+			ignoredFiles: Polymod.getDefaultIgnoreList()
 		});
 		reset();
 	}
@@ -137,5 +143,4 @@ class Main extends Sprite
 	{
 		trace(error.severity + "(" + error.code.toUpperCase() + "):" + error.message);
 	}
-
 }

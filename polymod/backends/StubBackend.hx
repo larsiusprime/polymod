@@ -20,7 +20,7 @@
  * THE SOFTWARE.
  * 
  */
- 
+
 package polymod.backends;
 
 import haxe.io.Bytes;
@@ -30,20 +30,51 @@ import polymod.backends.PolymodAssetLibrary;
 
 class StubBackend implements IBackend
 {
-    public var polymodLibrary:PolymodAssetLibrary;
-    public function new() {}
+	public var polymodLibrary:PolymodAssetLibrary;
 
-    public function init(?params:FrameworkParams):Void {}
-    public function destroy():Void {}
+	public function new()
+	{
+	}
 
-    public function clearCache():Void {}
-    
-    public function exists(id:String):Bool { return false; }
-    public function getBytes(id:String):Bytes { return null; }
-    public function getText(id:String):String { return null; }
+	public function init(?params:FrameworkParams):Void
+	{
+	}
 
-    public function getPath(id:String):String { return null; }
-    public function list(type:PolymodAssetType=null):Array<String> { return []; }
+	public function destroy():Void
+	{
+	}
 
-    public function stripAssetsPrefix(id:String):String { return id; }
+	public function clearCache():Void
+	{
+	}
+
+	public function exists(id:String):Bool
+	{
+		return false;
+	}
+
+	public function getBytes(id:String):Bytes
+	{
+		return null;
+	}
+
+	public function getText(id:String):String
+	{
+		return null;
+	}
+
+	public function getPath(id:String):String
+	{
+		return null;
+	}
+
+	public function list(type:PolymodAssetType = null):Array<String>
+	{
+		return [];
+	}
+
+	public function stripAssetsPrefix(id:String):String
+	{
+		return id;
+	}
 }

@@ -20,9 +20,9 @@
  * THE SOFTWARE.
  * 
  */
- 
+
 package polymod.fs;
- 
+
 #if sys
 import polymod.Polymod.ModMetadata;
 import polymod.util.Util;
@@ -31,30 +31,30 @@ class SysFileSystem implements IFileSystem
 {
 	public var modRoot(default, null):String;
 
-	public function new( modRoot: String )
+	public function new(modRoot:String)
 	{
 		this.modRoot = modRoot;
 	}
 
-	public inline function exists( path: String )
+	public inline function exists(path:String)
 	{
 		return sys.FileSystem.exists(path);
 	}
 
-	public inline function isDirectory( path: String )
+	public inline function isDirectory(path:String)
 		return sys.FileSystem.isDirectory(path);
 
-	public inline function readDirectory( path: String )
+	public inline function readDirectory(path:String)
 		return sys.FileSystem.readDirectory(path);
 
-	public inline function getFileContent( path: String )
+	public inline function getFileContent(path:String)
 	{
 		if (!exists(path))
 			return null;
 		return sys.io.File.getContent(path);
 	}
 
-	public inline function getFileBytes( path: String )
+	public inline function getFileBytes(path:String)
 	{
 		if (!exists(path))
 			return null;
@@ -120,7 +120,7 @@ class SysFileSystem implements IFileSystem
 		return null;
 	}
 
-	public function readDirectoryRecursive( path: String ):Array<String>
+	public function readDirectoryRecursive(path:String):Array<String>
 	{
 		var all = _readDirectoryRecursive(path);
 		for (i in 0...all.length)
@@ -129,24 +129,26 @@ class SysFileSystem implements IFileSystem
 			var stri = Util.uIndexOf(f, path + "/");
 			if (stri == 0)
 			{
-				f = Util.uSubstr(f, Util.uLength(path+"/"), Util.uLength(f));
+				f = Util.uSubstr(f, Util.uLength(path + "/"), Util.uLength(f));
 				all[i] = f;
 			}
 		}
 		return all;
 	}
 
-	private function _readDirectoryRecursive( str: String ):Array<String>
+	private function _readDirectoryRecursive(str:String):Array<String>
 	{
 		if (exists(str) && isDirectory(str))
 		{
 			var all = readDirectory(str);
-			if (all == null) return [];
+			if (all == null)
+				return [];
 			var results = [];
 			for (thing in all)
 			{
-				if (thing == null) continue;
-				var pathToThing = Util.pathJoin(str,thing);
+				if (thing == null)
+					continue;
+				var pathToThing = Util.pathJoin(str, thing);
 				if (isDirectory(pathToThing))
 				{
 					var subs = _readDirectoryRecursive(pathToThing);

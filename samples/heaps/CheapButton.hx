@@ -20,7 +20,7 @@
  * THE SOFTWARE.
  * 
  */
- 
+
 package samples.heaps;
 
 import hxd.Res;
@@ -44,14 +44,14 @@ class CheapButton extends Sprite
 	private var upT:Text;
 	private var overT:Text;
 	private var downT:Text;
-	
+
 	private var isOver:Bool = false;
 	private var isDown:Bool = false;
 
-	public function new(spr:Sprite, str:String, callback:Void->Void=null)
+	public function new(spr:Sprite, str:String, callback:Void->Void = null)
 	{
 		super(spr);
-		
+
 		this.callback = callback;
 
 		var img = Tile.fromColor(0xC0C0C0, 72, 32);
@@ -65,15 +65,15 @@ class CheapButton extends Sprite
 		var upB = new Bitmap(img, up);
 		var overB = new Bitmap(img2, over);
 		var downB = new Bitmap(img3, down);
-		
+
 		upT = getText(Center);
 		overT = getText(Center);
 		downT = getText(Center);
-		
+
 		upT.text = str;
 		overT.text = str;
 		downT.text = str;
-		
+
 		overT.textColor = 0xFFFFFF;
 		downT.textColor = 0xFFFFFF;
 
@@ -83,7 +83,7 @@ class CheapButton extends Sprite
 		interaction.onPush = onDown;
 		interaction.onRelease = onUp;
 		interaction.onOut = onOut;
-		
+
 		onUp(null);
 	}
 
@@ -91,37 +91,38 @@ class CheapButton extends Sprite
 	{
 		upT.text = overT.text = downT.text = str;
 	}
-	
+
 	public function destroy()
 	{
 		removeChildren();
 		callback = null;
 	}
-	
+
 	private function onUp(event:hxd.Event)
 	{
 		isDown = false;
 		updateButton();
 	}
-	
+
 	private function onClick(event:hxd.Event)
 	{
-		if (callback != null) callback();
+		if (callback != null)
+			callback();
 		updateButton();
 	}
-	
+
 	private function onOver(event:hxd.Event)
 	{
 		isOver = true;
 		updateButton();
 	}
-	
+
 	private function onDown(event:hxd.Event)
 	{
 		isDown = true;
 		updateButton();
 	}
-	
+
 	private function onOut(event:hxd.Event)
 	{
 		isOver = false;
@@ -130,11 +131,11 @@ class CheapButton extends Sprite
 
 	private function updateButton()
 	{
-		if(isOver)
+		if (isOver)
 		{
 			down.visible = up.visible = false;
 			over.visible = true;
-			if(isDown)
+			if (isDown)
 			{
 				over.visible = false;
 				down.visible = true;

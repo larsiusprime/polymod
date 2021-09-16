@@ -20,57 +20,70 @@
  * THE SOFTWARE.
  * 
  */
- 
+
 package polymod.format;
 
 class JsonHelp
 {
-	public static function bool(json:Dynamic, field:String, defaultValue:Bool=false):Bool
+	public static function bool(json:Dynamic, field:String, defaultValue:Bool = false):Bool
 	{
 		var str:String = "";
-		if(Reflect.hasField(json,field)) str = Reflect.field(json, field);
-		if(str == null || str == "") return defaultValue;
+		if (Reflect.hasField(json, field))
+			str = Reflect.field(json, field);
+		if (str == null || str == "")
+			return defaultValue;
 		str = str.toLowerCase();
-		if(str == "true") return true;
+		if (str == "true")
+			return true;
 		return false;
 	}
 
-	public static function int(json:Dynamic, field:String, defaultValue:Int=0):Int
+	public static function int(json:Dynamic, field:String, defaultValue:Int = 0):Int
 	{
 		var str:String = "";
-		if(Reflect.hasField(json,field)) str = Reflect.field(json, field);
-		if(str == null || str == "") return defaultValue;
+		if (Reflect.hasField(json, field))
+			str = Reflect.field(json, field);
+		if (str == null || str == "")
+			return defaultValue;
 		var i = Std.parseInt(str);
-		if(i == null) return defaultValue;
+		if (i == null)
+			return defaultValue;
 		return i;
 	}
 
-	public static function float(json:Dynamic, field:String, defaultValue:Float=0):Float
+	public static function float(json:Dynamic, field:String, defaultValue:Float = 0):Float
 	{
 		var str:String = "";
-		if(Reflect.hasField(json,field)) str = Reflect.field(json, field);
-		if(str == null || str == "") return defaultValue;
+		if (Reflect.hasField(json, field))
+			str = Reflect.field(json, field);
+		if (str == null || str == "")
+			return defaultValue;
 		var f = Math.NaN;
-		try{
+		try
+		{
 			f = Std.parseFloat(str);
-		}catch(msg:Dynamic){
+		}
+		catch (msg:Dynamic)
+		{
 			f = Math.NaN;
 		}
-		if(Math.isNaN(f)) return defaultValue;
+		if (Math.isNaN(f))
+			return defaultValue;
 		return f;
-		
-		
 	}
-	
-	 public static function mapStr(json:Dynamic, field:String):Map<String,String>
+
+	public static function mapStr(json:Dynamic, field:String):Map<String, String>
 	{
-		var map:Map<String,String> = new Map<String,String>();
-		if (json == null || field == "" || field == null) return map;
+		var map:Map<String, String> = new Map<String, String>();
+		if (json == null || field == "" || field == null)
+			return map;
 		var val = null;
-		if(Reflect.hasField(json,field)) val = Reflect.field(json, field);
-		if(val != null)
+		if (Reflect.hasField(json, field))
+			val = Reflect.field(json, field);
+		if (val != null)
 		{
-			for (field in Reflect.fields(val)){
+			for (field in Reflect.fields(val))
+			{
 				var fieldVal = Reflect.field(val, field);
 				map.set(field, Std.string(fieldVal));
 			}
@@ -78,19 +91,22 @@ class JsonHelp
 		return map;
 	}
 
-	public static function str(json:Dynamic, field:String, defaultValue:String=""):String
+	public static function str(json:Dynamic, field:String, defaultValue:String = ""):String
 	{
 		var str:String = "";
-		if(Reflect.hasField(json,field)) str = Reflect.field(json, field);
-		if(str == null || str == "") return defaultValue;
+		if (Reflect.hasField(json, field))
+			str = Reflect.field(json, field);
+		if (str == null || str == "")
+			return defaultValue;
 		return str;
 	}
 
-	public static function arrStr(json:Dynamic, field:String, defaultValue:Array<String>=null):Array<String>
+	public static function arrStr(json:Dynamic, field:String, defaultValue:Array<String> = null):Array<String>
 	{
 		var val = null;
-		if(Reflect.hasField(json,field)) val = Reflect.field(json, field);
-		if(val != null && Std.is(val,Array))
+		if (Reflect.hasField(json, field))
+			val = Reflect.field(json, field);
+		if (val != null && Std.is(val, Array))
 		{
 			return cast val;
 		}

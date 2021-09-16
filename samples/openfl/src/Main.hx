@@ -32,42 +32,42 @@ import polymod.Polymod.Framework;
  * ...
  * @author 
  */
-class Main extends Sprite 
+class Main extends Sprite
 {
-	private var demo:Demo=null;
-	
-	public function new() 
+	private var demo:Demo = null;
+
+	public function new()
 	{
 		super();
 		loadDemo();
 	}
-	
+
 	private function loadDemo()
 	{
 		demo = new Demo(onModChange);
 		addChild(demo);
 	}
-	
+
 	private function onModChange(arr:Array<String>)
 	{
 		loadMods(arr);
 		demo.refresh();
 	}
-	
+
 	private function loadMods(dirs:Array<String>)
 	{
 		var framework = Demo.usingOpenFL ? Framework.OPENFL : Framework.LIME;
 		var modRoot = "../../../mods/";
 		#if mac
-		//account for <APPLICATION>.app/Contents/Resources
+		// account for <APPLICATION>.app/Contents/Resources
 		var modRoot = "../../../../../../mods";
 		#end
 		var results = Polymod.init({
-			modRoot:modRoot,
-			dirs:dirs,
-			errorCallback:onError,
-			ignoredFiles:Polymod.getDefaultIgnoreList(),
-			framework:framework
+			modRoot: modRoot,
+			dirs: dirs,
+			errorCallback: onError,
+			ignoredFiles: Polymod.getDefaultIgnoreList(),
+			framework: framework
 		});
 	}
 
@@ -75,5 +75,4 @@ class Main extends Sprite
 	{
 		trace(error.severity + "(" + error.code.toUpperCase() + "):" + error.message);
 	}
-
 }

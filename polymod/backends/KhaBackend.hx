@@ -20,25 +20,25 @@
  * THE SOFTWARE.
  * 
  */
- 
+
 package polymod.backends;
 
 #if !kha
 class KhaBackend extends StubBackend
 {
-    public function new()
-    {
-        super();
-        Polymod.error(FAILED_CREATE_BACKEND,"KhaBackend requires the kha library, did you forget to install it?"); 
-    }
+	public function new()
+	{
+		super();
+		Polymod.error(FAILED_CREATE_BACKEND, "KhaBackend requires the kha library, did you forget to install it?");
+	}
 }
 #else
 class KhaBackend extends StubBackend
 {
-    public function new()
-    {
-        super();
-        Polymod.error(FAILED_CREATE_BACKEND,"Kha support in Polymod has not been implemented yet"); 
-    }
+	public function new()
+	{
+		super();
+		Polymod.error(FAILED_CREATE_BACKEND, "Kha support in Polymod has not been implemented yet");
+	}
 }
 #end

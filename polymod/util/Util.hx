@@ -32,242 +32,240 @@ import polymod.format.ParseRules;
 import polymod.format.ParseRules.CSVParseFormat;
 import polymod.format.ParseRules.TextFileFormat;
 import polymod.format.BaseParseFormat;
-
 #if unifill
 import unifill.Unifill;
 #end
-
 import haxe.Utf8;
 
 class Util
 {
+	public static function mergeAndAppendText(baseText:String, id:String, dirs:Array<String>, getModText:String->String->String, fileSystem:IFileSystem,
+			parseRules:ParseRules = null):String
+	{
+		var text = baseText;
 
-    public static function mergeAndAppendText(baseText:String, id:String, dirs:Array<String>, getModText:String->String->String, fileSystem:IFileSystem, parseRules:ParseRules=null):String
-    {
-        var text = baseText;
+		for (d in dirs)
+		{
+			if (fileSystem.exists(pathMerge(id, d)))
+			{
+				text = mergeText(text, id, d, getModText, parseRules);
+			}
+			if (fileSystem.exists(pathAppend(id, d)))
+			{
+				text = appendText(text, id, d, getModText, parseRules);
+			}
+		}
 
-        for (d in dirs)
-        {
-            if (fileSystem.exists(pathMerge(id, d)))
-            {
-                text = mergeText(text, id, d, getModText, parseRules);
-            }
-            if (fileSystem.exists(pathAppend(id, d)))
-            {
-                text = appendText(text, id, d, getModText, parseRules);
-            }
-        }
+		return text;
+	}
 
-        return text;
-    }
+	/**
+	 * Looks for a "_merge" entry for an asset and tries to merge its contents into the original
+	 * With the following rules:
+	 * - Only applies to XML, TSV, and CSV files (identified by extension)
+	 * - Adds single nodes from the merged asset into the original
+	 * - If the original has that node too, it overwrites the original information
+	 * @param	baseText	the basic text file you're merging extra content into
+	 * @param	id	the name of the asset file
+	 * @param	getModText	a function for getting the mod's contribution
+	 * @param	mergeRules	formatting rules to help with merging
+	 * @return
+	 */
+	public static function mergeText(baseText:String, id:String, theDir:String = "", getModText:String->String->String, parseRules:ParseRules = null):String
+	{
+		var extension = uExtension(id, true);
+		id = stripAssetsPrefix(id);
+		var mergeFile = "_merge" + sl() + id;
+		// try the path first
+		var format:BaseParseFormat = parseRules.get(id);
+		if (format == null)
+		{
+			// try the extension then
+			format = parseRules.get(extension);
+		}
+		if (format != null)
+		{
+			var mergeText = getModText(mergeFile, theDir);
+			return format.merge(baseText, mergeText, id);
+		}
+		else
+		{
+			Polymod.error(MERGE, "Could not merge file (" + id + "), no parse format was specified for extension (" + extension + ").");
+			return baseText;
+		}
+		return baseText;
+	}
 
-    /**
-     * Looks for a "_merge" entry for an asset and tries to merge its contents into the original
-     * With the following rules:
-     * - Only applies to XML, TSV, and CSV files (identified by extension)
-     * - Adds single nodes from the merged asset into the original
-     * - If the original has that node too, it overwrites the original information
-     * @param	baseText	the basic text file you're merging extra content into
-     * @param	id	the name of the asset file
-     * @param	getModText	a function for getting the mod's contribution
-     * @param	mergeRules	formatting rules to help with merging
-     * @return
-     */
+	public static function appendText(baseText:String, id:String, theDir:String, getModText:String->String->String, parseRules:ParseRules = null):String
+	{
+		var extension = uExtension(id, true);
+		id = stripAssetsPrefix(id);
+		// try the path first
+		var format:BaseParseFormat = parseRules.get(id);
+		if (format == null)
+		{
+			// try the extension then
+			format = parseRules.get(extension);
+		}
+		if (format != null)
+		{
+			var appendText = getModText(Util.pathJoin("_append", id), theDir);
+			return format.append(baseText, appendText, id);
+		}
+		return baseText;
+	}
 
-    public static function mergeText(baseText:String, id:String, theDir:String = "", getModText:String->String->String, parseRules:ParseRules=null):String
-    {
-        var extension = uExtension(id, true);
-        id = stripAssetsPrefix(id);
-        var mergeFile = "_merge" + sl() + id;
-        // try the path first
-        var format:BaseParseFormat = parseRules.get(id);
-        if(format == null) 
-        {
-            // try the extension then
-            format = parseRules.get(extension);
-        }
-        if(format != null)
-        {
-            var mergeText = getModText(mergeFile, theDir);
-            return format.merge(baseText, mergeText, id);
-        }
-        else
-        {
-            Polymod.error(MERGE,"Could not merge file ("+id+"), no parse format was specified for extension ("+extension+").");
-            return baseText;
-        }
-        return baseText;
-    }
+	public static function appendCSVOrTSV(baseText:String, appendText:String, id:String)
+	{
+		var lastChar = uCharAt(baseText, uLength(baseText) - 1);
+		var lastLastChar = uCharAt(baseText, uLength(baseText) - 1);
+		var joiner = "";
+		var endLine = "\n";
+		var crIndex = uIndexOf(baseText, "\r");
+		var lfIndex = uIndexOf(baseText, "\n");
 
-    public static function appendText(baseText:String, id:String, theDir:String, getModText:String->String->String, parseRules:ParseRules=null):String
-    {
-        var extension = uExtension(id, true);
-        id = stripAssetsPrefix(id);
-        // try the path first
-        var format:BaseParseFormat = parseRules.get(id);
-        if(format == null) 
-        {
-            // try the extension then
-            format = parseRules.get(extension);
-        }
-        if(format != null)
-        {
-            var appendText = getModText(Util.pathJoin("_append",id), theDir);
-            return format.append(baseText, appendText, id);
-        }
-        return baseText;
-    }
-    
-    public static function appendCSVOrTSV(baseText:String, appendText:String, id:String)
-    {
-        var lastChar = uCharAt(baseText, uLength(baseText) - 1);
-        var lastLastChar = uCharAt(baseText, uLength(baseText) - 1);
-        var joiner = "";
-        var endLine = "\n";
-        var crIndex = uIndexOf(baseText, "\r");
-        var lfIndex = uIndexOf(baseText, "\n");
+		if (crIndex != -1 && lfIndex == crIndex + 1)
+		{
+			endLine = "\r\n";
+		}
 
-        if (crIndex != -1 && lfIndex == crIndex + 1)
-        {
-            endLine = "\r\n";
-        }
+		if (lastChar != "\n")
+		{
+			joiner = endLine;
+		}
 
-        if (lastChar != "\n")
-        {
-            joiner = endLine;
-        }
+		var otherEndline = endLine == "\n" ? "\r\n" : "\n";
+		appendText = uSplitReplace(appendText, otherEndline, endLine);
 
-        var otherEndline = endLine == "\n" ? "\r\n" : "\n";
-        appendText = uSplitReplace(appendText, otherEndline, endLine);
-        
-        return uCombine([baseText, joiner, appendText]);
-    }
+		return uCombine([baseText, joiner, appendText]);
+	}
 
-    public static function appendSpecialXML(a:String, b:String, headers:Array<String>, footers:Array<String>):String
-    {
-        a = stripXML(a, true, true, headers, footers);
-        b = stripXML(b, true, true, headers, footers);
+	public static function appendSpecialXML(a:String, b:String, headers:Array<String>, footers:Array<String>):String
+	{
+		a = stripXML(a, true, true, headers, footers);
+		b = stripXML(b, true, true, headers, footers);
 
-        var txt = '<?xml version="1.0" encoding="utf-8" ?>';
-        txt = uCat(txt, "<data>");
-        txt = uCat(txt, a);
-        txt = uCat(txt, b);
-        txt = uCat(txt, "</data>");
+		var txt = '<?xml version="1.0" encoding="utf-8" ?>';
+		txt = uCat(txt, "<data>");
+		txt = uCat(txt, a);
+		txt = uCat(txt, b);
+		txt = uCat(txt, "</data>");
 
-        return txt;
-    }
+		return txt;
+	}
 
-    public static function appendXML(a:String, b:String):String
-    {
-        a = stripXML(a, false, true);
-        b = stripXML(b, true, false);
+	public static function appendXML(a:String, b:String):String
+	{
+		a = stripXML(a, false, true);
+		b = stripXML(b, true, false);
 
-        var txt = uCat(a, b);
+		var txt = uCat(a, b);
 
-        return txt;
-    }
+		return txt;
+	}
 
-    public static function stripComments(txt:String):String
-    {
-        var start = uIndexOf(txt,"<!--");
-        var end   = uIndexOf(txt,"-->");
-        while (start != -1 && end != -1)
-        {
-            var len    = uLength(txt);
-            var before = uSubstr(txt, 0, start);
-            var after  = uSubstr(txt, end + 3, len - (end + 3));
-            txt = uCat(before, after);
-            start = uIndexOf(txt,"<!--");
-            end   = uIndexOf(txt,"-->");
-        }
-        return txt;
-    }
+	public static function stripComments(txt:String):String
+	{
+		var start = uIndexOf(txt, "<!--");
+		var end = uIndexOf(txt, "-->");
+		while (start != -1 && end != -1)
+		{
+			var len = uLength(txt);
+			var before = uSubstr(txt, 0, start);
+			var after = uSubstr(txt, end + 3, len - (end + 3));
+			txt = uCat(before, after);
+			start = uIndexOf(txt, "<!--");
+			end = uIndexOf(txt, "-->");
+		}
+		return txt;
+	}
 
-    public static function trimLeadingWhiteSpace(txt:String):String
-    {
-        var white=["\r","\n"," ","\t"];
-        var len = uLength(txt);
-        for (w in white)
-        {
-            while (uIndexOf(txt, w) == 0)
-            {
-                txt = uSubstr(txt,1,len-1);
-                len--;
-            }
-        }
-        return txt;
-    }
+	public static function trimLeadingWhiteSpace(txt:String):String
+	{
+		var white = ["\r", "\n", " ", "\t"];
+		var len = uLength(txt);
+		for (w in white)
+		{
+			while (uIndexOf(txt, w) == 0)
+			{
+				txt = uSubstr(txt, 1, len - 1);
+				len--;
+			}
+		}
+		return txt;
+	}
 
-    public static function trimTrailingWhiteSpace(txt:String):String
-    {
-        var white=["\r","\n"," ","\t"];
-        var len = uLength(txt);
-        for (w in white)
-        {
-            while (uCharAt(txt, len - 1) == w)
-            {
-                txt = uSubstr(txt,0,len-1);
-                len--;
-            }
-        }
-        return txt;
-    }
+	public static function trimTrailingWhiteSpace(txt:String):String
+	{
+		var white = ["\r", "\n", " ", "\t"];
+		var len = uLength(txt);
+		for (w in white)
+		{
+			while (uCharAt(txt, len - 1) == w)
+			{
+				txt = uSubstr(txt, 0, len - 1);
+				len--;
+			}
+		}
+		return txt;
+	}
 
-    public static function stripXML(txt:String, stripHeader:Bool=true, stripFooter:Bool=true, headers:Array<String>=null, footers:Array<String>=null):String
-    {
-        txt = stripComments(txt);
+	public static function stripXML(txt:String, stripHeader:Bool = true, stripFooter:Bool = true, headers:Array<String> = null,
+			footers:Array<String> = null):String
+	{
+		txt = stripComments(txt);
 
-        if (stripHeader)
-        {
-            if (uIndexOf(txt, "<?xml") == 0)
-            {
-                var i = uIndexOf(txt, ">");
-                txt = uSubstr(txt, i+1, uLength(txt) - (i+1));
-                txt = trimLeadingWhiteSpace(txt);
-            }
-            if (uIndexOf(txt, "<data") == 0)
-            {
-                var i = uIndexOf(txt, ">");
-                txt = uSubstr(txt, i+1, uLength(txt) - (i+1));
-                txt = trimLeadingWhiteSpace(txt);
-            }
-            if (headers != null)
-            {
-                for (header in headers)
-                {
-                    if (uIndexOf(txt, header) == 0)
-                    {
-                        var i = uIndexOf(txt, ">");
-                        txt = uSubstr(txt, (i + 1), uLength(txt) - (i+1));
-                        txt = trimLeadingWhiteSpace(txt);
-                    }
-                }
-            }
-        }
-        if (stripFooter)
-        {
-            txt = trimTrailingWhiteSpace(txt);
-            var ulen = uLength(txt);
-            if (uLastIndexOf(txt, "</data>") == ulen - 7)
-            {
-                txt = uSubstr(txt, 0, ulen - 7);
-            }
-            if (footers != null)
-            {
-                for (footer in footers)
-                {
-                    txt = trimTrailingWhiteSpace(txt);
-                    var ulen = uLength(txt);
-                    var footerlen = uLength(footer);
-                    if (uLastIndexOf(txt, footer) == ulen - footerlen)
-                    {
-                        txt = uSubstr(txt, 0, ulen - footerlen);
-                    }
-                }
-            }
-        }
-        return txt;
-    }
+		if (stripHeader)
+		{
+			if (uIndexOf(txt, "<?xml") == 0)
+			{
+				var i = uIndexOf(txt, ">");
+				txt = uSubstr(txt, i + 1, uLength(txt) - (i + 1));
+				txt = trimLeadingWhiteSpace(txt);
+			}
+			if (uIndexOf(txt, "<data") == 0)
+			{
+				var i = uIndexOf(txt, ">");
+				txt = uSubstr(txt, i + 1, uLength(txt) - (i + 1));
+				txt = trimLeadingWhiteSpace(txt);
+			}
+			if (headers != null)
+			{
+				for (header in headers)
+				{
+					if (uIndexOf(txt, header) == 0)
+					{
+						var i = uIndexOf(txt, ">");
+						txt = uSubstr(txt, (i + 1), uLength(txt) - (i + 1));
+						txt = trimLeadingWhiteSpace(txt);
+					}
+				}
+			}
+		}
+		if (stripFooter)
+		{
+			txt = trimTrailingWhiteSpace(txt);
+			var ulen = uLength(txt);
+			if (uLastIndexOf(txt, "</data>") == ulen - 7)
+			{
+				txt = uSubstr(txt, 0, ulen - 7);
+			}
+			if (footers != null)
+			{
+				for (footer in footers)
+				{
+					txt = trimTrailingWhiteSpace(txt);
+					var ulen = uLength(txt);
+					var footerlen = uLength(footer);
+					if (uLastIndexOf(txt, footer) == ulen - footerlen)
+					{
+						txt = uSubstr(txt, 0, ulen - footerlen);
+					}
+				}
+			}
+		}
+		return txt;
+	}
 
 	public static inline function pathMerge(id:String, theDir:String = ""):String
 	{
@@ -279,14 +277,14 @@ class Util
 		return pathSpecial(id, "_append", theDir);
 	}
 
-    public static inline function stripAssetsPrefix(id:String):String
-    {
-        if (uIndexOf(id, "assets/") == 0)
-        {
-            id = uSubstring(id, 7);
-        }
-        return id;
-    }
+	public static inline function stripAssetsPrefix(id:String):String
+	{
+		if (uIndexOf(id, "assets/") == 0)
+		{
+			id = uSubstring(id, 7);
+		}
+		return id;
+	}
 
 	public static function pathSpecial(id:String, special:String = "", theDir:String = ""):String
 	{
@@ -298,294 +296,294 @@ class Util
 		return "";
 		#end
 	}
+}
 
-    }
+public static function pathJoin(a:String, b:String):String
+{
+	var aSlash = (uLastIndexOf(a, "/") == uLength(a) - 1 || uLastIndexOf(a, "\\") == uLength(a) - 1);
+	var bSlash = (uIndexOf(b, "/") == 0 || uIndexOf(b, "\\") == 0);
+	var str = "";
+	if (aSlash || bSlash)
+	{
+		str = Util.uCombine([a, b]);
+	}
+	else
+	{
+		str = Util.uCombine([a, sl(), b]);
+	}
+	str = cleanSlashes(str);
+	return str;
+}
 
-    public static function pathJoin(a:String, b:String):String
-    {
-        var aSlash = (uLastIndexOf(a,"/") == uLength(a) -1 || uLastIndexOf(a,"\\") == uLength(a) -1);
-        var bSlash = (uIndexOf(b,"/") == 0 || uIndexOf(b,"\\") == 0);
-        var str = "";
-        if(aSlash || bSlash)
-        {
-            str = Util.uCombine([a,b]);
-        }
-        else
-        {
-            str = Util.uCombine([a,sl(),b]);
-        }
-        str = cleanSlashes(str);
-        return str;
-    }
+public static function cleanSlashes(str:String):String
+{
+	str = uSplitReplace(str, "\\", "/");
+	str = uSplitReplace(str, "//", "/");
+	return str;
+}
 
-    public static function cleanSlashes(str:String):String
-    {
-        str = uSplitReplace(str, "\\", "/");
-        str = uSplitReplace(str, "//", "/");
-        return str;
-    }
+public static function sl():String
+{
+	return "/";
+}
 
-    public static function sl():String
-    {
-        return "/";
-    }
+@:access(haxe.xml.Xml)
+public static inline function copyXml(data:Xml, parent:Xml = null):Xml
+{
+	var c:Xml = null;
+	if (data.nodeType == Xml.Element)
+	{
+		c = Xml.createElement(data.nodeName);
+		for (att in data.attributes())
+		{
+			c.set(att, data.get(att));
+		}
+		for (el in data.elements())
+		{
+			c.addChild(copyXml(el, c));
+		}
+	}
+	else if (data.nodeType == Xml.PCData)
+	{
+		c = Xml.createPCData(data.nodeValue);
+	}
+	else if (data.nodeType == Xml.CData)
+	{
+		c = Xml.createCData(data.nodeValue);
+	}
+	else if (data.nodeType == Xml.Comment)
+	{
+		c = Xml.createComment(data.nodeValue);
+	}
+	else if (data.nodeType == Xml.DocType)
+	{
+		c = Xml.createDocType(data.nodeValue);
+	}
+	else if (data.nodeType == Xml.ProcessingInstruction)
+	{
+		c = Xml.createProcessingInstruction(data.nodeValue);
+	}
+	else if (data.nodeType == Xml.Document)
+	{
+		c = Xml.createDocument();
+		for (el in data.elements())
+		{
+			c.addChild(copyXml(el, c));
+		}
+	}
+	@:privateAccess c.parent = parent;
+	return c;
+}
 
-    @:access(haxe.xml.Xml)
-    public static inline function copyXml(data:Xml, parent:Xml = null):Xml
-    {
-        var c:Xml = null;
-        if (data.nodeType == Xml.Element)
-        {
-            c = Xml.createElement(data.nodeName);
-            for (att in data.attributes())
-            {
-                c.set(att, data.get(att));
-            }
-            for (el in data.elements())
-            {
-                c.addChild(copyXml(el,c));
-            }
-        }
-        else if(data.nodeType == Xml.PCData)
-        {
-            c = Xml.createPCData(data.nodeValue);
-        }
-        else if(data.nodeType == Xml.CData)
-        {
-            c = Xml.createCData(data.nodeValue);
-        }
-        else if(data.nodeType == Xml.Comment)
-        {
-            c = Xml.createComment(data.nodeValue);
-        }
-        else if(data.nodeType == Xml.DocType)
-        {
-            c = Xml.createDocType(data.nodeValue);
-        }
-        else if(data.nodeType == Xml.ProcessingInstruction)
-        {
-            c = Xml.createProcessingInstruction(data.nodeValue);
-        }
-        else if(data.nodeType == Xml.Document)
-        {
-            c = Xml.createDocument();
-            for (el in data.elements())
-            {
-                c.addChild(copyXml(el,c));
-            }
-        }
-        @:privateAccess c.parent = parent;
-        return c;
-    }
+/*****UTF shims*****/
+public static function uCat(a:String, b:String):String
+{
+	var sb = new StringBuf();
+	sb.add(Std.string(a));
+	sb.add(Std.string(b));
+	return sb.toString();
+}
 
-    /*****UTF shims*****/
+public static function uCharAt(str:String, index:Int):String
+{
+	#if unifill
+	return Unifill.uCharAt(str, index);
+	#else
+	return str.charAt(index);
+	#end
+}
 
-    public static function uCat(a:String, b:String):String
-    {
-        var sb = new StringBuf();
-        sb.add(Std.string(a));
-        sb.add(Std.string(b));
-        return sb.toString();
-    }
+public static function uJoin(arr:Array<String>, token:String):String
+{
+	var sb = new StringBuf();
+	var i = 0;
+	for (str in arr)
+	{
+		sb.add(str);
+		if (i != arr.length - 1)
+		{
+			sb.add(token);
+		}
+		i++;
+	}
+	return sb.toString();
+}
 
-    public static function uCharAt(str:String, index:Int):String
-    {
-        #if unifill
-        return Unifill.uCharAt(str, index);
-        #else
-        return str.charAt(index);
-        #end
-    }
+public static function uCombine(arr:Array<String>):String
+{
+	var sb = new StringBuf();
+	for (str in arr)
+	{
+		sb.add(str);
+	}
+	return sb.toString();
+}
 
-    public static function uJoin(arr:Array<String>, token:String):String
-    {
-        var sb = new StringBuf();
-        var i = 0;
-        for (str in arr)
-        {
-            sb.add(str);
-            if(i != arr.length-1)
-            {
-                sb.add(token);
-            }
-            i++;
-        }
-        return sb.toString();
-    }
+public static function uExtension(str:String, lowerCase:Bool = false):String
+{
+	var i = uLastIndexOf(str, ".");
+	var extension = uSubstr(str, i + 1, uLength(str) - (i + 1));
+	if (lowerCase)
+	{
+		extension = extension.toLowerCase();
+	}
+	return extension;
+}
 
-    public static function uCombine(arr:Array<String>):String
-    {
-        var sb = new StringBuf();
-        for (str in arr)
-        {
-            sb.add(str);
-        }
-        return sb.toString();
-    }
+public static function uIndexOf(str:String, substr:String, ?startIndex:Int):Int
+{
+	#if unifill
+	return Unifill.uIndexOf(str, substr, startIndex);
+	#else
+	return str.indexOf(substr, startIndex);
+	#end
+}
 
-    public static function uExtension(str:String, lowerCase:Bool=false):String
-    {
-        var i = uLastIndexOf(str, ".");
-        var extension = uSubstr(str, i + 1, uLength(str) - (i + 1));
-        if (lowerCase)
-        {
-            extension = extension.toLowerCase();
-        }
-        return extension;
-    }
+public static function uLastIndexOf(str:String, value:String, ?startIndex:Int):Int
+{
+	#if unifill
+	return Unifill.uLastIndexOf(str, value, startIndex);
+	#else
+	return str.lastIndexOf(value, startIndex);
+	#end
+}
 
-    public static function uIndexOf(str:String, substr:String, ?startIndex:Int):Int
-    {
-        #if unifill
-        return Unifill.uIndexOf(str, substr, startIndex);
-        #else
-        return str.indexOf(substr, startIndex);
-        #end
-    }
+public static function uLength(str:String):Int
+{
+	#if unifill
+	return Unifill.uLength(str);
+	#else
+	return str.length;
+	#end
+}
 
-    public static function uLastIndexOf(str:String, value:String, ?startIndex:Int):Int
-    {
-        #if unifill
-        return Unifill.uLastIndexOf(str, value, startIndex);
-        #else
-        return str.lastIndexOf(value, startIndex);
-        #end
-    }
+public static function uPathPop(str:String):String
+{
+	#if unifill
+	var path = Unifill.uSplit(str, "/");
+	path.pop();
+	return path.join("/");
+	#else
+	var path = str.split("/");
+	path.pop();
+	return path.join("/");
+	#end
+}
 
-    public static function uLength(str:String):Int
-    {
-        #if unifill
-        return Unifill.uLength(str);
-        #else
-        return str.length;
-        #end
-    }
+public static function uTrimFinalCharIf(str:String, match:String):String
+{
+	var uLength = Util.uLength(str);
+	var last = Util.uLastIndexOf(str, match);
+	if (last == uLength - 1)
+	{
+		str = Util.uSubstr(str, 0, uLength - 1);
+		uLength = Util.uLength(str);
+	}
+	return str;
+}
 
-    public static function uPathPop(str:String):String
-    {
-        #if unifill
-        var path = Unifill.uSplit(str,"/");
-        path.pop();
-        return path.join("/");
-        #else
-        var path = str.split("/");
-        path.pop();
-        return path.join("/");
-        #end
-    }
+public static function uTrimFinalEndlines(str:String):String
+{
+	var done = false;
+	var fix = "";
+	var last = "";
+	while (!done)
+	{
+		var fix = Util.uTrimFinalCharIf(str, "\n");
+		fix = Util.uTrimFinalCharIf(fix, "\r");
+		if (fix == str)
+		{
+			done = true;
+		}
+		else
+		{
+			str = fix;
+		}
+	}
+	return str;
+}
 
-    public static function uTrimFinalCharIf(str:String,match:String):String
-    {
-        var uLength = Util.uLength(str);
-        var last = Util.uLastIndexOf(str,match);
-        if(last == uLength-1)
-        {
-            str = Util.uSubstr(str,0,uLength-1);
-            uLength = Util.uLength(str);
-        }
-        return str;
-    }
+public static function uTrimFirstCharIf(str:String, match:String):String
+{
+	var uLength = Util.uLength(str);
+	var first = Util.uIndexOf(str, match);
+	if (first == 0)
+	{
+		str = Util.uSubstr(str, 1, uLength);
+		uLength = Util.uLength(str);
+	}
+	return str;
+}
 
-    public static function uTrimFinalEndlines(str:String):String
-    {
-        var done = false;
-        var fix = "";
-        var last = "";
-        while(!done)
-        {
-            var fix = Util.uTrimFinalCharIf(str,"\n");
-            fix = Util.uTrimFinalCharIf(fix,"\r");
-            if(fix == str)
-            {
-                done = true;
-            }
-            else
-            {
-                str = fix;
-            }
-        }
-        return str;
-    }
+public static function uTrimFirstEndlines(str:String):String
+{
+	var done = false;
+	var fix = "";
+	var last = "";
+	while (!done)
+	{
+		var fix = Util.uTrimFirstCharIf(str, "\n");
+		fix = Util.uTrimFirstCharIf(fix, "\r");
+		if (fix == str)
+		{
+			done = true;
+		}
+		else
+		{
+			str = fix;
+		}
+	}
+	return str;
+}
 
-    public static function uTrimFirstCharIf(str:String,match:String):String
-    {
-        var uLength = Util.uLength(str);
-        var first = Util.uIndexOf(str,match);
-        if(first == 0)
-        {
-            str = Util.uSubstr(str,1,uLength);
-            uLength = Util.uLength(str);
-        }
-        return str;
-    }
+public static function uSplit(str:String, substr:String):Array<String>
+{
+	#if unifill
+	return Unifill.uSplit(str, substr);
+	#else
+	return str.split(substr);
+	#end
+}
 
-    public static function uTrimFirstEndlines(str:String):String
-    {
-        var done = false;
-        var fix = "";
-        var last = "";
-        while(!done)
-        {
-            var fix = Util.uTrimFirstCharIf(str,"\n");
-            fix = Util.uTrimFirstCharIf(fix,"\r");
-            if(fix == str)
-            {
-                done = true;
-            }
-            else
-            {
-                str = fix;
-            }
-        }
-        return str;
-    }
+public static function uSplitReplace(s:String, substr:String, by:String):String
+{
+	if (uIndexOf(s, substr) == -1)
+		return s;
 
-    public static function uSplit(str:String, substr:String):Array<String>
-    {
-        #if unifill
-        return Unifill.uSplit(str, substr);
-        #else
-        return str.split(substr);
-        #end
-    }
+	var arr = uSplit(s, substr);
 
-    public static function uSplitReplace(s:String, substr:String, by:String):String
-    {
-        if (uIndexOf(s, substr) == -1) return s;
+	if (arr == null || arr.length < 2)
+		return s;
 
-        var arr = uSplit(s, substr);
+	var sb:StringBuf = new StringBuf();
+	for (i in 0...arr.length)
+	{
+		var bit = arr[i];
+		sb.add(bit);
+		if (i != arr.length - 1)
+		{
+			sb.add(by);
+		}
+	}
 
-        if (arr == null || arr.length < 2) return s;
+	return sb.toString();
+}
 
-        var sb:StringBuf = new StringBuf();
-        for (i in 0...arr.length)
-        {
-            var bit = arr[i];
-            sb.add(bit);
-            if (i != arr.length - 1)
-            {
-                sb.add(by);
-            }
-        }
+public static function uSubstr(str:String, pos:Int, ?len:Int):String
+{
+	#if unifill
+	return Unifill.uSubstr(str, pos, len);
+	#else
+	return str.substr(pos, len);
+	#end
+}
 
-        return sb.toString();
-    }
-
-    public static function uSubstr(str:String, pos:Int, ?len:Int):String
-    {
-        #if unifill
-        return Unifill.uSubstr(str, pos, len);
-        #else
-        return str.substr(pos, len);
-        #end
-    }
-
-    public static function uSubstring(str:String, startIndex:Int, ?endIndex:Int):String
-    {
-        #if unifill
-        return Unifill.uSubstring(str, startIndex, endIndex);
-        #else
-        return str.substring(startIndex, endIndex);
-        #end
-    }
+public static function uSubstring(str:String, startIndex:Int, ?endIndex:Int):String
+{
+	#if unifill
+	return Unifill.uSubstring(str, startIndex, endIndex);
+	#else
+	return str.substring(startIndex, endIndex);
+	#end
+}
 }

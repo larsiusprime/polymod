@@ -29,14 +29,15 @@ import polymod.format.ParseRules.CSVParseFormat;
  * A simple CSV (comma separated values) structure
  * @author Lars Doucet
  */
-
-class CSV 
+class CSV
 {
 	public var fields:Array<String>;
 	public var grid:Array<Array<String>>;
-	
-	function new(){}
-    
+
+	function new()
+	{
+	}
+
 	/**
 	 * Parses CSV formatted string into a useable data structure
 	 * @param	input csv-formatted string
@@ -44,13 +45,13 @@ class CSV
 	 * @param	quotedCells	whether all cells are quoted (true) or all cells are unqouted (false)
 	 * @return	the parsed CSV data
 	 */
-    public static function parse(input:String, delimeter:String=',', quotedCells:Bool=true):CSV
+	public static function parse(input:String, delimeter:String = ',', quotedCells:Bool = true):CSV
 	{
-        var csv = new CSV();
-        @:privateAccess csv._parse(input, delimeter, quotedCells);
-        return csv;
-    }
-	
+		var csv = new CSV();
+		@:privateAccess csv._parse(input, delimeter, quotedCells);
+		return csv;
+	}
+
 	/**
 	 * Parses CSV formatted string into a useable data structure
 	 * @param	format details about the parse format
@@ -58,7 +59,7 @@ class CSV
 	 */
 	public static function parseWithFormat(input:String, format:CSVParseFormat):CSV
 	{
-		if(format.isSimpleMode)
+		if (format.isSimpleMode)
 		{
 			return CSV.parseSimple(input);
 		}
@@ -68,33 +69,33 @@ class CSV
 		}
 	}
 
-    
-    /**
+	/**
 	 * Parses CSV assuming 1) All cells are unquoted and 2) No commas or endlines exist within a cell
 	 * Endline format will be auto-detected: a single "\r\n" will make it split lines based on windows
 	 * style endlines, otherwise it will attempt splitting based on unix-style "\n" endlines.
 	 * @param	input csv-formatted string
 	 * @return	the parsed CSV data
 	 */
-    public static function parseSimple(input:String):CSV
-    {
-        var endline:String = "\n";
-        if(input.indexOf("\r\n") != -1) endline = "\r\n";
-        var lines = input.split(endline);
-        var fieldLine = lines.shift();
-        var fields = fieldLine.split(",");
-        var grid = [];
-        for(line in lines)
-        {
-        	var cells = line.split(",");
-        	grid.push(cells);
-        }
-    	var csv = new CSV();
-    	csv.fields = fields;
-    	csv.grid = grid;
-    	return csv;
-    }
-    
+	public static function parseSimple(input:String):CSV
+	{
+		var endline:String = "\n";
+		if (input.indexOf("\r\n") != -1)
+			endline = "\r\n";
+		var lines = input.split(endline);
+		var fieldLine = lines.shift();
+		var fields = fieldLine.split(",");
+		var grid = [];
+		for (line in lines)
+		{
+			var cells = line.split(",");
+			grid.push(cells);
+		}
+		var csv = new CSV();
+		csv.fields = fields;
+		csv.grid = grid;
+		return csv;
+	}
+
 	public function destroy():Void
 	{
 		clearArray(grid);
@@ -102,15 +103,15 @@ class CSV
 		grid = null;
 		fields = null;
 	}
-	
+
 	/********PRIVATE**********/
-	
-	private var _rgx:EReg=null;
+	private var _rgx:EReg = null;
+
 	private var _delimeter:String = "";
-	private var _quoted:Bool=false;
-	
-    private function _parse(input:String, delimeter:String=',', quoted:Bool=true)
-    {
+	private var _quoted:Bool = false;
+
+	private function _parse(input:String, delimeter:String = ',', quoted:Bool = true)
+	{
 		_delimeter = delimeter;
 		_quoted = quoted;
 		if (input != "")
@@ -118,12 +119,13 @@ class CSV
 			processRows(getRows(input));
 		}
 	}
-    
+
 	private function clearArray(array:Array<Dynamic>):Void
 	{
-		if (array == null) return;
-		var i:Int = array.length - 1; 
-		while (i >= 0) 
+		if (array == null)
+			return;
+		var i:Int = array.length - 1;
+		while (i >= 0)
 		{
 			destroyThing(array[i]);
 			array[i] = null;
@@ -132,29 +134,30 @@ class CSV
 		}
 		array = null;
 	}
-	
+
 	private function destroyThing(thing:Dynamic):Void
 	{
-		if (thing == null) return;
-		
+		if (thing == null)
+			return;
+
 		if (Std.is(thing, Array))
 		{
 			clearArray(thing);
 		}
-		
+
 		thing = null;
 	}
-	
+
 	private function getCells(row:String):Array<String>
 	{
 		if (_rgx == null)
 		{
-			//If the last cell in the row ends with the delimeter, trim it off before splitting
+			// If the last cell in the row ends with the delimeter, trim it off before splitting
 			if (row.charAt(row.length - 1) == _delimeter)
 			{
 				row = row.substr(0, row.length - 1);
 			}
-			
+
 			if (_delimeter == ',')
 			{
 				_rgx = ~/,(?=(?:[^\x22]*\x22[^\x22]*\x22)*(?![^\x22]*\x22))/gm;
@@ -164,39 +167,39 @@ class CSV
 			}
 			else
 			{
-				//You can provide your own customer delimeter, but we generally don't recommend it
-				_rgx = new EReg(_delimeter + '(?=(?:[^\x22]*\x22[^\x22]*\x22)*(?![^\x22]*\x22))',"gm");
+				// You can provide your own customer delimeter, but we generally don't recommend it
+				_rgx = new EReg(_delimeter + '(?=(?:[^\x22]*\x22[^\x22]*\x22)*(?![^\x22]*\x22))', "gm");
 			}
 		}
 		return _rgx.split(row);
 	}
-	
+
 	private function getRows(input:String):Array<String>
 	{
 		var endl:String = "\r\n";
-		
-		if (input.indexOf("\r\n") == -1)		//no windows-style endlines...
+
+		if (input.indexOf("\r\n") == -1) // no windows-style endlines...
 		{
-			endl = "\n";						//try unix-style instead...
+			endl = "\n"; // try unix-style instead...
 		}
-		
+
 		return input.split(endl);
 	}
-	
-	private function processCells(cells:Array<String>,row:Int=0):Void
+
+	private function processCells(cells:Array<String>, row:Int = 0):Void
 	{
 		var col:Int = 0;
 		var newline:Bool = false;
-		var row_array:Array<String>=null;
-		
+		var row_array:Array<String> = null;
+
 		if (grid == null)
 		{
 			grid = new Array<Array<String>>();
 			fields = [];
 		}
-		
+
 		row_array = [];
-		
+
 		for (i in 0...cells.length)
 		{
 			var cell:String = "";
@@ -208,22 +211,22 @@ class CSV
 			{
 				cell = cells[i];
 			}
-			
-			if (row == 0) 
+
+			if (row == 0)
 			{
-				fields.push(cell);		//get the fields
+				fields.push(cell); // get the fields
 			}
 			else
 			{
-				row_array.push(cell);	//get the row cells
+				row_array.push(cell); // get the row cells
 			}
 		}
-		
+
 		grid.push(row_array);
 		clearArray(cells);
 		cells = null;
 	}
-	
+
 	private function processRows(rows:Array<String>):Void
 	{
 		for (i in 0...rows.length)

@@ -20,8 +20,8 @@
  * THE SOFTWARE.
  * 
  */
- 
- package polymod.backends;
+
+package polymod.backends;
 
 import haxe.io.Bytes;
 import polymod.Polymod.FrameworkParams;
@@ -30,19 +30,19 @@ import polymod.backends.PolymodAssetLibrary;
 
 interface IBackend
 {
-    public var polymodLibrary:PolymodAssetLibrary;
+	public var polymodLibrary:PolymodAssetLibrary;
 
-    public function init(?params:FrameworkParams):Void;
-    public function destroy():Void;
+	public function init(?params:FrameworkParams):Void;
+	public function destroy():Void;
 
-    public function clearCache():Void;
-    
-    public function exists(id:String):Bool;
-    public function getBytes(id:String):Bytes;
-    public function getText(id:String):String;
+	public function clearCache():Void;
 
-    public function getPath(id:String):String;
-    public function list(type:PolymodAssetType=null):Array<String>;
+	public function exists(id:String):Bool;
+	public function getBytes(id:String):Bytes;
+	public function getText(id:String):String;
 
-    public function stripAssetsPrefix(id:String):String;
+	public function getPath(id:String):String;
+	public function list(type:PolymodAssetType = null):Array<String>;
+
+	public function stripAssetsPrefix(id:String):String;
 }
