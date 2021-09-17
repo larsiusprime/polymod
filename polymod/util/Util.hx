@@ -296,294 +296,293 @@ class Util
 		return "";
 		#end
 	}
-}
 
-public static function pathJoin(a:String, b:String):String
-{
-	var aSlash = (uLastIndexOf(a, "/") == uLength(a) - 1 || uLastIndexOf(a, "\\") == uLength(a) - 1);
-	var bSlash = (uIndexOf(b, "/") == 0 || uIndexOf(b, "\\") == 0);
-	var str = "";
-	if (aSlash || bSlash)
+	public static function pathJoin(a:String, b:String):String
 	{
-		str = Util.uCombine([a, b]);
-	}
-	else
-	{
-		str = Util.uCombine([a, sl(), b]);
-	}
-	str = cleanSlashes(str);
-	return str;
-}
-
-public static function cleanSlashes(str:String):String
-{
-	str = uSplitReplace(str, "\\", "/");
-	str = uSplitReplace(str, "//", "/");
-	return str;
-}
-
-public static function sl():String
-{
-	return "/";
-}
-
-@:access(haxe.xml.Xml)
-public static inline function copyXml(data:Xml, parent:Xml = null):Xml
-{
-	var c:Xml = null;
-	if (data.nodeType == Xml.Element)
-	{
-		c = Xml.createElement(data.nodeName);
-		for (att in data.attributes())
+		var aSlash = (uLastIndexOf(a, "/") == uLength(a) - 1 || uLastIndexOf(a, "\\") == uLength(a) - 1);
+		var bSlash = (uIndexOf(b, "/") == 0 || uIndexOf(b, "\\") == 0);
+		var str = "";
+		if (aSlash || bSlash)
 		{
-			c.set(att, data.get(att));
-		}
-		for (el in data.elements())
-		{
-			c.addChild(copyXml(el, c));
-		}
-	}
-	else if (data.nodeType == Xml.PCData)
-	{
-		c = Xml.createPCData(data.nodeValue);
-	}
-	else if (data.nodeType == Xml.CData)
-	{
-		c = Xml.createCData(data.nodeValue);
-	}
-	else if (data.nodeType == Xml.Comment)
-	{
-		c = Xml.createComment(data.nodeValue);
-	}
-	else if (data.nodeType == Xml.DocType)
-	{
-		c = Xml.createDocType(data.nodeValue);
-	}
-	else if (data.nodeType == Xml.ProcessingInstruction)
-	{
-		c = Xml.createProcessingInstruction(data.nodeValue);
-	}
-	else if (data.nodeType == Xml.Document)
-	{
-		c = Xml.createDocument();
-		for (el in data.elements())
-		{
-			c.addChild(copyXml(el, c));
-		}
-	}
-	@:privateAccess c.parent = parent;
-	return c;
-}
-
-/*****UTF shims*****/
-public static function uCat(a:String, b:String):String
-{
-	var sb = new StringBuf();
-	sb.add(Std.string(a));
-	sb.add(Std.string(b));
-	return sb.toString();
-}
-
-public static function uCharAt(str:String, index:Int):String
-{
-	#if unifill
-	return Unifill.uCharAt(str, index);
-	#else
-	return str.charAt(index);
-	#end
-}
-
-public static function uJoin(arr:Array<String>, token:String):String
-{
-	var sb = new StringBuf();
-	var i = 0;
-	for (str in arr)
-	{
-		sb.add(str);
-		if (i != arr.length - 1)
-		{
-			sb.add(token);
-		}
-		i++;
-	}
-	return sb.toString();
-}
-
-public static function uCombine(arr:Array<String>):String
-{
-	var sb = new StringBuf();
-	for (str in arr)
-	{
-		sb.add(str);
-	}
-	return sb.toString();
-}
-
-public static function uExtension(str:String, lowerCase:Bool = false):String
-{
-	var i = uLastIndexOf(str, ".");
-	var extension = uSubstr(str, i + 1, uLength(str) - (i + 1));
-	if (lowerCase)
-	{
-		extension = extension.toLowerCase();
-	}
-	return extension;
-}
-
-public static function uIndexOf(str:String, substr:String, ?startIndex:Int):Int
-{
-	#if unifill
-	return Unifill.uIndexOf(str, substr, startIndex);
-	#else
-	return str.indexOf(substr, startIndex);
-	#end
-}
-
-public static function uLastIndexOf(str:String, value:String, ?startIndex:Int):Int
-{
-	#if unifill
-	return Unifill.uLastIndexOf(str, value, startIndex);
-	#else
-	return str.lastIndexOf(value, startIndex);
-	#end
-}
-
-public static function uLength(str:String):Int
-{
-	#if unifill
-	return Unifill.uLength(str);
-	#else
-	return str.length;
-	#end
-}
-
-public static function uPathPop(str:String):String
-{
-	#if unifill
-	var path = Unifill.uSplit(str, "/");
-	path.pop();
-	return path.join("/");
-	#else
-	var path = str.split("/");
-	path.pop();
-	return path.join("/");
-	#end
-}
-
-public static function uTrimFinalCharIf(str:String, match:String):String
-{
-	var uLength = Util.uLength(str);
-	var last = Util.uLastIndexOf(str, match);
-	if (last == uLength - 1)
-	{
-		str = Util.uSubstr(str, 0, uLength - 1);
-		uLength = Util.uLength(str);
-	}
-	return str;
-}
-
-public static function uTrimFinalEndlines(str:String):String
-{
-	var done = false;
-	var fix = "";
-	var last = "";
-	while (!done)
-	{
-		var fix = Util.uTrimFinalCharIf(str, "\n");
-		fix = Util.uTrimFinalCharIf(fix, "\r");
-		if (fix == str)
-		{
-			done = true;
+			str = Util.uCombine([a, b]);
 		}
 		else
 		{
-			str = fix;
+			str = Util.uCombine([a, sl(), b]);
 		}
+		str = cleanSlashes(str);
+		return str;
 	}
-	return str;
-}
 
-public static function uTrimFirstCharIf(str:String, match:String):String
-{
-	var uLength = Util.uLength(str);
-	var first = Util.uIndexOf(str, match);
-	if (first == 0)
+	public static function cleanSlashes(str:String):String
 	{
-		str = Util.uSubstr(str, 1, uLength);
-		uLength = Util.uLength(str);
+		str = uSplitReplace(str, "\\", "/");
+		str = uSplitReplace(str, "//", "/");
+		return str;
 	}
-	return str;
-}
 
-public static function uTrimFirstEndlines(str:String):String
-{
-	var done = false;
-	var fix = "";
-	var last = "";
-	while (!done)
+	public static function sl():String
 	{
-		var fix = Util.uTrimFirstCharIf(str, "\n");
-		fix = Util.uTrimFirstCharIf(fix, "\r");
-		if (fix == str)
-		{
-			done = true;
-		}
-		else
-		{
-			str = fix;
-		}
+		return "/";
 	}
-	return str;
-}
 
-public static function uSplit(str:String, substr:String):Array<String>
-{
-	#if unifill
-	return Unifill.uSplit(str, substr);
-	#else
-	return str.split(substr);
-	#end
-}
-
-public static function uSplitReplace(s:String, substr:String, by:String):String
-{
-	if (uIndexOf(s, substr) == -1)
-		return s;
-
-	var arr = uSplit(s, substr);
-
-	if (arr == null || arr.length < 2)
-		return s;
-
-	var sb:StringBuf = new StringBuf();
-	for (i in 0...arr.length)
+	@:access(haxe.xml.Xml)
+	public static inline function copyXml(data:Xml, parent:Xml = null):Xml
 	{
-		var bit = arr[i];
-		sb.add(bit);
-		if (i != arr.length - 1)
+		var c:Xml = null;
+		if (data.nodeType == Xml.Element)
 		{
-			sb.add(by);
+			c = Xml.createElement(data.nodeName);
+			for (att in data.attributes())
+			{
+				c.set(att, data.get(att));
+			}
+			for (el in data.elements())
+			{
+				c.addChild(copyXml(el, c));
+			}
 		}
+		else if (data.nodeType == Xml.PCData)
+		{
+			c = Xml.createPCData(data.nodeValue);
+		}
+		else if (data.nodeType == Xml.CData)
+		{
+			c = Xml.createCData(data.nodeValue);
+		}
+		else if (data.nodeType == Xml.Comment)
+		{
+			c = Xml.createComment(data.nodeValue);
+		}
+		else if (data.nodeType == Xml.DocType)
+		{
+			c = Xml.createDocType(data.nodeValue);
+		}
+		else if (data.nodeType == Xml.ProcessingInstruction)
+		{
+			c = Xml.createProcessingInstruction(data.nodeValue);
+		}
+		else if (data.nodeType == Xml.Document)
+		{
+			c = Xml.createDocument();
+			for (el in data.elements())
+			{
+				c.addChild(copyXml(el, c));
+			}
+		}
+		@:privateAccess c.parent = parent;
+		return c;
 	}
 
-	return sb.toString();
-}
+	/*****UTF shims*****/
+	public static function uCat(a:String, b:String):String
+	{
+		var sb = new StringBuf();
+		sb.add(Std.string(a));
+		sb.add(Std.string(b));
+		return sb.toString();
+	}
 
-public static function uSubstr(str:String, pos:Int, ?len:Int):String
-{
-	#if unifill
-	return Unifill.uSubstr(str, pos, len);
-	#else
-	return str.substr(pos, len);
-	#end
-}
+	public static function uCharAt(str:String, index:Int):String
+	{
+		#if unifill
+		return Unifill.uCharAt(str, index);
+		#else
+		return str.charAt(index);
+		#end
+	}
 
-public static function uSubstring(str:String, startIndex:Int, ?endIndex:Int):String
-{
-	#if unifill
-	return Unifill.uSubstring(str, startIndex, endIndex);
-	#else
-	return str.substring(startIndex, endIndex);
-	#end
-}
+	public static function uJoin(arr:Array<String>, token:String):String
+	{
+		var sb = new StringBuf();
+		var i = 0;
+		for (str in arr)
+		{
+			sb.add(str);
+			if (i != arr.length - 1)
+			{
+				sb.add(token);
+			}
+			i++;
+		}
+		return sb.toString();
+	}
+
+	public static function uCombine(arr:Array<String>):String
+	{
+		var sb = new StringBuf();
+		for (str in arr)
+		{
+			sb.add(str);
+		}
+		return sb.toString();
+	}
+
+	public static function uExtension(str:String, lowerCase:Bool = false):String
+	{
+		var i = uLastIndexOf(str, ".");
+		var extension = uSubstr(str, i + 1, uLength(str) - (i + 1));
+		if (lowerCase)
+		{
+			extension = extension.toLowerCase();
+		}
+		return extension;
+	}
+
+	public static function uIndexOf(str:String, substr:String, ?startIndex:Int):Int
+	{
+		#if unifill
+		return Unifill.uIndexOf(str, substr, startIndex);
+		#else
+		return str.indexOf(substr, startIndex);
+		#end
+	}
+
+	public static function uLastIndexOf(str:String, value:String, ?startIndex:Int):Int
+	{
+		#if unifill
+		return Unifill.uLastIndexOf(str, value, startIndex);
+		#else
+		return str.lastIndexOf(value, startIndex);
+		#end
+	}
+
+	public static function uLength(str:String):Int
+	{
+		#if unifill
+		return Unifill.uLength(str);
+		#else
+		return str.length;
+		#end
+	}
+
+	public static function uPathPop(str:String):String
+	{
+		#if unifill
+		var path = Unifill.uSplit(str, "/");
+		path.pop();
+		return path.join("/");
+		#else
+		var path = str.split("/");
+		path.pop();
+		return path.join("/");
+		#end
+	}
+
+	public static function uTrimFinalCharIf(str:String, match:String):String
+	{
+		var uLength = Util.uLength(str);
+		var last = Util.uLastIndexOf(str, match);
+		if (last == uLength - 1)
+		{
+			str = Util.uSubstr(str, 0, uLength - 1);
+			uLength = Util.uLength(str);
+		}
+		return str;
+	}
+
+	public static function uTrimFinalEndlines(str:String):String
+	{
+		var done = false;
+		var fix = "";
+		var last = "";
+		while (!done)
+		{
+			var fix = Util.uTrimFinalCharIf(str, "\n");
+			fix = Util.uTrimFinalCharIf(fix, "\r");
+			if (fix == str)
+			{
+				done = true;
+			}
+			else
+			{
+				str = fix;
+			}
+		}
+		return str;
+	}
+
+	public static function uTrimFirstCharIf(str:String, match:String):String
+	{
+		var uLength = Util.uLength(str);
+		var first = Util.uIndexOf(str, match);
+		if (first == 0)
+		{
+			str = Util.uSubstr(str, 1, uLength);
+			uLength = Util.uLength(str);
+		}
+		return str;
+	}
+
+	public static function uTrimFirstEndlines(str:String):String
+	{
+		var done = false;
+		var fix = "";
+		var last = "";
+		while (!done)
+		{
+			var fix = Util.uTrimFirstCharIf(str, "\n");
+			fix = Util.uTrimFirstCharIf(fix, "\r");
+			if (fix == str)
+			{
+				done = true;
+			}
+			else
+			{
+				str = fix;
+			}
+		}
+		return str;
+	}
+
+	public static function uSplit(str:String, substr:String):Array<String>
+	{
+		#if unifill
+		return Unifill.uSplit(str, substr);
+		#else
+		return str.split(substr);
+		#end
+	}
+
+	public static function uSplitReplace(s:String, substr:String, by:String):String
+	{
+		if (uIndexOf(s, substr) == -1)
+			return s;
+
+		var arr = uSplit(s, substr);
+
+		if (arr == null || arr.length < 2)
+			return s;
+
+		var sb:StringBuf = new StringBuf();
+		for (i in 0...arr.length)
+		{
+			var bit = arr[i];
+			sb.add(bit);
+			if (i != arr.length - 1)
+			{
+				sb.add(by);
+			}
+		}
+
+		return sb.toString();
+	}
+
+	public static function uSubstr(str:String, pos:Int, ?len:Int):String
+	{
+		#if unifill
+		return Unifill.uSubstr(str, pos, len);
+		#else
+		return str.substr(pos, len);
+		#end
+	}
+
+	public static function uSubstring(str:String, startIndex:Int, ?endIndex:Int):String
+	{
+		#if unifill
+		return Unifill.uSubstring(str, startIndex, endIndex);
+		#else
+		return str.substring(startIndex, endIndex);
+		#end
+	}
 }

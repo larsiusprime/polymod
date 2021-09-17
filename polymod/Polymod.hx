@@ -302,7 +302,7 @@ class Polymod
 		if (fileSystem == null)
 		{
 			#if sys
-			fileSystem = new polymod.fs.SysFileSystem();
+			fileSystem = new polymod.fs.SysFileSystem(modRoot);
 			#else
 			fileSystem = new polymod.fs.StubFileSystem();
 			#end
@@ -333,7 +333,7 @@ class Polymod
 			{
 				var origDir = dirs[i];
 				dirs[i] = modRoot + "/" + dirs[i];
-				var meta:ModMetadata = getMetadata(dirs[i]);
+				var meta:ModMetadata = fileSystem.getMetadata(dirs[i]);
 
 				if (meta != null)
 				{
