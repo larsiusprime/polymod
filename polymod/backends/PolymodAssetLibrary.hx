@@ -280,6 +280,11 @@ class PolymodAssetLibrary
         _extensionSet("vdf", TEXT);
         _extensionSet("ttf", FONT);
         _extensionSet("otf", FONT);
+        _extensionSet("webm", VIDEO);
+        _extensionSet("mp4", VIDEO);
+        _extensionSet("mov", VIDEO);
+        _extensionSet("avi", VIDEO);
+        _extensionSet("mkv", VIDEO);
     }
 
     private function _extensionSet(str:String, type:PolymodAssetType)
