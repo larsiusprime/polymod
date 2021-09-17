@@ -359,6 +359,10 @@ private function emptyFlower(flower:Flower)
 }
 ```
 
+**NOTE:** _Polymod loads the relevant script files to be executed in the object's constructor, therefore static methods are not supported. This may be changed in the future._
+
+**NOTE:** _Since scripts are loaded in the same manner as other assets, they therefore follow the standard rules for asset replace/append/merge. Keep this in mind when writing scripts, if you want to create and maintain compatibility between mods._
+
 ### Resolving other variables
 
 Here's another function:
