@@ -124,9 +124,12 @@ class PolymodAssets
             extensionMap:params.extensionMap
         });
 
-        backend.init(params.frameworkParams);
-
-        return library;
+        if (backend.init(params.frameworkParams)) {
+          // Initialization successful.
+          return library;
+        } else {
+          return null;
+        }
     }
 
     public static function exists(id:String):Bool { return library.exists(id); }

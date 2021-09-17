@@ -88,11 +88,12 @@ class HEAPSBackend implements IBackend
     
     public function new (){}
 
-    public function init()
+    public function init(?params:FrameworkParams):Bool
     {
         fallback = getDefaultLoader();
         modLoader = new HEAPSModLoader(this);
         Res.loader = modLoader;
+        return true;
     }
 
     public function destroy()

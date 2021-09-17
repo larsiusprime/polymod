@@ -111,7 +111,7 @@ class LimeBackend implements IBackend
     
     public function new (){}
 
-    public function init(?params:FrameworkParams)
+    public function init(?params:FrameworkParams):Bool
     {
         //Get all the default asset libraries:
         var defaultLibraries = getDefaultAssetLibraries();
@@ -128,14 +128,14 @@ class LimeBackend implements IBackend
             }
         }
 
-        if(hasMoreThanDefault && params.assetLibraryPaths == null)
+        if(hasMoreThanDefault && (params == null || params.assetLibraryPaths == null))
         {
             Polymod.error(
                 PolymodErrorCode.LIME_MISSING_ASSET_LIBRARY_INFO, 
                 "Your Lime/OpenFL configuration is using custom asset libraries, but you have not provided any frameworkParams in Polymod.init() that tells Polymod which asset libraries to expect and what their mod sub-directory prefixes should be.",
                 PolymodErrorOrigin.INIT
             );
-            return;
+            return false;
         }
 
         //Wrap each asset library in `LimeModLibrary`, register it with Lime, and store it here
@@ -151,7 +151,7 @@ class LimeBackend implements IBackend
                         "Your Lime/OpenFL configuration is using custom asset libraries, and you provided frameworkParams in Polymod.init(), but we couldn't find a match for this asset library: ("+key+")",
                         PolymodErrorOrigin.INIT
                     );
-                    return;
+                    return false;
                 }
                 else
                 {
@@ -174,6 +174,8 @@ class LimeBackend implements IBackend
         {
             Assets.registerLibrary(key, modLibraries.get(key));
         }
+
+        return true;
     }
 
     public function destroy()

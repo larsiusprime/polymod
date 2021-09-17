@@ -33,7 +33,7 @@ class StubBackend implements IBackend
     public var polymodLibrary:PolymodAssetLibrary;
     public function new() {}
 
-    public function init(?params:FrameworkParams):Void {}
+    public function init(?params:FrameworkParams):Bool { return false; }
     public function destroy():Void {}
 
     public function clearCache():Void {}
