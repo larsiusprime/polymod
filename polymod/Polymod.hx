@@ -221,7 +221,7 @@ class Polymod
             }
         }
 
-        PolymodAssets.init({
+        library = PolymodAssets.init({
             framework:params.framework,
             dirs:dirs,
             parseRules:params.parseRules,
@@ -231,7 +231,10 @@ class Polymod
             frameworkParams:params.frameworkParams
         });
 
-        
+        if (library == null) {
+          return null;
+        }
+
         if(PolymodAssets.exists(("_polymod_pack.txt")))
         {
             initModPack(params);
