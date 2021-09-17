@@ -569,6 +569,9 @@ enum PolymodErrorType
     var MISSING_MOD:String = "missing_mod";
     var MISSING_META:String = "missing_meta";
     var MISSING_ICON:String = "missing_icon";
+    var MOD_LOAD_PREPARE:String = "mod_load_prepare";
+    var MOD_LOAD_FAILED:String = "mod_load_failed";
+    var MOD_LOAD_DONE:String = "mod_load_done";
     var VERSION_CONFLICT_MOD:String = "version_conflict_mod";
     var VERSION_CONFLICT_API:String = "version_conflict_api";
     var VERSION_PRERELEASE_API:String = "version_prerelease_api";
