@@ -137,7 +137,7 @@ class CSV
 	{
 		if (thing == null) return;
 		
-		if (Std.is(thing, Array))
+		if (Std.isOfType(thing, Array))
 		{
 			clearArray(thing);
 		}
