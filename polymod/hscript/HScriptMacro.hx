@@ -39,7 +39,7 @@ class HScriptMacro
 		if (classToEvaluate == null)
 			return [];
 
-		trace('Evaluating class: ${classToEvaluate.name}');
+		// trace('Evaluating class: ${classToEvaluate.name}');
 
 		var result = [];
 
@@ -48,13 +48,13 @@ class HScriptMacro
 		if (scriptable_meta != null)
 		{
 			// Get variables names from inside @:hscript(...) and add them to the list to pass to scripts.
-			trace('Found an hscript annotation on a class:', scriptable_meta.pos);
+			// trace('Found an hscript annotation on a class:', scriptable_meta.pos);
 			for (p in scriptable_meta.params)
 			{
 				switch p.expr
 				{
 					case EConst(CIdent(name)):
-						trace('Adding a class-wide identifier: ${name}', p.pos);
+						// trace('Adding a class-wide identifier: ${name}', p.pos);
 						result.push(name);
 					default:
 						throw 'Error: Only identifiers (like Std, Math, myVariable, etc) are allowed in @:hscript(), got ${p.toString()}';
@@ -90,7 +90,7 @@ class HScriptMacro
 		var constructor_setup:Array<Expr> = null;
 
 		// These variable names are added to every @:hscript() function in this class.
-		var classwide_variable_names:Array<String> = [];
+		var classwide_variable_names:Array<String> = getClasswideVariableNames(cls);
 		// Evaluate each class in the hierarchy.
 		var classToEvaluate:haxe.macro.Type.ClassType = cls;
 
