@@ -27,4 +27,5 @@ class HScriptConfig
 {
 	public static var rootPath:String = "data/";
 	public static var useNamespaceInPaths:Bool = true;
+	public static var scriptExt:String = ".hscript";
 }

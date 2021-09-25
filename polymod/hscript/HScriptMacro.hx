@@ -169,7 +169,8 @@ class HScriptMacro
 								#if POLYMOD_DEBUG
 								trace("Polymod: Loading hscript " + $v{pathName});
 								#end
-								_polymod_scripts.load($v{pathName}, Assets.getText(polymod.hscript.HScriptConfig.rootPath + $v{pathName} + ".hx"));
+								_polymod_scripts.load($v{pathName},
+									Assets.getText(polymod.hscript.HScriptConfig.rootPath + $v{pathName} + polymod.hscript.HScriptConfig.scriptExt));
 							});
 
 					default:
