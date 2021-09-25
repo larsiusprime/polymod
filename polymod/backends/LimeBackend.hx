@@ -110,7 +110,7 @@ class LimeBackend implements IBackend
 	{
 	}
 
-	public function init(?params:FrameworkParams)
+	public function init(?params:FrameworkParams):Bool
 	{
 		// Get all the default asset libraries:
 		var defaultLibraries = getDefaultAssetLibraries();
@@ -170,6 +170,8 @@ class LimeBackend implements IBackend
 		{
 			Assets.registerLibrary(key, modLibraries.get(key));
 		}
+        
+        return true;
 	}
 
 	public function destroy()

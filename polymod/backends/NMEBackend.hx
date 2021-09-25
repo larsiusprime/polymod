@@ -64,7 +64,7 @@ class NMEBackend implements IBackend
 	{
 	}
 
-	public function init(?params:FrameworkParams)
+    public function init(?params:FrameworkParams):Bool
 	{
 		restoreDefaultAssets();
 
@@ -125,6 +125,8 @@ class NMEBackend implements IBackend
 				}
 			}
 		}
+
+        return true;
 	}
 
 	public function destroy()

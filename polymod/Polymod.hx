@@ -258,10 +258,14 @@ class Polymod
 			fileSystem: fileSystem,
 		});
 
-		if (PolymodAssets.exists(("_polymod_pack.txt")))
-		{
-			initModPack(params);
-		}
+        if (library == null) {
+          return null;
+        }
+
+        if(PolymodAssets.exists(("_polymod_pack.txt")))
+        {
+            initModPack(params);
+        }
 
 		return modMeta;
 	}
