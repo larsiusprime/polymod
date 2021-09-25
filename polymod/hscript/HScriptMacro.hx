@@ -35,12 +35,63 @@ using Lambda;
 
 class HScriptMacro
 {
+  static function getClasswideVariableNames(classToEvaluate:haxe.macro.Type.ClassType):Array<String>
+  {
+    if (classToEvaluate == null)
+      return [];
+
+    trace('Evaluating class: ${classToEvaluate.name}');
+
+    var result = [];
+
+    // Find any classes with the @:hscript annotation on the class itself.
+    var scriptable_meta = classToEvaluate.meta.get().find(function(m) return m.name == ":hscript");
+    if (scriptable_meta != null)
+    {
+      // Get variables names from inside @:hscript(...) and add them to the list to pass to scripts.
+      trace('Found an hscript annotation on a class:', scriptable_meta.pos);
+      for (p in scriptable_meta.params)
+      {
+        switch p.expr
+        {
+          case EConst(CIdent(name)):
+            trace('Adding a class-wide identifier: ${name}', p.pos);
+            result.push(name);
+          default:
+            throw 'Error: Only identifiers (like Std, Math, myVariable, etc) are allowed in @:hscript(), got ${p.toString()}';
+        }
+      }
+    }
+
+    // Resolve any parent classes.
+    if (classToEvaluate.superClass != null && classToEvaluate.superClass.t != null)
+    {
+      // Recursion!
+      result = result.concat(getClasswideVariableNames(classToEvaluate.superClass.t.get()));
+    }
+
+    // Resolve any interfaces.
+    if (classToEvaluate.interfaces != null && classToEvaluate.interfaces.length > 0)
+    {
+      for (iface in classToEvaluate.interfaces)
+      {
+        // Recursion!
+        result = result.concat(getClasswideVariableNames(iface.t.get()));
+      }
+    }
+
+    return result;
+  }
+
   public static macro function build():Array<Field>
   {
     var cls = Context.getLocalClass().get();
     var fields:Array<Field> = Context.getBuildFields();
 
     var constructor_setup:Array<Expr> = null;
+
+    // These variable names are added to every @:hscript() function in this class.
+    var classwide_variable_names:Array<String> = getClasswideVariableNames(cls);
 
     // Find all fields with @:hscript metadata
     for (field in fields)
@@ -64,6 +115,9 @@ class HScriptMacro
 
             // Also the function arguments
             for (arg in func.args) variable_names.push(arg.name);
+
+            // Also the variables specified by the class and its parents
+            for (v in classwide_variable_names) variable_names.push(v);
 
             // Now prepend the code to execute the hscript to the
             // function body. Store it in a variable called script_result.
