@@ -34,6 +34,54 @@ using Lambda;
 
 class HScriptMacro
 {
+	static function getClasswideVariableNames(classToEvaluate:haxe.macro.Type.ClassType):Array<String>
+	{
+		if (classToEvaluate == null)
+			return [];
+
+		trace('Evaluating class: ${classToEvaluate.name}');
+
+		var result = [];
+
+		// Find any classes with the @:hscript annotation on the class itself.
+		var scriptable_meta = classToEvaluate.meta.get().find(function(m) return m.name == ":hscript");
+		if (scriptable_meta != null)
+		{
+			// Get variables names from inside @:hscript(...) and add them to the list to pass to scripts.
+			trace('Found an hscript annotation on a class:', scriptable_meta.pos);
+			for (p in scriptable_meta.params)
+			{
+				switch p.expr
+				{
+					case EConst(CIdent(name)):
+						trace('Adding a class-wide identifier: ${name}', p.pos);
+						result.push(name);
+					default:
+						throw 'Error: Only identifiers (like Std, Math, myVariable, etc) are allowed in @:hscript(), got ${p.toString()}';
+				}
+			}
+		}
+
+		// Resolve any parent classes.
+		if (classToEvaluate.superClass != null && classToEvaluate.superClass.t != null)
+		{
+			// Recursion!
+			result = result.concat(getClasswideVariableNames(classToEvaluate.superClass.t.get()));
+		}
+
+		// Resolve any interfaces.
+		if (classToEvaluate.interfaces != null && classToEvaluate.interfaces.length > 0)
+		{
+			for (iface in classToEvaluate.interfaces)
+			{
+				// Recursion!
+				result = result.concat(getClasswideVariableNames(iface.t.get()));
+			}
+		}
+
+		return result;
+	}
+
 	public static macro function build():Array<Field>
 	{
 		var cls = Context.getLocalClass().get();
@@ -45,38 +93,6 @@ class HScriptMacro
 		var classwide_variable_names:Array<String> = [];
 		// Evaluate each class in the hierarchy.
 		var classToEvaluate:haxe.macro.Type.ClassType = cls;
-		while (classToEvaluate != null)
-		{
-			Context.info('Evaluating class: ${classToEvaluate.name}', classToEvaluate.pos);
-			// Find any classes with the @:hscript annotation on the class itself.
-			var scriptable_meta = classToEvaluate.meta.get().find(function(m) return m.name == ":hscript");
-			if (scriptable_meta != null)
-			{
-				// Get variables names from inside @:hscript(...) and add them to the list to pass to scripts.
-				Context.info('Found an hscript annotation on a class:', scriptable_meta.pos);
-				for (p in scriptable_meta.params)
-				{
-					switch p.expr
-					{
-						case EConst(CIdent(name)):
-							Context.info('Adding a class-wide identifier: ${name}', p.pos);
-							classwide_variable_names.push(name);
-						default:
-							Context.error("Error: Only identifiers (like Std, Math, myVariable, etc) are allowed in @:hscript()", p.pos);
-					}
-				}
-			}
-
-			// Move on to the next parent.
-			if (classToEvaluate.superClass != null && classToEvaluate.superClass.t != null)
-			{
-				classToEvaluate = classToEvaluate.superClass.t.get();
-			}
-			else
-			{
-				classToEvaluate = null;
-			}
-		}
 
 		// Find all fields with @:hscript metadata
 		for (field in fields)
