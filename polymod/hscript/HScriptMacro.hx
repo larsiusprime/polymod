@@ -47,7 +47,7 @@ class HScriptMacro
 		var classToEvaluate:haxe.macro.Type.ClassType = cls;
 		while (classToEvaluate != null)
 		{
-			Context.info('Evaluating class: ${classToEvaluate.name}', p.pos);
+			Context.info('Evaluating class: ${classToEvaluate.name}', classToEvaluate.pos);
 			// Find any classes with the @:hscript annotation on the class itself.
 			var scriptable_meta = classToEvaluate.meta.get().find(function(m) return m.name == ":hscript");
 			if (scriptable_meta != null)
@@ -68,9 +68,9 @@ class HScriptMacro
 			}
 
 			// Move on to the next parent.
-			if (cls.superClass != null && cls.superClass.t != null)
+			if (classToEvaluate.superClass != null && classToEvaluate.superClass.t != null)
 			{
-				classToEvaluate = cls.superClass.t.get();
+				classToEvaluate = classToEvaluate.superClass.t.get();
 			}
 			else
 			{
