@@ -168,7 +168,11 @@ Hello from my mod!
 
 ### `_merge` folder
 
-This is mostly meant for XML and CSV/TSV files. Say you have a big complicated XML file at `data/stuff.xml` with lots of nodes:
+This folder allows you to merge into files containing a more complex data structure, such as XML, CSV/TSV, or JSON. The format of the files in this folder depends on the file type of the file being merged into.
+
+#### XML
+
+Say you have a big complicated XML file at `data/stuff.xml` with lots of nodes:
 
 ```xml
 <?xml version="1.0" encoding="utf-8" ?>
@@ -225,10 +229,55 @@ The `<merge>` tag instructs the mod loader thus:
 
 As soon as it finds the first match, it stops and merges the payload with the specified tag. Any attributes will be added to the base tag (overwriting any existing attributes with the same name, which in this case changes values from "easy" to just "super_hard", which is what we want). Furthermore, if the payload has child nodes, all of its children will be merged with the target tag as well.
 
-CSV and TSV files can be merged as well, but no logic needs to be supplied. In this case, the mod loader will look for any rows in the base file whose first cell matches the same value as those in the merge file, and replace them with the rows from the merge file.
+#### CSV/TSV
 
-TODO: Merge logic for JSON is currently planned but not yet supported.
+CSV and TSV files can be merged as well, but no logic needs to be supplied. In this case, the mod loader will look for any rows in the base file whose first cell matches the same value as those in the merge file, and replace them with the rows from the merge file.
 TODO: Advanced merge logic for CSV/TSV (specify a field other than the one at index 0 as the primary merge key) is not yet supported.
+
+#### JSON
+
+JSON acts somewhat similarly to XML. Say you have a data file like this:
+
+```json
+{
+    "data": {
+        "difficulty": "easy",
+	"nested": {
+	    "enemies": [
+	    	{
+		    "name": "foo"
+		},
+	    	{
+		    "name": "bar",
+		    "weapon": "deagle"
+		},
+	    	{
+		    "name": "baz"
+		}
+	    ]
+	}
+    }
+}
+```
+
+And you want to change the difficulty to `super_hard`, same idea as the XML. We also want to bump up Bar's meager Desert Eagle into a fearsome Minigun. Instead of specifying the whole structure and putting a merge tag underneath it, you create a single top-level array called `merge`, specify the full path to inject into, along with the payload to inject, like so:
+
+```json
+{
+    "merge": [
+    	{
+	    "target": "data.difficulty",
+	    "payload": "super_hard"
+	},
+	{
+	    "target": "data.nested.enemies[1].weapon",
+	    "payload": "minigun"
+	}
+    ]
+}
+```
+
+You can inject as many values as you like into as many paths as you like.
 
 ## Metadata
 
