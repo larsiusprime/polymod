@@ -91,8 +91,6 @@ class HScriptMacro
 
 		// These variable names are added to every @:hscript() function in this class.
 		var classwide_variable_names:Array<String> = getClasswideVariableNames(cls);
-		// Evaluate each class in the hierarchy.
-		var classToEvaluate:haxe.macro.Type.ClassType = cls;
 
 		// Find all fields with @:hscript metadata
 		for (field in fields)
