@@ -23,8 +23,9 @@
 
 package polymod.hscript;
 
-import hscript.*;
+import hscript.Parser;
 import hscript.Expr;
+import hscript.Interp;
 
 // This interface triggers this build macro on any implementing classes
 

@@ -1,0 +1,29 @@
+package polymod.util;
+
+class DefineUtil
+{
+	// Only macros should be able to use these.
+	#if macro
+	public static function getDefineStringRaw(key:String, ?defaultValue:String = ''):String
+	{
+		var value = Context.definedValue(key);
+		return value == null ? defaultValue : value;
+	}
+
+	public static function getDefineBoolRaw(key:String, ?defaultValue:Bool = false):Bool
+	{
+		var value:String = getDefineStringRaw(key);
+		return value == null ? defaultValue : (value == 'true');
+	}
+	#end
+
+	public static macro function getDefineString(key:String, ?defaultValue:String = ''):haxe.macro.Expr
+	{
+		return macro $v{getDefineStringRaw(key, defaultValue)};
+	}
+
+	public static macro function getDefineBool(key:String, ?defaultValue:Bool = false):haxe.macro.Expr
+	{
+		return macro $v{getDefineBoolRaw(key, defaultValue)};
+	}
+}

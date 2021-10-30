@@ -23,6 +23,7 @@
 
 package polymod.hscript;
 
+import polymod.util.DefineUtil;
 import haxe.macro.Type.ClassType;
 import haxe.macro.Context;
 import haxe.macro.Expr;
@@ -50,54 +51,38 @@ using Lambda;
  */
 class HScriptConfig
 {
-	static macro function getStringDefine(key:String, defaultValue:String):haxe.macro.Expr
+	public static var debug(get, null):Bool;
+
+	static function get_debug()
 	{
-		var value = Context.definedValue(key);
-		Context.info('String define: ${key} : ${defaultValue} : ${value}', Context.currentPos());
-		if (value == null)
-			value = defaultValue;
-		return macro $v{value};
+		return DefineUtil.getDefineBool('POLYMOD_DEBUG', false);
 	}
 
-	static macro function getBoolDefine(key:String, defaultValue:Bool):haxe.macro.Expr
+	public static var rootPath(get, null):String;
+
+	static function get_rootPath()
 	{
-		var value:String = Context.definedValue(key);
-		var valueBool = (value == null) ? defaultValue : (value == 'true');
-		return macro $v{valueBool};
+		return DefineUtil.getDefineString('POLYMOD_ROOT_PATH', "data/");
 	}
 
-	public static var debug(default, null):Bool;
+	public static var useNamespaceInPaths(get, null):Bool;
 
-	function get_debug()
+	static function get_useNamespaceInPaths()
 	{
-		return getBoolDefine('POLYMOD_DEBUG', false);
+		return DefineUtil.getDefineBool('POLYMOD_USE_NAMESPACE', true);
 	}
 
-	public static var rootPath(default, null):String;
+	public static var scriptExt(get, null):String;
 
-	function get_rootPath()
+	static function get_scriptExt()
 	{
-		return getStringDefine('POLYMOD_ROOT_PATH', "data/");
+		return DefineUtil.getDefineString('POLYMOD_SCRIPT_EXT', ".txt");
 	}
 
-	public static var useNamespaceInPaths(default, null):Bool;
+	public static var scriptLibrary(get, null):String;
 
-	function get_useNamespaceInPaths()
+	static function get_scriptLibrary()
 	{
-		return getBoolDefine('POLYMOD_USE_NAMESPACE', true);
-	}
-
-	public static var scriptExt(default, null):String;
-
-	function get_scriptExt()
-	{
-		return getStringDefine('POLYMOD_SCRIPT_EXT', ".txt");
-	}
-
-	public static var scriptLibrary(default, null):String;
-
-	function get_scriptLibrary()
-	{
-		return getStringDefine('POLYMOD_SCRIPT_LIBRARY', "default");
+		return DefineUtil.getDefineString('POLYMOD_SCRIPT_LIBRARY', "default");
 	}
 }

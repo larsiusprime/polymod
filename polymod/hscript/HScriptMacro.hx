@@ -139,7 +139,7 @@ class HScriptMacro
 						}
 
 						var pathName = field.name;
-						if (polymod.hscript.HScriptConfig.useNamespaceInPaths)
+						if (polymod.util.DefineUtil.getDefineBoolRaw('POLYMOD_USE_NAMESPACE'))
 						{
 							var module:String = Context.getLocalModule();
 							module = StringTools.replace(module, ".", "/");
