@@ -34,6 +34,19 @@ interface HScriptable
 {
 }
 
+typedef ScriptOutput =
+{
+	/**
+	 * The output of the script. Can be any value type.
+	 */
+	var script_result:Dynamic;
+
+	/**
+	 * The functions and variables created within the scope of the script.
+	 */
+	var script_variables:Map<String, Dynamic>;
+}
+
 class ScriptRunner
 {
 	private var scripts:Map<String, Script>;
@@ -57,7 +70,7 @@ class ScriptRunner
 		return scripts.get(name);
 	}
 
-	public function execute(name:String):Dynamic
+	public function execute(name:String):ScriptOutput
 	{
 		if (!scripts.exists(name))
 			return null;
@@ -89,8 +102,12 @@ class Script
 		interp.variables.set(key, value);
 	}
 
-	public function execute():Dynamic
+	public function execute():ScriptOutput
 	{
-		return interp.execute(program);
+		var result:Dynamic = interp.execute(program);
+		return {
+			script_result: result,
+			script_variables: interp.variables,
+		};
 	}
 }

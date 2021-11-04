@@ -27,6 +27,7 @@ import haxe.macro.Compiler;
 import haxe.macro.Context;
 import haxe.macro.Expr;
 import haxe.macro.ExprTools;
+import polymod.hscript.HScriptable.ScriptOutput;
 
 using haxe.macro.ExprTools;
 using haxe.macro.TypeTools;
@@ -159,7 +160,10 @@ class HScriptMacro
 										throw "Did not find hscript: " + $v{pathName};
 									#end
 									$b{setters};
-									script_result = script.execute();
+
+									var output = script.execute();
+									script_result = output.script_result;
+									script_variables = output.script_variables;
 								}
 								catch (e:Dynamic)
 								{
