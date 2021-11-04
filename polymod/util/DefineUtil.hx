@@ -1,5 +1,9 @@
 package polymod.util;
 
+#if macro
+import haxe.macro.Context;
+#end
+
 class DefineUtil
 {
 	// Only macros should be able to use these.
