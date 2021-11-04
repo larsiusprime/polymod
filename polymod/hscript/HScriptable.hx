@@ -34,6 +34,134 @@ interface HScriptable
 {
 }
 
+/**
+ * Used to provide additional parameters to a script function.
+ */
+class HScriptParams
+{
+	/**
+	 * Provide an array of constants which will be accessible by the local script.
+	 * This can be global utility classes, or variables/functions local to the current class.
+	 */
+	public var context:Array<String> = [];
+
+	/**
+	 * If true, provides a `cancel()` function to the script.
+	 * Calling it will cause the main body of the function to be ignored.
+	 */
+	public var cancellable:Bool = false;
+
+	/**
+	 * If true, the body of the function will run BEFORE the script does.
+	 * Incompatible with `cancellable`.
+	 */
+	public var runBefore:Bool = false;
+
+	/**
+	 * Force a specific script path name.
+	 */
+	public var pathName(default, set):String = null;
+
+	function set_pathName(newValue:String):String
+	{
+		if (pathNameDynId != null)
+			return null;
+
+		this.pathName = newValue;
+		return pathName;
+	}
+
+	/**
+	 * A dynamic identifier which will be evaluated, at function call time,
+	 		* to determine the pathname of the script to run.
+	 		*
+	 		* This can be the name of a String variable, or of a function.
+	 		* 
+	 		* DON'T PASS `pathNameDynId` DIRECTLY!
+	 		* Just pass an identifier into `pathName` instead of a constant.
+	 */
+	public var pathNameDynId(default, set):String = null;
+
+	function set_pathNameDynId(newValue:String):String
+	{
+		this.pathName = null;
+		this.pathNameDynId = newValue;
+		return this.pathNameDynId;
+	}
+
+	public function new()
+	{
+	}
+
+	/**
+	 * Concatenate the provided list of constant identifiers to the existing list.
+	 * @returns Self, for chaining.
+	 */
+	public function mergeContext(newValues:Array<String>):HScriptParams
+	{
+		context = context.concat(newValues);
+		return this;
+	}
+
+	public function mergeCancellable(newValue:Bool):HScriptParams
+	{
+		if (!cancellable)
+			cancellable = newValue;
+		return this;
+	}
+
+	public function mergeRunBefore(newValue:Bool):HScriptParams
+	{
+		if (!runBefore)
+			runBefore = newValue;
+		return this;
+	}
+
+	public function mergePathName(newValue:String, ?newDynValue:String = null):HScriptParams
+	{
+		if (newDynValue != null)
+		{
+			pathNameDynId = newDynValue;
+			pathName = null;
+		}
+		else
+		{
+			if (pathNameDynId == null)
+				pathName = newValue;
+		}
+		return this;
+	}
+
+	/**
+	 * Create a copy of this object.
+	 * @return A new instance of HScriptParams.
+	 */
+	public function copy():HScriptParams
+	{
+		var result = new HScriptParams();
+
+		result.cancellable = cancellable;
+		result.context = context;
+		result.pathName = pathName;
+		result.pathNameDynId = pathNameDynId;
+		result.runBefore = runBefore;
+
+		return result;
+	}
+
+	/**
+	 * Merge all values from the provided params into this one.
+	 * @returns Self, for chaining.
+	 */
+	public function merge(newValue:HScriptParams)
+	{
+		return this.mergeContext(newValue.context)
+			.mergeCancellable(newValue.cancellable)
+			.mergeRunBefore(newValue.runBefore)
+			.mergePathName(newValue.pathName, newValue.pathNameDynId);
+	}
+}
+
 typedef ScriptOutput =
 {
 	/**

@@ -27,6 +27,7 @@ import haxe.macro.Compiler;
 import haxe.macro.Context;
 import haxe.macro.Expr;
 import haxe.macro.ExprTools;
+import polymod.hscript.HScriptable.HScriptParams;
 import polymod.hscript.HScriptable.ScriptOutput;
 
 using haxe.macro.ExprTools;
@@ -35,12 +36,10 @@ using Lambda;
 
 class HScriptMacro
 {
-	static function getClasswideVariableNames(classToEvaluate:haxe.macro.Type.ClassType):Array<String>
+	static function legacyParseParams(classToEvaluate:haxe.macro.Type.ClassType):Array<String>
 	{
 		if (classToEvaluate == null)
 			return [];
-
-		// trace('Evaluating class: ${classToEvaluate.name}');
 
 		var result = [];
 
@@ -48,14 +47,11 @@ class HScriptMacro
 		var scriptable_meta = classToEvaluate.meta.get().find(function(m) return m.name == ":hscript");
 		if (scriptable_meta != null)
 		{
-			// Get variables names from inside @:hscript(...) and add them to the list to pass to scripts.
-			// trace('Found an hscript annotation on a class:', scriptable_meta.pos);
 			for (p in scriptable_meta.params)
 			{
 				switch p.expr
 				{
 					case EConst(CIdent(name)):
-						// trace('Adding a class-wide identifier: ${name}', p.pos);
 						result.push(name);
 					default:
 						throw 'Error: Only identifiers (like Std, Math, myVariable, etc) are allowed in @:hscript(), got ${p.toString()}';
@@ -63,24 +59,130 @@ class HScriptMacro
 			}
 		}
 
+		return result;
+	}
+
+	static function getClassHScriptParams(classToEvaluate:haxe.macro.Type.ClassType):HScriptParams
+	{
+		var result = new HScriptParams();
+
+		if (classToEvaluate == null)
+			return result;
+
+		// Find any classes with the @:hscript annotation on the class itself.
+		var scriptable_meta = classToEvaluate.meta.get().find(function(m) return m.name == ":hscript");
+		if (scriptable_meta != null)
+		{
+			// Get variables names from inside @:hscript(...) and add them to the list to pass to scripts.
+			// trace('Found an hscript annotation on a class:', scriptable_meta.pos);
+			var hscriptObjectRaw = scriptable_meta.params[0];
+
+			switch (hscriptObjectRaw.expr)
+			{
+				case EObjectDecl(paramFields):
+					for (paramField in paramFields)
+					{
+						switch (paramField.field)
+						{
+							case 'context':
+								// Parse the list of context items.
+								switch (paramField.expr.expr)
+								{
+									case EArrayDecl(contextItems):
+										for (contextItem in contextItems)
+										{
+											switch contextItem.expr
+											{
+												case EConst(CIdent(name)):
+													result.mergeContext([name]);
+												default:
+													throw 'Error: Only identifiers (like Std, Math, myVariable, etc) are allowed in @:hscript(), got ${contextItem.toString()}';
+											}
+										}
+									default:
+										throw '@:hscript({context}) must be an array of identifiers.';
+								}
+							case 'cancellable':
+								switch (paramField.expr.expr)
+								{
+									case EConst(CIdent('true')):
+										result.cancellable = true;
+									case EConst(CIdent('false')):
+										result.cancellable = false;
+									default:
+										throw '@:hscript({cancellable}) must be a Boolean value.';
+								}
+							case 'runBefore':
+								switch (paramField.expr.expr)
+								{
+									case EConst(CIdent('true')):
+										result.runBefore = true;
+									case EConst(CIdent('false')):
+										result.runBefore = false;
+									default:
+										throw '@:hscript({runBefore}) must be a Boolean value.';
+								}
+							case 'pathName':
+								switch (paramField.expr.expr)
+								{
+									case EConst(CString(value)):
+										// Passed a string, this means pathName is constant.
+										Context.info('Found value for pathName: ${value}', paramField.expr.pos);
+										result.pathName = value;
+									case EConst(CIdent(value)):
+										// Passed an identifier, this means pathName is dynamic.
+										Context.info('Found IDENTIFIER for pathName, that means it is dynamic: ${value}', paramField.expr.pos);
+										result.pathNameDynId = value;
+									default:
+										throw '@:hscript({pathName}) must be a String value.';
+								}
+							default:
+								throw '@:hscript({${paramField.field}}) is an unknown parameter.';
+						}
+					}
+				case EConst(CIdent(name)):
+					result.mergeContext(legacyParseParams(classToEvaluate));
+				default:
+					throw 'The parameters for your @:hscript annotation are incorrect.';
+			}
+		}
 		// Resolve any parent classes.
 		if (classToEvaluate.superClass != null && classToEvaluate.superClass.t != null)
 		{
 			// Recursion!
-			result = result.concat(getClasswideVariableNames(classToEvaluate.superClass.t.get()));
+			var parentParams = getClassHScriptParams(classToEvaluate.superClass.t.get());
+			result = parentParams.merge(result);
 		}
-
 		// Resolve any interfaces.
 		if (classToEvaluate.interfaces != null && classToEvaluate.interfaces.length > 0)
 		{
 			for (iface in classToEvaluate.interfaces)
 			{
 				// Recursion!
-				result = result.concat(getClasswideVariableNames(iface.t.get()));
+				var parentParams = getClassHScriptParams(iface.t.get());
+				result = parentParams.merge(result);
 			}
 		}
 
 		return result;
+	}
+
+	static function getFunctionHScriptParams(params:Null<Array<Expr>>, parentParams:HScriptParams):HScriptParams
+	{
+		var contextResult:Array<String> = [];
+		for (p in params)
+			switch p.expr
+			{
+				case EObjectDecl(fields):
+					Context.info('New @:hscript detected.', p.pos);
+					Context.info(fields.toString(), p.pos);
+				case EConst(CIdent(name)):
+					contextResult.push(name);
+				default:
+					Context.error('The parameters for your @:hscript annotation are incorrect.', p.pos);
+			}
+
+		return parentParams.copy().mergeContext(contextResult);
 	}
 
 	public static macro function build():Array<Field>
@@ -90,8 +192,7 @@ class HScriptMacro
 
 		var constructor_setup:Array<Expr> = null;
 
-		// These variable names are added to every @:hscript() function in this class.
-		var classwide_variable_names:Array<String> = getClasswideVariableNames(cls);
+		var classParams = getClassHScriptParams(cls);
 
 		// Find all fields with @:hscript metadata
 		for (field in fields)
@@ -105,20 +206,15 @@ class HScriptMacro
 						// The variables we'll set on the hscript scope:
 						var variable_names:Array<String> = [];
 
-						// Get variables names from inside @:hscript(...)
-						for (p in scriptable_meta.params)
-							switch p.expr
-							{
-								case EConst(CIdent(name)): variable_names.push(name);
-								default: Context.error("Error: Only identifiers (like Std, Math, myVariable, etc) are allowed in @:hscript()", p.pos);
-							}
+						// Get the full @:hscript parameters.
+						var hscriptParams:HScriptParams = getFunctionHScriptParams(scriptable_meta.params, classParams);
 
-						// Also the function arguments
+						// Also the direct function arguments
 						for (arg in func.args)
 							variable_names.push(arg.name);
 
 						// Also the variables specified by the class and its parents
-						for (v in classwide_variable_names)
+						for (v in hscriptParams.context)
 							variable_names.push(v);
 
 						// Now prepend the code to execute the hscript to the
@@ -130,6 +226,8 @@ class HScriptMacro
 							return macro script.set($v{name}, $i{name});
 						});
 
+						// Get the original script's return expression.
+						// Defaults to `return script_result` unless you return in your function body.
 						var return_expr = switch func.ret
 						{
 							case TPath({name: "Void", pack: [], params: []}):
@@ -147,19 +245,64 @@ class HScriptMacro
 							pathName = $v{module + "/" + pathName};
 						}
 
+						// If pathName is a string, set it.
+						if (hscriptParams.pathName != null)
+						{
+							pathName = hscriptParams.pathName;
+						}
+
+						// If pathName is an identifier, call the function or access the variable.
+						var scriptFetchExpr = macro _polymod_scripts.get($v{pathName});
+
+						Context.info('Using dyn id: ${hscriptParams.pathNameDynId}', field.pos);
+						if (hscriptParams.pathNameDynId != null)
+						{
+							scriptFetchExpr = macro
+								{
+									if (Reflect.isFunction($i{hscriptParams.pathNameDynId}))
+									{
+										var pathName = Reflect.callMethod(this, cast $i{hscriptParams.pathNameDynId}, []);
+										_polymod_scripts.get(pathName);
+									}
+									else
+									{
+										_polymod_scripts.get(cast $i{hscriptParams.pathNameDynId});
+									}
+								}
+						}
+
+						Context.info('${scriptFetchExpr.toString()}', field.pos);
+
 						// Alter the function body:
 						func.expr = macro
 							{
+								if ($v{hscriptParams.runBefore})
+								{
+									${func.expr};
+								}
+
 								var script_error:Dynamic = null;
 								var script_result:Dynamic = null;
+								var script_variables:Dynamic = null;
+								var wasCancelled:Bool = false;
 								try
 								{
-									var script = _polymod_scripts.get($v{pathName});
+									var script = $e{scriptFetchExpr};
+
 									#if POLYMOD_DEBUG
 									if (script == null)
 										throw "Did not find hscript: " + $v{pathName};
 									#end
 									$b{setters};
+
+									if ($v{hscriptParams.cancellable})
+									{
+										script.set('cancel', function()
+										{
+											trace('Script called cancel()');
+											wasCancelled = true;
+										});
+									}
 
 									var output = script.execute();
 									script_result = output.script_result;
@@ -172,7 +315,12 @@ class HScriptMacro
 									#end
 									script_error = e;
 								}
-								${func.expr};
+
+								if (!$v{hscriptParams.runBefore} && !wasCancelled)
+								{
+									${func.expr};
+								}
+
 								$return_expr;
 							}
 
