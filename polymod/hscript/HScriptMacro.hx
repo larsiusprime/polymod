@@ -276,10 +276,7 @@ class HScriptMacro
 						// Alter the function body:
 						func.expr = macro
 							{
-								if ($v{hscriptParams.runBefore})
-								{
-									${func.expr};
-								}
+								$b{hscriptParams.runBefore ? [func.expr] : []};
 
 								var script_error:Dynamic = null;
 								var script_result:Dynamic = null;
