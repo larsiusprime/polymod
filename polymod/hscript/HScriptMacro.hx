@@ -62,6 +62,70 @@ class HScriptMacro
 		return result;
 	}
 
+	static function parseParamObjectFields(paramFields:Array<ObjectField>, result:HScriptParams)
+	{
+		for (paramField in paramFields)
+		{
+			switch (paramField.field)
+			{
+				case 'context':
+					// Parse the list of context items.
+					switch (paramField.expr.expr)
+					{
+						case EArrayDecl(contextItems):
+							for (contextItem in contextItems)
+							{
+								switch contextItem.expr
+								{
+									case EConst(CIdent(name)):
+										result.mergeContext([name]);
+									default:
+										throw 'Error: Only identifiers (like Std, Math, myVariable, etc) are allowed in @:hscript(), got ${contextItem.toString()}';
+								}
+							}
+						default:
+							throw '@:hscript({context}) must be an array of identifiers.';
+					}
+				case 'cancellable':
+					switch (paramField.expr.expr)
+					{
+						case EConst(CIdent('true')):
+							result.cancellable = true;
+						case EConst(CIdent('false')):
+							result.cancellable = false;
+						default:
+							throw '@:hscript({cancellable}) must be a Boolean value.';
+					}
+				case 'runBefore':
+					switch (paramField.expr.expr)
+					{
+						case EConst(CIdent('true')):
+							result.runBefore = true;
+						case EConst(CIdent('false')):
+							result.runBefore = false;
+						default:
+							throw '@:hscript({runBefore}) must be a Boolean value.';
+					}
+				case 'pathName':
+					switch (paramField.expr.expr)
+					{
+						case EConst(CString(value)):
+							// Passed a string, this means pathName is constant.
+							Context.info('Found value for pathName: ${value}', paramField.expr.pos);
+							result.pathName = value;
+						case EConst(CIdent(value)):
+							// Passed an identifier, this means pathName is dynamic.
+							Context.info('Found IDENTIFIER for pathName, that means it is dynamic: ${value}', paramField.expr.pos);
+							result.pathNameDynId = value;
+						default:
+							throw '@:hscript({pathName}) must be a String value.';
+					}
+				default:
+					throw '@:hscript({${paramField.field}}) is an unknown parameter.';
+			}
+		}
+	}
+
 	static function getClassHScriptParams(classToEvaluate:haxe.macro.Type.ClassType):HScriptParams
 	{
 		var result = new HScriptParams();
@@ -80,66 +144,7 @@ class HScriptMacro
 			switch (hscriptObjectRaw.expr)
 			{
 				case EObjectDecl(paramFields):
-					for (paramField in paramFields)
-					{
-						switch (paramField.field)
-						{
-							case 'context':
-								// Parse the list of context items.
-								switch (paramField.expr.expr)
-								{
-									case EArrayDecl(contextItems):
-										for (contextItem in contextItems)
-										{
-											switch contextItem.expr
-											{
-												case EConst(CIdent(name)):
-													result.mergeContext([name]);
-												default:
-													throw 'Error: Only identifiers (like Std, Math, myVariable, etc) are allowed in @:hscript(), got ${contextItem.toString()}';
-											}
-										}
-									default:
-										throw '@:hscript({context}) must be an array of identifiers.';
-								}
-							case 'cancellable':
-								switch (paramField.expr.expr)
-								{
-									case EConst(CIdent('true')):
-										result.cancellable = true;
-									case EConst(CIdent('false')):
-										result.cancellable = false;
-									default:
-										throw '@:hscript({cancellable}) must be a Boolean value.';
-								}
-							case 'runBefore':
-								switch (paramField.expr.expr)
-								{
-									case EConst(CIdent('true')):
-										result.runBefore = true;
-									case EConst(CIdent('false')):
-										result.runBefore = false;
-									default:
-										throw '@:hscript({runBefore}) must be a Boolean value.';
-								}
-							case 'pathName':
-								switch (paramField.expr.expr)
-								{
-									case EConst(CString(value)):
-										// Passed a string, this means pathName is constant.
-										Context.info('Found value for pathName: ${value}', paramField.expr.pos);
-										result.pathName = value;
-									case EConst(CIdent(value)):
-										// Passed an identifier, this means pathName is dynamic.
-										Context.info('Found IDENTIFIER for pathName, that means it is dynamic: ${value}', paramField.expr.pos);
-										result.pathNameDynId = value;
-									default:
-										throw '@:hscript({pathName}) must be a String value.';
-								}
-							default:
-								throw '@:hscript({${paramField.field}}) is an unknown parameter.';
-						}
-					}
+					parseParamObjectFields(paramFields, result);
 				case EConst(CIdent(name)):
 					result.mergeContext(legacyParseParams(classToEvaluate));
 				default:
@@ -169,20 +174,38 @@ class HScriptMacro
 
 	static function getFunctionHScriptParams(params:Null<Array<Expr>>, parentParams:HScriptParams):HScriptParams
 	{
-		var contextResult:Array<String> = [];
-		for (p in params)
-			switch p.expr
-			{
-				case EObjectDecl(fields):
-					Context.info('New @:hscript detected.', p.pos);
-					Context.info(fields.toString(), p.pos);
-				case EConst(CIdent(name)):
-					contextResult.push(name);
-				default:
-					Context.error('The parameters for your @:hscript annotation are incorrect.', p.pos);
-			}
+		var result = new HScriptParams();
 
-		return parentParams.copy().mergeContext(contextResult);
+		var hscriptObjectRaw = params[0];
+
+		// If there are no params, we are done.
+		if (hscriptObjectRaw == null)
+			return result;
+
+		switch hscriptObjectRaw.expr
+		{
+			case EObjectDecl(paramFields):
+				// New and preferred syntax. Pass in a parameter object.
+				Context.info('New @:hscript detected.', paramFields[0].expr.pos);
+				parseParamObjectFields(paramFields, result);
+			case EConst(CIdent(name)):
+				// Legacy support. Allow passing context as a set of parameters.
+				result.mergeContext(params.map(function(p)
+				{
+					switch (p.expr)
+					{
+						case EConst(CIdent(name)):
+							return name;
+						default:
+							Context.error('@:hscript only accepts a single parameter object or a set of context objects.', p.pos);
+							return null;
+					}
+				}).filter(function(p) return p != null));
+			default:
+				Context.error('The parameters for your @:hscript annotation are incorrect.', params[0].pos);
+		}
+
+		return result;
 	}
 
 	public static macro function build():Array<Field>
@@ -248,15 +271,16 @@ class HScriptMacro
 						// If pathName is a string, set it.
 						if (hscriptParams.pathName != null)
 						{
+							// Context.info('Using path: ${hscriptParams.pathName}', field.pos);
 							pathName = hscriptParams.pathName;
 						}
 
 						// If pathName is an identifier, call the function or access the variable.
 						var scriptFetchExpr = macro _polymod_scripts.get($v{pathName});
 
-						Context.info('Using dyn id: ${hscriptParams.pathNameDynId}', field.pos);
 						if (hscriptParams.pathNameDynId != null)
 						{
+							// Context.info('Using path (identifier): ${hscriptParams.pathNameDynId}', field.pos);
 							scriptFetchExpr = macro
 								{
 									if (Reflect.isFunction($i{hscriptParams.pathNameDynId}))
@@ -270,8 +294,6 @@ class HScriptMacro
 									}
 								}
 						}
-
-						Context.info('${scriptFetchExpr.toString()}', field.pos);
 
 						// Alter the function body:
 						func.expr = macro
