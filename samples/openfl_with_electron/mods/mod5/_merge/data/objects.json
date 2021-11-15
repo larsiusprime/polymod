@@ -1,0 +1,8 @@
+{
+    "merge":[
+        {
+            "target":"nested.object.array",
+            "payload":["a","b","c","d"]
+        }
+    ]
+}

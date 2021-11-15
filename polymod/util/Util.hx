@@ -288,7 +288,7 @@ class Util
 
 	public static function pathSpecial(id:String, special:String = "", theDir:String = ""):String
 	{
-		#if sys
+		#if (sys || nodefs)
 		id = stripAssetsPrefix(id);
 		var thePath = uCombine([theDir, sl(), special, sl(), id]);
 		return thePath;
