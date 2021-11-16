@@ -107,6 +107,7 @@ enum Framework
 	NME;
 	LIME;
 	OPENFL;
+	OPENFL_WITH_NODE;
 	HEAPS;
 	KHA;
 	CUSTOM;
@@ -160,6 +161,8 @@ class Polymod
 		{
 			#if sys
 			new polymod.fs.SysFileSystem(params.modRoot);
+			#elseif nodefs
+			new polymod.fs.NodeFileSystem(params.modRoot);
 			#else
 			new polymod.fs.StubFileSystem();
 			#end
@@ -307,6 +310,8 @@ class Polymod
 		{
 			#if sys
 			fileSystem = new polymod.fs.SysFileSystem(modRoot);
+			#elseif nodefs
+			fileSystem = new polymod.fs.NodeFileSystem(modRoot);
 			#else
 			fileSystem = new polymod.fs.StubFileSystem();
 			#end
