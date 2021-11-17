@@ -40,6 +40,9 @@ import sys.FileSystem;
  * ...
  * @author 
  */
+@:hscript({
+	constants: [Std, Math] // Std and Math will be included in all scripts.
+})
 class Simulation extends Sprite implements polymod.hscript.HScriptable
 {
 	private var bees:Array<Bee>;
@@ -118,7 +121,10 @@ class Simulation extends Sprite implements polymod.hscript.HScriptable
 		}
 	}
 
-	@:hscript(Std, Math, numFlowers, numBees, distTest, makeFlower, makeHome, makeBee, home)
+	@:hscript({
+		constants: [numFlowers, numBees, distTest, makeFlower, makeHome, makeBee, home],
+		pathName: "initBee"
+	})
 	private function init():Void
 	{
 		if (script_error != null)
@@ -139,7 +145,7 @@ class Simulation extends Sprite implements polymod.hscript.HScriptable
 		score.text = script_result;
 	}
 
-	@:hscript(Math, bee, elapsed, home, moveToward, isTouching, getClosestFlower, getRandomFlower, emptyFlower, updateScore)
+	@:hscript(bee, elapsed, home, moveToward, isTouching, getClosestFlower, getRandomFlower, emptyFlower, updateScore)
 	private function updateBee(bee:Bee, elapsed:Float)
 	{
 	}
