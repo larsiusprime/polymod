@@ -42,7 +42,6 @@ class Main extends Sprite
 
 	public function new()
 	{
-		HScriptConfig.rootPath = "data/scripts/";
 		super();
 		mods = [];
 		loadDemo();

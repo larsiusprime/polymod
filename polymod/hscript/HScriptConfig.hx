@@ -38,19 +38,23 @@ using Lambda;
  * 
  * Overriding in HXML:
  * ```
- * -D POLYMOD_SCRIPT_EXT=".hx"
+ * -D POLYMOD_SCRIPT_EXT=".hscript"
  * ```
  * 
  * Overriding in Lime:
  * ```
- * <haxedef name="POLYMOD_SCRIPT_EXT" value=".hx" />
+ * <haxedef name="POLYMOD_SCRIPT_EXT" value=".hscript" />
  * ```
  * 
  * Each value has a default, or you can use a compiler flag to override it.
- * For example, 
  */
 class HScriptConfig
 {
+	/**
+	 * Whether additional debug information should be output.
+	 * Override with `<haxedef name="POLYMOD_DEBUG" value="true" />`
+	 * @default `false`
+	 */
 	public static var debug(get, null):Bool;
 
 	static function get_debug()
@@ -58,6 +62,11 @@ class HScriptConfig
 		return DefineUtil.getDefineBool('POLYMOD_DEBUG', false);
 	}
 
+	/**
+	 * The base path from which scripts should be accessed.
+	 * Override with `<haxedef name="POLYMOD_ROOT_PATH" value="true" />`
+	 * @default `data/`
+	 */
 	public static var rootPath(get, null):String;
 
 	static function get_rootPath()
@@ -65,6 +74,13 @@ class HScriptConfig
 		return DefineUtil.getDefineString('POLYMOD_ROOT_PATH', "data/");
 	}
 
+	/**
+	 * Whether script paths should, by default, be relative to the class's path or the root path.
+	 * Override with `<haxedef name="POLYMOD_USE_NAMESPACE" value="true" />`
+	 * For example, if `POLYMOD_USE_NAMESPACE` is false, `demo.Simulation#updateBee` will use `data/demo/Simulation/updateBee.txt`
+	 * If `POLYMOD_USE_NAMESPACE` is false, `demo.Simulation#updateBee` will use `data/updateBee.txt`
+	 * @default `true`
+	 */
 	public static var useNamespaceInPaths(get, null):Bool;
 
 	static function get_useNamespaceInPaths()
@@ -72,13 +88,24 @@ class HScriptConfig
 		return DefineUtil.getDefineBool('POLYMOD_USE_NAMESPACE', true);
 	}
 
+	/**
+	 * The file extension for script files.
+	 * Override with `<haxedef name="POLYMOD_SCRIPT_EXT" value=".txt" />`
+	 * @default `.txt`
+	 */
 	public static var scriptExt(get, null):String;
 
 	static function get_scriptExt()
 	{
+		// Ideally, the default should be `.hscript` but that would be a breaking change.
 		return DefineUtil.getDefineString('POLYMOD_SCRIPT_EXT', ".txt");
 	}
 
+	/**
+	 * The asset library to use for loading scripts.
+	 		* Override with `<haxedef name="POLYMOD_SCRIPT_LIBRARY" value="default" />`
+	 		* @default `default`
+	 */
 	public static var scriptLibrary(get, null):String;
 
 	static function get_scriptLibrary()

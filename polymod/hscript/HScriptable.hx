@@ -27,8 +27,11 @@ import hscript.Parser;
 import hscript.Expr;
 import hscript.Interp;
 
-// This interface triggers this build macro on any implementing classes
-
+/**
+ * This interface triggers the execution of a macro on any elements which use the `@:hscript` annotation.
+ * Adding the annotation to the function will cause the associate script to be executed.
+ * Adding the annotation to the class will allow specification of additional parameters which apply to all annotated functions.
+ */
 @:autoBuild(polymod.hscript.HScriptMacro.build())
 interface HScriptable
 {
@@ -36,6 +39,13 @@ interface HScriptable
 
 /**
  * Used to provide additional parameters to a script function.
+ * 
+ * `@:hscript({context, cancellable, runBefore, pathName})` can be added to any function to make it scriptable.
+ * Add constant identifiers to `context` to make values accessible to the script and use the other values to define the script's behavior.
+ * 
+ * For the purposes of backwards compatibility, `@:hscript(A, B, C)` can also be used, which will specify the context.
+ * `@:hscript(A, B, C)` is equivalent to `@:hscript({context: [A, B, C]})` but doesn't allow modifying other parameters.
+ * The new syntax should be adopted where possible.
  */
 class HScriptParams
 {

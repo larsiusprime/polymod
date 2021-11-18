@@ -23,7 +23,15 @@
 	<assets path="assets/img" rename="img" />
 	<assets path="assets/data" rename="data" />
 	
-	<!-- optimize output
-	<haxeflag name="-dce full" /> -->
+	<!-- Settings for Polymod -->
+  <haxedef name="POLYMOD_SCRIPT_EXT"
+           value=".txt" /> <!-- You should probably change this to ".hscript" -->
+  <haxedef name="POLYMOD_DEBUG" value="true" />
+  <haxedef name="POLYMOD_SCRIPT_LIBRARY"
+           value="default" />
+  <haxedef name="POLYMOD_USE_NAMESPACE"
+           value="true" />
+  <haxedef name="POLYMOD_ROOT_PATH"
+           value="data/scripts/" />
 	
 </project>
