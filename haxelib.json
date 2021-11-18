@@ -1,11 +1,11 @@
 {
   "name": "polymod",
-  "url" : "https://github.com/MasterEric/polymod",
+  "url" : "https://github.com/larsiusprime/polymod",
   "license": "MIT",
   "tags": ["mod","game","data","asset"],
   "description": "An atomic modding framework for Haxe games",
   "version": "1.3.0",
-  "releasenote": "",
+  "releasenote": "Revamped @:hscript to be recursive and support additional parameters.",
   "contributors": ["larsiusprime", "MasterEric"],
   "dependencies": {}
 }
