@@ -10,7 +10,6 @@ var cY:Float = 480/2;
 trace('[SCRIPT] Making ' + numFlowers + ' flowers...');
 for(i in 0...numFlowers)
 {
-    trace('[SCRIPT] Making flower...');
     var type = Std.int(Math.random() * 3) + 1;
     var x = cX;
     var y = cY;
@@ -27,7 +26,6 @@ makeHome(cX,cY);
 trace('[SCRIPT] Making ' + numBees + ' bees...');
 for(i in 0...numBees)
 {
-    trace('[SCRIPT] Making bee...');
     var x = minX + (Math.random() * (maxX-minX));
     var y = minY + (Math.random() * (maxY-minY));
     makeBee(x, y);
