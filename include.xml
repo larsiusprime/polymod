@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <project>
   <!-- These values are added to the project XML when you include this library. -->
-  <haxedef name="hscriptPos" value="true" if="POLYMOD_DEBUG" />
+  <haxedef name="hscriptPos" value="true" if="debug" />
 </project>
