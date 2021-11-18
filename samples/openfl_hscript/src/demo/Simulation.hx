@@ -41,7 +41,7 @@ import sys.FileSystem;
  * @author 
  */
 @:hscript({
-	constants: [Std, Math] // Std and Math will be included in all scripts.
+	context: [Std, Math] // Std and Math will be included in all scripts.
 })
 class Simulation extends Sprite implements polymod.hscript.HScriptable
 {
@@ -122,18 +122,66 @@ class Simulation extends Sprite implements polymod.hscript.HScriptable
 	}
 
 	@:hscript({
-		constants: [numFlowers, numBees, distTest, makeFlower, makeHome, makeBee, home],
-		pathName: "initBee"
+		context: [numFlowers, numBees, distTest, makeFlower, makeHome, makeBee, home],
+		pathName: "demo/Simulation/initSimulation"
 	})
 	private function init():Void
 	{
+		trace('init() called');
 		if (script_error != null)
 		{
 			trace('hscript failed to load or threw: ' + script_error);
 			trace('TODO: Do something to recover from this failure.');
 		}
+		if (script_result == null)
+		{
+			trace('hscript had no result');
+		}
+		else
+		{
+			trace('hscript result: $script_result');
+		}
 	}
 
+	/*
+		private function init():Void
+		{
+			var minX:Float = 40;
+			var maxX:Float = 800 - 40;
+
+			var minY:Float = 40;
+			var maxY:Float = 480 - 40;
+
+			var cX:Float = 800 / 2;
+			var cY:Float = 480 / 2;
+
+			trace('[SCRIPT] Making ' + numFlowers + ' flowers...');
+			for (i in 0...numFlowers)
+			{
+				var type = Std.int(Math.random() * 3) + 1;
+				var x = cX;
+				var y = cY;
+				while (distTest(x, y, cX, cY, 100))
+				{
+					x = minX + (Math.random() * (maxX - minX));
+					y = minY + (Math.random() * (maxY - minY));
+				}
+				trace('[SCRIPT] Making flower...');
+				makeFlower(type, x, y);
+			}
+
+			makeHome(cX, cY);
+
+			trace('[SCRIPT] Making ' + numBees + ' bees...');
+			for (i in 0...numBees)
+			{
+				var x = minX + (Math.random() * (maxX - minX));
+				var y = minY + (Math.random() * (maxY - minY));
+				trace('[SCRIPT] Making bee...');
+				makeBee(x, y);
+			}
+		}
+	 */
 	@:hscript
 	private function updateFlower(flower:Flower, elapsed:Float)
 	{
@@ -244,6 +292,7 @@ class Simulation extends Sprite implements polymod.hscript.HScriptable
 
 	public function makeBee(x:Float, y:Float):Bee
 	{
+		trace('makeBee()');
 		var bee = new Bee();
 		bees.push(bee);
 		addChild(bee);
@@ -254,6 +303,7 @@ class Simulation extends Sprite implements polymod.hscript.HScriptable
 
 	public function makeFlower(i:Int, x:Float, y:Float):Flower
 	{
+		trace('makeFlower()');
 		if (i < 0 || i > 3)
 			return null;
 		var flower = new Flower(i);
