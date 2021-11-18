@@ -111,11 +111,11 @@ class HScriptMacro
 					{
 						case EConst(CString(value)):
 							// Passed a string, this means pathName is constant.
-							Context.info('Found value for pathName: ${value}', paramField.expr.pos);
+							// Context.info('Found value for pathName: ${value}', paramField.expr.pos);
 							result.pathName = value;
 						case EConst(CIdent(value)):
 							// Passed an identifier, this means pathName is dynamic.
-							Context.info('Found IDENTIFIER for pathName, that means it is dynamic: ${value}', paramField.expr.pos);
+							// Context.info('Found IDENTIFIER for pathName, that means it is dynamic: ${value}', paramField.expr.pos);
 							result.pathNameDynId = value;
 						default:
 							throw '@:hscript({pathName}) must be a String value.';
@@ -178,34 +178,33 @@ class HScriptMacro
 
 		var hscriptObjectRaw = params[0];
 
-		// If there are no params, we are done.
-		if (hscriptObjectRaw == null)
-			return result;
-
-		switch hscriptObjectRaw.expr
+		if (hscriptObjectRaw != null)
 		{
-			case EObjectDecl(paramFields):
-				// New and preferred syntax. Pass in a parameter object.
-				Context.info('New @:hscript detected.', paramFields[0].expr.pos);
-				parseParamObjectFields(paramFields, result);
-			case EConst(CIdent(name)):
-				// Legacy support. Allow passing context as a set of parameters.
-				result.mergeContext(params.map(function(p)
-				{
-					switch (p.expr)
+			switch hscriptObjectRaw.expr
+			{
+				case EObjectDecl(paramFields):
+					// New and preferred syntax. Pass in a parameter object.
+					// Context.info('New @:hscript detected.', paramFields[0].expr.pos);
+					parseParamObjectFields(paramFields, result);
+				case EConst(CIdent(name)):
+					// Legacy support. Allow passing context as a set of parameters.
+					result.mergeContext(params.map(function(p)
 					{
-						case EConst(CIdent(name)):
-							return name;
-						default:
-							Context.error('@:hscript only accepts a single parameter object or a set of context objects.', p.pos);
-							return null;
-					}
-				}).filter(function(p) return p != null));
-			default:
-				Context.error('The parameters for your @:hscript annotation are incorrect.', params[0].pos);
+						switch (p.expr)
+						{
+							case EConst(CIdent(name)):
+								return name;
+							default:
+								Context.error('@:hscript only accepts a single parameter object or a set of context objects.', p.pos);
+								return null;
+						}
+					}).filter(function(p) return p != null));
+				default:
+					Context.error('The parameters for your @:hscript annotation are incorrect.', params[0].pos);
+			}
 		}
 
-		return result;
+		return parentParams.copy().merge(result);
 	}
 
 	public static macro function build():Array<Field>
