@@ -23,6 +23,7 @@
 
 package polymod.hscript;
 
+import haxe.Json;
 import hscript.Parser;
 import hscript.Expr;
 import hscript.Interp;
@@ -169,6 +170,11 @@ class HScriptParams
 			.mergeCancellable(newValue.cancellable)
 			.mergeRunBefore(newValue.runBefore)
 			.mergePathName(newValue.pathName, newValue.pathNameDynId);
+	}
+
+	public function toString():String
+	{
+		return Json.stringify(this);
 	}
 }
 
