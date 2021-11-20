@@ -9,6 +9,14 @@ Supports these frameworks:
 - Custom (provide your own backend)
 - KHA (Coming Soon)
 
+## NOTICE
+
+Polymod is now available via [HaxeLib](https://lib.haxe.org/p/polymod/)! If you have previously installed Polymod directly from git, please update your installation:
+
+```
+haxelib install polymod
+```
+
 ## Basic sample:
 ![A visual preview of the polymod OpenFL sample](preview.gif)
 
