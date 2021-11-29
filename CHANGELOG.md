@@ -5,10 +5,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 ### Added
+- Added `optional` as an `@:hscript` parameter.
+  - This suppresses the error thrown when a script file is missing.
 ### Changed
+- Missing scripts are now handled gracefully rather than throwing an unhandled missing asset exception.
 ### Deprecated
 ### Removed
 ### Fixed
+- Fixed a bug where scripted function that define a `pathName` function fail to retrieve the script.
 ### Security
 ### Known Issues
 
