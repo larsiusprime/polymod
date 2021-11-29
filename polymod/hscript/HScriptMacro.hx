@@ -96,6 +96,16 @@ class HScriptMacro
 						default:
 							throw '@:hscript({cancellable}) must be a Boolean value.';
 					}
+				case 'optional':
+					switch (paramField.expr.expr)
+					{
+						case EConst(CIdent('true')):
+							result.optional = true;
+						case EConst(CIdent('false')):
+							result.optional = false;
+						default:
+							throw '@:hscript({optional}) must be a Boolean value.';
+					}
 				case 'runBefore':
 					switch (paramField.expr.expr)
 					{
@@ -285,11 +295,11 @@ class HScriptMacro
 									if (Reflect.isFunction($i{hscriptParams.pathNameDynId}))
 									{
 										var pathName = Reflect.callMethod(this, cast $i{hscriptParams.pathNameDynId}, []);
-										_polymod_scripts.get(pathName);
+										_polymod_scripts.get(pathName, Assets);
 									}
 									else
 									{
-										_polymod_scripts.get(cast $i{hscriptParams.pathNameDynId});
+										_polymod_scripts.get(cast $i{hscriptParams.pathNameDynId}, Assets);
 									}
 								}
 						}
@@ -301,36 +311,48 @@ class HScriptMacro
 
 								var script_error:Dynamic = null;
 								var script_result:Dynamic = null;
-								var script_variables:Dynamic = null;
+								// Initialize as empty rather than null.
+								var script_variables:Map<String, Dynamic> = new Map<String, Dynamic>();
 								var wasCancelled:Bool = false;
 								try
 								{
 									var script = $e{scriptFetchExpr};
 
-									#if POLYMOD_DEBUG
-									if (script == null)
-										throw "Did not find hscript: " + $v{pathName};
-									#end
-									$b{setters};
-
-									if ($v{hscriptParams.cancellable})
+									if (script == null && $v{!hscriptParams.optional})
 									{
-										script.set('cancel', function()
-										{
-											trace('Script called cancel()');
-											wasCancelled = true;
-										});
+										// We failed to find the script!
+										// But we only care about that if the script is not optional.
+										polymod.Polymod.error(polymod.Polymod.PolymodErrorCode.SCRIPT_NOT_FOUND,
+											'The script ' + $v{pathName} + ' could not be found.');
+										wasCancelled = true;
+									}
+									else
+									{
+										polymod.Polymod.debug('The script ' + $v{pathName} + ' could not be found, but that is fine because it is optional.');
 									}
 
-									var output = script.execute();
-									script_result = output.script_result;
-									script_variables = output.script_variables;
+									if (!wasCancelled)
+									{
+										$b{setters};
+
+										if ($v{hscriptParams.cancellable})
+										{
+											script.set('cancel', function()
+											{
+												polymod.Polymod.debug('Script called cancel()');
+												wasCancelled = true;
+											});
+										}
+
+										var output = script.execute();
+										script_result = output.script_result;
+										script_variables = output.script_variables;
+									}
 								}
 								catch (e:Dynamic)
 								{
-									#if POLYMOD_DEBUG
-									trace("Error: script " + $v{pathName} + " threw:\n" + e);
-									#end
+									polymod.Polymod.error(polymod.Polymod.PolymodErrorCode.SCRIPT_EXCEPTION,
+										"Error: script " + $v{pathName} + " threw:\n" + e);
 									script_error = e;
 								}
 
@@ -350,12 +372,8 @@ class HScriptMacro
 						}
 						constructor_setup.push(macro
 							{
-								#if POLYMOD_DEBUG
-								trace("Polymod: Loading hscript " + $v{pathName});
-								#end
-								_polymod_scripts.load($v{pathName},
-									Assets.getText(polymod.hscript.HScriptConfig.scriptLibrary + ':' + polymod.hscript.HScriptConfig.rootPath
-										+ $v{pathName} + polymod.hscript.HScriptConfig.scriptExt));
+								polymod.Polymod.debug("Loading hscript " + $v{pathName});
+								_polymod_scripts.load($v{pathName}, Assets);
 							});
 
 					default:
@@ -367,19 +385,16 @@ class HScriptMacro
 		// No @:hscript fields found? Just return now...
 		if (constructor_setup == null)
 			return fields;
-
 		// Inject _polymod_scripts var
 		for (new_field in (macro class Ignore
 			{
 				public var _polymod_scripts:polymod.hscript.HScriptable.ScriptRunner;
 			}).fields)
 			fields.push(new_field);
-
 		// Find constructor, and inject script setup...
 		var constructor = fields.find(function(field) return field.name == "new");
 		if (constructor == null)
 			Context.error("Error: @:hscript requires a constructor", Context.currentPos());
-
 		switch constructor.kind
 		{
 			case FFun(func):
@@ -391,7 +406,6 @@ class HScriptMacro
 			default:
 				Context.error("Error: constructor is not a function?!", Context.currentPos());
 		}
-
 		return fields;
 	}
 }

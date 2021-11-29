@@ -261,14 +261,15 @@ class Polymod
 			fileSystem: fileSystem,
 		});
 
-        if (library == null) {
-          return null;
-        }
+		if (library == null)
+		{
+			return null;
+		}
 
-        if(PolymodAssets.exists(("_polymod_pack.txt")))
-        {
-            initModPack(params);
-        }
+		if (PolymodAssets.exists(("_polymod_pack.txt")))
+		{
+			initModPack(params);
+		}
 
 		return modMeta;
 	}
@@ -408,6 +409,16 @@ class Polymod
 		{
 			onError(new PolymodError(PolymodErrorType.NOTICE, code, message, origin));
 		}
+	}
+
+	public static function debug(message:String, ?posInfo:haxe.PosInfos):Void
+	{
+		#if POLYMOD_DEBUG
+		if (posInfo != null)
+			trace('[POLYMOD] (${posInfo.fileName}#${posInfo.lineNumber}): $message');
+		else
+			trace('[POLYMOD] $message');
+		#end
 	}
 
 	/**
@@ -579,9 +590,13 @@ enum PolymodErrorType
 	var MISSING_MOD:String = "missing_mod";
 	var MISSING_META:String = "missing_meta";
 	var MISSING_ICON:String = "missing_icon";
-    var MOD_LOAD_PREPARE:String = "mod_load_prepare";
-    var MOD_LOAD_FAILED:String = "mod_load_failed";
-    var MOD_LOAD_DONE:String = "mod_load_done";
+	var MOD_LOAD_PREPARE:String = "mod_load_prepare";
+	var MOD_LOAD_FAILED:String = "mod_load_failed";
+	var MOD_LOAD_DONE:String = "mod_load_done";
+	var SCRIPT_NO_ASSET_HANDLER:String = "script_no_asset_handler";
+	var SCRIPT_NOT_FOUND:String = "script_not_found";
+	var SCRIPT_NOT_LOADED:String = "script_not_loaded";
+	var SCRIPT_EXCEPTION:String = "script_exception";
 	var VERSION_CONFLICT_MOD:String = "version_conflict_mod";
 	var VERSION_CONFLICT_API:String = "version_conflict_api";
 	var VERSION_PRERELEASE_API:String = "version_prerelease_api";
