@@ -248,7 +248,7 @@ class ScriptRunner
 
 		if (result == null)
 		{
-			Polymod.error(PolymodErrorCode.SCRIPT_NOT_FOUND, 'Script not found: $name');
+			// An error will only be thrown if hscriptParams.optional == false (the default).
 			return null;
 		}
 

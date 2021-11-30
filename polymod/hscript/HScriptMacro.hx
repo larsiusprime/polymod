@@ -285,7 +285,7 @@ class HScriptMacro
 						}
 
 						// If pathName is an identifier, call the function or access the variable.
-						var scriptFetchExpr = macro _polymod_scripts.get($v{pathName});
+						var scriptFetchExpr = macro _polymod_scripts.get($v{pathName}, Assets);
 
 						if (hscriptParams.pathNameDynId != null)
 						{
@@ -318,17 +318,21 @@ class HScriptMacro
 								{
 									var script = $e{scriptFetchExpr};
 
-									if (script == null && $v{!hscriptParams.optional})
+									if (script == null)
 									{
-										// We failed to find the script!
-										// But we only care about that if the script is not optional.
-										polymod.Polymod.error(polymod.Polymod.PolymodErrorCode.SCRIPT_NOT_FOUND,
-											'The script ' + $v{pathName} + ' could not be found.');
-										wasCancelled = true;
-									}
-									else
-									{
-										polymod.Polymod.debug('The script ' + $v{pathName} + ' could not be found, but that is fine because it is optional.');
+										if ($v{!hscriptParams.optional})
+										{
+											// We failed to find the script!
+											// But we only care about that if the script is not optional.
+											polymod.Polymod.error(polymod.Polymod.PolymodErrorCode.SCRIPT_NOT_FOUND,
+												'The script ' + $v{pathName} + ' could not be found.');
+											wasCancelled = true;
+										}
+										else
+										{
+											polymod.Polymod.debug('The script '
+												+ $v{pathName} + ' could not be found, but that is fine because it is optional.');
+										}
 									}
 
 									if (!wasCancelled)

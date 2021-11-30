@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   - This suppresses the error thrown when a script file is missing.
 ### Changed
 - Missing scripts are now handled gracefully rather than throwing an unhandled missing asset exception.
+  - Added a debug print call when the script is missing but `optional` is set to `true`.
 ### Deprecated
 ### Removed
 ### Fixed
