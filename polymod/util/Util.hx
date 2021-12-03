@@ -39,6 +39,14 @@ import haxe.Utf8;
 
 class Util
 {
+	public static var appendFile = "_append";
+	public static var mergeFiles = "_merge";
+	
+	public static function setFileName(append:String = "_append", merge:String = "_merge")
+	{
+		appendFile = append;
+		mergeFiles = merge;
+	}
 	public static function mergeAndAppendText(baseText:String, id:String, dirs:Array<String>, getModText:String->String->String, fileSystem:IFileSystem,
 			parseRules:ParseRules = null):String
 	{
@@ -75,7 +83,7 @@ class Util
 	{
 		var extension = uExtension(id, true);
 		id = stripAssetsPrefix(id);
-		var mergeFile = "_merge" + sl() + id;
+		var mergeFile = mergeFiles + sl() + id;
 		// try the path first
 		var format:BaseParseFormat = parseRules.get(id);
 		if (format == null)
@@ -109,7 +117,7 @@ class Util
 		}
 		if (format != null)
 		{
-			var appendText = getModText(Util.pathJoin("_append", id), theDir);
+			var appendText = getModText(Util.pathJoin(appendFile, id), theDir);
 			return format.append(baseText, appendText, id);
 		}
 		return baseText;
@@ -269,12 +277,12 @@ class Util
 
 	public static inline function pathMerge(id:String, theDir:String = ""):String
 	{
-		return pathSpecial(id, "_merge", theDir);
+		return pathSpecial(id, mergeFiles, theDir);
 	}
 
 	private static inline function pathAppend(id:String, theDir:String = ""):String
 	{
-		return pathSpecial(id, "_append", theDir);
+		return pathSpecial(id, appendFile, theDir);
 	}
 
 	public static inline function stripAssetsPrefix(id:String):String
