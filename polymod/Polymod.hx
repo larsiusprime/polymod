@@ -122,7 +122,26 @@ class Polymod
 {
 	public static var onError:PolymodError->Void = null;
 	private static var library:PolymodAssetLibrary = null;
-
+	
+	static var polymodPack = "_polymod_pack.txt";
+	static var polymodMeta = "_polymod_meta.json";
+	static var polymodIcon = "_polymod_icon.png";
+	static var polymodAssetLicense = "ASSET_LICENSE.txt";
+	static var polymodCodeLicense = "CODE_LICENSE.txt";
+	static var polymodLicense = "LICENSE.txt";
+	
+	/**
+	 * This sets all the complementary files that you need for your project
+	*/
+	public static function setAllFiles(meta:String = "_polymod_meta.json", icon:String = "_polymod_icon.png", pack:String = "_polymod_pack.txt", assetLicense:String = "ASSET_LICENSE.txt", codeLicense:String = "CODE_LICENSE.txt", license:String = "LICENSE.txt")
+	{
+		polymodMeta = meta;
+		polymodIcon = icon;
+		polymodPack = pack;
+		polymodAssetLicense = assetLicense;
+		polymodCodeLicense = codeLicense;
+		polymodLicense = license;
+	}
 	/**
 	 * Initializes the chosen mod or mods.
 	 * @param	params initialization parameters
@@ -265,7 +284,7 @@ class Polymod
           return null;
         }
 
-        if(PolymodAssets.exists(("_polymod_pack.txt")))
+        if(PolymodAssets.exists((polymodPack)))
         {
             initModPack(params);
         }
@@ -275,14 +294,7 @@ class Polymod
 
 	public static function getDefaultIgnoreList():Array<String>
 	{
-		return [
-			"_polymod_meta.json",
-			"_polymod_icon.png",
-			"_polymod_pack.txt",
-			"ASSET_LICENSE.txt",
-			"CODE_LICENSE.txt",
-			"LICENSE.txt"
-		];
+		return [polymodMeta, polymodIcon, polymodPack, polymodAssetLicense, polymodCodeLicense, polymodLicense];
 	}
 
 	/**
@@ -427,7 +439,7 @@ class Polymod
 	/***PRIVATE***/
 	private static function initModPack(params:PolymodParams)
 	{
-		var polymodpack:String = PolymodAssets.getText("_polymod_pack.txt");
+		var polymodpack:String = PolymodAssets.getText(polymodPack);
 		if (polymodpack != null)
 		{
 			var data = getModPack(polymodpack);
