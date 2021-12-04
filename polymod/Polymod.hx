@@ -211,7 +211,7 @@ class Polymod
 			{
 				var origDir = dirs[i];
 				dirs[i] = Util.pathJoin(modRoot, dirs[i]);
-				var meta:ModMetadata = fileSystem.getMetadata(dirs[i]);
+				var meta:ModMetadata = getMetadata(dirs[i]);
 
 				if (meta != null)
 				{
@@ -354,7 +354,7 @@ class Polymod
 			{
 				var origDir = dirs[i];
 				dirs[i] = modRoot + "/" + dirs[i];
-				var meta:ModMetadata = fileSystem.getMetadata(dirs[i]);
+				var meta:ModMetadata = getMetadata(dirs[i]);
 
 				if (meta != null)
 				{
@@ -476,6 +476,47 @@ class Polymod
 				}
 			}
 			return {mods: mods, versions: vers};
+		}
+		return null;
+	}
+	private static function getMetadata(dir:String):ModMetadata
+	{
+		if(PolymodFileSystem.exists(dir))
+		{
+		   var meta:ModMetadata = null;
+
+		   var metaFile = Util.pathJoin(dir, polymodMeta);
+		   var iconFile = Util.pathJoin(dir, polymodIcon);
+		   var packFile = Util.pathJoin(dir,polymodPack);
+		   if(!PolymodFileSystem.exists(metaFile))
+		   {
+			warning(MISSING_META,"Could not find mod metadata file: \""+metaFile+"\"");
+		   }
+		   else
+		   {
+			var metaText = PolymodFileSystem.getFileContent(metaFile);
+			meta = ModMetadata.fromJsonStr(metaText);
+		   }
+		   if(!PolymodFileSystem.exists(iconFile))
+		   {
+			warning(MISSING_ICON,"Could not find mod icon file: \""+iconFile+"\"");
+		   }
+		   else
+		   {
+			var iconBytes = PolymodFileSystem.getFileBytes(iconFile);
+			meta.icon = iconBytes;
+		   }
+		   if(PolymodFileSystem.exists(packFile))
+		   {
+			meta.isModPack = true;
+			var packText = PolymodFileSystem.getFileContent(packFile);
+			meta.modPack = getModPack(packText);
+		   }
+		   return meta;
+		}
+		else
+		{
+		    error(MISSING_MOD,"Could not find mod directory: \""+dir+"\"");
 		}
 		return null;
 	}
