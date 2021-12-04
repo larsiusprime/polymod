@@ -23,7 +23,7 @@
 
 package polymod;
 
-import polymod.fs.IFileSystem;
+import polymod.fs.PolymodFileSystem;
 import haxe.Json;
 import haxe.io.Bytes;
 import polymod.util.SemanticVersion;
@@ -87,7 +87,7 @@ typedef PolymodParams =
 	/**
 	 * (optional) your own custom backend for accessing the file system
 	 */
-	?customFilesystem:Class<IFileSystem>,
+	?customFilesystem:Class<PolymodFileSystem>,
 }
 
 /**
@@ -171,21 +171,21 @@ class Polymod
 
 		var modMeta = [];
 		var modVers = [];
-
-		var fileSystem = if (params.customFilesystem != null)
-		{
-			Type.createInstance(params.customFilesystem, []);
-		}
-		else
-		{
-			#if sys
-			new polymod.fs.SysFileSystem(params.modRoot);
-			#elseif nodefs
-			new polymod.fs.NodeFileSystem(params.modRoot);
-			#else
-			new polymod.fs.StubFileSystem();
-			#end
-		}
+		var fileSystem:PolymodFileSystem;
+// 		var fileSystem = if (params.customFilesystem != null)
+// 		{
+// 			Type.createInstance(params.customFilesystem, []);
+// 		}
+// 		else
+// 		{
+// 			#if sys
+// 			new polymod.fs.SysFileSystem(params.modRoot);
+// 			#elseif nodefs
+// 			new polymod.fs.NodeFileSystem(params.modRoot);
+// 			#else
+// 			new polymod.fs.StubFileSystem();
+// 			#end
+// 		}
 
 		if (params.modVersions != null)
 		{
