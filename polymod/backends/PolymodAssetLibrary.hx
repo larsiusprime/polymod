@@ -307,11 +307,11 @@ class PolymodAssetLibrary
 		_extensionSet("vdf", TEXT);
 		_extensionSet("ttf", FONT);
 		_extensionSet("otf", FONT);
-        _extensionSet("webm", VIDEO);
-        _extensionSet("mp4", VIDEO);
-        _extensionSet("mov", VIDEO);
-        _extensionSet("avi", VIDEO);
-        _extensionSet("mkv", VIDEO);
+		_extensionSet("webm", VIDEO);
+		_extensionSet("mp4", VIDEO);
+		_extensionSet("mov", VIDEO);
+		_extensionSet("avi", VIDEO);
+		_extensionSet("mkv", VIDEO);
 	}
 
 	private function _extensionSet(str:String, type:PolymodAssetType)
@@ -324,7 +324,7 @@ class PolymodAssetLibrary
 
 	private function initMod(d:String):Void
 	{
-        Polymod.error(MOD_LOAD_PREPARE, 'Preparing to load mod $d');
+		Polymod.error(MOD_LOAD_PREPARE, 'Preparing to load mod $d');
 		if (d == null)
 			return;
 
@@ -348,7 +348,7 @@ class PolymodAssetLibrary
 		}
 		catch (msg:Dynamic)
 		{
-            Polymod.error(MOD_LOAD_FAILED, 'Failed to load mod $d : $msg');
+			Polymod.error(MOD_LOAD_FAILED, 'Failed to load mod $d : $msg');
 			throw("ModAssetLibrary._initMod(" + d + ") failed : " + msg);
 		}
 		for (f in all)
@@ -359,6 +359,6 @@ class PolymodAssetLibrary
 			var assetType = getExtensionType(ext);
 			type.set(f, assetType);
 		}
-        Polymod.error(MOD_LOAD_DONE, 'Done loading mod $d');
+		Polymod.error(MOD_LOAD_DONE, 'Done loading mod $d');
 	}
 }

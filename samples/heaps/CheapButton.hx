@@ -24,7 +24,7 @@
 package samples.heaps;
 
 import hxd.Res;
-import h2d.Sprite;
+import h2d.Object;
 import h2d.Text;
 import h2d.Scene;
 import h2d.Bitmap;
@@ -35,12 +35,12 @@ import h2d.Interactive;
  * ...
  * @author 
  */
-class CheapButton extends Sprite
+class CheapButton extends Object
 {
 	private var callback:Void->Void = null;
-	private var up:Sprite;
-	private var down:Sprite;
-	private var over:Sprite;
+	private var up:Object;
+	private var down:Object;
+	private var over:Object;
 	private var upT:Text;
 	private var overT:Text;
 	private var downT:Text;
@@ -48,7 +48,7 @@ class CheapButton extends Sprite
 	private var isOver:Bool = false;
 	private var isDown:Bool = false;
 
-	public function new(spr:Sprite, str:String, callback:Void->Void = null)
+	public function new(spr:Object, str:String, callback:Void->Void = null)
 	{
 		super(spr);
 
@@ -58,9 +58,9 @@ class CheapButton extends Sprite
 		var img2 = Tile.fromColor(0xD0D0D0, 72, 32);
 		var img3 = Tile.fromColor(0x000000, 72, 32);
 
-		up = new Sprite(this);
-		over = new Sprite(this);
-		down = new Sprite(this);
+		up = new Object(this);
+		over = new Object(this);
+		down = new Object(this);
 
 		var upB = new Bitmap(img, up);
 		var overB = new Bitmap(img2, over);

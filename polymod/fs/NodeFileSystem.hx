@@ -20,8 +20,9 @@
  * THE SOFTWARE.
  * 
  */
- 
+
 package polymod.fs;
+
 import haxe.io.Bytes;
 import haxe.io.UInt8Array;
 import js.Browser;
@@ -34,15 +35,17 @@ class NodeFileSystem implements IFileSystem
 {
 	// hack to make sure NodeUtils.injectJSCode is called
 	private static var _jsCodeInjected:Bool = injectJSCode();
+
 	public var modRoot(default, null):String;
-	
+
 	public function new(modRoot:String)
 	{
 		this.modRoot = modRoot;
 	}
-	
+
 	// -----------------------------------------------------------------------------------------------
 	// -----------------------------------------------------------------------------------------------
+
 	/**
 	 * Injects JS code needed to interact with Node's file system into the head element of the HTML document.
 	 * @return
@@ -51,10 +54,10 @@ class NodeFileSystem implements IFileSystem
 	{
 		// array for adding JS text
 		var jsCode:Array<String> = [];
-		
+
 		// get the node file system
 		jsCode.push("let _nodefs = require('fs')");
-		
+
 		// utility function for getting directory contents
 		jsCode.push("function getDirectoryContents(path, recursive, dirContents=null)");
 		jsCode.push("{");
@@ -78,7 +81,7 @@ class NodeFileSystem implements IFileSystem
 		jsCode.push("	}");
 		jsCode.push("	return dirContents;");
 		jsCode.push("}");
-		
+
 		// functions needed by Polymod
 		jsCode.push("function exists(path) { return _nodefs.existsSync(path); }");
 		jsCode.push("function getStats(path) { return exists(path) ? _nodefs.statSync(path) : null; }");
@@ -87,20 +90,20 @@ class NodeFileSystem implements IFileSystem
 		jsCode.push("function getFileBytes(path) { return exists(path) ? Uint8Array.from( _nodefs.readFileSync(path) ) : null; }");
 		jsCode.push("function readDirectory(path) { return getDirectoryContents(path, false, []) }");
 		jsCode.push("function readDirectoryRecursive(path) { return getDirectoryContents(path, true, []) }");
-		
+
 		// create the script element
 		var scriptElement:ScriptElement = Browser.document.createScriptElement();
 		scriptElement.type = "text/javascript";
 		scriptElement.text = jsCode.join("\n");
-		
+
 		// inject into the head tag
 		Browser.document.head.appendChild(scriptElement);
-		
+
 		return true;
 	}
-	
-	
+
 	// -----------------------------------------------------------------------------------------------
+
 	/**
 	 * Pulled and modified from OpenFL's ExternalInterface implementation
 	 * @param	functionName
@@ -117,58 +120,66 @@ class NodeFileSystem implements IFileSystem
 				functionName += '.bind(${thisArg})';
 			}
 		}
-		
+
 		var fn:Dynamic = Lib.eval(functionName);
-		
+
 		return fn(arg);
 	}
-	
+
 	// -----------------------------------------------------------------------------------------------
-	public function santizePaths( path:String, directories:Array<String> ):Void
+	public function santizePaths(path:String, directories:Array<String>):Void
 	{
-		for ( i in 0...directories.length ) {
+		for (i in 0...directories.length)
+		{
 			directories[i] = StringTools.replace(directories[i], path, "");
-			if ( directories[i].charAt(0) == "/") {
+			if (directories[i].charAt(0) == "/")
+			{
 				directories[i] = directories[i].substr(1);
 			}
 		}
 	}
-	
+
 	// -----------------------------------------------------------------------------------------------
-    public inline function exists( path: String ):Bool {
-        return callFunc("exists", path);
+	public inline function exists(path:String):Bool
+	{
+		return callFunc("exists", path);
 	}
-	
+
 	// -----------------------------------------------------------------------------------------------
-    public inline function isDirectory( path: String ):Bool {
-        return callFunc("isDirectory", path);
+	public inline function isDirectory(path:String):Bool
+	{
+		return callFunc("isDirectory", path);
 	}
-	
+
 	// -----------------------------------------------------------------------------------------------
-    public inline function readDirectory( path: String ):Array<String> {
-        var arr:Array<String> = callFunc("readDirectory", path);
+	public inline function readDirectory(path:String):Array<String>
+	{
+		var arr:Array<String> = callFunc("readDirectory", path);
 		santizePaths(path, arr);
-        return arr;
+		return arr;
 	}
-	
+
 	// -----------------------------------------------------------------------------------------------
-    public inline function getFileContent( path: String ):String {
-        return callFunc("getFileContent", path);
+	public inline function getFileContent(path:String):String
+	{
+		return callFunc("getFileContent", path);
 	}
-	
+
 	// -----------------------------------------------------------------------------------------------
-	public inline function getFileBytes( path: String ):Bytes {
+	public inline function getFileBytes(path:String):Bytes
+	{
 		var intArr:UInt8Array = callFunc("getFileBytes", path);
 		return intArr != null ? intArr.view.buffer : null;
 	}
-	
+
 	// -----------------------------------------------------------------------------------------------
-    public inline function readDirectoryRecursive( path: String ):Array<String> {
+	public inline function readDirectoryRecursive(path:String):Array<String>
+	{
 		var arr:Array<String> = callFunc("readDirectoryRecursive", path);
 		santizePaths(path, arr);
-        return arr;
+		return arr;
 	}
-	
+
 	// -----------------------------------------------------------------------------------------------
 	public function getMetadata(modId:String)
 	{
@@ -179,7 +190,7 @@ class NodeFileSystem implements IFileSystem
 			var metaFile = Util.pathJoin(modId, "_polymod_meta.json");
 			var iconFile = Util.pathJoin(modId, "_polymod_icon.png");
 			var packFile = Util.pathJoin(modId, "_polymod_pack.txt");
-			
+
 			if (!exists(metaFile))
 			{
 				Polymod.warning(MISSING_META, "Could not find mod metadata file: \"" + metaFile + "\"");
@@ -212,7 +223,7 @@ class NodeFileSystem implements IFileSystem
 		}
 		return null;
 	}
-	
+
 	// -----------------------------------------------------------------------------------------------
 	public function scanMods()
 	{
@@ -230,5 +241,4 @@ class NodeFileSystem implements IFileSystem
 		}
 		return dirs;
 	}
-
 }

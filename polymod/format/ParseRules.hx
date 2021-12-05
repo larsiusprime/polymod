@@ -611,7 +611,8 @@ class JSONParseFormat implements BaseParseFormat
 
 	public function parse(str:String):Dynamic
 	{
-		return Json.parse(str);
+    var result = Json.parse(~/(\r|\n|\t)/g.replace(str, ""));
+    return result;
 	}
 
 	public function append(baseText:String, appendText:String, id:String):String
@@ -675,7 +676,11 @@ class JSONParseFormat implements BaseParseFormat
 
 					target = entry.target;
 					payload = entry.payload;
-					base = _mergeJson(base, entry, id);
+          try {
+            base = _mergeJson(base, entry, id);
+          } catch (msg:Dynamic) {
+            Polymod.error(MERGE, 'JSON merge error ($id): could not merge payload "${Json.stringify(payload)}" into target : ' + msg);
+          }
 				}
 			}
 			else
@@ -706,17 +711,18 @@ class JSONParseFormat implements BaseParseFormat
 		var last = obj;
 		var i:Int = 0;
 		var signatureSoFar = "";
-		var struct:{
-			next:Dynamic,
-			parent:Dynamic,
-			arrIndex:Int,
-			target:String
-		} = {
-			next: null,
-			parent: null,
-			arrIndex: -1,
-			target: null
-		};
+		var struct:
+			{
+				next:Dynamic,
+				parent:Dynamic,
+				arrIndex:Int,
+				target:String
+			} = {
+				next: null,
+				parent: null,
+				arrIndex: -1,
+				target: null
+			};
 		var next = null;
 		while (!done)
 		{
@@ -893,17 +899,19 @@ class JSONParseFormat implements BaseParseFormat
 		return false;
 	}
 
-	private function _descend(obj:Dynamic, target:TargetSignatureElement, signatureSoFar:String = "", struct:{
-		next:Dynamic,
-		parent:Dynamic,
-		arrIndex:Int,
-		target:String
-	} = null):{
-		next:Dynamic,
-		parent:Dynamic,
-		arrIndex:Int,
-		target:String
-	}
+	private function _descend(obj:Dynamic, target:TargetSignatureElement, signatureSoFar:String = "", struct:
+		{
+			next:Dynamic,
+			parent:Dynamic,
+			arrIndex:Int,
+			target:String
+		} = null):
+		{
+			next:Dynamic,
+			parent:Dynamic,
+			arrIndex:Int,
+			target:String
+		}
 	{
 		if (struct == null)
 		{

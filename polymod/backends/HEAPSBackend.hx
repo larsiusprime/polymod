@@ -90,12 +90,12 @@ class HEAPSBackend implements IBackend
 	{
 	}
 
-    public function init(?params:FrameworkParams):Bool
+	public function init(?params:FrameworkParams):Bool
 	{
 		fallback = getDefaultLoader();
 		modLoader = new HEAPSModLoader(this);
 		Res.loader = modLoader;
-        return true;
+		return true;
 	}
 
 	public function destroy()
@@ -120,6 +120,16 @@ class HEAPSBackend implements IBackend
 	public function getText(id:String):String
 	{
 		return modLoader.loadText(id).toText();
+	}
+
+	public function list(type:PolymodAssetType = null):Array<String>
+	{
+		throw "Function not implemented";
+	}
+
+	public function getPath(id:String):String
+	{
+		throw "Function not implemented";
 	}
 
 	public function clearCache()

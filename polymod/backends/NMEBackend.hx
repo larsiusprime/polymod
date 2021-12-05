@@ -64,7 +64,7 @@ class NMEBackend implements IBackend
 	{
 	}
 
-    public function init(?params:FrameworkParams):Bool
+	public function init(?params:FrameworkParams):Bool
 	{
 		restoreDefaultAssets();
 
@@ -126,7 +126,7 @@ class NMEBackend implements IBackend
 			}
 		}
 
-        return true;
+		return true;
 	}
 
 	public function destroy()
@@ -185,6 +185,16 @@ class NMEBackend implements IBackend
 	public function getText(id:String):String
 	{
 		return Assets.getText(id);
+	}
+
+	public function list(type:PolymodAssetType = null):Array<String>
+	{
+		throw "Function not implemented";
+	}
+
+	public function getPath(id:String):String
+	{
+		throw "Function not implemented";
 	}
 
 	public function clearCache()
