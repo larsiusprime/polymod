@@ -24,6 +24,8 @@
 package polymod.hscript;
 
 import polymod.Polymod.PolymodErrorCode;
+import polymod.Polymod;
+import polymod.Polymod.PolymodErrorCode;
 import haxe.Json;
 import hscript.Parser;
 import hscript.Expr;
@@ -232,7 +234,7 @@ class ScriptRunner
 
 	static inline function scriptPath(pathName:String):String
 	{
-		return '${HScriptConfig.scriptLibrary}:${HScriptConfig.rootPath}$pathName${HScriptConfig.scriptExt}';
+		return '${PolymodConfig.scriptLibrary}:${PolymodConfig.rootPath}$pathName${PolymodConfig.scriptExt}';
 	}
 
 	public function get(name:String, ?assetHandler:Dynamic = null):Script

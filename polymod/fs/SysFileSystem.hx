@@ -27,6 +27,9 @@ package polymod.fs;
 import polymod.Polymod.ModMetadata;
 import polymod.util.Util;
 
+/**
+ * An implementation of IFileSystem which accesses files from the local directory.
+ */
 class SysFileSystem implements IFileSystem
 {
 	public var modRoot(default, null):String;
@@ -84,9 +87,10 @@ class SysFileSystem implements IFileSystem
 		{
 			var meta:ModMetadata = null;
 
-			var metaFile = Util.pathJoin(modId, "_polymod_meta.json");
-			var iconFile = Util.pathJoin(modId, "_polymod_icon.png");
-			var packFile = Util.pathJoin(modId, "_polymod_pack.txt");
+			var metaFile = Util.pathJoin(modId, PolymodConfig.modMetadataFile);
+			var iconFile = Util.pathJoin(modId, PolymodConfig.modIconFile);
+			var packFile = Util.pathJoin(modId, PolymodConfig.modPackFile);
+
 			if (!exists(metaFile))
 			{
 				Polymod.warning(MISSING_META, "Could not find mod metadata file: \"" + metaFile + "\"");

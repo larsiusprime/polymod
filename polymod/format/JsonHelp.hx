@@ -106,7 +106,7 @@ class JsonHelp
 		var val = null;
 		if (Reflect.hasField(json, field))
 			val = Reflect.field(json, field);
-		if (val != null && Std.is(val, Array))
+		if (val != null && Std.isOfType(val, Array))
 		{
 			return cast val;
 		}

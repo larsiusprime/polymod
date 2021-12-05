@@ -23,12 +23,9 @@
 
 package polymod.backends;
 
-import haxe.xml.Fast;
-import haxe.xml.Printer;
 import polymod.Polymod;
-import polymod.Polymod.FrameworkParams;
-import polymod.Polymod.PolymodError;
 import polymod.util.Util;
+import polymod.Polymod.FrameworkParams;
 import polymod.backends.PolymodAssetLibrary;
 import polymod.backends.PolymodAssets.PolymodAssetType;
 #if unifill
@@ -536,7 +533,7 @@ class LimeModLibrary extends AssetLibrary
 
 		for (id in p.type.keys())
 		{
-			if (id.indexOf(Util.appendFile) == 0 || id.indexOf(Util.mergeFiles) == 0)
+			if (id.indexOf(PolymodConfig.appendFolder) == 0 || id.indexOf(PolymodConfig.mergeFolder) == 0)
 				continue;
 			if (requestedType == null || exists(id, requestedType))
 			{

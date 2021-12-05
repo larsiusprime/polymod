@@ -29,8 +29,13 @@ import js.Browser;
 import js.html.ScriptElement;
 import js.Lib;
 import polymod.Polymod.ModMetadata;
+import polymod.PolymodConfig;
 import polymod.util.Util;
 
+/**
+ * An implementation of IFileSystem which accesses files from the local directory,
+ * when running in Node.js via Electron.
+ */
 class NodeFileSystem implements IFileSystem
 {
 	// hack to make sure NodeUtils.injectJSCode is called
@@ -187,9 +192,9 @@ class NodeFileSystem implements IFileSystem
 		{
 			var meta:ModMetadata = null;
 
-			var metaFile = Util.pathJoin(modId, "_polymod_meta.json");
-			var iconFile = Util.pathJoin(modId, "_polymod_icon.png");
-			var packFile = Util.pathJoin(modId, "_polymod_pack.txt");
+			var metaFile = Util.pathJoin(modId, PolymodConfig.modMetadataFile);
+			var iconFile = Util.pathJoin(modId, PolymodConfig.modIconFile);
+			var packFile = Util.pathJoin(modId, PolymodConfig.modPackFile);
 
 			if (!exists(metaFile))
 			{
