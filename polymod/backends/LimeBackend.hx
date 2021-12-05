@@ -536,7 +536,7 @@ class LimeModLibrary extends AssetLibrary
 
 		for (id in p.type.keys())
 		{
-			if (id.indexOf("_append") == 0 || id.indexOf("_merge") == 0)
+			if (id.indexOf(Util.appendFile) == 0 || id.indexOf(Util.mergeFiles) == 0)
 				continue;
 			if (requestedType == null || exists(id, requestedType))
 			{

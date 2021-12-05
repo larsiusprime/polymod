@@ -254,7 +254,7 @@ class ModFileEntry extends BytesFileEntry
 		{
 			if (id.indexOf(dirPath) != 0)
 				continue;
-			if (id.indexOf("_append") == 0 || id.indexOf("_merge") == 0)
+			if (id.indexOf(Util.appendFile) == 0 || id.indexOf(Util.mergeFiles) == 0)
 				continue;
 			if (p.ignoredFiles.indexOf(id) != -1)
 				continue;
