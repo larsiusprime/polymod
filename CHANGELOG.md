@@ -3,19 +3,41 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.3.1] - 2021-12-05
+### New Contributors
+- @Cheemsandfriends made their first contribution in https://github.com/larsiusprime/polymod/pull/75
 ### Added
+- All compile defines can now also be edited at runtime.
+  - For example, you can enable Debug logging in code by using `PolymodConfig.debug = true;`
+  - If you use these to set asset library locations, etc., be sure to set them before instantiating any classes which utilize script files.
+- Added a config option to customize the mod append folder.
+  - Modify this option by adding `POLYMOD_APPEND_FOLDER` as a compile define, or by setting `PolymodConfig.appendFolder` in your code.
+  - Defaults to `_append` for backwards compatibility.
+- Added a config option to customize the mod merge folder.
+  - Modify this option by adding `POLYMOD_MERGE_FOLDER` as a compile define, or by setting `PolymodConfig.mergeFolder` in your code.
+  - Defaults to `_merge` for backwards compatibility.
+- Added a config option to customize the mod metadata file.
+  - Modify this option by adding `POLYMOD_MOD_METADATA_FILE` as a compile define, or by setting `PolymodConfig.modMetadataFile` in your code.
+  - Defaults to `_polymod_meta.json` for backwards compatibility.
+- Added a config option to customize the mod icon file.
+  - Modify this option by adding `POLYMOD_MOD_ICON_FILE` as a compile define, or by setting `PolymodConfig.modIconFile` in your code.
+  - Defaults to `_polymod_icon.png` for backwards compatibility.
+- Added a config option to customize the mod pack definition file.
+  - Modify this option by adding `POLYMOD_MOD_PACK_FILE` as a compile define, or by setting `PolymodConfig.modPackFile` in your code.
+  - Defaults to `_polymod_pack.txt` for backwards compatibility.
+- Added a config option to customize the ignore list for Polymod mod files.
+  - Modify this option by adding `POLYMOD_MOD_IGNORE` as a compile define (use a comma separated list), or by setting `PolymodConfig.modIgnoreFiles` in your code (use an `Array<String>`).
+  - Defaults to `LICENSE.txt,ASSET_LICENSE.txt,CODE_LICENSE.txt` for backwards compatibility.
 - Added `optional` as an `@:hscript` parameter.
   - This suppresses the error thrown when a script file is missing.
 ### Changed
 - Missing scripts are now handled gracefully rather than throwing an unhandled missing asset exception.
   - Added a debug print call when the script is missing but `optional` is set to `true`.
-### Deprecated
-### Removed
 ### Fixed
 - Fixed a bug where scripted function that define a `pathName` function fail to retrieve the script.
-### Security
-### Known Issues
+- Fixed compilation errors when using the HEAPS backend.
+  - The HEAPS sample now compiles and runs without errors.
+- Fixed a deprecation warning in the CSV.hx file.
 
 
 ## [1.3.0] - 2021-11-18
@@ -84,6 +106,8 @@ This release is backwards compatible with 1.0.0 as no breaking changes have been
 
 
 ## [1.1.0] - 2021-09-25
+### New Contributors
+* @MasterEric made their first contribution in https://github.com/larsiusprime/polymod/pull/34
 ### Added
 - Added several new informational error codes to `onError`:
   - `MOD_LOAD_PREPARE`: Called when Polymod is about to load a given mod.
