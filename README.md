@@ -148,8 +148,8 @@ The Polymod format is fairly simple -- create a folder for your mod, and stick s
 ## Basic mod structure
 
 - root folder
-- `_append` folder
-- `_merge` folder
+- append folder
+- merge folder
 
 ### Root folder
 
@@ -157,13 +157,13 @@ Any files you place here will replace those found in the default asset library. 
 
 When loading multiple mods, if several mods all provide the same file, the last one loaded will provide the final asset. You can see this behavior in the included sample. This is why the order in which you load mods matters!
 
-### `_append` folder
+### append folder
 
 Any text files you place here will have their contents appended to the ends of files with the same names in the default asset library. So if the base game has a file called `text/hello.txt` that says:
 
 `Hello, world!`
 
-You can add additional lines by placing a file at `<modroot>/_append/text/hello.txt` that says:
+You can add additional lines by placing a file at `<modroot>/<appendFolder>/text/hello.txt` that says:
 
 `Hello from my mod!`
 
@@ -174,9 +174,22 @@ Hello, world!
 Hello from my mod!
 ```
 
-### `_merge` folder
+By default, The append Folder Name will be `_append`, But if you want/need to change it, there are two options:
+
+
+1. Add a `<haxedef name="POLYMOD_APPEND_FOLDER" value="[append name folder]" />` value to your project.xml.
+1. Add `PolymodConfig.appendFolder = "[append name folder]";` to your code somewhere. Make sure it's before you call Polymod.init or after (Recommended that you call it before) and before you load any assets.
+
+
+### merge folder
 
 This folder allows you to merge into files containing a more complex data structure, such as XML, CSV/TSV, or JSON. The format of the files in this folder depends on the file type of the file being merged into.
+
+By default, the merge folder will be `_merge` but again, to change the name of the stuff just use the append folder setting but instead of append, merge.
+So, something like:
+
+1. Adding a `<haxedef name="POLYMOD_MERGE_FOLDER" value="[merge name folder]" />` value to your project.xml.
+2. Adding `PolymodConfig.mergeFolder = "[append merge folder]";` to your code somewhere. Make sure it's before you call Polymod.init or after (Recommended that you call it before) and before you load any assets.
 
 #### XML
 
@@ -213,7 +226,7 @@ to this:
 <mode id="difficulty" values="super_hard"/>
 ```
 
-This is the file you would put in `<modroot>/_merge/data/stuff.xml`:
+This is the file you would put in `<modroot>/<mergeFolder>/data/stuff.xml`:
 ```xml
 <?xml version="1.0" encoding="utf-8" ?>
 <data>
