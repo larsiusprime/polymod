@@ -23,6 +23,7 @@
 
 package polymod.hscript;
 
+import polymod.Polymod.PolymodErrorCode;
 import haxe.Json;
 import hscript.Parser;
 import hscript.Expr;
@@ -41,7 +42,7 @@ interface HScriptable
 /**
  * Used to provide additional parameters to a script function.
  * 
- * `@:hscript({context, cancellable, runBefore, pathName})` can be added to any function to make it scriptable.
+ * `@:hscript({context, pathName, ...})` can be added to any function to make it scriptable.
  * Add constant identifiers to `context` to make values accessible to the script and use the other values to define the script's behavior.
  * 
  * For the purposes of backwards compatibility, `@:hscript(A, B, C)` can also be used, which will specify the context.
@@ -67,6 +68,12 @@ class HScriptParams
 	 * Incompatible with `cancellable`.
 	 */
 	public var runBefore:Bool = false;
+
+	/**
+	 * If true, no error will be thrown in the event that the script is missing.
+	 * This is useful when the script you're calling might be empty or undefined.
+	 */
+	public var optional:Bool = false;
 
 	/**
 	 * Force a specific script path name.
@@ -202,23 +209,59 @@ class ScriptRunner
 		scripts = new Map<String, Script>();
 	}
 
-	public function load(name:String, source:String):Script
+	public function load(name:String, assetHandler:Dynamic):Script
 	{
-		var script = new Script(source);
+		if (assetHandler == null)
+		{
+			Polymod.error(PolymodErrorCode.SCRIPT_NO_ASSET_HANDLER, "Class does not import an Assets class for Polymod to fetch scripts with!");
+			return null;
+		}
+
+		var scriptPath = scriptPath(name);
+		if (!assetHandler.exists(scriptPath))
+		{
+			// Error will only be thrown if hscriptParams.optional == false (the default).
+			return null;
+		}
+
+		var script = new Script(assetHandler.getText(scriptPath));
 		scripts.set(name, script);
+		Polymod.debug('Script $name loaded successfully.');
 		return script;
 	}
 
-	public function get(name:String):Script
+	static inline function scriptPath(pathName:String):String
 	{
+		return '${HScriptConfig.scriptLibrary}:${HScriptConfig.rootPath}$pathName${HScriptConfig.scriptExt}';
+	}
+
+	public function get(name:String, ?assetHandler:Dynamic = null):Script
+	{
+		// If the script isn't loaded yet, do that now.
+		if (!scripts.exists(name))
+		{
+			Polymod.debug('NOTE: Late script load ($name).');
+			load(name, assetHandler);
+		}
+
+		var result = scripts.get(name);
+
+		if (result == null)
+		{
+			// An error will only be thrown if hscriptParams.optional == false (the default).
+			return null;
+		}
+
 		return scripts.get(name);
 	}
 
-	public function execute(name:String):ScriptOutput
+	public function execute(name:String, ?assetHandler:Dynamic = null):ScriptOutput
 	{
-		if (!scripts.exists(name))
-			return null;
-		var script = scripts.get(name);
+		var script = get(name, assetHandler);
+		if (script == null)
+		{
+			Polymod.error(PolymodErrorCode.SCRIPT_NOT_LOADED, 'Could not load script $name for execution.');
+		}
 		return script.execute();
 	}
 }

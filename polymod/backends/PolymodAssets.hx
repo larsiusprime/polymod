@@ -130,12 +130,15 @@ class PolymodAssets
 			fileSystem: params.fileSystem,
 		});
 
-        if (backend.init(params.frameworkParams)) {
-          // Initialization successful.
-		return library;
-        } else {
-          return null;
-        }
+		if (backend.init(params.frameworkParams))
+		{
+			// Initialization successful.
+			return library;
+		}
+		else
+		{
+			return null;
+		}
 	}
 
 	public static function exists(id:String):Bool

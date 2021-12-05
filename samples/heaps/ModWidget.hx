@@ -23,7 +23,7 @@
 
 package samples.heaps;
 
-import h2d.Sprite;
+import h2d.Object;
 import h2d.Text;
 import h2d.Scene;
 
@@ -31,7 +31,7 @@ import h2d.Scene;
  * ...
  * @author 
  */
-class ModWidget extends Sprite
+class ModWidget extends Object
 {
 	public var active(default, null):Bool;
 	public var mod(default, null):String;
@@ -47,7 +47,7 @@ class ModWidget extends Sprite
 	public var locX:Int;
 	public var locY:Int;
 
-	public function new(spr:Sprite, x:Int, y:Int, str:String, callback:ModWidget->Int->Void = null)
+	public function new(spr:Object, x:Int, y:Int, str:String, callback:ModWidget->Int->Void = null)
 	{
 		super(spr);
 
@@ -134,7 +134,7 @@ class ModWidget extends Sprite
 		}
 	}
 
-	private function text(spr:Sprite):Text
+	private function text(spr:Object):Text
 	{
 		var font = hxd.Res.customFont.toFont();
 		var text = new h2d.Text(font, spr);

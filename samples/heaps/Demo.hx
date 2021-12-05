@@ -24,18 +24,18 @@
 package samples.heaps;
 
 import hxd.Res;
-import h2d.Sprite;
+import h2d.Object;
 import h2d.Tile;
 import h2d.Bitmap;
 import h2d.Text;
 import h2d.Text.Align;
 import h2d.Scene;
 
-class Demo extends Sprite
+class Demo extends Object
 {
 	private var widgets:Array<ModWidget> = [];
 	private var callback:Array<String>->Void;
-	private var sprites:Array<Sprite> = [];
+	private var sprites:Array<Object> = [];
 	private var texts:Array<Text> = [];
 
 	public function new(scene:Scene, callback:Array<String>->Void)
@@ -227,7 +227,7 @@ class Demo extends Sprite
 		}
 	}
 
-	private function getBox(width:Int, height:Int, border:Int, color1:Int = 0x000000, color2:Int = 0xFFFFFF):Sprite
+	private function getBox(width:Int, height:Int, border:Int, color1:Int = 0x000000, color2:Int = 0xFFFFFF):Object
 	{
 		var spr = getSprite();
 		spr.x = 0;
@@ -254,9 +254,9 @@ class Demo extends Sprite
 		return text;
 	}
 
-	private function getSprite():Sprite
+	private function getSprite():Object
 	{
-		var sprite = new Sprite(this);
+		var sprite = new Object(this);
 		sprites.push(sprite);
 		return sprite;
 	}

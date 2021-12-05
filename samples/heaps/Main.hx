@@ -37,7 +37,7 @@ class Main extends hxd.App
 
 	function bkg()
 	{
-		var spr = new h2d.Sprite(s2d);
+		var spr = new h2d.Object(s2d);
 		spr.x = 0;
 		spr.y = 0;
 		var tile = h2d.Tile.fromColor(0xFFFFFF, 1, 1);

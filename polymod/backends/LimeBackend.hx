@@ -173,8 +173,8 @@ class LimeBackend implements IBackend
 
 		return true;
 	}
-	
-	private function getModLibrary( fallbackLibrary:AssetLibrary, pathPrefix:String ):LimeModLibrary
+
+	private function getModLibrary(fallbackLibrary:AssetLibrary, pathPrefix:String):LimeModLibrary
 	{
 		return new LimeModLibrary(this, fallbackLibrary, pathPrefix);
 	}
