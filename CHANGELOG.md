@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ### Changed
 - Added an additional example to `openfl_hscript` to demonstrate retrieving and calling one or more functions from a single script file.
 ### Fixed
+- Fixed a crash bug which occured when LimeBackend was used without a `frameworkParams` argument.
 - Fixed a bug where `MOD_LOAD_PREPARE` and `MOD_LOAD_DONE` were showing as errors rather than notices.
 
 ## [1.3.1] - 2021-12-05

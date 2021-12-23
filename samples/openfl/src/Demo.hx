@@ -33,7 +33,6 @@ import openfl.display.Sprite;
 import openfl.text.TextField;
 import openfl.text.TextFormatAlign;
 import openfl.utils.AssetType;
-import sys.FileSystem;
 
 /**
  * ...
@@ -87,7 +86,11 @@ class Demo extends Sprite
 		// account for <APPLICATION>.app/Contents/Resources
 		modDir = "../../../../../../mods";
 		#end
-		var mods = FileSystem.readDirectory(modDir);
+		#if sys
+		var mods = sys.FileSystem.readDirectory(modDir);
+		#else
+		var mods = [];
+		#end
 		var xx = 10;
 		var yy = 200;
 		for (mod in mods)

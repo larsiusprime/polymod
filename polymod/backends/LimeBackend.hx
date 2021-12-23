@@ -124,10 +124,18 @@ class LimeBackend implements IBackend
 			}
 		}
 
-		if (hasMoreThanDefault && params.assetLibraryPaths == null)
+		if (hasMoreThanDefault && params == null)
 		{
 			Polymod.error(PolymodErrorCode.LIME_MISSING_ASSET_LIBRARY_INFO,
 				"Your Lime/OpenFL configuration is using custom asset libraries, but you have not provided any frameworkParams in Polymod.init() that tells Polymod which asset libraries to expect and what their mod sub-directory prefixes should be.",
+				PolymodErrorOrigin.INIT);
+			return false;
+		}
+
+		if (hasMoreThanDefault && params.assetLibraryPaths == null)
+		{
+			Polymod.error(PolymodErrorCode.LIME_MISSING_ASSET_LIBRARY_INFO,
+				"Your Lime/OpenFL configuration is using custom asset libraries, but you have not provided the frameworkParams.assetLibraryPaths parameter in Polymod.init() that tells Polymod which asset libraries to expect and what their mod sub-directory prefixes should be.",
 				PolymodErrorOrigin.INIT);
 			return false;
 		}
