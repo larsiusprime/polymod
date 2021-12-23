@@ -3,6 +3,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.3] - 2021-12-XX
+### Changed
+- Added an additional example to `openfl_hscript` to demonstrate retrieving and calling one or more functions from a single script file.
+### Fixed
+- Fixed a bug where `MOD_LOAD_PREPARE` and `MOD_LOAD_DONE` were showing as errors rather than notices.
+
 ## [1.3.1] - 2021-12-05
 ### New Contributors
 - @Cheemsandfriends made their first contribution in https://github.com/larsiusprime/polymod/pull/75

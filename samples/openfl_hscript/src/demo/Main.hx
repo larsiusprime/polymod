@@ -26,7 +26,7 @@ package demo;
 import openfl.Lib;
 import openfl.display.Sprite;
 import polymod.Polymod;
-import polymod.hscript.HScriptConfig;
+import polymod.PolymodConfig;
 import openfl.events.KeyboardEvent;
 import openfl.text.TextField;
 

@@ -1,0 +1,4 @@
+function getFlowerName() {
+    trace('Flower 1!');
+    return "dandilion1";
+}
