@@ -324,7 +324,7 @@ class PolymodAssetLibrary
 
 	private function initMod(d:String):Void
 	{
-		Polymod.error(MOD_LOAD_PREPARE, 'Preparing to load mod $d');
+		Polymod.notice(MOD_LOAD_PREPARE, 'Preparing to load mod $d');
 		if (d == null)
 			return;
 
@@ -359,6 +359,6 @@ class PolymodAssetLibrary
 			var assetType = getExtensionType(ext);
 			type.set(f, assetType);
 		}
-		Polymod.error(MOD_LOAD_DONE, 'Done loading mod $d');
+		Polymod.notice(MOD_LOAD_DONE, 'Done loading mod $d');
 	}
 }
