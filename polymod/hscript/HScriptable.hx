@@ -134,17 +134,24 @@ class HScriptParams
 		return this;
 	}
 
-	public function mergeCancellable(newValue:Bool):HScriptParams
+	public function mergeCancellable(newValue:Null<Bool>):HScriptParams
 	{
-		if (!cancellable)
+		if (newValue != null)
 			cancellable = newValue;
 		return this;
 	}
 
-	public function mergeRunBefore(newValue:Bool):HScriptParams
+	public function mergeRunBefore(newValue:Null<Bool>):HScriptParams
 	{
-		if (!runBefore)
+		if (newValue != null)
 			runBefore = newValue;
+		return this;
+	}
+
+	public function mergeOptional(newValue:Null<Bool>):HScriptParams
+	{
+		if (newValue != null)
+			optional = newValue;
 		return this;
 	}
 
@@ -157,7 +164,7 @@ class HScriptParams
 		}
 		else
 		{
-			if (pathNameDynId == null)
+			if (pathNameDynId == null && newValue != null)
 				pathName = newValue;
 		}
 		return this;
@@ -173,6 +180,7 @@ class HScriptParams
 
 		result.cancellable = cancellable;
 		result.context = context;
+		result.optional = optional;
 		result.pathName = pathName;
 		result.pathNameDynId = pathNameDynId;
 		result.runBefore = runBefore;
@@ -186,10 +194,11 @@ class HScriptParams
 	 */
 	public function merge(newValue:HScriptParams)
 	{
-		return this.mergeContext(newValue.context)
-			.mergeCancellable(newValue.cancellable)
-			.mergeRunBefore(newValue.runBefore)
-			.mergePathName(newValue.pathName, newValue.pathNameDynId);
+		return this.mergeCancellable(newValue.cancellable)
+			.mergeContext(newValue.context)
+			.mergeOptional(newValue.optional)
+			.mergePathName(newValue.pathName, newValue.pathNameDynId)
+			.mergeRunBefore(newValue.runBefore);
 	}
 
 	public function toString():String
@@ -231,9 +240,11 @@ class ScriptRunner
 		}
 
 		var scriptPath = scriptPath(name);
+		Polymod.debug('Fetching script "$scriptPath"...');
 		if (!assetHandler.exists(scriptPath))
 		{
 			// Error will only be thrown if hscriptParams.optional == false (the default).
+			Polymod.debug('Note: Script at path "$scriptPath" not found! This may cause problems if it is not optional...');
 			return null;
 		}
 
