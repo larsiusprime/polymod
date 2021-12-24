@@ -256,7 +256,10 @@ class ScriptRunner
 
 	static inline function scriptPath(pathName:String):String
 	{
-		return '${PolymodConfig.scriptLibrary}:${PolymodConfig.rootPath}$pathName${PolymodConfig.scriptExt}';
+		return haxe.io.Path.join([
+			'${PolymodConfig.scriptLibrary}:${PolymodConfig.rootPath}',
+			'$pathName${PolymodConfig.scriptExt}'
+		]);
 	}
 
 	public function get(name:String, ?assetHandler:Dynamic = null):Script
