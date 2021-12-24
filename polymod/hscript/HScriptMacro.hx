@@ -148,9 +148,7 @@ class HScriptMacro
 		if (scriptable_meta != null)
 		{
 			// Get variables names from inside @:hscript(...) and add them to the list to pass to scripts.
-			// trace('Found an hscript annotation on a class:', scriptable_meta.pos);
 			var hscriptObjectRaw = scriptable_meta.params[0];
-
 			switch (hscriptObjectRaw.expr)
 			{
 				case EObjectDecl(paramFields):
@@ -305,9 +303,12 @@ class HScriptMacro
 						}
 
 						// Alter the function body:
+						var hscriptCancellable:Bool = hscriptParams.cancellable == null ? HScriptParams.CANCELLABLE_DEFAULT : hscriptParams.cancellable;
+						var hscriptOptional:Bool = hscriptParams.optional == null ? HScriptParams.OPTIONAL_DEFAULT : hscriptParams.optional;
+						var hscriptRunBefore:Bool = hscriptParams.runBefore == null ? HScriptParams.RUN_BEFORE_DEFAULT : hscriptParams.runBefore;
 						func.expr = macro
 							{
-								$b{hscriptParams.runBefore ? [func.expr] : []};
+								$b{hscriptRunBefore ? [func.expr] : []};
 
 								var script_error:Dynamic = null;
 								var script_result:Dynamic = null;
@@ -320,26 +321,34 @@ class HScriptMacro
 
 									if (script == null)
 									{
-										if ($v{!hscriptParams.optional})
+										if ($v{!hscriptOptional})
 										{
 											// We failed to find the script!
 											// But we only care about that if the script is not optional.
 											polymod.Polymod.error(polymod.Polymod.PolymodErrorCode.SCRIPT_NOT_FOUND,
 												'The script ' + $v{pathName} + ' could not be found.');
+
+											// Prevent the function body from executing.
 											wasCancelled = true;
 										}
 										else
 										{
 											polymod.Polymod.debug('The script '
 												+ $v{pathName} + ' could not be found, but that is fine because it is optional.');
+
+											// Prevent the script from running but do not prevent the function body from executing.
+											wasCancelled = true;
 										}
 									}
 
-									if (!wasCancelled)
+									if (script != null && !wasCancelled)
 									{
-										$b{setters};
+										if (script != null)
+										{
+											$b{setters};
+										}
 
-										if ($v{hscriptParams.cancellable})
+										if ($v{hscriptCancellable})
 										{
 											script.set('cancel', function()
 											{
@@ -360,7 +369,7 @@ class HScriptMacro
 									script_error = e;
 								}
 
-								if (!$v{hscriptParams.runBefore} && !wasCancelled)
+								if (!$v{hscriptRunBefore} && !wasCancelled)
 								{
 									${func.expr};
 								}

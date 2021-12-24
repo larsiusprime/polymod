@@ -56,29 +56,40 @@ class HScriptParams
 	/**
 	 * Provide an array of constants which will be accessible by the local script.
 	 * This can be global utility classes, or variables/functions local to the current class.
+	 * @default An empty array.
 	 */
 	public var context:Array<String> = [];
 
 	/**
 	 * If true, provides a `cancel()` function to the script.
 	 * Calling it will cause the main body of the function to be ignored.
+	 * @default false
 	 */
-	public var cancellable:Bool = false;
+	public var cancellable:Null<Bool> = null;
+
+	public static final CANCELLABLE_DEFAULT:Bool = false;
 
 	/**
 	 * If true, the body of the function will run BEFORE the script does.
 	 * Incompatible with `cancellable`.
+	 * @default false
 	 */
-	public var runBefore:Bool = false;
+	public var runBefore:Null<Bool> = null;
+
+	public static final RUN_BEFORE_DEFAULT:Bool = false;
 
 	/**
 	 * If true, no error will be thrown in the event that the script is missing.
 	 * This is useful when the script you're calling might be empty or undefined.
+	 * @default false
 	 */
-	public var optional:Bool = false;
+	public var optional:Null<Bool> = null;
+
+	public static final OPTIONAL_DEFAULT:Bool = false;
 
 	/**
 	 * Force a specific script path name.
+	 * If not specified, the path name will be the name of the function.
 	 */
 	public var pathName(default, set):String = null;
 
@@ -93,12 +104,12 @@ class HScriptParams
 
 	/**
 	 * A dynamic identifier which will be evaluated, at function call time,
-	 		* to determine the pathname of the script to run.
-	 		*
-	 		* This can be the name of a String variable, or of a function.
-	 		* 
-	 		* DON'T PASS `pathNameDynId` DIRECTLY!
-	 		* Just pass an identifier into `pathName` instead of a constant.
+	 * to determine the pathname of the script to run.
+	 *
+	 * This can be the name of a String variable, or of a function.
+	 * 
+	 * DON'T SET `pathNameDynId` DIRECTLY!
+	 * Just pass an identifier into `pathName` instead of a constant.
 	 */
 	public var pathNameDynId(default, set):String = null;
 
