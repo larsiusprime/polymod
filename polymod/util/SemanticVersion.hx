@@ -49,7 +49,7 @@ class SemanticVersion
 			extra = arr[1];
 		}
 		var arr = str.split(".");
-		if (arr.length < 3)
+		if (arr.length < SemanticVersionScore.MATCH_PATCH)
 			throw "SemanticVersion.hx: needs major, minor, and patch versions! :\"" + str + "\"";
 		for (ii in 0...arr.length)
 		{
@@ -171,18 +171,19 @@ class SemanticVersion
 	 * @param newer version to check against
 	 * @return Int 3:match major/minor/patch, 2:match major/minor, 1:match major, 0:incompatible
 	 */
-	public function checkCompatibility(newer:SemanticVersion):Int
+	public function checkCompatibility(newer:SemanticVersion):SemanticVersionScore
 	{
-		var score = 0;
+		var score:SemanticVersionScore = NONE;
+
 		if (newer.major == major || newer.major == -1 || major == -1)
 		{
-			score++;
+			score = MATCH_MAJOR;
 			if (newer.minor >= minor || newer.minor == -1 || minor == -1)
 			{
-				score++;
+				score = MATCH_MINOR;
 				if (newer.patch >= patch || newer.patch == -1 || patch == -1)
 				{
-					score++;
+					score = MATCH_PATCH;
 				}
 			}
 		}
@@ -255,4 +256,41 @@ class SemanticVersion
 	{
 		return effective;
 	}
+}
+
+enum abstract SemanticVersionScore(Int) from Int to Int
+{
+	var NONE = 0;
+	var MATCH_MAJOR = 1;
+	var MATCH_MINOR = 2;
+	var MATCH_PATCH = 3;
+
+	public static function fromString(value:String):SemanticVersionScore
+	{
+		switch (value)
+		{
+			case "NONE":
+				return NONE;
+			case "MATCH_MAJOR":
+				return MATCH_MAJOR;
+			case "MATCH_MINOR":
+				return MATCH_MINOR;
+			case "MATCH_PATCH":
+				return MATCH_PATCH;
+			default:
+				throw 'SemanticVersionScore: Unknown value $value';
+		}
+	}
+
+	@:op(A < B) static function lt(a:SemanticVersionScore, b:SemanticVersionScore):Bool;
+
+	@:op(A <= B) static function lte(a:SemanticVersionScore, b:SemanticVersionScore):Bool;
+
+	@:op(A > B) static function gt(a:SemanticVersionScore, b:SemanticVersionScore):Bool;
+
+	@:op(A >= B) static function gte(a:SemanticVersionScore, b:SemanticVersionScore):Bool;
+
+	@:op(A == B) static function eq(a:SemanticVersionScore, b:SemanticVersionScore):Bool;
+
+	@:op(A != B) static function ne(a:SemanticVersionScore, b:SemanticVersionScore):Bool;
 }

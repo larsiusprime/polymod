@@ -27,6 +27,7 @@ import polymod.fs.IFileSystem;
 import haxe.Json;
 import haxe.io.Bytes;
 import polymod.util.SemanticVersion;
+import polymod.util.SemanticVersion.SemanticVersionScore;
 import polymod.util.Util;
 import polymod.format.JsonHelp;
 import polymod.format.ParseRules;
@@ -197,7 +198,7 @@ class Polymod
 				{
 					meta.id = origDir;
 					var apiScore = meta.apiVersion.checkCompatibility(apiVersion);
-					if (apiScore < 3)
+					if (apiScore < PolymodConfig.apiVersionMatch)
 					{
 						error(VERSION_CONFLICT_API,
 							"Mod \""
@@ -231,7 +232,7 @@ class Polymod
 					if (modVer != null)
 					{
 						var score = modVer.checkCompatibility(meta.modVersion);
-						if (score < 3)
+						if (score < SemanticVersionScore.MATCH_PATCH)
 						{
 							error(VERSION_CONFLICT_MOD,
 								"Mod pack wants version "
@@ -345,7 +346,7 @@ class Polymod
 				{
 					meta.id = origDir;
 					var apiScore = meta.apiVersion.checkCompatibility(apiVersion);
-					if (apiScore < 3)
+					if (apiScore < PolymodConfig.apiVersionMatch)
 					{
 						error(VERSION_CONFLICT_API,
 							"Mod \""
