@@ -3,9 +3,15 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.3.3] - 2021-12-XX
+## UNRELEASED - 2021-12-XX
+### Added
+- Added a new logo for the library.
+- Improved the Mod Metadata format with new and useful attributes.
+  - These changes are backwards compatible; new fields are optional, and changed fields still support the existing format.
+  - Added the `homepage` attribute to provide a URL for mods.
 ### Changed
 - Added an additional example to `openfl_hscript` to demonstrate retrieving and calling one or more functions from a single script file.
+- Improved compile-time error output for when `@:hscript({context})` receives an invalid value.
 ### Fixed
 - Fixed a crash bug which occured when LimeBackend was used without a `frameworkParams` argument.
 - Fixed a bug where `MOD_LOAD_PREPARE` and `MOD_LOAD_DONE` were showing as errors rather than notices.

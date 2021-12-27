@@ -482,6 +482,7 @@ class ModMetadata
 	public var title:String;
 	public var description:String;
 	public var author:String;
+	public var homepage:String;
 	public var apiVersion:SemanticVersion;
 	public var modVersion:SemanticVersion;
 	public var license:String;
@@ -501,6 +502,7 @@ class ModMetadata
 		Reflect.setField(json, "title", title);
 		Reflect.setField(json, "description", description);
 		Reflect.setField(json, "author", author);
+		Reflect.setField(json, "homepage", homepage);
 		Reflect.setField(json, "api_version", apiVersion.toString());
 		Reflect.setField(json, "mod_version", modVersion.toString());
 		Reflect.setField(json, "license", license);
@@ -521,6 +523,7 @@ class ModMetadata
 		m.title = JsonHelp.str(json, "title");
 		m.description = JsonHelp.str(json, "description");
 		m.author = JsonHelp.str(json, "author");
+		m.homepage = JsonHelp.str(json, "homepage");
 		var apiVersionStr = JsonHelp.str(json, "api_version");
 		var modVersionStr = JsonHelp.str(json, "mod_version");
 		try
