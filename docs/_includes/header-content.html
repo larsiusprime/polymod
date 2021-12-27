@@ -1,0 +1,24 @@
+{% include global.markdown %}
+
+    {% if isHome %}
+    <a id="doc_banner" href="/docs/">Documentation</a>
+    {% else %}
+    <a id="home_banner" href="/">Home</a>
+    {% endif %}
+
+<a id="issue_banner" href="{{ site.github.issues_url }}">Report an Issue</a>
+
+<div style="display:flex;align-items:center;flex-direction: row;">
+    <img
+    id="header-logo"
+    style="height: 192px; width: 192px;"
+    src="/assets/images/logo.png"
+    alt="{{ site.title }}" />
+    <h1 style="color: #EFEFEF;">Polymod</h1>
+</div>
+<h2 id="project_tagline">{{ site.github.project_tagline }}</h2>
+
+<!-- This is auto-populated from the Github repo! -->
+<div style="color: #EFEFEF; text-align: right; font-size: 0.9em;">
+    Download with <code>haxelib install polymod</code>
+</span>

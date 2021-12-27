@@ -1,0 +1,53 @@
+{% assign sidebar = true %}
+{% if include.sidebar == false %}
+{% assign sidebar = false %}
+{% endif %}
+{%if sidebar%}
+<div id="toc" class="sidebar">
+{% else %}
+<div id="toc">
+{% endif %}
+<h2>Documentation</h2>
+<ul>
+    <li>
+        <a href="/docs/basic-setup">Basic Setup</a>
+    </li>
+    <li>
+        <a href="/docs/best-practices">Best Practices</a>
+        <ul>
+            <li>
+                <a href="/docs/best-practices#for-game-developers">(for game developers)</a>
+            </li>
+            <li>
+                <a href="/docs/best-practices#for-modders">(for modders)</a>
+            </li>
+        </ul>
+    </li>
+    <li>
+        <a href="/docs/configuring-polymod">Configuring Polymod</a>
+    </li>
+    <li>
+        <a href="/docs/creating-mods">Creating Mods</a>
+    </li>
+    <li>
+        <a href="/docs/translation">WIP: Translation</a>
+    </li>
+    <!--
+    <li>
+        <a href="/docs/mod-guide">Making Mods in Enigma Engine</a>
+        <ul>
+            <li>
+                <a href="/docs/custom-characters">Custom Characters</a>
+            </li>
+            <li>
+                <a href="/docs/custom-songs">Custom Songs</a>
+            </li>
+            <li>
+                <a href="/docs/custom-title-screen">Custom Title Screen</a>
+            </li>
+        </ul>
+
+         
+        -->
+</ul>
+</div>
