@@ -340,7 +340,7 @@ class HScriptMacro
 											polymod.Polymod.error(polymod.Polymod.PolymodErrorCode.SCRIPT_NOT_FOUND,
 												'The script ' + $v{pathName} + ' could not be found.');
 
-											// Prevent the function body from executing.
+											// Prevent the script and the function body from executing.
 											wasCancelled = true;
 										}
 										else
@@ -349,7 +349,7 @@ class HScriptMacro
 												+ $v{pathName} + ' could not be found, but that is fine because it is optional.');
 
 											// Prevent the script from running but do not prevent the function body from executing.
-											wasCancelled = true;
+											// wasCancelled = true;
 										}
 									}
 

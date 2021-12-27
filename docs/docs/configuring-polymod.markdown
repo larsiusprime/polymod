@@ -24,7 +24,12 @@ The available options are:
     - Defaults to `.txt`.
     - The default option is in place for compatibility reasons, you'll probably want to change it to `.hscript` or something similar.
 - `POLYMOD_SCRIPT_LIBRARY`: The asset library to load scripts from.
-    - Only relevant for Lime and OpenFL/HaxeFlixel projects which utilize 
+    - Defaults to `default`.
+    - Only relevant for Lime and OpenFL/HaxeFlixel projects which utilize multiple asset libraries.
+- `POLYMOD_API_VERSION_MATCH`: Determines the precision required for 
+    - Possible values are `NONE` (no version matching required), `MATCH_MAJOR` (major version must match), `MATCH_MINOR` (major and minor version must match), or `MATCH_PATCH` (major, minor, and patch version must match). 
+    - Defaults to `MATCH_PATCH`.
+    - The default option is in place for compatibility reasons, you'll probably want to change it to `MATCH_MINOR` or higher.
 - `POLYMOD_APPEND_FOLDER`: Set this value to change the directory which append files are read from.
     - Defaults to `_append`
 - `POLYMOD_MERGE_FOLDER`: Set this value to change the directory which merge files are read from.

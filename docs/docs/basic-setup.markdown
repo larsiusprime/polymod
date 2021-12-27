@@ -41,7 +41,9 @@ var myImage = Res.loader.load("myImage.png");
 
 Of particular note in the snippet above is the `dirs` field. This is a list of all the IDs for the mods you wish to load.
 
-You will need to build this list yourself, although Polymod has several functions and utilities to assist you in this. See [Mod Metadata](./mod-metadata/) for more details.
+Polymod recommends you build a list view, from which users can view which mods they have installed (i.e. present in the `modRoot` folder), whether they are enabled (i.e. whether your application passes the mod ID to `dirs`), and ideally some way to reprioritize mods (i.e. determine the order of the mod IDs in the `dirs` array). You will need to build this list yourself, since Polymod is not a UI library.
+
+However, Polymod has several functions and utilities to assist you in building this list, such as a `scan()` function and a standard metadata format. See [Mod Metadata](./mod-metadata/) for more details.
 
 ## Samples
 
