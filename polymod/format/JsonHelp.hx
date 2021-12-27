@@ -101,6 +101,28 @@ class JsonHelp
 		return str;
 	}
 
+	public static function type<T>(json:Dynamic, field:String, defaultValue:T = null):T
+	{
+		var value:T = null;
+		if (Reflect.hasField(json, field))
+			value = Reflect.field(json, field);
+		if (value == null)
+			return defaultValue;
+		return value;
+	}
+
+	public static function arrType<T>(json:Dynamic, field:String, defaultValue:Array<T> = null):Array<T>
+	{
+		var val:Array<T> = null;
+		if (Reflect.hasField(json, field))
+			val = Reflect.field(json, field);
+		if (val != null && Std.isOfType(val, Array))
+		{
+			return cast val;
+		}
+		return defaultValue;
+	}
+
 	public static function arrStr(json:Dynamic, field:String, defaultValue:Array<String> = null):Array<String>
 	{
 		var val = null;

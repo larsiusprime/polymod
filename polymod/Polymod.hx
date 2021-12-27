@@ -476,12 +476,19 @@ class Polymod
 	}
 }
 
+typedef ModContributor =
+{
+	name:String,
+	role:String,
+	email:String,
+	url:String
+};
+
 class ModMetadata
 {
 	public var id:String;
 	public var title:String;
 	public var description:String;
-	public var author:String;
 	public var homepage:String;
 	public var apiVersion:SemanticVersion;
 	public var modVersion:SemanticVersion;
@@ -492,6 +499,32 @@ class ModMetadata
 	public var modPack:{mods:Array<String>, versions:Array<String>};
 	public var metaData:Map<String, String>;
 
+	/**
+	 * Please use the `contributors` field instead.
+	 */
+	@:deprecated
+	public var author(get, set):String;
+
+	// author has been made a property so setting it internally doesn't throw deprecation warnings
+	var _author:String;
+
+	function get_author()
+	{
+		if (contributors.length > 0)
+		{
+			return contributors[0].name;
+		}
+		return _author;
+	}
+
+	function set_author(v):String
+	{
+		_author = v;
+		return v;
+	}
+
+	public var contributors:Array<ModContributor>;
+
 	public function new()
 	{
 	}
@@ -501,7 +534,8 @@ class ModMetadata
 		var json = {};
 		Reflect.setField(json, "title", title);
 		Reflect.setField(json, "description", description);
-		Reflect.setField(json, "author", author);
+		Reflect.setField(json, "author", _author);
+		Reflect.setField(json, "contributors", contributors);
 		Reflect.setField(json, "homepage", homepage);
 		Reflect.setField(json, "api_version", apiVersion.toString());
 		Reflect.setField(json, "mod_version", modVersion.toString());
@@ -522,7 +556,8 @@ class ModMetadata
 		var json = haxe.Json.parse(str);
 		m.title = JsonHelp.str(json, "title");
 		m.description = JsonHelp.str(json, "description");
-		m.author = JsonHelp.str(json, "author");
+		m._author = JsonHelp.str(json, "author");
+		m.contributors = JsonHelp.arrType(json, "contributors");
 		m.homepage = JsonHelp.str(json, "homepage");
 		var apiVersionStr = JsonHelp.str(json, "api_version");
 		var modVersionStr = JsonHelp.str(json, "mod_version");
