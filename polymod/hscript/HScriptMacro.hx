@@ -54,7 +54,7 @@ class HScriptMacro
 					case EConst(CIdent(name)):
 						result.push(name);
 					default:
-						throw 'Error: Only identifiers (like Std, Math, myVariable, etc) are allowed in @:hscript(), got ${p.toString()}';
+						throw 'LEGACY Error: Only identifiers (like Std, Math, myVariable, etc) are allowed in @:hscript(), got "${p.toString()}"';
 				}
 			}
 		}
@@ -79,8 +79,20 @@ class HScriptMacro
 								{
 									case EConst(CIdent(name)):
 										result.mergeContext([name]);
+									case EField(e, field):
+										throw 'Error: Only constant identifiers (like Std, Math, myVariable, etc) are allowed in @:hscript({context}). Got "${contextItem.toString()}", which is a field access.';
+									case EArray(e1, e2):
+										throw 'Error: Only constant identifiers (like Std, Math, myVariable, etc) are allowed in @:hscript({context}). Got "${contextItem.toString()}", which is an array access.';
+									case EBinop(op, e1, e2):
+										throw 'Error: Only constant identifiers (like Std, Math, myVariable, etc) are allowed in @:hscript({context}). Got "${contextItem.toString()}", which is a binary operator.';
+									case EParenthesis(e):
+										throw 'Error: Only constant identifiers (like Std, Math, myVariable, etc) are allowed in @:hscript({context}). Got "${contextItem.toString()}", which is an expression wrapped in parens.';
+									case EObjectDecl(fields):
+										throw 'Error: Only constant identifiers (like Std, Math, myVariable, etc) are allowed in @:hscript({context}). Got "${contextItem.toString()}", which is an object declaration.';
+									case EArrayDecl(values):
+										throw 'Error: Only constant identifiers (like Std, Math, myVariable, etc) are allowed in @:hscript({context}). Got "${contextItem.toString()}", which is an array declaration.';
 									default:
-										throw 'Error: Only identifiers (like Std, Math, myVariable, etc) are allowed in @:hscript(), got ${contextItem.toString()}';
+										throw 'Error: Only constant identifiers (like Std, Math, myVariable, etc) are allowed in @:hscript({context}). Got "${contextItem.toString()}"';
 								}
 							}
 						default:
