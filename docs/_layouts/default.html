@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="{{ site.lang | default: 'en-US' }}">
+
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width,maximum-scale=2">
+    <link rel="stylesheet" type="text/css" media="screen" href="{{ '/assets/css/style.css?v=' | relative_url }}">
+
+    <link rel="apple-touch-icon" sizes="180x180"
+      href="{{ '/apple-touch-icon.png' | relative_url }}" />
+    <link rel="icon" type="image/png" sizes="32x32"
+      href="{{ '/favicon-32x32.png' | relative_url }}" />
+    <link rel="icon" type="image/png" sizes="16x16"
+      href="{{ '/favicon-16x16.png' | relative_url }}" />
+    <link rel="manifest"
+      href="{{ '/site.webmanifest' | relative_url }}" />
+
+    {% seo %}
+    {% include head-custom.html %}
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          {% include header-content.html %}
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        {{ content }}
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p>Published with <a href="https://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+  </body>
+</html>

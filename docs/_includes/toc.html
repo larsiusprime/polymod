@@ -1,0 +1,84 @@
+{% assign sidebar = true %}
+{% if include.sidebar == false %}
+{% assign sidebar = false %}
+{% endif %}
+
+{%if sidebar%}
+<div id="toc" class="sidebar">
+{% else %}
+<div id="toc">
+{% endif %}
+  <h2>Documentation</h2>
+  <ul>
+    <li>
+      <a
+        href="{{ '/docs/basic-setup' | relative_url }}">
+        Basic Setup
+      </a>
+    </li>
+    <li>
+      <a
+        href="{{ '/docs/best-practices' | relative_url }}">
+        Best Practices
+      </a>
+      <ul>
+        <li>
+          <a
+            href="{{ '/docs/best-practices#for-game-developers' | relative_url }}">
+            (for game developers)
+          </a>
+        </li>
+        <li>
+          <a
+            href="{{ '/docs/best-practices#for-modders' | relative_url }}">
+            (for modders)
+          </a>
+        </li>
+      </ul>
+    </li>
+    <li>
+      <a
+        href="{{ '/docs/configuring-polymod' | relative_url }}">
+        Configuring Polymod
+      </a>
+    </li>
+    <li>
+      <a
+        href="{{ '/docs/creating-mods' | relative_url }}">
+        Creating Mods
+      </a>
+      <ul>
+        <li>
+          <a
+            href="{{ '/docs/mod-metadata' | relative_url }}">
+            Mod Metadata
+          </a>
+        </li>
+        <li>
+          <a
+            href="{{ '/docs/mod-packs' | relative_url }}">
+            Mod Packs
+          </a>
+        </li>
+        <li>
+          <a
+            href="{{ '/docs/scripting' | relative_url }}">
+            Scripting
+          </a>
+        </li>
+        <li>
+          <a
+            href="{{ '/docs/merging-files' | relative_url }}">
+            Merging Files
+          </a>
+        </li>
+        <li>
+          <a
+            href="{{ '/docs/translation' | relative_url }}">
+            WIP: Translation
+          </a>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</div>
