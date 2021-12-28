@@ -177,21 +177,84 @@ That logic is relying on many other class member variables, and even calling oth
 Instead, you can just add extra variables to the script context by adding the `context` parameter to your `hscript` annotation, like this:
 ```haxe
 @:hscript({
-    context: [Math,bee,elapsed,home,moveToward,isTouching,getClosestFlower,getRandomFlower,emptyFlower,updateScore]
+    context: [Math,elapsed,home,moveToward,isTouching,getClosestFlower,getRandomFlower,emptyFlower,updateScore]
 })
 private function updateBee(bee:Bee, elapsed:Float) { }
 ```
 
 Here the script will receive all the parameters we specified in the provided `context`, followed by all the normal function parameters. This is also a good way to pass in global utility classes that are otherwise not available to your scripts, such as `Math`, `Std`, and `StringTools`.
 
+**NOTE:** _You can also pass `this` to the `context` parameter, which will pass in the object itself, allowing your script to access the current object, and therefore call any public functions available on your class, like so:_
+
+```haxe
+@:hscript({
+    context: [Math,this]
+})
+private function updateBee(bee:Bee, elapsed:Float) { }
+```
+
+with this user script:
+
+```haxe
+this.moveToward(this.getClosestFlower());
+```
+
 **NOTE:** _Although your scripts can make changes to any mutable objects you pass in, a local variable within an hscript file is *not* the same as the local variable from your host function with the same name, even if they both *point* to the same object. This means that you can do `bee.pollen = 0` in your script and expect to see that change even after the script is finished, but if you do `bee = anotherBee` within the script, the `bee` variable in your main function will remain unchanged. This is the difference between passing by reference and passing by value used in other languages such as C++, and this can be a common source of subtle bugs if you're not careful.To TL;DR -- scripts can change the internal state of objects that are passed to it, and call functions of those objects, but cannot change what objects that variables are being pointed to._
+
+### Context inheritance
+
+Say you have a class containing several scripted functions, all of which share a context, like the one below:
+
+```haxe
+class Simulation {
+  @:hscript({
+    context: [Math,elapsed,home,moveToward,isTouching,getClosestFlower,getRandomFlower,emptyFlower,updateScore]
+  })
+  private function updateBee(bee:Bee, elapsed:Float) { }
+
+  @:hscript({
+    context: [Math,elapsed,home,moveToward,isTouching,getClosestFlower,getRandomFlower,emptyFlower,updateScore]
+  })
+  private function updateFlower(flower:Flower, elapsed:Float) { }
+}
+```
+
+It can be a massive pain to manage the context for each function, and this only multiplies if you have several classes which all share the same context. One typo or omission can cause a script to fail to execute, or to execute in an unexpected way.
+
+Fear not! The `@:hscript` macro can be used to specify a context for a class, and all of its functions will inherit that context. Moreover, `@:hscript` can be specified on the parent classes and interfaces for a class, and all its parameters will be passed down in order of inheritance.
+
+Check it out:
+
+```haxe
+@:hscript({
+    context: [Std, Math, FlxG]
+})
+interface IScriptable extends HScriptable {}
+
+@:hscript({
+    context: [elapsed,home,moveToward,isTouching,getClosestFlower,getRandomFlower,emptyFlower,updateScore]
+})
+class Simulation implements IScriptable {
+  @:hscript
+  private function updateBee(bee:Bee, elapsed:Float) { }
+
+  @:hscript
+  private function updateFlower(flower:Flower, elapsed:Float) { }
+}
+```
+
+This is a great way to share common functionality between scripts, and it's also a great way to share functionality between classes.
+
+**NOTE:** _`context` is not the only parameter which is passed down. You can also pass down any other parameters of `@:hscript`, including `optional`, `cancellable`, `pathName`, etc. The behavior of these parameters is covered later in this documentation._
+
+**NOTE:** _Inheritance acts in a reasonably predictable manner; children will inherit the parameters of their super classes and interfaces, with the child class's own parameters overriding those of the parents. Note that `context` is a special case, in which contexts are **CONCATENATED TOGETHER** rather than overridden.
 
 ### Mixing code and scripts
 
 Of significant note is that the function body of a scriptable function doesn't have to be empty!
 
 ```haxe
- @:hscript
+@:hscript
 private function updateScore(value:Float)
 {
     score.text = script_result;

@@ -20,3 +20,5 @@ samples/openfl/dump/neko/openfl/geom/
 samples/openfl_with_electron/bin/
 
 samples/heaps/res/
+
+docs/Gemfile.lock

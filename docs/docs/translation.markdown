@@ -75,6 +75,35 @@ For example, if a mod replaces `assets/music/song-with-lyrics.mp3`, that new ass
 
 Additionally, if a mod adds the file `assets/locales/pt-BR/images/billboard.png`, that asset will be used, as long as the user is playing in the Portuguese language, *even if another mod has its own replacement for `assets/images/billboard.png`.*
 
+## Switching Locales
+
+To switch locales, call `tongue.init()`
+
+## Adding New Locales
+
+A mod can add a completely new locale to an existing application which utilizes Firetongue for its translation.
+
+1. Add a new locale to the `locales` folder. Name it after the locale code, such as `en-US`, `pt-BR`, etc.
+2. Add your new assets and translations to the new locale folder.
+3. Create a file `_merge/assets/locales/index.xml` and add the new locale to it, like so:
+
+```xml
+<?xml version="1.0" encoding="utf-8" ?>
+<data>
+    <data>
+        <merge/>
+        <locale id="en-US" is_default="true" sort="0">	
+	      	<contributors value="Lars Doucet, Level Up Labs"/>
+	      	<ui language="Language" region="Region" accept="Okay" />
+	      	<label id="en-US,en-GB,en-CA" language="English" region="United States"/>
+	      	<label id="nb-NO" language="Engelsk" region="U.S.A."/>
+	      </locale>
+    </mode>
+</data>
+```
+
+by adding a new folder to the `locales` folder. The folder name should be the locale code, such as `en-US`.
+
 ## Best Practices
 
 When using Polymod with FireTongue, you should utilize FireTongue for user interface text whenever possible, and utilize Polymod's  localization integration only for things like graphics, audio, and script files.

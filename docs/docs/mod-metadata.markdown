@@ -3,6 +3,8 @@ title: Mod Metadata
 ---
 {% include toc.html %}
 
+# Mod Metadata
+
 In order to be recognized by Polymod, a mod folder must contain a metadata file. By default, this file is located at `_polymod_meta.json`, but this can be reconfigured in your own projects. See [Configuring Polymod](./configuring-polymod) for more information.
 
 A mod's metadata contains all the information needed for your project to not only recognize a mod and validate its compatibility, but also display it to your users. It includes a title, description, author, and even optionally an icon you can display.

@@ -2,6 +2,13 @@
 layout: default
 ---
 
+<!--
+[![Build Status](https://github.com/larsiusprime/polymod/workflows/Build/badge.svg "GitHub Actions")](https://github.com/larsiusprime/haxe-concurrent/actions?query=workflow%3A%22Build%22)
+-->
+[![Release](https://img.shields.io/github/release/larsiusprime/polymod.svg)](http://lib.haxe.org/p/polymod)
+[![License](https://img.shields.io/github/license/larsiusprime/polymod.svg?label=license)](#license)
+[![Issues](https://img.shields.io/github/issues/larsiusprime/polymod.svg?label=issues)](https://github.io/larsiusprime/polymod/issues)
+
 Polymod is an atomic modding framework for use with Haxe. It supports scripting as well as replacement of any asset.
 
 1. [Showcase](#showcase)
@@ -23,18 +30,24 @@ Here are some of the wonderful games and apps that use Polymod!
 
 <div style="padding-bottom: 12px">
 <a href="http://www.defendersquest.com/1/" style="width: 30%; float: left;">
-  <img src="assets/images/showcase/defendersQuest.png" alt="Defender's Quest꞉ Valley of the Forgotten"
-      style="width: 100%; padding: 0;" />
+  <img
+    src="{{ 'assets/images/showcase/defendersQuest2.png' | relative_url }}"
+    alt="Defender's Quest꞉ Valley of the Forgotten"
+    style="width: 100%; padding: 0;" />
 </a>
 
 <a href="https://store.steampowered.com/app/861540/Dicey_Dungeons/" style="width: 30%; float: left;">
-  <img src="assets/images/showcase/diceyDungeons.png" alt="Dicey Dungeons"
-      style="width: 100%; padding: 0;" />
+  <img
+    src="{{ 'assets/images/showcase/diceyDungeons.png' | relative_url }}"
+    alt="Dicey Dungeons"
+    style="width: 100%; padding: 0;" />
 </a>
 
 <a href="http://www.defendersquest.com/2/" style="width: 30%; float: left;">
-  <img src="assets/images/showcase/defendersQuest2.png" alt="Defender's Quest 2"
-      style="width: 100%; padding: 0;" />
+  <img
+    src="{{ 'assets/images/showcase/defendersQuest2.png' | relative_url }}"
+    alt="Defender's Quest 2"
+    style="width: 100%; padding: 0;" />
 </a>
 </div>
 

@@ -1,18 +1,31 @@
 {% include global.markdown %}
 
     {% if isHome %}
-    <a id="doc_banner" href="/docs/">Documentation</a>
+    <a
+      id="doc_banner"
+      href="{{ '/docs/' | relative_url }}">
+      Documentation
+    </a>
+    
     {% else %}
-    <a id="home_banner" href="/">Home</a>
+    <a
+      id="home_banner"
+      href="{{ '/' | relative_url }}">
+      Home
+    </a>
     {% endif %}
 
-<a id="issue_banner" href="{{ site.github.issues_url }}">Report an Issue</a>
+<a
+  id="issue_banner"
+  href="https://github.com/larsiusprime/polymod/issues">
+  Report an Issue
+</a>
 
 <div style="display:flex;align-items:center;flex-direction: row;">
     <img
     id="header-logo"
     style="height: 192px; width: 192px;"
-    src="/assets/images/logo.png"
+    src="{{ '/assets/images/logo.png' | relative_url }}"
     alt="{{ site.title }}" />
     <h1 style="color: #EFEFEF;">Polymod</h1>
 </div>
