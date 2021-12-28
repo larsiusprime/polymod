@@ -1,0 +1,50 @@
+{% assign sidebar = true %}
+{% if include.sidebar == false %}
+{% assign sidebar = false %}
+{% endif %}
+{%if sidebar%}
+<div id="toc" class="sidebar">
+{% else %}
+<div id="toc">
+{% endif %}
+<h2>Documentation</h2>
+<ul>
+    <li>
+        <a href="/docs/basic-setup">Basic Setup</a>
+    </li>
+    <li>
+        <a href="/docs/best-practices">Best Practices</a>
+        <ul>
+            <li>
+                <a href="/docs/best-practices#for-game-developers">(for game developers)</a>
+            </li>
+            <li>
+                <a href="/docs/best-practices#for-modders">(for modders)</a>
+            </li>
+        </ul>
+    </li>
+    <li>
+        <a href="/docs/configuring-polymod">Configuring Polymod</a>
+    </li>
+    <li>
+        <a href="/docs/creating-mods">Creating Mods</a>
+        <ul>
+            <li>
+                <a href="/docs/mod-metadata">Mod Metadata</a>
+            </li>
+            <li>
+                <a href="/docs/mod-packs">Mod Packs</a>
+            </li>
+            <li>
+                <a href="/docs/scripting">Scripting</a>
+            </li>
+            <li>
+                <a href="/docs/merging-files">Merging Files</a>
+            </li>
+            <li>
+                <a href="/docs/translation">WIP: Translation</a>
+            </li>
+        </ul>
+    </li>
+</ul>
+</div>
