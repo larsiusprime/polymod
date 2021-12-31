@@ -311,7 +311,7 @@ class Script
 		if (PolymodConfig.useHScriptEX)
 		{
 			Polymod.error(PolymodErrorCode.SCRIPT_NO_INTERPRETER, 'HScript-EX is not available on this platform. Make sure to install it.');
-			return null;
+			return new hscript.Parser();
 		}
 		else
 		{
@@ -336,7 +336,7 @@ class Script
 		if (PolymodConfig.useHScriptEX)
 		{
 			Polymod.error(PolymodErrorCode.SCRIPT_NO_INTERPRETER, 'HScript-EX is not available on this platform. Make sure to install it.');
-			return null;
+			return new hscript.Interp();
 		}
 		else
 		{
