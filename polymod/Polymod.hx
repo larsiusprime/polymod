@@ -568,7 +568,12 @@ class ModMetadata
 		}
 		catch (msg:Dynamic)
 		{
-			Polymod.error(PARSE_MOD_API_VERSION, "Error parsing api version: (" + Std.string(msg) + ") _polymod_meta.json was : " + str);
+			Polymod.error(PARSE_MOD_API_VERSION, "Error parsing api version: ("
+				+ Std.string(msg)
+				+ ") "
+				+ PolymodConfig.modMetadataFile
+				+ " was : "
+				+ str);
 			return null;
 		}
 		try
@@ -577,7 +582,12 @@ class ModMetadata
 		}
 		catch (msg:Dynamic)
 		{
-			Polymod.error(PARSE_MOD_VERSION, "Error parsing mod version: (" + Std.string(msg) + ") _polymod_meta.json was : " + str);
+			Polymod.error(PARSE_MOD_VERSION, "Error parsing api version: ("
+				+ Std.string(msg)
+				+ ") "
+				+ PolymodConfig.modMetadataFile
+				+ " was : "
+				+ str);
 			return null;
 		}
 		m.license = JsonHelp.str(json, "license");

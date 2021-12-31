@@ -31,7 +31,7 @@ Here are some of the wonderful games and apps that use Polymod!
 <div style="padding-bottom: 12px">
 <a href="http://www.defendersquest.com/1/" style="width: 30%; float: left;">
   <img
-    src="{{ 'assets/images/showcase/defendersQuest2.png' | relative_url }}"
+    src="{{ 'assets/images/showcase/defendersQuest.png' | relative_url }}"
     alt="Defender's Quest꞉ Valley of the Forgotten"
     style="width: 100%; padding: 0;" />
 </a>
