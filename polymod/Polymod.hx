@@ -638,6 +638,7 @@ enum PolymodErrorType
 	var MOD_LOAD_PREPARE:String = "mod_load_prepare";
 	var MOD_LOAD_FAILED:String = "mod_load_failed";
 	var MOD_LOAD_DONE:String = "mod_load_done";
+	var SCRIPT_NO_INTERPRETER:String = "script_no_interpreter";
 	var SCRIPT_NO_ASSET_HANDLER:String = "script_no_asset_handler";
 	var SCRIPT_NOT_FOUND:String = "script_not_found";
 	var SCRIPT_NOT_LOADED:String = "script_not_loaded";

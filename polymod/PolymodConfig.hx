@@ -146,6 +146,24 @@ class PolymodConfig
 	}
 
 	/**
+	 * Determines which HScript interpreter to use. The HScript-EX interpreter is experimental but boasts support for custom classes.
+	 * 
+	 * If `false`, the default HScript interpreter will be used.
+	 * If `true`, the HScript-EX interpreter will be used.
+	 * 
+	 * @default `false`
+	 */
+	public static var useHScriptEX(get, default):Null<Bool> = null;
+
+	static function get_useHScriptEX()
+	{
+		// If the value is null, retrieve the value as a Haxe define.
+		if (useHScriptEX == null)
+			useHScriptEX = DefineUtil.getDefineBool('POLYMOD_USE_HSCRIPTEX', true);
+		return useHScriptEX;
+	}
+
+	/**
 	 * The directory from which to read data merge files.
 	 * 
 	 * Set this option by setting the `POLYMOD_MERGE_FOLDER` Haxe define at compile time,

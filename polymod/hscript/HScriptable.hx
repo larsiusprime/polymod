@@ -27,9 +27,6 @@ import polymod.Polymod.PolymodErrorCode;
 import polymod.Polymod;
 import polymod.Polymod.PolymodErrorCode;
 import haxe.Json;
-import hscript.Parser;
-import hscript.Expr;
-import hscript.Interp;
 
 /**
  * This interface triggers the execution of a macro on any elements which use the `@:hscript` annotation.
@@ -223,11 +220,9 @@ typedef ScriptOutput =
 class ScriptRunner
 {
 	private var scripts:Map<String, Script>;
-	private var parser:Parser;
 
 	public function new()
 	{
-		parser = new Parser();
 		scripts = new Map<String, Script>();
 	}
 
@@ -295,20 +290,70 @@ class ScriptRunner
 
 class Script
 {
-	public var program:Expr;
-	public var interp:Interp;
+	private static var parser:hscript.Parser;
 
-	private static var parser:Parser;
+	public var program:hscript.Expr;
+	public var interp:hscript.Interp;
+
+	public static function buildParser():hscript.Parser
+	{
+		// TODO: What is the correct compile define?
+		#if hscript_ex
+		if (PolymodConfig.useHScriptEX)
+		{
+			return new hscript.ParserEx();
+		}
+		else
+		{
+			return new hscript.Parser();
+		}
+		#else
+		if (PolymodConfig.useHScriptEX)
+		{
+			Polymod.error(PolymodErrorCode.SCRIPT_NO_INTERPRETER, 'HScript-EX is not available on this platform. Make sure to install it.');
+			return null;
+		}
+		else
+		{
+			return new hscript.Parser();
+		}
+		#end
+	}
+
+	public static function buildInterpreter():hscript.Interp
+	{
+		// TODO: What is the correct compile define?
+		#if hscript_ex
+		if (PolymodConfig.useHScriptEX)
+		{
+			return new hscript.InterpEx();
+		}
+		else
+		{
+			return new hscript.Interp();
+		}
+		#else
+		if (PolymodConfig.useHScriptEX)
+		{
+			Polymod.error(PolymodErrorCode.SCRIPT_NO_INTERPRETER, 'HScript-EX is not available on this platform. Make sure to install it.');
+			return null;
+		}
+		else
+		{
+			return new hscript.Interp();
+		}
+		#end
+	}
 
 	public function new(script:String)
 	{
 		if (parser == null)
 		{
-			parser = new Parser();
+			parser = buildParser();
 			parser.allowTypes = true;
 		}
 		program = parser.parseString(script);
-		interp = new Interp();
+		interp = buildInterp();
 	}
 
 	public function set(key:String, value:Dynamic)
