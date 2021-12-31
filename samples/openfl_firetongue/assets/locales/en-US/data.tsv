@@ -1,0 +1,5 @@
+flag	content
+$HELLO_WORLD	Hello, world!
+$ASSET_SYSTEM_LABEL	Asset System:
+$ASSET_SYSTEM_OPENFL	OpenFL
+$ASSET_SYSTEM_LIME	Lime
