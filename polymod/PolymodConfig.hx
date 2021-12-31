@@ -135,7 +135,7 @@ class PolymodConfig
 	 * 
 	 * @default `MATCH_PATCH`
 	 */
-	public static var apiVersionMatch(get, default):SemanticVersionScore;
+	public static var apiVersionMatch(get, default):Null<SemanticVersionScore> = null;
 
 	static function get_apiVersionMatch()
 	{
