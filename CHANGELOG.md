@@ -3,9 +3,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## UNRELEASED - 2021-12-XX
+## UNRELEASED - 2022-01-XX
+This release marks the migration of the project documentation to [polymod.io](https://polymod.io), a new website for the project hosted by Github Pages.
 ### Added
+- Added a new Github Pages site for documentation.
+  - This page is automatically generated using the `master` branch, with the Jekyll project located at `/docs/`.
 - Added a new logo for the library.
+- Added a new compile definition: `POLYMOD_API_VERSION_MATCH`
+  - This allows you to define how strictly mods must match when loading.
+  - `NONE` matches any version, `MATCH_MAJOR` requires the major version to match, `MATCH_MINOR` requires the minor version to match, and `MATCH_PATCH` requires the patch version to match.
+  - This defaults to `MATCH_PATCH` to prevent breaking changes, but you should probably update this to at least `MATCH_MINOR` to reduce strain on your mod developers.
 - Improved the Mod Metadata format with new and useful attributes.
   - These changes are backwards compatible; new fields are optional, and changed fields still support the existing format.
   - Added the `homepage` attribute to provide a URL for mods.
