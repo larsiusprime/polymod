@@ -39,7 +39,7 @@ typedef PolymodAssetsParams =
 	/**
 	 * the Haxe framework you're using (OpenFL, HEAPS, Kha, NME, etc..)
 	 */
-	framework:Framework,
+	framework:polymod.Framework,
 
 	/**
 	 * the file system to use to access mods.
@@ -80,7 +80,7 @@ class PolymodAssets
 	/**PUBLIC STATIC**/
 	public static function init(params:PolymodAssetsParams):PolymodAssetLibrary
 	{
-		var framework:Framework = params.framework;
+		var framework:polymod.Framework = params.framework;
 		if (framework == null)
 		{
 			framework = autoDetectFramework();
@@ -93,6 +93,7 @@ class PolymodAssets
 		var backend:IBackend = switch (framework)
 		{
 			case NME: new polymod.backends.NMEBackend();
+			case FLIXEL: new polymod.backends.FlixelBackend();
 			case OPENFL: new polymod.backends.OpenFLBackend();
 			case OPENFL_WITH_NODE: new polymod.backends.OpenFLWithNodeBackend();
 			case LIME: new polymod.backends.LimeBackend();
@@ -169,13 +170,21 @@ class PolymodAssets
 	/**PRIVATE STATIC**/
 	private static var library:PolymodAssetLibrary;
 
-	private static function autoDetectFramework():Framework
+	/**
+	 * Determine the correct framework to use based on the current environment.
+	 * Powered by compile-time macros.
+	 * @return polymod.Framework
+	 */
+	private static function autoDetectFramework():polymod.Framework
 	{
 		#if heaps
 		return HEAPS;
 		#end
 		#if nme
 		return NME;
+		#end
+		#if flixel
+		return FLIXEL;
 		#end
 		#if (openfl && !nme)
 		return OPENFL;

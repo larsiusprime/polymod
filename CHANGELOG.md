@@ -15,6 +15,10 @@ This release marks the migration of the project documentation to [polymod.io](ht
   - This defaults to `MATCH_PATCH` to prevent breaking changes, but you should probably update this to at least `MATCH_MINOR` to reduce strain on your mod developers.
 - Added a new compile definition: `POLYMOD_USE_HSCRIPTEX`
   - This *EXPERIMENTAL* option allows you to replace the default hscript parser with [hscript-ex](https://github.com/ianharrigan/hscript-ex), which provides support for classes.
+- Added the new `FlixelBackend` backend.
+  - This backend provides additional HaxeFlixel-specific fixes to the OpenFLBackend.
+  - Added `FLIXEL` as a Framework value to manually select this backend.
+  - Updated the framework detector to use the `FlixelBackend` over the `OpenFLBackend` when HaxeFlixel is being used.
 - Added a new function, `Polymod.clearCache()`, which triggers the backend to clear any cached assets from memory.
   - This is useful if you want to ensure assets reload after a modlist or locale change. 
 - Improved the Mod Metadata format with new and useful attributes.

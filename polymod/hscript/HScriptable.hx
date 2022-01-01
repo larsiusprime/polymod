@@ -262,7 +262,7 @@ class ScriptRunner
 		// If the script isn't loaded yet, do that now.
 		if (!scripts.exists(name))
 		{
-			Polymod.debug('NOTE: Late script load ($name).');
+			Polymod.debug('Note: Late script load ($name). This is normal for dynamic pathNames.');
 			load(name, assetHandler);
 		}
 
