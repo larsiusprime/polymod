@@ -47,20 +47,36 @@ class Main extends Sprite
 
 	private function loadDemo()
 	{
-    tongue = new FireTongue();
-    tongue.initialize({
-      locale: "en-US",
-    });
+		loadLocale('en-US');
+		loadMods([]);
 
-		demo = new Demo(onModChange);
+		demo = new Demo(onModChange, onLocaleChange);
 		addChild(demo);
 	}
 
 	private function onModChange(arr:Array<String>)
 	{
 		loadMods(arr);
-    if (demo != null)
-  		demo.refresh();
+		Polymod.clearCache();
+		if (demo != null)
+			demo.refresh();
+	}
+
+	private function onLocaleChange(newLocale:String)
+	{
+		loadLocale(newLocale);
+		Polymod.clearCache();
+		if (demo != null)
+			demo.refresh();
+	}
+
+	private function loadLocale(locale:String)
+	{
+		if (tongue == null)
+			tongue = new FireTongue();
+		tongue.initialize({
+			locale: locale,
+		});
 	}
 
 	private function loadMods(dirs:Array<String>)
@@ -72,13 +88,16 @@ class Main extends Sprite
 		var modRoot = "../../../../../../mods";
 		#end
 
-    trace('Initializing Polymod...');
+		trace('Initializing Polymod...');
+		// Note: If you are using Polymod with FireTongue, you should call Polymod.init(),
+		// regardless if you are loading any mods or not, in order to utilize the localized asset handler.
 		var results = Polymod.init({
 			modRoot: modRoot,
 			dirs: dirs,
 			errorCallback: onError,
 			ignoredFiles: Polymod.getDefaultIgnoreList(),
-			framework: framework
+			framework: framework,
+			tongue: tongue,
 		});
 	}
 

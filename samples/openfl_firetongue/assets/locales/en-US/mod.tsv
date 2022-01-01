@@ -1,0 +1,5 @@
+flag	content
+MOD_LEFT	←
+MOD_RIGHT	→
+MOD_ACTIVE	active
+MOD_INACTIVE	inactive

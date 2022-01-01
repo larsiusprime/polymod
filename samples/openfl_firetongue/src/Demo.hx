@@ -34,6 +34,8 @@ import openfl.text.TextField;
 import openfl.text.TextFormatAlign;
 import openfl.utils.AssetType;
 
+using StringTools;
+
 /**
  * ...
  * @author 
@@ -41,8 +43,10 @@ import openfl.utils.AssetType;
 class Demo extends Sprite
 {
 	private var widgets:Array<ModWidget> = [];
-	private var callback:Array<String>->Void;
 	private var stuff:Array<Dynamic> = [];
+
+	private var onModChange:Array<String>->Void;
+	private var onLocaleChange:String->Void;
 
 	private var limeToggle:CheapButton;
 	private var limeLabel:TextField;
@@ -52,19 +56,20 @@ class Demo extends Sprite
 
 	public static var usingOpenFL(default, null):Bool = true;
 
-	public function new(callback:Array<String>->Void)
+	public function new(onModChange:Array<String>->Void, onLocaleChange:String->Void)
 	{
 		super();
 
-		this.callback = callback;
+		this.onModChange = onModChange;
+		this.onLocaleChange = onLocaleChange;
 
 		makeButtons();
 		drawImages();
 		drawText();
 
-    drawFlag();
+		drawFlag();
 
-    reloadMods();
+		reloadMods();
 	}
 
 	public function destroy()
@@ -73,7 +78,8 @@ class Demo extends Sprite
 		{
 			w.destroy();
 		}
-		callback = null;
+		onModChange = null;
+		onLocaleChange = null;
 		removeChildren();
 	}
 
@@ -174,22 +180,10 @@ class Demo extends Sprite
 
 	private function onToggleLocale()
 	{
-    // To change language, just call initialize() again with the new language.
-		if (Main.tongue.locale == "en-US")
-		{
-			Main.tongue.initialize({
-        locale: 'yr-HR',
-      });
-		}
-		else
-		{
-			Main.tongue.initialize({
-        locale: 'en-US',
-      });
-		}
+		reloadLocale();
 
 		reloadText();
-    drawFlag();
+		drawFlag();
 		updateWidgets();
 		visible = false;
 		haxe.Timer.delay(function()
@@ -207,7 +201,7 @@ class Demo extends Sprite
 			var showLeft = i != 0;
 			var showRight = i != widgets.length - 1;
 			widgets[i].reloadText();
-      widgets[i].showButtons(showLeft, showRight);
+			widgets[i].showButtons(showLeft, showRight);
 		}
 	}
 
@@ -245,7 +239,7 @@ class Demo extends Sprite
 
 	private function reloadMods()
 	{
-		if (callback != null)
+		if (onModChange != null)
 		{
 			var theMods = [];
 			for (w in widgets)
@@ -255,7 +249,16 @@ class Demo extends Sprite
 					theMods.push(w.mod);
 				}
 			}
-			callback(theMods);
+			onModChange(theMods);
+		}
+	}
+
+	private function reloadLocale()
+	{
+		if (onLocaleChange != null)
+		{
+			var newLocale = Main.tongue.locale == "en-US" ? 'yr-HR' : 'en-US';
+			onLocaleChange(newLocale);
 		}
 	}
 
@@ -331,18 +334,20 @@ class Demo extends Sprite
 		}
 	}
 
-  var flag:Bitmap;
-  function drawFlag() {
-    if (flag != null)
-      removeChild(flag);
-    
-    var bData = AssetsGetBitmapData(Main.tongue.getIcon(Main.tongue.locale));
-    flag = new Bitmap(bData);
-    flag.x = 90;
-    flag.y = 470;
+	var flag:Bitmap;
 
-    addChild(flag);
-  }
+	function drawFlag()
+	{
+		if (flag != null)
+			removeChild(flag);
+
+		var bData = AssetsGetBitmapData(Main.tongue.getIcon(Main.tongue.locale));
+		flag = new Bitmap(bData);
+		flag.x = 90;
+		flag.y = 470;
+
+		addChild(flag);
+	}
 
 	private function drawText()
 	{
@@ -354,15 +359,15 @@ class Demo extends Sprite
 		// Exclude the locale configs.
 		texts = texts.filter(function(str:String)
 		{
-			return str.indexOf("locale") == -1;
+			return str.startsWith("assets/data/");
 		});
 
 		texts.sort(function(a:String, b:String)
 		{
 			if (a < b)
-				return -1;
-			if (a > b)
 				return 1;
+			if (a > b)
+				return -1;
 			return 0;
 		});
 

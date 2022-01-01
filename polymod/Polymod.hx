@@ -35,6 +35,9 @@ import polymod.backends.IBackend;
 import polymod.backends.PolymodAssets;
 import polymod.backends.PolymodAssetLibrary;
 import polymod.backends.PolymodAssets.PolymodAssetType;
+#if firetongue
+import firetongue.FireTongue;
+#end
 
 typedef PolymodParams =
 {
@@ -89,6 +92,13 @@ typedef PolymodParams =
 	 * (optional) your own custom backend for accessing the file system
 	 */
 	?customFilesystem:Class<IFileSystem>,
+
+	/**
+	 * (optional) a FireTongue instance for Polymod to hook into for localization support
+	 */
+	#if firetongue
+	?tongue:FireTongue,
+	#end
 }
 
 /**
@@ -109,6 +119,7 @@ enum Framework
 	LIME;
 	OPENFL;
 	OPENFL_WITH_NODE;
+	FLIXEL;
 	HEAPS;
 	KHA;
 	CUSTOM;
@@ -123,6 +134,9 @@ class Polymod
 {
 	public static var onError:PolymodError->Void = null;
 	private static var library:PolymodAssetLibrary = null;
+	#if firetongue
+	private static var tongue:FireTongue = null;
+	#end
 
 	/**
 	 * Initializes the chosen mod or mods.
@@ -259,6 +273,9 @@ class Polymod
 			extensionMap: params.extensionMap,
 			frameworkParams: params.frameworkParams,
 			fileSystem: fileSystem,
+			#if firetongue
+			tongue: params.tongue,
+			#end
 		});
 
 		if (library == null)

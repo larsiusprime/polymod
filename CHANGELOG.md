@@ -9,6 +9,11 @@ This release marks the migration of the project documentation to [polymod.io](ht
 - Added a new Github Pages site for documentation.
   - This page is automatically generated using the `master` branch, with the Jekyll project located at `/docs/`.
 - Added a new logo for the library.
+- Added FireTongue integration for asset localization.
+  - This incredibly powerful feature allows you to pass a FireTongue instance to Polymod, which will allow loading assets from the locale folder. This allows for locales to override not just strings, but also data files and even audio/visual assets, just by using your framework's asset management system.
+  - For example, when the locale is set to `en-US`, `openfl.Assets.getImage("images/billboard.png")` can return a default image, or a custom image when the locale is `pt-BR`.
+  - This not only allows developers to translate audio or graphics with almost no effort, but also allows mods to translate audio and graphics of the base game, or EVEN OTHER MODS.
+  - With the existing features of Polymod, mods should also be able to reasonably append new locales to the manifest, without requiring the developers to modify the base game.
 - Added a new compile definition: `POLYMOD_API_VERSION_MATCH`
   - This allows you to define how strictly mods must match when loading.
   - `NONE` matches any version, `MATCH_MAJOR` requires the major version to match, `MATCH_MINOR` requires the minor version to match, and `MATCH_PATCH` requires the patch version to match.

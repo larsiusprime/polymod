@@ -19,12 +19,10 @@
 
   <!-- assets -->
   <icon path="assets/openfl.svg" />
-  <assets path="assets/img" rename="img" />
-  <assets path="assets/data" rename="data" />
+  <assets path="assets" />
 
-  <!-- added for firetongue -->
+  <!-- added for FireTongue -->
   <haxelib name="firetongue" />
-  <assets path="assets/locales" />
 
   <!--
     remember, if you're debugging and you get a crash that isn't being caught,

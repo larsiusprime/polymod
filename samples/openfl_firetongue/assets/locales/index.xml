@@ -2,6 +2,7 @@
 <data>
 	
 	<file id="data" value="data.tsv"/>
+  <file id="mod" value="mod.tsv"/>
 	
 	<!--Add locale entries here.
 	

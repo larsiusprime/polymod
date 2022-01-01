@@ -180,6 +180,18 @@ class Util
 		return txt;
 	}
 
+	public static function stripPathPrefix(value:String, prefix:String):String
+	{
+		var result = value;
+		if (result.indexOf(prefix) == 0)
+			result = result.substr(prefix.length);
+
+		if (result.indexOf("/") == 0)
+			result = result.substr(1);
+
+		return result;
+	}
+
 	public static function trimLeadingWhiteSpace(txt:String):String
 	{
 		var white = ["\r", "\n", " ", "\t"];

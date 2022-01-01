@@ -33,6 +33,9 @@ import polymod.Polymod.Framework;
 import polymod.Polymod.FrameworkParams;
 import polymod.format.ParseRules;
 import polymod.backends.PolymodAssetLibrary;
+#if firetongue
+import firetongue.FireTongue;
+#end
 
 typedef PolymodAssetsParams =
 {
@@ -72,7 +75,14 @@ typedef PolymodAssetsParams =
 	/**
 	 * (optional) maps file extensions to asset types. This ensures e.g. text files with unfamiliar extensions are handled properly.
 	 */
-	?extensionMap:Map<String, PolymodAssetType>
+	?extensionMap:Map<String, PolymodAssetType>,
+
+	/**
+	 * (optional) a FireTongue instance for Polymod to hook into for localization support
+	 */
+	#if firetongue
+	?tongue:FireTongue,
+	#end
 }
 
 class PolymodAssets
@@ -129,6 +139,9 @@ class PolymodAssets
 			ignoredFiles: params.ignoredFiles,
 			extensionMap: params.extensionMap,
 			fileSystem: params.fileSystem,
+			#if firetongue
+			tongue: params.tongue,
+			#end
 		});
 
 		if (backend.init(params.frameworkParams))

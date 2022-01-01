@@ -29,6 +29,9 @@ import polymod.util.Util;
 import polymod.backends.IBackend;
 import polymod.backends.PolymodAssets.PolymodAssetType;
 import polymod.format.ParseRules;
+#if firetongue
+import firetongue.FireTongue;
+#end
 
 typedef PolymodAssetLibraryParams =
 {
@@ -59,7 +62,14 @@ typedef PolymodAssetLibraryParams =
 	/**
 	 * (optional) maps file extensions to asset types. This ensures e.g. text files with unfamiliar extensions are handled properly.
 	 */
-	?extensionMap:Map<String, PolymodAssetType>
+	?extensionMap:Map<String, PolymodAssetType>,
+
+	/**
+	 * (optional) a FireTongue instance for Polymod to hook into for localization support
+	 */
+	#if firetongue
+	?tongue:FireTongue,
+	#end
 }
 
 class PolymodAssetLibrary
@@ -84,9 +94,55 @@ class PolymodAssetLibrary
 		parseRules = params.parseRules;
 		ignoredFiles = params.ignoredFiles != null ? params.ignoredFiles.copy() : [];
 		extensions = params.extensionMap;
+
+		#if firetongue
+		tongue = params.tongue;
+		if (tongue != null)
+		{
+			// Call when we build the asset library then again each time we change locale.
+			onFireTongueLoad();
+			tongue.addFinishedCallback(onFireTongueLoad);
+		}
+		#end
+
 		backend.clearCache();
 		init();
 	}
+
+	#if firetongue
+	private var tongue:FireTongue = null;
+
+	/**
+	 * The directory where all the FireTongue locales are stored.
+	 */
+	public var rawTongueDirectory(default, null):String = null;
+
+	/**
+	 * The directory where the current locale's FireTongue files are stored.
+	 */
+	public var localePrefix(default, null):String = null;
+
+	/**
+	 * The directory where the current locale's FireTongue localized assets are stored.
+	 * 
+	 * Prefix asset paths with this string to get a localized version of the asset.
+	 */
+	public var localeAssetPrefix(default, null):String = null;
+
+	/**
+	 * Do basic initialization based on the FireTongue instance
+	 * Must be redone if the locale changes
+	 */
+	function onFireTongueLoad()
+	{
+		if (tongue == null)
+			return;
+
+		rawTongueDirectory = tongue.directory;
+		localePrefix = Util.pathJoin(rawTongueDirectory, tongue.locale);
+		localeAssetPrefix = Util.pathJoin(localePrefix, 'assets');
+	}
+	#end
 
 	public function destroy()
 	{
@@ -203,6 +259,25 @@ class PolymodAssetLibrary
 		return exists;
 	}
 
+	/**
+	 * Check if the given asset exists in the file system
+	 * (will ignore any mods enabled)
+	 * @param id 
+	 */
+	public function checkDefault(id:String, type:PolymodAssetType = null)
+	{
+		#if firetongue
+		if (localePrefix != null)
+		{
+			var localePath = Util.pathJoin(localePrefix, id);
+			if (fileSystem.exists(localePath))
+				return true;
+		}
+		// Else, FireTongue not enabled.
+		#end
+		return fileSystem.exists(id);
+	}
+
 	public function getType(id:String):PolymodAssetType
 	{
 		var exists = _checkExists(id);
@@ -239,38 +314,89 @@ class PolymodAssetLibrary
 	 */
 	public function file(id:String, theDir:String = ""):String
 	{
-		id = backend.stripAssetsPrefix(id);
+		var idStripped = backend.stripAssetsPrefix(id);
 		if (theDir != "")
 		{
-			return Util.pathJoin(theDir, id);
+			return Util.pathJoin(theDir, idStripped);
 		}
 
-		var theFile = "";
-		for (d in dirs)
+		var result = "";
+		var resultLocalized = false;
+		for (modDir in dirs)
 		{
-			var thePath = Util.pathJoin(d, id);
-			if (fileSystem.exists(thePath))
+			#if firetongue
+			if (localeAssetPrefix != null)
 			{
-				theFile = thePath;
+				var localePath = Util.pathJoin(modDir, Util.pathJoin(localeAssetPrefix, idStripped));
+				if (fileSystem.exists(localePath))
+				{
+					result = localePath;
+					resultLocalized = true;
+				}
+			}
+			// Else, FireTongue not enabled.
+			#end
+
+			// If we have a localized result, any unlocalized result will be ignored
+			if (!resultLocalized)
+			{
+				var filePath = Util.pathJoin(modDir, idStripped);
+				if (fileSystem.exists(filePath))
+					result = filePath;
 			}
 		}
-		return theFile;
+		return result;
+	}
+
+	/**
+	 * Get the filename of the given asset id
+	 * (will ignore all installed mods)
+	 * @param	id
+	 * @return
+	 */
+	public function fileDefault(id:String):String
+	{
+		var idStripped = backend.stripAssetsPrefix(id);
+
+		#if firetongue
+		if (localeAssetPrefix != null)
+		{
+			var localePath = Util.pathJoin(localeAssetPrefix, idStripped);
+			if (fileSystem.exists(localePath))
+				return localePath;
+		}
+		// Else, FireTongue not enabled.
+		#end
+
+		if (fileSystem.exists(id))
+			return id;
+
+		// File does not exist.
+		return null;
 	}
 
 	private function _checkExists(id:String):Bool
 	{
 		if (ignoredFiles.length > 0 && ignoredFiles.indexOf(id) != -1)
 			return false;
-		var exists = false;
 		id = backend.stripAssetsPrefix(id);
 		for (d in dirs)
 		{
-			if (fileSystem.exists(Util.pathJoin(d, id)))
+			#if firetongue
+			if (localeAssetPrefix != null)
 			{
-				exists = true;
+				var localePath = Util.pathJoin(d, Util.pathJoin(localeAssetPrefix, id));
+				if (fileSystem.exists(localePath))
+					return true;
 			}
+			// Else, FireTongue not enabled.
+			#end
+			var filePath = Util.pathJoin(d, id);
+			if (fileSystem.exists(filePath))
+				return true;
 		}
-		return exists;
+		// The loop didn't find it.
+		return false;
 	}
 
 	private function init()

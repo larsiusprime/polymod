@@ -51,8 +51,9 @@ Your asset folder should look like this (the same structure should be used by mo
             - play.tsv
             - options.tsv
         - pt-BR/
-            - music/
-                - song-with-lyrics.mp3
+            - assets/
+              - music/
+                  - song-with-lyrics.mp3
             - menu.tsv
             - play.tsv
             - options.tsv
@@ -71,9 +72,9 @@ Modded assets will take priority over unmodded assets, and localized assets take
 * Otherwise, Polymod will check if the base files contain the asset within the locale folder, and use that if it can.
 * Otherwise, Polymod will use the base asset from the base folder.
 
-For example, if a mod replaces `assets/music/song-with-lyrics.mp3`, that new asset will be used, even if the user is playing in the Portuguese language and would normally load `assets/locales/pt-BR/music/song-with-lyrics.mp3`.
+For example, if a mod replaces `assets/music/song-with-lyrics.mp3`, that new asset will be used, even if the user is playing in the Portuguese language and would normally load `assets/locales/pt-BR/assets/music/song-with-lyrics.mp3`.
 
-Additionally, if a mod adds the file `assets/locales/pt-BR/images/billboard.png`, that asset will be used, as long as the user is playing in the Portuguese language, *even if another mod has its own replacement for `assets/images/billboard.png`.*
+Additionally, if a mod adds the file `assets/locales/pt-BR/assets/images/billboard.png`, that asset will be used, as long as the user is playing in the Portuguese language, *even if another mod has its own replacement for `assets/images/billboard.png`.*
 
 ## Switching Locales
 
@@ -81,7 +82,7 @@ To switch locales, call `tongue.init()`
 
 ## Adding New Locales
 
-A mod can add a completely new locale to an existing application which utilizes Firetongue for its translation.
+A mod can add a completely new locale to an existing application which utilizes FireTongue for its translation.
 
 1. Add a new locale to the `locales` folder. Name it after the locale code, such as `en-US`, `pt-BR`, etc.
 2. Add your new assets and translations to the new locale folder.
