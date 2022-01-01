@@ -14,4 +14,6 @@
 	<assets path="Assets/data" rename="data" />
 	<icon path="Assets/nme.svg" />
 	
+  <haxedef name="POLYMOD_DEBUG" value="true" />
+
 </project>

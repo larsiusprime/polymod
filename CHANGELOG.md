@@ -15,13 +15,21 @@ This release marks the migration of the project documentation to [polymod.io](ht
   - This defaults to `MATCH_PATCH` to prevent breaking changes, but you should probably update this to at least `MATCH_MINOR` to reduce strain on your mod developers.
 - Added a new compile definition: `POLYMOD_USE_HSCRIPTEX`
   - This *EXPERIMENTAL* option allows you to replace the default hscript parser with [hscript-ex](https://github.com/ianharrigan/hscript-ex), which provides support for classes.
+- Added a new function, `Polymod.clearCache()`, which triggers the backend to clear any cached assets from memory.
+  - This is useful if you want to ensure assets reload after a modlist or locale change. 
 - Improved the Mod Metadata format with new and useful attributes.
   - These changes are backwards compatible; new fields are optional, and changed fields still support the existing format.
-  - Added the `homepage` attribute to provide a URL for mods.
-- Added a new sample demonstrating usage with Firetongue.
+  - Added the `homepage` attribute to allow mods to provide a URL.
+  - Added the `contributors` attribute to provide a list of contributors.
+    - Each contributor is an object with the following keys: `name`, `role`, `email`, `url`.
+    - New applications are encouraged to use this attribute over the `author` attribute where possible.
+- Added a new sample demonstrating usage with FireTongue.
 ### Changed
-- Added an additional example to `openfl_hscript` to demonstrate retrieving and calling one or more functions from a single script file.
+- Deprecated the `author` attribute in favor of the `contributors` attribute.
+  - The `author` attribute is still supported for backwards compatibility.
+  - Retrieving `author` when `contributors` is defined will return the name of the first contributor.
 - Improved compile-time error output for when `@:hscript({context})` receives an invalid value.
+- Changed the `openfl_hscript` sample to demonstrate retrieving and calling one or more functions from a single script file.
 - Cleaned up samples by removing unnecessary project configuration.
 ### Fixed
 - Fixed a crash bug which occured when LimeBackend was used without a `frameworkParams` argument.

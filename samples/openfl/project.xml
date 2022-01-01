@@ -22,7 +22,7 @@
 	<assets path="assets/img" rename="img" />
 	<assets path="assets/data" rename="data" />
 	
-	<!-- optimize output
-	<haxeflag name="-dce full" /> -->
+  <!-- Settings for Polymod -->  
+  <haxedef name="POLYMOD_DEBUG" value="true" />
 	
 </project>

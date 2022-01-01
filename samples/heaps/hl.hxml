@@ -4,6 +4,7 @@
 -hl demo.hl
 -main samples.heaps.Main
 -D windowSize=1024x768
+-D POLYMOD_DEBUG=true
 -cp ../..
 -cp .
 -lib hxbit

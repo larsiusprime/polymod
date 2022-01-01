@@ -30,5 +30,8 @@
     remember, if you're debugging and you get a crash that isn't being caught,
     make sure VSCode is configured to use `Windows / Debug` in the bottom toolbar.
   -->
+  
+  <!-- Settings for Polymod -->  
+  <haxedef name="POLYMOD_DEBUG" value="true" />
 
 </project>
