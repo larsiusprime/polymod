@@ -23,8 +23,9 @@
 
 package;
 
-import FiretongueUtil;
+import firetongue.FireTongue;
 import openfl.display.Sprite;
+import openfl.Lib;
 import polymod.Polymod;
 import polymod.Polymod.Framework;
 
@@ -36,6 +37,8 @@ class Main extends Sprite
 {
 	private var demo:Demo = null;
 
+	public static var tongue:FireTongue;
+
 	public function new()
 	{
 		super();
@@ -44,6 +47,11 @@ class Main extends Sprite
 
 	private function loadDemo()
 	{
+    tongue = new FireTongue();
+    tongue.initialize({
+      locale: "en-US",
+    });
+
 		demo = new Demo(onModChange);
 		addChild(demo);
 	}
@@ -51,7 +59,8 @@ class Main extends Sprite
 	private function onModChange(arr:Array<String>)
 	{
 		loadMods(arr);
-		demo.refresh();
+    if (demo != null)
+  		demo.refresh();
 	}
 
 	private function loadMods(dirs:Array<String>)
@@ -62,7 +71,8 @@ class Main extends Sprite
 		// account for <APPLICATION>.app/Contents/Resources
 		var modRoot = "../../../../../../mods";
 		#end
-    FiretongueUtil.firetongue.init('en-US');
+
+    trace('Initializing Polymod...');
 		var results = Polymod.init({
 			modRoot: modRoot,
 			dirs: dirs,

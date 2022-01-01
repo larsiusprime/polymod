@@ -27,6 +27,7 @@ import openfl.text.TextField;
 import openfl.display.Sprite;
 import openfl.display.Bitmap;
 import openfl.display.BitmapData;
+import openfl.display.DisplayObject;
 import openfl.display.DisplayObjectContainer;
 import openfl.events.MouseEvent;
 import openfl.text.TextFormatAlign;
@@ -41,15 +42,15 @@ class CheapButton extends Sprite
 	private var overT:TextField;
 	private var downT:TextField;
 
-	public function new(str:String, callback:Void->Void = null)
+	public function new(str:String, callback:Void->Void = null, ?width = 72)
 	{
 		super();
 
 		this.callback = callback;
 
-		var img = new BitmapData(72, 32, false, 0xC0C0C0);
-		var img2 = new BitmapData(72, 32, false, 0xD0D0F0);
-		var img3 = new BitmapData(72, 32, false, 0x000000);
+		var img = new BitmapData(width, 32, false, 0xC0C0C0);
+		var img2 = new BitmapData(width, 32, false, 0xD0D0F0);
+		var img3 = new BitmapData(width, 32, false, 0x000000);
 
 		up = new Sprite();
 		over = new Sprite();
@@ -63,9 +64,9 @@ class CheapButton extends Sprite
 		over.addChild(overB);
 		down.addChild(downB);
 
-		upT = text();
-		overT = text();
-		downT = text();
+		upT = text(width);
+		overT = text(width);
+		downT = text(width);
 
 		upT.text = str;
 		overT.text = str;
@@ -140,10 +141,10 @@ class CheapButton extends Sprite
 		down.visible = true;
 	}
 
-	private function text():TextField
+	private function text(?width = 72):TextField
 	{
 		var t:TextField = new TextField();
-		t.width = 72;
+		t.width = width;
 		t.height = 32;
 		var dtf = t.defaultTextFormat;
 		dtf.size = 18;

@@ -3,9 +3,6 @@
 	
 	<file id="data" value="data.tsv"/>
 	
-	<file id="fonts" value="fonts.xml"/>
-	
-	
 	<!--Add locale entries here.
 	
 	The locale id is the ISO 639-1 country language code with 2-letter country suffix:

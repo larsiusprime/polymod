@@ -23,14 +23,16 @@
 
 package;
 
+import lime.utils.Assets;
+import openfl.Assets;
+import openfl.display.DisplayObject;
+import openfl.text.TextFieldType;
 import openfl.display.Bitmap;
 import openfl.display.BitmapData;
 import openfl.display.Sprite;
 import openfl.text.TextField;
 import openfl.text.TextFormatAlign;
 import openfl.utils.AssetType;
-import FiretongueUtil.t;
-import sys.FileSystem;
 
 /**
  * ...
@@ -41,7 +43,12 @@ class Demo extends Sprite
 	private var widgets:Array<ModWidget> = [];
 	private var callback:Array<String>->Void;
 	private var stuff:Array<Dynamic> = [];
+
 	private var limeToggle:CheapButton;
+	private var limeLabel:TextField;
+
+	private var localeToggle:CheapButton;
+	private var localeLabel:TextField;
 
 	public static var usingOpenFL(default, null):Bool = true;
 
@@ -54,6 +61,10 @@ class Demo extends Sprite
 		makeButtons();
 		drawImages();
 		drawText();
+
+    drawFlag();
+
+    reloadMods();
 	}
 
 	public function destroy()
@@ -84,7 +95,11 @@ class Demo extends Sprite
 		// account for <APPLICATION>.app/Contents/Resources
 		modDir = "../../../../../../mods";
 		#end
-		var mods = FileSystem.readDirectory(modDir);
+		#if sys
+		var mods = sys.FileSystem.readDirectory(modDir);
+		#else
+		var mods = [];
+		#end
 		var xx = 10;
 		var yy = 200;
 		for (mod in mods)
@@ -107,37 +122,75 @@ class Demo extends Sprite
 
 		updateWidgets();
 		addToggle();
+		reloadText();
+	}
+
+	private function reloadText()
+	{
+		// Make sure to redo any translation calls when you change language.
+		// This won't matter as much if you put your language select in a separate menu.
+		limeLabel.text = Main.tongue.get('ASSET_SYSTEM_LABEL');
+		limeToggle.setText(Main.tongue.get(usingOpenFL ? "ASSET_SYSTEM_OPENFL" : "ASSET_SYSTEM_LIME"));
+		localeLabel.text = Main.tongue.get('TRANSLATION_LABEL');
+		localeToggle.setText(Main.tongue.locale);
 	}
 
 	private function addToggle()
 	{
-		var limeLabel = getText(LEFT);
+		limeLabel = getText(LEFT);
 		limeLabel.x = 10;
 		limeLabel.y = 400;
-		limeLabel.text = t("$ASSET_SYSTEM_LABEL");
 
-		limeToggle = new CheapButton(usingOpenFL ? "openfl" : "lime", onToggleOpenFL);
+		limeToggle = new CheapButton("", onToggleOpenFL, 144);
 		limeToggle.x = 10;
 		limeToggle.y = 420;
 
+		localeLabel = getText(LEFT);
+		localeLabel.x = 10;
+		localeLabel.y = 450;
+
+		localeToggle = new CheapButton("", onToggleLocale);
+		localeToggle.x = 10;
+		localeToggle.y = 470;
+
 		addChild(limeLabel);
 		addChild(limeToggle);
+		addChild(localeLabel);
+		addChild(localeToggle);
 	}
 
 	private function onToggleOpenFL()
 	{
 		usingOpenFL = !usingOpenFL;
 
-		if (usingOpenFL)
+		reloadText();
+		reloadMods();
+		visible = false;
+		haxe.Timer.delay(function()
 		{
-			limeToggle.setText("openfl");
+			visible = true;
+		}, 10);
+	}
+
+	private function onToggleLocale()
+	{
+    // To change language, just call initialize() again with the new language.
+		if (Main.tongue.locale == "en-US")
+		{
+			Main.tongue.initialize({
+        locale: 'yr-HR',
+      });
 		}
 		else
 		{
-			limeToggle.setText("lime");
+			Main.tongue.initialize({
+        locale: 'en-US',
+      });
 		}
 
-		reloadMods();
+		reloadText();
+    drawFlag();
+		updateWidgets();
 		visible = false;
 		haxe.Timer.delay(function()
 		{
@@ -153,7 +206,8 @@ class Demo extends Sprite
 		{
 			var showLeft = i != 0;
 			var showRight = i != widgets.length - 1;
-			widgets[i].showButtons(showLeft, showRight);
+			widgets[i].reloadText();
+      widgets[i].showButtons(showLeft, showRight);
 		}
 	}
 
@@ -238,6 +292,13 @@ class Demo extends Sprite
 		var yy = 10;
 
 		var images = AssetsList(AssetType.IMAGE);
+
+		// Exclude the flag images.
+		images = images.filter(function(str:String)
+		{
+			return str.indexOf("locale") == -1;
+		});
+
 		images.sort(function(a:String, b:String):Int
 		{
 			if (a < b)
@@ -270,12 +331,31 @@ class Demo extends Sprite
 		}
 	}
 
+  var flag:Bitmap;
+  function drawFlag() {
+    if (flag != null)
+      removeChild(flag);
+    
+    var bData = AssetsGetBitmapData(Main.tongue.getIcon(Main.tongue.locale));
+    flag = new Bitmap(bData);
+    flag.x = 90;
+    flag.y = 470;
+
+    addChild(flag);
+  }
+
 	private function drawText()
 	{
 		var xx = 500;
 		var yy = 10;
 
 		var texts = AssetsList(AssetType.TEXT);
+
+		// Exclude the locale configs.
+		texts = texts.filter(function(str:String)
+		{
+			return str.indexOf("locale") == -1;
+		});
 
 		texts.sort(function(a:String, b:String)
 		{

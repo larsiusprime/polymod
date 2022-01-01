@@ -25,6 +25,7 @@ package;
 
 import flash.text.TextField;
 import openfl.display.DisplayObjectContainer;
+import openfl.events.MouseEvent;
 import openfl.text.TextFormatAlign;
 
 /**
@@ -53,23 +54,24 @@ class ModWidget extends DisplayObjectContainer
 		this.callback = callback;
 
 		status = text();
-		status.text = "inactive";
 
 		button = new CheapButton(str, onClick);
-		var left = "←";
-		var right = "→";
-		#if mac
-		left = "<--";
-		right = "-->";
-		#end
-		moveLeft = new CheapButton(left, onMove.bind(-1));
-		moveRight = new CheapButton(right, onMove.bind(1));
+		moveLeft = new CheapButton("", onMove.bind(-1));
+		moveRight = new CheapButton("", onMove.bind(1));
+
+    reloadText();
 
 		addChild(status);
 		addChild(button);
 		addChild(moveLeft);
 		addChild(moveRight);
 	}
+
+  public function reloadText() {
+    moveLeft.setText(Main.tongue.get('MOD_LEFT'));
+    moveRight.setText(Main.tongue.get('MOD_RIGHT'));
+    status.text = Main.tongue.get(active ? "MOD_ACTIVE" : "MOD_INACTIVE");
+  }
 
 	public function fixButtons()
 	{
@@ -107,7 +109,7 @@ class ModWidget extends DisplayObjectContainer
 	private function onClick()
 	{
 		active = !active;
-		status.text = active ? "active" : "inactive";
+		reloadText();
 		if (callback != null)
 		{
 			callback(this, 0);

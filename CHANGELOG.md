@@ -13,12 +13,16 @@ This release marks the migration of the project documentation to [polymod.io](ht
   - This allows you to define how strictly mods must match when loading.
   - `NONE` matches any version, `MATCH_MAJOR` requires the major version to match, `MATCH_MINOR` requires the minor version to match, and `MATCH_PATCH` requires the patch version to match.
   - This defaults to `MATCH_PATCH` to prevent breaking changes, but you should probably update this to at least `MATCH_MINOR` to reduce strain on your mod developers.
+- Added a new compile definition: `POLYMOD_USE_HSCRIPTEX`
+  - This *EXPERIMENTAL* option allows you to replace the default hscript parser with [hscript-ex](https://github.com/ianharrigan/hscript-ex), which provides support for classes.
 - Improved the Mod Metadata format with new and useful attributes.
   - These changes are backwards compatible; new fields are optional, and changed fields still support the existing format.
   - Added the `homepage` attribute to provide a URL for mods.
+- Added a new sample demonstrating usage with Firetongue.
 ### Changed
 - Added an additional example to `openfl_hscript` to demonstrate retrieving and calling one or more functions from a single script file.
 - Improved compile-time error output for when `@:hscript({context})` receives an invalid value.
+- Cleaned up samples by removing unnecessary project configuration.
 ### Fixed
 - Fixed a crash bug which occured when LimeBackend was used without a `frameworkParams` argument.
 - Fixed a bug where `MOD_LOAD_PREPARE` and `MOD_LOAD_DONE` were showing as errors rather than notices.
