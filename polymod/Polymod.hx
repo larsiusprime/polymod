@@ -384,6 +384,15 @@ class Polymod
 		return modMeta;
 	}
 
+	/**
+	 * Tells Polymod to force the current backend to clear any asset caches
+	 */
+	public static function clearCache()
+	{
+		if (library != null)
+			library.clearCache();
+	}
+
 	public static function error(code:PolymodErrorCode, message:String, origin:PolymodErrorOrigin = UNKNOWN)
 	{
 		if (onError != null)

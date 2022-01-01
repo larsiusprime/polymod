@@ -159,6 +159,11 @@ class PolymodAssetLibrary
 		return backend.getPath(id);
 	}
 
+	public function clearCache()
+	{
+		backend.clearCache();
+	}
+
 	public function list(type:PolymodAssetType = null):Array<String>
 	{
 		return backend.list(type);
