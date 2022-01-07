@@ -166,6 +166,20 @@ class Polymod
 			new polymod.fs.StubFileSystem();
 			#end
 		}
+		if (params.frameworkParams == null || params.frameworkParams != null && params.frameworkParams.assetLibraryPaths == null)
+		{
+			var modStuff:Map<String, String> = [];
+			var foldersOnly = Lambda.filter(fileSystem.readDirectory("./assets"), _ -> 
+			{
+				return (Path.extension(_) == "");
+			});
+			for (i in 0...foldersOnly.length)
+			{
+				modStuff[foldersOnly[i]] = './${foldersOnly[i]}';
+			}
+
+			params.frameworkParams = {assetLibraryPaths: modStuff};
+		}
 
 		if (params.modVersions != null)
 		{
