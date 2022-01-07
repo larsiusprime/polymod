@@ -152,7 +152,7 @@ class Polymod
 
 		var modMeta = [];
 		var modVers = [];
-		var fileSystem = (params.customFilesystem != null) ? Type.createInstance(params.customFilesystem, []); : #if sys new polymod.fs.SysFileSystem(params.modRoot) #elseif nodefs new polymod.fs.NodeFileSystem(params.modRoot) #else new polymod.fs.StubFileSystem() #end;
+		var fileSystem = (params.customFilesystem != null) ? Type.createInstance(params.customFilesystem, []) : #if sys new polymod.fs.SysFileSystem(params.modRoot) #elseif nodefs new polymod.fs.NodeFileSystem(params.modRoot) #else new polymod.fs.StubFileSystem() #end;
 		
 		if (params.frameworkParams == null || params.frameworkParams != null && params.frameworkParams.assetLibraryPaths == null)
 		{
@@ -164,7 +164,7 @@ class Polymod
 			{
 				modMap[foldersOnly[i]] = './${foldersOnly[i]}';
 			}
-
+			
 			params.frameworkParams = {assetLibraryPaths: modMap};
 		}
 		
