@@ -152,35 +152,22 @@ class Polymod
 
 		var modMeta = [];
 		var modVers = [];
-		var fileSystem = if (params.customFilesystem != null)
-		{
-			Type.createInstance(params.customFilesystem, []);
-		}
-		else
-		{
-			#if sys
-			new polymod.fs.SysFileSystem(params.modRoot);
-			#elseif nodefs
-			new polymod.fs.NodeFileSystem(params.modRoot);
-			#else
-			new polymod.fs.StubFileSystem();
-			#end
-		}
+		var fileSystem = (params.customFilesystem != null) ? Type.createInstance(params.customFilesystem, []); : #if sys new polymod.fs.SysFileSystem(params.modRoot) #elseif nodefs new polymod.fs.NodeFileSystem(params.modRoot) #else new polymod.fs.StubFileSystem() #end;
+		
 		if (params.frameworkParams == null || params.frameworkParams != null && params.frameworkParams.assetLibraryPaths == null)
 		{
-			var modStuff:Map<String, String> = [];
-			var foldersOnly = Lambda.filter(fileSystem.readDirectory("./assets"), _ -> 
-			{
-				return (Path.extension(_) == "");
-			});
+			var modMap:Map<String, String> = [];
+			var defaultAssets = ["data", "images", "music", "sounds"];
+			var foldersOnly = Lambda.filter(fileSystem.readDirectory("./assets"), _ -> { return (Path.extension(_) == "" && !defaultAssets.contains(_)); });
+			
 			for (i in 0...foldersOnly.length)
 			{
-				modStuff[foldersOnly[i]] = './${foldersOnly[i]}';
+				modMap[foldersOnly[i]] = './${foldersOnly[i]}';
 			}
 
-			params.frameworkParams = {assetLibraryPaths: modStuff};
+			params.frameworkParams = {assetLibraryPaths: modMap};
 		}
-
+		
 		if (params.modVersions != null)
 		{
 			for (str in params.modVersions)
