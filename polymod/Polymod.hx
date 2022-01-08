@@ -25,6 +25,7 @@ package polymod;
 
 import polymod.fs.IFileSystem;
 import haxe.Json;
+import haxe.io.Path;
 import haxe.io.Bytes;
 import polymod.util.SemanticVersion;
 import polymod.util.Util;
