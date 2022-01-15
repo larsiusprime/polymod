@@ -106,13 +106,13 @@ class NMEBackend implements IBackend
 					nme.Assets.byteFactory.set(info.path, function()
 					{
 						var bytes = null;
-						if (p.fileSystem.exists(modFile))
+						if (polymodLibrary.fileSystem.exists(modFile))
 						{
-							bytes = p.fileSystem.getFileBytes(modFile);
+							bytes = polymodLibrary.fileSystem.getFileBytes(modFile);
 						}
 						else
 						{
-							bytes = p.fileSystem.getFileBytes(key);
+							bytes = polymodLibrary.fileSystem.getFileBytes(key);
 						}
 						var origText = Std.string(bytes);
 						var newText = polymodLibrary.mergeAndAppendText(key, origText);

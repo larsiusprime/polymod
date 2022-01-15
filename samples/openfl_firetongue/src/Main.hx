@@ -76,6 +76,7 @@ class Main extends Sprite
 			tongue = new FireTongue();
 		tongue.initialize({
 			locale: locale,
+			directory: 'locales/',
 		});
 	}
 
@@ -97,7 +98,7 @@ class Main extends Sprite
 			errorCallback: onError,
 			ignoredFiles: Polymod.getDefaultIgnoreList(),
 			framework: framework,
-			tongue: tongue,
+			firetongue: tongue,
 		});
 	}
 

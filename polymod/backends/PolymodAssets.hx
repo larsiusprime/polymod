@@ -81,7 +81,7 @@ typedef PolymodAssetsParams =
 	 * (optional) a FireTongue instance for Polymod to hook into for localization support
 	 */
 	#if firetongue
-	?tongue:FireTongue,
+	?firetongue:FireTongue,
 	#end
 }
 
@@ -102,6 +102,7 @@ class PolymodAssets
 		}
 		var backend:IBackend = switch (framework)
 		{
+			case CASTLE: new polymod.backends.CastleBackend();
 			case NME: new polymod.backends.NMEBackend();
 			case FLIXEL: new polymod.backends.FlixelBackend();
 			case OPENFL: new polymod.backends.OpenFLBackend();
@@ -127,6 +128,20 @@ class PolymodAssets
 			return null;
 		}
 
+		#if firetongue
+		if (params.firetongue != null)
+		{
+			if (framework == Framework.NME
+				|| framework == Framework.HEAPS
+				|| framework == Framework.KHA
+				|| framework == Framework.CASTLE)
+			{
+				Polymod.error(PolymodErrorCode.FUNCTIONALITY_NOT_IMPLEMENTED,
+					'Polymod currently does not support FireTongue localization for ${framework}! Nag us on GitHub about it.');
+			}
+		}
+		#end
+
 		if (library != null)
 		{
 			library.destroy();
@@ -140,7 +155,7 @@ class PolymodAssets
 			extensionMap: params.extensionMap,
 			fileSystem: params.fileSystem,
 			#if firetongue
-			tongue: params.tongue,
+			firetongue: params.firetongue,
 			#end
 		});
 
@@ -190,6 +205,9 @@ class PolymodAssets
 	 */
 	private static function autoDetectFramework():polymod.Framework
 	{
+		#if castle
+		return CASTLE;
+		#end
 		#if heaps
 		return HEAPS;
 		#end

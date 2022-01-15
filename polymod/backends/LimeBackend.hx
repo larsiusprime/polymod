@@ -338,7 +338,7 @@ class LimeModLibrary extends AssetLibrary
 		if (p.check(symbol.modId, LimeToPoly(cast type)))
 		{
 			// Load the modded asset.
-			return super.getAsset(p.file(symbol.modId), type);
+			return super.getAsset(id, type);
 		}
 		else if (hasFallback)
 		{
@@ -349,6 +349,10 @@ class LimeModLibrary extends AssetLibrary
 		return null;
 	}
 
+	/**
+	 * Returns true if the asset of the given id and type exists.
+	 		* Takes into account mods and locales, if available.
+	 */
 	public override function exists(id:String, type:String):Bool
 	{
 		var symbol = new IdAndLibrary(id, this);
@@ -360,10 +364,30 @@ class LimeModLibrary extends AssetLibrary
 		else if (hasFallback)
 		{
 			// Check the base asset.
-			return p.checkDefault(symbol.modId, LimeToPoly(cast type));
+			return existsDefault(id, type);
 		}
 		// No fallback.
 		return false;
+	}
+
+	/**
+	 * Returns true if the asset of the given id and type exists.
+	 * Takes into account locales, but not mods.
+	 */
+	function existsDefault(id:String, type:String):Bool
+	{
+		#if firetongue
+		if (p.localePrefix != null)
+		{
+			var localePath = Util.pathJoin(p.localePrefix, id);
+			if (fallback.exists(localePath, type))
+			{
+				return true;
+			}
+		}
+		// Else, FireTongue not enabled.
+		#end
+		return fallback.exists(id, type);
 	}
 
 	public override function getAudioBuffer(id:String):AudioBuffer
@@ -497,6 +521,7 @@ class LimeModLibrary extends AssetLibrary
 
 	public override function loadImage(id:String):Future<Image>
 	{
+		Polymod.debug('LimeModLibrary.loadImage($id)');
 		var symbol = new IdAndLibrary(id, this);
 		if (p.check(symbol.modId))
 		{
@@ -584,6 +609,7 @@ class LimeModLibrary extends AssetLibrary
 		// - Include other assets (such as FireTongue data files) as though they were in the locale folder.
 		for (fallbackId in fallbackList)
 		{
+			#if firetongue
 			if (fallbackId.startsWith(p.rawTongueDirectory))
 			{
 				// Localized file (example: assets/locales/en-US/...)
@@ -591,7 +617,6 @@ class LimeModLibrary extends AssetLibrary
 				{
 					// Localized asset file in CURRENT locale! (example: assets/locales/en-US/assets/...)
 					// We should register this with the locale path prefix removed.
-
 					var assetId = Util.stripPathPrefix(fallbackId, p.localeAssetPrefix);
 					if (fallbackId.startsWith('assets/'))
 						assetId = Util.pathJoin('assets', assetId);
@@ -600,14 +625,12 @@ class LimeModLibrary extends AssetLibrary
 						if (requestedType == null || fallback.exists(fallbackId, type))
 						{
 							items.push(assetId);
-							items.push(fallbackId);
 						}
 					}
 				}
 				else
 				{
 					// Localized FireTongue data file, or asset file in other locale! (example: assets/locales/en-US/data.tsv)
-
 					var assetId = fallbackId;
 					if (items.indexOf(assetId) == -1)
 					{
@@ -621,7 +644,6 @@ class LimeModLibrary extends AssetLibrary
 			else
 			{
 				// Unlocalized asset. Handle the original path.
-
 				var assetId = fallbackId;
 				if (items.indexOf(assetId) == -1)
 				{
@@ -631,6 +653,17 @@ class LimeModLibrary extends AssetLibrary
 					}
 				}
 			}
+			#else
+			// Unlocalized asset. Handle the original path.
+			var assetId = fallbackId;
+			if (items.indexOf(assetId) == -1)
+			{
+				if (requestedType == null || fallback.exists(assetId, type))
+				{
+					items.push(assetId);
+				}
+			}
+			#end
 		}
 
 		return items;

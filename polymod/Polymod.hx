@@ -97,7 +97,7 @@ typedef PolymodParams =
 	 * (optional) a FireTongue instance for Polymod to hook into for localization support
 	 */
 	#if firetongue
-	?tongue:FireTongue,
+	?firetongue:FireTongue,
 	#end
 }
 
@@ -115,6 +115,7 @@ typedef FrameworkParams =
 
 enum Framework
 {
+	CASTLE;
 	NME;
 	LIME;
 	OPENFL;
@@ -274,7 +275,7 @@ class Polymod
 			frameworkParams: params.frameworkParams,
 			fileSystem: fileSystem,
 			#if firetongue
-			tongue: params.tongue,
+			firetongue: params.firetongue,
 			#end
 		});
 
@@ -677,6 +678,7 @@ enum PolymodErrorType
 	var FRAMEWORK_INIT:String = "framework_init";
 	var UNDEFINED_CUSTOM_BACKEND:String = "undefined_custom_backend";
 	var FAILED_CREATE_BACKEND:String = "failed_create_backend";
+	var FUNCTIONALITY_NOT_IMPLEMENTED:String = "functionality_not_implemented";
 	var MERGE:String = "merge_error";
 	var APPEND:String = "append_error";
 	var LIME_MISSING_ASSET_LIBRARY_INFO = "lime_missing_asset_library_info";

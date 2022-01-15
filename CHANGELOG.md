@@ -40,6 +40,18 @@ This release marks the migration of the project documentation to [polymod.io](ht
 - Improved compile-time error output for when `@:hscript({context})` receives an invalid value.
 - Changed the `openfl_hscript` sample to demonstrate retrieving and calling one or more functions from a single script file.
 - Cleaned up samples by removing unnecessary project configuration.
+- [X] Update CastleBackend for translation.
+- [X] Update FlixelBackend for translation.
+- [X] Update OpenFLBackend for translation.
+- [X] Update KhaBackend for translation.
+- [X] Update LimeBackend for translation.
+  - [X] Test LimeBackend with translation.
+- [] Update OpenFLWithNodeBackend for translation.
+  - [] Test OpenFLWithNodeBackend with translation.
+- [] Update HEAPSBackend for translation.
+  - [] Test HEAPSBackend with translation.
+- [] Update NMEBackend for translation.
+  - [] Test NMEBackend with translation.
 ### Fixed
 - Fixed a crash bug which occured when LimeBackend was used without a `frameworkParams` argument.
 - Fixed a bug where `MOD_LOAD_PREPARE` and `MOD_LOAD_DONE` were showing as errors rather than notices.

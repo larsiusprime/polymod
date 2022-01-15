@@ -68,7 +68,7 @@ typedef PolymodAssetLibraryParams =
 	 * (optional) a FireTongue instance for Polymod to hook into for localization support
 	 */
 	#if firetongue
-	?tongue:FireTongue,
+	?firetongue:FireTongue,
 	#end
 }
 
@@ -96,7 +96,7 @@ class PolymodAssetLibrary
 		extensions = params.extensionMap;
 
 		#if firetongue
-		tongue = params.tongue;
+		tongue = params.firetongue;
 		if (tongue != null)
 		{
 			// Call when we build the asset library then again each time we change locale.
@@ -259,25 +259,6 @@ class PolymodAssetLibrary
 		return exists;
 	}
 
-	/**
-	 * Check if the given asset exists in the file system
-	 * (will ignore any mods enabled)
-	 * @param id 
-	 */
-	public function checkDefault(id:String, type:PolymodAssetType = null)
-	{
-		#if firetongue
-		if (localePrefix != null)
-		{
-			var localePath = Util.pathJoin(localePrefix, id);
-			if (fileSystem.exists(localePath))
-				return true;
-		}
-		// Else, FireTongue not enabled.
-		#end
-		return fileSystem.exists(id);
-	}
-
 	public function getType(id:String):PolymodAssetType
 	{
 		var exists = _checkExists(id);
@@ -288,7 +269,7 @@ class PolymodAssetLibrary
 		return null;
 	}
 
-	public function checkDirectly(id:String, dir:String):Bool
+	public function checkDirectly(id:String, dir:String = ""):Bool
 	{
 		id = backend.stripAssetsPrefix(id);
 		if (dir == null || dir == "")

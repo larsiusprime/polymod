@@ -299,7 +299,7 @@ class Demo extends Sprite
 		// Exclude the flag images.
 		images = images.filter(function(str:String)
 		{
-			return str.indexOf("locale") == -1;
+			return str.startsWith("img/");
 		});
 
 		images.sort(function(a:String, b:String):Int
@@ -359,7 +359,7 @@ class Demo extends Sprite
 		// Exclude the locale configs.
 		texts = texts.filter(function(str:String)
 		{
-			return str.startsWith("assets/data/");
+			return str.startsWith("data/");
 		});
 
 		texts.sort(function(a:String, b:String)

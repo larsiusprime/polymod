@@ -19,7 +19,9 @@
 
   <!-- assets -->
   <icon path="assets/openfl.svg" />
-  <assets path="assets" />
+  <assets path="assets/img" rename="img" />
+	<assets path="assets/data" rename="data" />
+  <assets path="assets/locales" rename="locales" />
 
   <!-- added for FireTongue -->
   <haxelib name="firetongue" />
