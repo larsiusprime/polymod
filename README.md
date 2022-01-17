@@ -4,13 +4,17 @@
 
 An atomic modding framework for Haxe games/apps.
 
-Supports these frameworks:
+Polymod allows users of your application to easily and seamlessly replace assets in your application, and manage those asset replacements in a centralized way as mods. It also provides a scripting system powered by HScript, and integration with FireTongue to load assets conditionally based on the currently selected locale.
+
+Polymod supports the following Haxe frameworks:
 - OpenFL
 - HEAPS
 - NME
 - Lime (with or without OpenFL)
 - Custom (provide your own backend)
+
 - KHA (Coming Soon)
+- Castle (Coming Soon)
 
 ## Basic sample:
 ![A visual preview of the polymod OpenFL sample](preview.gif)

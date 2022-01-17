@@ -3,7 +3,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## UNRELEASED - 2022-01-XX
+## 1.4.0 - 2022-01-17
 This release marks the migration of the project documentation to [polymod.io](https://polymod.io), a new website for the project hosted by Github Pages.
 ### Added
 - Added a new Github Pages site for documentation.
@@ -40,18 +40,6 @@ This release marks the migration of the project documentation to [polymod.io](ht
 - Improved compile-time error output for when `@:hscript({context})` receives an invalid value.
 - Changed the `openfl_hscript` sample to demonstrate retrieving and calling one or more functions from a single script file.
 - Cleaned up samples by removing unnecessary project configuration.
-- [X] Update CastleBackend for translation.
-- [X] Update FlixelBackend for translation.
-- [X] Update OpenFLBackend for translation.
-- [X] Update KhaBackend for translation.
-- [X] Update LimeBackend for translation.
-  - [X] Test LimeBackend with translation.
-- [] Update OpenFLWithNodeBackend for translation.
-  - [] Test OpenFLWithNodeBackend with translation.
-- [] Update HEAPSBackend for translation.
-  - [] Test HEAPSBackend with translation.
-- [] Update NMEBackend for translation.
-  - [] Test NMEBackend with translation.
 ### Fixed
 - Fixed a crash bug which occured when LimeBackend was used without a `frameworkParams` argument.
 - Fixed a bug where `MOD_LOAD_PREPARE` and `MOD_LOAD_DONE` were showing as errors rather than notices.
