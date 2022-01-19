@@ -46,8 +46,8 @@ class FlixelBackend extends OpenFLBackend
 		{
 			var obj = flixel.FlxG.bitmap._cache.get(key);
 			if (obj != null)
-			{.      openfl.Assets.cache.removeBitmapData;
-				flixel.FlxG.bitmap._cache.remove(key);
+			{      openfl.Assets.cache.removeBitmapData;
+			       flixel.FlxG.bitmap._cache.remove(key);
 				obj.destroy();
 			}
 		}
