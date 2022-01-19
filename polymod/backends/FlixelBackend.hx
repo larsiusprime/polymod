@@ -42,9 +42,9 @@ class FlixelBackend extends OpenFLBackend
 	public override function clearCache()
 	{
 		@:privateAccess
-		for (key in flixel.FlxG.bitmap._cache.keys())
+		for (key in flixel.FlxG.bitmap.cache.keys())
 		{
-			var obj = flixel.FlxG.bitmap._cache.get(key);
+			var obj = flixel.FlxG.bitmap.cache.get(key);
 			if (obj != null)
 			{      openfl.Assets.cache.removeBitmapData;
 			       flixel.FlxG.bitmap.cache.remove;
