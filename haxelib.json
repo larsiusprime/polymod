@@ -4,7 +4,7 @@
   "license": "MIT",
   "tags": ["mod","game","data","asset"],
   "description": "An atomic modding framework for Haxe games",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "releasenote": "Revamped @:hscript to be recursive and support additional parameters.",
   "contributors": ["MasterEric", "larsiusprime"],
   "dependencies": {}

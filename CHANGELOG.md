@@ -3,7 +3,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## 1.4.0 - 2022-01-17
+## [1.4.1] - 2022-01-20
+### Changed
+- Added additional codedocs for each error code.
+### Fixed
+- Fixed a compile bug for Flixel backends.
+- Fixed a bug where embedded default assets would not load properly.
+
+## [1.4.0] - 2022-01-17
 This release marks the migration of the project documentation to [polymod.io](https://polymod.io), a new website for the project hosted by Github Pages.
 ### Added
 - Added a new Github Pages site for documentation.
