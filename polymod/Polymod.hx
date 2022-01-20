@@ -656,31 +656,182 @@ enum PolymodErrorType
 
 @:enum abstract PolymodErrorCode(String) from String to String
 {
+	/**
+	 * The mod's metadata file could not be parsed.
+	 * - Make sure the file contains valid JSON.
+	 */
+	var PARSE_MOD_META:String = "parse_mod_meta";
+
+	/**
+	 * The mod's version string could not be parsed.
+	 * - Make sure the metadata JSON contains a valid Semantic Version string.
+	 */
 	var PARSE_MOD_VERSION:String = "parse_mod_version";
+
+	/**
+	 * The mod's API version string could not be parsed.
+	 * - Make sure the metadata JSON contains a valid Semantic Version string.
+	 */
 	var PARSE_MOD_API_VERSION:String = "parse_mod_api_version";
+
+	/**
+	 * The app's API version string (passed to Polymod.init) could not be parsed.
+	 * - Make sure the string is a valid Semantic Version string.
+	 */
 	var PARSE_API_VERSION:String = "parse_api_version";
+
+	/**
+	 * A mod with the given ID was not found in the mods folder.
+	 * - Make sure a mod with that name is installed.
+	 * - Make sure to run Polymod.scan to get the list of valid mod IDs.
+	 */
 	var MISSING_MOD:String = "missing_mod";
+
+	/**
+	 * A mod with the given ID is missing a metadata file.
+	 * - Make sure the mod folder contains a metadata JSON file. Polymod won't recognize the mod without it.
+	 */
 	var MISSING_META:String = "missing_meta";
+
+	/**
+	 * A mod with the given ID is missing a metadata file.
+	 * - Make sure the mod folder contains a metadata JSON file. Polymod will still load your mod, but it looks better if you add an icon.
+	 */
 	var MISSING_ICON:String = "missing_icon";
+
+	/**
+	 * We are preparing to load a mod.
+	 * - This is an info message. You can log it or ignore it if you like.
+	 */
 	var MOD_LOAD_PREPARE:String = "mod_load_prepare";
+
+	/**
+	 * We couldn't load a particular mod.
+	 * - There will generally be a warning or error before this indicating the reason for the error.
+	 */
 	var MOD_LOAD_FAILED:String = "mod_load_failed";
+
+	/**
+	 * We are preparing to load a mod.
+	 * - This is an info message. You can log it or ignore it if you like.
+	 * - This is also a good trigger for a UI indicator like a toast notification.
+	 */
 	var MOD_LOAD_DONE:String = "mod_load_done";
+
+	/**
+	 * The chosen script interpreter is not available.
+	 * - This message is only displayed if the HScript-EX config option is enabled, and HScript-EX is not installed.
+	 * - Either install HScript-EX or disable the config option.
+	 */
 	var SCRIPT_NO_INTERPRETER:String = "script_no_interpreter";
+
+	/**
+	 * The scripted class does not import an `Assets` class to handle script loading.
+	 * - When loading scripts, the target of the HScriptable interface will call `Assets.getText` to read the relevant script file.
+	 * - You will need to import `openfl.util.Assets` on the HScriptable class, even if you don't otherwise use it.
+	 */
 	var SCRIPT_NO_ASSET_HANDLER:String = "script_no_asset_handler";
+
+	/**
+	 * A script file of the given name could not be found.
+	 * - Make sure the script file exists in the proper location in your assets folder.
+	 * - Alternatively, you can expand your annotation to `@:hscript({optional: true})` to disable the error message,
+	 *     as long as it's fine for the script to be missing.
+	 */
 	var SCRIPT_NOT_FOUND:String = "script_not_found";
+
+	/**
+	 * A script file of the given name could not be loaded for whatever reason.
+	 */
 	var SCRIPT_NOT_LOADED:String = "script_not_loaded";
+
+	/**
+	 * When running a script, it threw an exception.
+	 * - The scripted function will assign the `script_error` variable, allowing you to handle the error gracefully.
+	 */
 	var SCRIPT_EXCEPTION:String = "script_exception";
+
+	/**
+	 * An installed modpack is looking for a mod with a specific version, but the mod is not of that version.
+	 * - Inform your users to install the proper mod version.
+	 */
 	var VERSION_CONFLICT_MOD:String = "version_conflict_mod";
+
+	/**
+	 * The mod has an API version that conflicts with the application's API version.
+	 * - This means that the mod needs to be updated, checking for compatibility issues with any changes to API version.
+	 * - If you're getting this error even for patch versions, be sure to tweak the `POLYMOD_API_VERSION_MATCH` config option.
+	 */
 	var VERSION_CONFLICT_API:String = "version_conflict_api";
+
+	/**
+	 * A log warning thrown when the minor version of the mod differs from the minor version of the app, when the app version is 0.X.
+	 * - This warning is provided to remind mod developers that early mod APIs can change drastically. This can be ignored if desired,
+	 *   but should most likely be logged.
+	 */
 	var VERSION_PRERELEASE_API:String = "version_prerelease_api";
+
+	/**
+	 * One of the version strings you provided to Polymod.init is invalid.
+	 * - Make sure you're using a valid Semantic Version string.
+	 */
 	var PARAM_MOD_VERSION:String = "param_mod_version";
+
+	/**
+	 * Indicates what asset framework Polymod has automatically detected for use.
+	 * - This is an info message, and can either be logged or ignored.
+	 */
 	var FRAMEWORK_AUTODETECT:String = "framework_autodetect";
+
+	/**
+	 * Indicates what asset framework Polymod has been manually configured to use.
+	 * - This is an info message, and can either be logged or ignored.
+	 */
 	var FRAMEWORK_INIT:String = "framework_init";
+
+	/**
+	 * You configured Polymod to use the `CUSTOM` asset framework, then didn't provide a value for `params.customBackend`.
+	 * - Define a class which extends IBackend, and provide it to Polymod.
+	 */
 	var UNDEFINED_CUSTOM_BACKEND:String = "undefined_custom_backend";
+
+	/**
+	 * Polymod could not create an instance of the class you provided for `params.customBackend`.
+	 * - Check that the class extends IBackend, and can be instantiated properly.
+	 */
 	var FAILED_CREATE_BACKEND:String = "failed_create_backend";
+
+	/**
+	 * You attempted to use a functionality of Polymod that is not fully implemented, or not implemented for the current framework.
+	 * - Report the issue here, and describe your setup and provide the error message:
+	 *   https://github.com/larsiusprime/polymod/issues
+	 */
 	var FUNCTIONALITY_NOT_IMPLEMENTED:String = "functionality_not_implemented";
+
+	/**
+	 * There was an error attempting to perform a merge operation on a file.
+	 * - Check the source and target files are correctly formatted and try again.
+	 */
 	var MERGE:String = "merge_error";
+
+	/**
+	 * There was an error attempting to perform an append operation on a file.
+	 * - Check the source and target files are correctly formatted and try again.
+	 */
 	var APPEND:String = "append_error";
+
+	/**
+	 * On the Lime and OpenFL platforms, if the base app defines multiple asset libraries,
+	 * each asset library must be assigned a path to allow mods to override their files.
+	 * - Provide a `frameworkParams.assetLibraryPaths` object to Polymod.init().
+	 */
 	var LIME_MISSING_ASSET_LIBRARY_INFO = "lime_missing_asset_library_info";
+
+	/**
+	 * On the Lime and OpenFL platforms, if the base app defines multiple asset libraries,
+	 * each asset library must be assigned a path to allow mods to override their files.
+	 * - All libraries must have a value under `frameworkParams.assetLibraryPaths`.
+	 * - Set the value to `./` to fetch assets from the root of the mod folder.
+	 */
 	var LIME_MISSING_ASSET_LIBRARY_REFERENCE = "lime_missing_asset_library_reference";
 }
