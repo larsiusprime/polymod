@@ -94,12 +94,16 @@ class SysFileSystem implements IFileSystem
 			if (!exists(metaFile))
 			{
 				Polymod.warning(MISSING_META, "Could not find mod metadata file: \"" + metaFile + "\"");
+				return null;
 			}
 			else
 			{
 				var metaText = getFileContent(metaFile);
 				meta = ModMetadata.fromJsonStr(metaText);
+				if (meta == null)
+					return null;
 			}
+
 			if (!exists(iconFile))
 			{
 				Polymod.warning(MISSING_ICON, "Could not find mod icon file: \"" + iconFile + "\"");

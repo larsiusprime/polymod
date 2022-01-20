@@ -94,11 +94,11 @@ class PolymodAssets
 		if (framework == null)
 		{
 			framework = autoDetectFramework();
-			Polymod.notice(PolymodErrorCode.FRAMEWORK_AUTODETECT, " going with " + framework);
+			Polymod.notice(PolymodErrorCode.FRAMEWORK_AUTODETECT, "Framework: Autodetect, going with " + framework);
 		}
 		else
 		{
-			Polymod.notice(PolymodErrorCode.FRAMEWORK_INIT, " user specified " + framework);
+			Polymod.notice(PolymodErrorCode.FRAMEWORK_INIT, "Framework: User specified " + framework);
 		}
 		var backend:IBackend = switch (framework)
 		{
@@ -109,7 +109,7 @@ class PolymodAssets
 			case OPENFL_WITH_NODE: new polymod.backends.OpenFLWithNodeBackend();
 			case LIME: new polymod.backends.LimeBackend();
 			case HEAPS: new polymod.backends.HEAPSBackend();
-			// case KHA: new polymod.backends.KhaBackend();
+			case KHA: new polymod.backends.KhaBackend();
 			case CUSTOM:
 				if (params.customBackend != null)
 				{

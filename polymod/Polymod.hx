@@ -340,6 +340,9 @@ class Polymod
 			return modMeta;
 		}
 		var dirs = fileSystem.readDirectory(modRoot);
+		Polymod.debug('scan found ' + dirs.length + ' folders in ' + modRoot);
+
+		// Filter to only directories.
 		var l = dirs.length;
 		for (i in 0...l)
 		{
@@ -580,8 +583,24 @@ class ModMetadata
 
 	public static function fromJsonStr(str:String)
 	{
+		if (str == null || str == "")
+		{
+			Polymod.error(PARSE_MOD_META, "Error parsing mod metadata file, was null or empty.");
+			return null;
+		}
+
+		var json = null;
+		try
+		{
+			json = haxe.Json.parse(str);
+		}
+		catch (msg:Dynamic)
+		{
+			Polymod.error(PARSE_MOD_META, "Error parsing mod metadata file: " + Std.string(msg));
+			return null;
+		}
+
 		var m = new ModMetadata();
-		var json = haxe.Json.parse(str);
 		m.title = JsonHelp.str(json, "title");
 		m.description = JsonHelp.str(json, "description");
 		m._author = JsonHelp.str(json, "author");

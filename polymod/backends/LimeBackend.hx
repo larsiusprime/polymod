@@ -343,7 +343,11 @@ class LimeModLibrary extends AssetLibrary
 		else if (hasFallback)
 		{
 			// Load the base asset.
-			return fallback.getAsset(p.fileDefault(id), type);
+			var localePath = p.fileLocale(id);
+			if (fallback.exists(localePath, null))
+				return fallback.getAsset(localePath, type);
+			else
+				return fallback.getAsset(id, type);
 		}
 		// No fallback.
 		return null;
@@ -399,7 +403,11 @@ class LimeModLibrary extends AssetLibrary
 		}
 		else if (hasFallback)
 		{
-			return fallback.getAudioBuffer(p.fileDefault(id));
+			var localePath = p.fileLocale(id);
+			if (fallback.exists(localePath, null))
+				return fallback.getAudioBuffer(localePath);
+			else
+				return fallback.getAudioBuffer(id);
 		}
 		return null;
 	}
@@ -414,7 +422,11 @@ class LimeModLibrary extends AssetLibrary
 		}
 		else if (hasFallback)
 		{
-			return fallback.getBytes(p.fileDefault(id));
+			var localePath = p.fileLocale(id);
+			if (fallback.exists(localePath, null))
+				return fallback.getBytes(localePath);
+			else
+				return fallback.getBytes(id);
 		}
 		return null;
 	}
@@ -428,7 +440,11 @@ class LimeModLibrary extends AssetLibrary
 		}
 		else if (hasFallback)
 		{
-			return fallback.getFont(p.fileDefault(id));
+			var localePath = p.fileLocale(id);
+			if (fallback.exists(localePath, null))
+				return fallback.getFont(localePath);
+			else
+				return fallback.getFont(id);
 		}
 		return null;
 	}
@@ -442,7 +458,11 @@ class LimeModLibrary extends AssetLibrary
 		}
 		else if (hasFallback)
 		{
-			return fallback.getImage(p.fileDefault(id));
+			var localePath = p.fileLocale(id);
+			if (fallback.exists(localePath, null))
+				return fallback.getImage(localePath);
+			else
+				return fallback.getImage(id);
 		}
 		return null;
 	}
@@ -456,7 +476,11 @@ class LimeModLibrary extends AssetLibrary
 		}
 		else if (hasFallback)
 		{
-			return fallback.getPath(p.fileDefault(id));
+			var localePath = p.fileLocale(id);
+			if (fallback.exists(localePath, null))
+				return fallback.getPath(localePath);
+			else
+				return fallback.getPath(id);
 		}
 		return null;
 	}
@@ -471,12 +495,16 @@ class LimeModLibrary extends AssetLibrary
 		}
 		else if (hasFallback)
 		{
-			modText = fallback.getText(p.fileDefault(id));
+			var localePath = p.fileLocale(id);
+			if (fallback.exists(localePath, null))
+				modText = fallback.getText(localePath);
+			else
+				modText = fallback.getText(id);
 		}
 
 		if (modText != null)
 		{
-			// TODO: Not implemented for non-default asset libraries
+			// TODO: Ensure _merge and _append work with alternate asset libraries.
 			modText = p.mergeAndAppendText(id, modText);
 		}
 
@@ -492,7 +520,11 @@ class LimeModLibrary extends AssetLibrary
 		}
 		else if (hasFallback)
 		{
-			return fallback.loadBytes(p.fileDefault(id));
+			var localePath = p.fileLocale(id);
+			if (fallback.exists(localePath, null))
+				return fallback.loadBytes(localePath);
+			else
+				return fallback.loadBytes(id);
 		}
 		return Bytes.loadFromFile("");
 	}
@@ -510,7 +542,11 @@ class LimeModLibrary extends AssetLibrary
 		}
 		else if (hasFallback)
 		{
-			return fallback.loadFont(p.fileDefault(id));
+			var localePath = p.fileLocale(id);
+			if (fallback.exists(localePath, null))
+				return fallback.loadFont(localePath);
+			else
+				return fallback.loadFont(id);
 		}
 		#if (js && html5)
 		return Font.loadFromName(paths.get(""));
@@ -529,7 +565,11 @@ class LimeModLibrary extends AssetLibrary
 		}
 		else if (hasFallback)
 		{
-			return fallback.loadImage(p.fileDefault(id));
+			var localePath = p.fileLocale(id);
+			if (fallback.exists(localePath, null))
+				return fallback.loadImage(localePath);
+			else
+				return fallback.loadImage(id);
 		}
 		return Image.loadFromFile("");
 	}
@@ -550,7 +590,11 @@ class LimeModLibrary extends AssetLibrary
 		}
 		else if (hasFallback)
 		{
-			return fallback.loadAudioBuffer(p.fileDefault(id));
+			var localePath = p.fileLocale(id);
+			if (fallback.exists(localePath, null))
+				return fallback.loadAudioBuffer(localePath);
+			else
+				return fallback.loadAudioBuffer(id);
 		}
 		return AudioBuffer.loadFromFile("");
 	}
@@ -565,7 +609,11 @@ class LimeModLibrary extends AssetLibrary
 		}
 		else if (hasFallback)
 		{
-			return fallback.loadText(p.fileDefault(id));
+			var localePath = p.fileLocale(id);
+			if (fallback.exists(localePath, null))
+				return fallback.loadText(localePath);
+			else
+				return fallback.loadText(id);
 		}
 		var request = new HTTPRequest<String>();
 		return request.load("");
@@ -580,7 +628,11 @@ class LimeModLibrary extends AssetLibrary
 		}
 		else if (hasFallback)
 		{
-			return fallback.isLocal(p.fileDefault(id), type);
+			var localePath = p.fileLocale(id);
+			if (fallback.exists(localePath, null))
+				return fallback.isLocal(localePath, type);
+			else
+				return fallback.isLocal(id, type);
 		}
 		return false;
 	}

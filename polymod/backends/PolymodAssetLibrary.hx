@@ -330,29 +330,21 @@ class PolymodAssetLibrary
 	}
 
 	/**
-	 * Get the filename of the given asset id
+	 * Get the filename of the given asset id,
+	 * with the given locale prefix prepended.
 	 * (will ignore all installed mods)
-	 * @param	id
-	 * @return
 	 */
-	public function fileDefault(id:String):String
+	public function fileLocale(id:String):String
 	{
-		var idStripped = backend.stripAssetsPrefix(id);
-
 		#if firetongue
 		if (localeAssetPrefix != null)
 		{
-			var localePath = Util.pathJoin(localeAssetPrefix, idStripped);
-			if (fileSystem.exists(localePath))
-				return localePath;
+			var idStripped = backend.stripAssetsPrefix(id);
+			return Util.pathJoin(localeAssetPrefix, idStripped);
 		}
-		// Else, FireTongue not enabled.
+		// Else, Firetongue is not enabled.
 		#end
-
-		if (fileSystem.exists(id))
-			return id;
-
-		// File does not exist.
+		// Else, Firetongue is not installed.
 		return null;
 	}
 
