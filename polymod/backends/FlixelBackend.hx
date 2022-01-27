@@ -41,6 +41,7 @@ class FlixelBackend extends OpenFLBackend
 	 */
 	public override function clearCache()
 	{
+		#if !macro
 		@:privateAccess
 		for (key in flixel.FlxG.bitmap._cache.keys())
 		{
@@ -52,6 +53,7 @@ class FlixelBackend extends OpenFLBackend
 				obj.destroy();
 			}
 		}
+		#end
 		super.clearCache();
 	}
 }

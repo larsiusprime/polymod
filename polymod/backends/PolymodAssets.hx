@@ -131,10 +131,10 @@ class PolymodAssets
 		#if firetongue
 		if (params.firetongue != null)
 		{
-			if (framework == Framework.NME
-				|| framework == Framework.HEAPS
-				|| framework == Framework.KHA
-				|| framework == Framework.CASTLE)
+			if (framework == polymod.Framework.NME
+				|| framework == polymod.Framework.HEAPS
+				|| framework == polymod.Framework.KHA
+				|| framework == polymod.Framework.CASTLE)
 			{
 				Polymod.error(PolymodErrorCode.FUNCTIONALITY_NOT_IMPLEMENTED,
 					'Polymod currently does not support FireTongue localization for ${framework}! Nag us on GitHub about it.');

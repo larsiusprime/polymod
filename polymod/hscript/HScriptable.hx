@@ -320,7 +320,7 @@ class Script
 		#end
 	}
 
-	public static function buildInterpreter():hscript.Interp
+	public static function buildInterp():hscript.Interp
 	{
 		// TODO: What is the correct compile define?
 		#if hscript_ex
