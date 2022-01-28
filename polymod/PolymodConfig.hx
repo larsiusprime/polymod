@@ -157,10 +157,14 @@ class PolymodConfig
 
 	static function get_useHScriptEX()
 	{
-		// If the value is null, retrieve the value as a Haxe define.
-		if (useHScriptEX == null)
-			useHScriptEX = DefineUtil.getDefineBool('POLYMOD_USE_HSCRIPTEX', true);
-		return useHScriptEX;
+		/*
+			// If the value is null, retrieve the value as a Haxe define.
+			if (useHScriptEX == null)
+				useHScriptEX = DefineUtil.getDefineBool('POLYMOD_USE_HSCRIPTEX', true);
+			return useHScriptEX;
+		 */
+		// TODO: Implement this.
+		return false;
 	}
 
 	/**

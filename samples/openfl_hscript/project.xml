@@ -31,7 +31,14 @@
            value="default" />
   <haxedef name="POLYMOD_USE_NAMESPACE"
            value="true" />
-  <haxedef name="POLYMOD_ROOT_PATH"
-           value="data/scripts/" />
-	
+  <haxedef name="POLYMOD_ROOT_PATH" value="data/scripts/" />
+
+
+  <!-- 
+    There is a work in process function to make classes work in scripts.
+    To use classes in scripts, enable this option.
+  -->
+	<haxedef name="POLYMOD_USE_HSCRIPTEX" value="true" />
+  <!-- You also need to add the hscript-ex library to the project. -->
+  <haxelib name="hscript-ex"/>
 </project>
