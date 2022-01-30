@@ -134,7 +134,8 @@ enum Framework
 class Polymod
 {
 	public static var onError:PolymodError->Void = null;
-	private static var library:PolymodAssetLibrary = null;
+
+	private static var assetLibrary:PolymodAssetLibrary = null;
 	#if firetongue
 	private static var tongue:FireTongue = null;
 	#end
@@ -249,7 +250,7 @@ class Polymod
 			}
 		}
 
-		library = PolymodAssets.init({
+		assetLibrary = PolymodAssets.init({
 			framework: params.framework,
 			dirs: dirs,
 			parseRules: params.parseRules,
@@ -263,14 +264,15 @@ class Polymod
 			#end
 		});
 
-		if (library == null)
+		if (assetLibrary == null)
 		{
+			//
 			return null;
 		}
 
 		if (PolymodAssets.exists((PolymodConfig.modPackFile)))
 		{
-			initModPack(params);
+			Polymod.warning(FUNCTIONALITY_DEPRECATED, 'The pack.txt modpack format has been deprecated', INIT);
 		}
 
 		return modMeta;
@@ -278,11 +280,7 @@ class Polymod
 
 	public static function getDefaultIgnoreList():Array<String>
 	{
-		return PolymodConfig.modIgnoreFiles.concat([
-			PolymodConfig.modMetadataFile,
-			PolymodConfig.modPackFile,
-			PolymodConfig.modIconFile,
-		]);
+		return PolymodConfig.modIgnoreFiles.concat([PolymodConfig.modMetadataFile, PolymodConfig.modIconFile,]);
 	}
 
 	/**
@@ -394,8 +392,13 @@ class Polymod
 	 */
 	public static function clearCache()
 	{
-		if (library != null)
-			library.clearCache();
+		if (assetLibrary != null)
+		{
+			Polymod.warning(POLYMOD_NOT_LOADED, 'Polymod is not loaded yet, cannot clear cache.');
+			return;
+		}
+
+		assetLibrary.clearCache();
 	}
 
 	public static function error(code:PolymodErrorCode, message:String, origin:PolymodErrorOrigin = UNKNOWN)
@@ -439,56 +442,16 @@ class Polymod
 	 */
 	public static function listModFiles(type:PolymodAssetType = null):Array<String>
 	{
-		if (library != null)
+		if (assetLibrary != null)
 		{
-			return library.listModFiles(type);
+			return assetLibrary.listModFiles(type);
 		}
+
+		Polymod.warning(POLYMOD_NOT_LOADED, 'Polymod is not loaded yet, cannot list files.');
 		return [];
 	}
 
 	/***PRIVATE***/
-	private static function initModPack(params:PolymodParams)
-	{
-		var polymodpack:String = PolymodAssets.getText(PolymodConfig.modPackFile);
-		if (polymodpack != null)
-		{
-			var data = getModPack(polymodpack);
-			var mods:Array<String> = data.mods;
-			var vers:Array<String> = data.versions;
-
-			params.dirs = mods;
-			params.modVersions = vers;
-			init(params);
-		}
-	}
-
-	private static function getModPack(text:String):{mods:Array<String>, versions:Array<String>}
-	{
-		if (text != null)
-		{
-			var mods = text.split(",");
-			if (mods == null || mods.length == 0)
-			{
-				return null;
-			}
-			var vers = [];
-			for (i in 0...mods.length)
-			{
-				vers[i] = "*.*.*";
-				if (mods[i].indexOf(":") != -1)
-				{
-					var arr = mods[i].split(":");
-					if (arr != null && arr.length == 2)
-					{
-						mods[i] = arr[0];
-						vers[i] = arr[1];
-					}
-				}
-			}
-			return {mods: mods, versions: vers};
-		}
-		return null;
-	}
 }
 
 typedef ModContributor =
@@ -510,8 +473,6 @@ class ModMetadata
 	public var license:String;
 	public var licenseRef:String;
 	public var icon:Bytes;
-	public var isModPack:Bool;
-	public var modPack:{mods:Array<String>, versions:Array<String>};
 	public var metaData:Map<String, String>;
 
 	/**
