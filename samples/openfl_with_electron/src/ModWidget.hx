@@ -55,8 +55,8 @@ class ModWidget extends Sprite
 		status.text = 'inactive';
 
 		var button = new CheapButton(str, onClick);
-		var left = "←";
-		var right = "→";
+		var left = '←';
+		var right = '→';
 		#if mac
 		left = "<--";
 		right = "-->";

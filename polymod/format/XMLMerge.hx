@@ -242,7 +242,7 @@ class XMLMerge
 			str += arr[j];
 			if (i != arr.length - 1)
 			{
-				str += ".";
+				str += '.';
 			}
 		}
 		return str;

@@ -57,8 +57,8 @@ class ModWidget extends DisplayObjectContainer
 		status.text = 'inactive';
 
 		button = new CheapButton(str, onClick);
-		var left = "←";
-		var right = "→";
+		var left = '←';
+		var right = '→';
 		#if mac
 		left = "<--";
 		right = "-->";

@@ -152,7 +152,7 @@ class LimeBackend implements IBackend
 				{
 					Polymod.error(PolymodErrorCode.LIME_MISSING_ASSET_LIBRARY_REFERENCE,
 						"Your Lime/OpenFL configuration is using custom asset libraries, and you provided frameworkParams in Polymod.init(), but we couldn't find a match for this asset library: (" +
-						key + ")",
+						key + ')',
 						PolymodErrorOrigin.INIT);
 					return false;
 				}
@@ -747,7 +747,7 @@ private class IdAndLibrary
 	public inline function new(id:String, ?libs:Map<String, LimeModLibrary>, ?l:LimeModLibrary)
 	{
 		fallbackId = id;
-		var colonIndex = id.indexOf(":");
+		var colonIndex = id.indexOf(':');
 		lib = id.substring(0, colonIndex);
 		nakedId = id.substring(colonIndex + 1);
 		if (l != null)

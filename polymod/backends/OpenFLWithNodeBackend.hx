@@ -338,8 +338,8 @@ class OpenFLNodeModLibrary extends LimeModLibrary
 		else if (hasFallback)
 		{
 			var path:String = fallback.paths.get(id);
-			// check the file name for "?" and remove anything after it
-			var qIndex:Int = path != null ? path.lastIndexOf("?") : -1;
+			// check the file name for '?' and remove anything after it
+			var qIndex:Int = path != null ? path.lastIndexOf('?') : -1;
 			if (qIndex > -1)
 			{
 				path = path.substr(0, qIndex);

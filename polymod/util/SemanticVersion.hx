@@ -37,33 +37,33 @@ class SemanticVersion
 		if (str == '' || str == null)
 			throw "SemanticVersion.hx: string is empty!";
 		var extra = '';
-		if (str.indexOf("+") != -1)
+		if (str.indexOf('+') != -1)
 		{
-			var arr = str.split("+");
+			var arr = str.split('+');
 			str = arr[0];
 		}
-		if (str.indexOf("-") != -1)
+		if (str.indexOf('-') != -1)
 		{
-			var arr = str.split("-");
+			var arr = str.split('-');
 			str = arr[0];
 			extra = arr[1];
 		}
-		var arr = str.split(".");
+		var arr = str.split('.');
 		if (arr.length < SemanticVersionScore.MATCH_PATCH)
-			throw "SemanticVersion.hx: needs major, minor, and patch versions! :\"" + str + "\"";
+			throw 'SemanticVersion.hx: needs major, minor, and patch versions! "$str"';
 		for (ii in 0...arr.length)
 		{
 			var substr = arr[ii];
 			if (substr.length > 1 && substr.charAt(0) == '0')
 			{
-				throw "SemanticVersion.hx: no leading zeroes allowed! :\"" + str + "\"";
+				throw 'SemanticVersion.hx: no leading zeroes allowed! "$str"';
 			}
 			for (i in 0...substr.length)
 			{
 				var char:String = substr.charAt(i);
 				switch (char)
 				{
-					case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', "*":
+					case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '*':
 					// donothing, fine
 					default:
 						var word = switch (ii)
@@ -73,18 +73,18 @@ class SemanticVersion
 							case 2: 'patch';
 							default: '';
 						}
-						throw "SemanticVersion.hx: couldn't parse " + word + " version! :\"" + str + "\"";
+						throw 'SemanticVersion.hx: couldn\'t parse $word version "$str"';
 				}
 			}
 		}
 		var maj:Null<Int> = null;
 		var min:Null<Int> = null;
 		var pat:Null<Int> = null;
-		if (arr[0] == "*")
+		if (arr[0] == '*')
 			maj = -1;
-		if (arr[1] == "*")
+		if (arr[1] == '*')
 			min = -1;
-		if (arr[2] == "*")
+		if (arr[2] == '*')
 			pat = -1;
 		if (maj == null)
 			maj = Std.parseInt(arr[0]);
@@ -93,11 +93,11 @@ class SemanticVersion
 		if (pat == null)
 			pat = Std.parseInt(arr[2]);
 		if (maj == null)
-			throw "SemanticVersion.hx: couldn't parse major version! :\"" + str + "\"";
+			throw 'SemanticVersion.hx: couldn\'t parse major version! "$str"';
 		if (min == null)
-			throw "SemanticVersion.hx: couldn't parse minor version! :\"" + str + "\"";
+			throw 'SemanticVersion.hx: couldn\'t parse minor version! "$str"';
 		if (pat == null)
-			throw "SemanticVersion.hx: couldn't parse patch version! :\"" + str + "\"";
+			throw 'SemanticVersion.hx: couldn\'t parse patch version! "$str"';
 
 		if (maj == -1)
 		{
@@ -122,15 +122,15 @@ class SemanticVersion
 		if (extra != null && extra != '')
 		{
 			if (maj > 1)
-				throw "SemanticVersion.hx: pre-release version not allowed post 1.0.0! :\"" + str + "\"";
+				throw 'SemanticVersion.hx: pre-release version not allowed post 1.0.0! "$str"';
 			if (maj == 1)
 			{
 				if (min > 0)
-					throw "SemanticVersion.hx: pre-release version not allowed post 1.0.0! :\"" + str + "\"";
+					throw 'SemanticVersion.hx: pre-release version not allowed post 1.0.0! "$str"';
 				if (pat > 0)
-					throw "SemanticVersion.hx: pre-release version not allowed post 1.0.0! :\"" + str + "\"";
+					throw 'SemanticVersion.hx: pre-release version not allowed post 1.0.0! "$str"';
 			}
-			var arr = extra.split(".");
+			var arr = extra.split('.');
 			if (arr != null && arr.length > 0)
 			{
 				for (substr in arr)
@@ -140,17 +140,17 @@ class SemanticVersion
 					{
 						if (substr.length > 0 && substr.charAt(0) == '0')
 						{
-							throw "SemanticVersion.hx: no leading zeroes allowed! :\"" + str + "\"";
+							throw 'SemanticVersion.hx: no leading zeroes allowed! "$str"';
 						}
 					}
 					v.preRelease.push(substr);
 				}
 			}
 		}
-		v.effective = v.major + "." + v.minor + "." + v.patch;
+		v.effective = v.major + '.' + v.minor + '.' + v.patch;
 		if (v.preRelease != null && v.preRelease.length > 0)
 		{
-			v.effective = (v.effective + "-" + v.preRelease.join("."));
+			v.effective = (v.effective + '-' + v.preRelease.join('.'));
 		}
 		return v;
 	}

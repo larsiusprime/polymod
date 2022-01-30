@@ -186,7 +186,7 @@ class Util
 		if (result.indexOf(prefix) == 0)
 			result = result.substr(prefix.length);
 
-		if (result.indexOf("/") == 0)
+		if (result.indexOf('/') == 0)
 			result = result.substr(1);
 
 		return result;
@@ -194,7 +194,7 @@ class Util
 
 	public static function trimLeadingWhiteSpace(txt:String):String
 	{
-		var white = ["\r", "\n", " ", "\t"];
+		var white = ["\r", "\n", ' ', "\t"];
 		var len = uLength(txt);
 		for (w in white)
 		{
@@ -209,7 +209,7 @@ class Util
 
 	public static function trimTrailingWhiteSpace(txt:String):String
 	{
-		var white = ["\r", "\n", " ", "\t"];
+		var white = ["\r", "\n", ' ', "\t"];
 		var len = uLength(txt);
 		for (w in white)
 		{
@@ -231,13 +231,13 @@ class Util
 		{
 			if (uIndexOf(txt, "<?xml") == 0)
 			{
-				var i = uIndexOf(txt, ">");
+				var i = uIndexOf(txt, '>');
 				txt = uSubstr(txt, i + 1, uLength(txt) - (i + 1));
 				txt = trimLeadingWhiteSpace(txt);
 			}
 			if (uIndexOf(txt, "<data") == 0)
 			{
-				var i = uIndexOf(txt, ">");
+				var i = uIndexOf(txt, '>');
 				txt = uSubstr(txt, i + 1, uLength(txt) - (i + 1));
 				txt = trimLeadingWhiteSpace(txt);
 			}
@@ -247,7 +247,7 @@ class Util
 				{
 					if (uIndexOf(txt, header) == 0)
 					{
-						var i = uIndexOf(txt, ">");
+						var i = uIndexOf(txt, '>');
 						txt = uSubstr(txt, (i + 1), uLength(txt) - (i + 1));
 						txt = trimLeadingWhiteSpace(txt);
 					}
@@ -311,8 +311,8 @@ class Util
 
 	public static function pathJoin(a:String, b:String):String
 	{
-		var aSlash = (uLastIndexOf(a, "/") == uLength(a) - 1 || uLastIndexOf(a, "\\") == uLength(a) - 1);
-		var bSlash = (uIndexOf(b, "/") == 0 || uIndexOf(b, "\\") == 0);
+		var aSlash = (uLastIndexOf(a, '/') == uLength(a) - 1 || uLastIndexOf(a, '\\') == uLength(a) - 1);
+		var bSlash = (uIndexOf(b, '/') == 0 || uIndexOf(b, '\\') == 0);
 		var str = '';
 		if (aSlash || bSlash)
 		{
@@ -328,14 +328,14 @@ class Util
 
 	public static function cleanSlashes(str:String):String
 	{
-		str = uSplitReplace(str, "\\", "/");
-		str = uSplitReplace(str, "//", "/");
+		str = uSplitReplace(str, "\\", '/');
+		str = uSplitReplace(str, "//", '/');
 		return str;
 	}
 
 	public static function sl():String
 	{
-		return "/";
+		return '/';
 	}
 
 	@:access(haxe.xml.Xml)
@@ -432,7 +432,7 @@ class Util
 
 	public static function uExtension(str:String, lowerCase:Bool = false):String
 	{
-		var i = uLastIndexOf(str, ".");
+		var i = uLastIndexOf(str, '.');
 		var extension = uSubstr(str, i + 1, uLength(str) - (i + 1));
 		if (lowerCase)
 		{
@@ -471,13 +471,13 @@ class Util
 	public static function uPathPop(str:String):String
 	{
 		#if unifill
-		var path = Unifill.uSplit(str, "/");
+		var path = Unifill.uSplit(str, '/');
 		path.pop();
-		return path.join("/");
+		return path.join('/');
 		#else
-		var path = str.split("/");
+		var path = str.split('/');
 		path.pop();
-		return path.join("/");
+		return path.join('/');
 		#end
 	}
 

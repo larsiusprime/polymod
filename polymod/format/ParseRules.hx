@@ -214,12 +214,7 @@ class CSVParseFormat implements BaseParseFormat
 
 			for (baseField in missingFields)
 			{
-				Polymod.warning(PolymodErrorCode.APPEND,
-					"Mod file("
-					+ id
-					+ ") missing expected field \""
-					+ baseField
-					+ "\", values will default to empty string.", INIT);
+				Polymod.warning(PolymodErrorCode.APPEND, 'Mod file ($id) is missing expected field "$baseField", values will default to empty string.', INIT);
 			}
 
 			return finalText;
@@ -617,12 +612,12 @@ class JSONParseFormat implements BaseParseFormat
 
 	public function append(baseText:String, appendText:String, id:String):String
 	{
-		var lastBracket = Util.uLastIndexOf(baseText, "}");
+		var lastBracket = Util.uLastIndexOf(baseText, '}');
 		var baseFirst = Util.uSubstr(baseText, 0, lastBracket);
 		var baseEnd = Util.uSubstr(baseText, lastBracket, baseText.length);
 
-		var firstAppendBracket = Util.uIndexOf(appendText, "{");
-		var lastAppendBracket = Util.uLastIndexOf(appendText, "}");
+		var firstAppendBracket = Util.uIndexOf(appendText, '{');
+		var lastAppendBracket = Util.uLastIndexOf(appendText, '}');
 		var injectText = Util.uSubstring(appendText, firstAppendBracket + 1, lastAppendBracket);
 
 		if (injectText == null || injectText == '')
@@ -689,12 +684,12 @@ class JSONParseFormat implements BaseParseFormat
 			else
 			{
 				Polymod.error(MERGE,
-					"JSON merge error (" + id + "): merge file must contain a single top-level array named \"merge\"! (Found an object, not an array)");
+					'JSON merge error ($id): merge file must contain a single top-level array named "merge" (expected an array, found an object)');
 			}
 		}
 		else
 		{
-			Polymod.error(MERGE, "JSON merge error (" + id + "): merge file must contain a single top-level array named \"merge\"!");
+			Polymod.error(MERGE, 'JSON merge error ($id): merge file must contain a single top-level array named "merge"');
 		}
 		return print(base);
 	}
@@ -706,7 +701,7 @@ class JSONParseFormat implements BaseParseFormat
 		var currTarget = sig[0];
 		if (currTarget == null)
 		{
-			Polymod.warning(MERGE, "JSON merge failed (" + id + "), sig was " + sig);
+			Polymod.warning(MERGE, 'JSON merge failed ($id), sig was $sig');
 			return obj;
 		}
 
@@ -746,7 +741,7 @@ class JSONParseFormat implements BaseParseFormat
 
 			if (next == null)
 			{
-				Polymod.warning(MERGE, "JSON merge failed (" + id + "), could not find object \"" + signatureSoFar + '")');
+				Polymod.warning(MERGE, 'JSON merge failed ($id), could not find object "${signatureSoFar}"');
 				done = true;
 			}
 			else
@@ -775,7 +770,7 @@ class JSONParseFormat implements BaseParseFormat
 			{
 				if (arri >= 0)
 				{
-					str += "[" + arri + "]";
+					str += '[' + arri + ']';
 				}
 			}
 		}
@@ -868,7 +863,7 @@ class JSONParseFormat implements BaseParseFormat
 			// if they're incompatible types, return a
 			var aArr = Std.isOfType(a, Array) ? 'array' : 'object';
 			var bArr = Std.isOfType(b, Array) ? 'array' : 'object';
-			Polymod.warning(MERGE, "JSON can't merge @ (" + signatureSoFar + ") because base is (" + aArr + ") but payload is (" + bArr + ")");
+			Polymod.warning(MERGE, "JSON can't merge @ (" + signatureSoFar + ") because base is (" + aArr + ") but payload is (" + bArr + ')');
 		}
 		return a;
 	}
@@ -932,7 +927,7 @@ class JSONParseFormat implements BaseParseFormat
 
 		if (Reflect.hasField(obj, target.value) == false)
 		{
-			Polymod.warning(MERGE, "JSON merge error : object (" + signatureSoFar + ") has no field (" + target.value + ")");
+			Polymod.warning(MERGE, "JSON merge error : object (" + signatureSoFar + ") has no field (" + target.value + ')');
 			return null;
 		}
 		var next = Reflect.field(obj, target.value);
@@ -969,22 +964,17 @@ class JSONParseFormat implements BaseParseFormat
 						}
 						else
 						{
-							Polymod.warning(MERGE, "JSON merge error : invalid array access [" + arrIndex + "] on target \"" + signatureSoFar + "\"");
+							Polymod.warning(MERGE, 'JSON merge error : invalid array access [$arrIndex] on target "$signatureSoFar"');
 							done = true;
 						}
 					}
 					else
 					{
 						Polymod.warning(MERGE,
-							"JSON merge error : array index ("
-							+ arrIndex
-							+ ") out of bounds on target \""
-							+ signatureSoFar
-							+ "\" with length "
-							+ arr.length);
+							'JSON merge error : array index ($arrIndex) out of bounds on target "$signatureSoFar" with length ${arr.length}');
 						done = true;
 					}
-					signatureSoFar += "[" + arrIndex + "]";
+					signatureSoFar += '[' + arrIndex + ']';
 				}
 			}
 			else
@@ -1003,15 +993,15 @@ class JSONParseFormat implements BaseParseFormat
 		var arr = str.split('.');
 		for (bit in arr)
 		{
-			if (bit.indexOf("[") != -1)
+			if (bit.indexOf('[') != -1)
 			{
-				var arr2 = bit.split("[");
+				var arr2 = bit.split('[');
 				var value = arr2.shift();
 				var arrayIndeces = [];
 				while (arr2.length > 0)
 				{
 					var value2 = arr2.shift();
-					value2 = Util.uTrimFinalCharIf(value2, "]");
+					value2 = Util.uTrimFinalCharIf(value2, ']');
 					var arrIndex = Std.parseInt(value2);
 					if (arrIndex != null && arrIndex >= 0)
 					{
@@ -1019,7 +1009,7 @@ class JSONParseFormat implements BaseParseFormat
 					}
 					else
 					{
-						Polymod.warning(MERGE, "JSON merge error: found invalid array index (" + value2 + ") in signature (" + str + ")");
+						Polymod.warning(MERGE, "JSON merge error: found invalid array index (" + value2 + ") in signature (" + str + ')');
 						break;
 					}
 				}

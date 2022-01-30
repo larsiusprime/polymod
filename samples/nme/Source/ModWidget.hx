@@ -57,8 +57,8 @@ class ModWidget extends Sprite
 		status.text = 'inactive';
 
 		var button = new CheapButton(str, onClick);
-		moveLeft = new CheapButton("←", onMove.bind(-1));
-		moveRight = new CheapButton("→", onMove.bind(1));
+		moveLeft = new CheapButton('←', onMove.bind(-1));
+		moveRight = new CheapButton('→', onMove.bind(1));
 
 		addChild(status);
 		addChild(button);

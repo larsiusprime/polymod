@@ -352,13 +352,7 @@ class Polymod
 					if (apiScore < PolymodConfig.apiVersionMatch)
 					{
 						Polymod.error(VERSION_CONFLICT_API,
-							"Mod \""
-							+ origDir
-							+ "\" was built for incompatible API version "
-							+ meta.apiVersion.toString()
-							+ ", current API version is "
-							+ apiVersion.toString(),
-							SCAN);
+							'Mod "$origDir" was built for incompatible API version ${meta.apiVersion)}, current version is "${apiVersion}"', SCAN);
 					}
 					else
 					{
@@ -368,13 +362,8 @@ class Polymod
 							if (apiVersion.minor != meta.apiVersion.minor)
 							{
 								Polymod.warning(VERSION_PRERELEASE_API,
-									"Modding API is in pre-release, some things might have changed!\n"
-									+ "Mod \""
-									+ origDir
-									+ "\" was built for API version "
-									+ meta.apiVersion.toString()
-									+ ", current API version is "
-									+ apiVersion.toString(),
+									"Modding API is in pre-release, some things might have changed!\n" +
+									'Mod "$origDir" was built for incompatible API version ${meta.apiVersion)}, current version is "${apiVersion}"',
 									SCAN);
 							}
 						}

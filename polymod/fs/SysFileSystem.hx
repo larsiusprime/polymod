@@ -72,7 +72,7 @@ class SysFileSystem implements IFileSystem
 		{
 			var j = l - i - 1;
 			var dir = dirs[j];
-			var testDir = modRoot + "/" + dir;
+			var testDir = modRoot + '/' + dir;
 			if (!isDirectory(testDir) || !exists(testDir))
 			{
 				dirs.splice(j, 1);
@@ -93,7 +93,7 @@ class SysFileSystem implements IFileSystem
 
 			if (!exists(metaFile))
 			{
-				Polymod.warning(MISSING_META, "Could not find mod metadata file: \"" + metaFile + "\"");
+				Polymod.warning(MISSING_META, 'Could not find mod metadata file: $metaFile');
 				return null;
 			}
 			else
@@ -106,24 +106,18 @@ class SysFileSystem implements IFileSystem
 
 			if (!exists(iconFile))
 			{
-				Polymod.warning(MISSING_ICON, "Could not find mod icon file: \"" + iconFile + "\"");
+				Polymod.warning(MISSING_ICON, 'Could not find mod icon file: $iconFile');
 			}
 			else
 			{
 				var iconBytes = getFileBytes(iconFile);
 				meta.icon = iconBytes;
 			}
-			if (exists(packFile))
-			{
-				meta.isModPack = true;
-				var packText = getFileContent(packFile);
-				meta.modPack = @:privateAccess Polymod.getModPack(packText);
-			}
 			return meta;
 		}
 		else
 		{
-			Polymod.error(MISSING_MOD, "Could not find mod directory: \"" + modId + "\"");
+			Polymod.error(MISSING_MOD, 'Could not find mod directory: $modId');
 		}
 		return null;
 	}
@@ -134,10 +128,10 @@ class SysFileSystem implements IFileSystem
 		for (i in 0...all.length)
 		{
 			var f = all[i];
-			var stri = Util.uIndexOf(f, path + "/");
+			var stri = Util.uIndexOf(f, path + '/');
 			if (stri == 0)
 			{
-				f = Util.uSubstr(f, Util.uLength(path + "/"), Util.uLength(f));
+				f = Util.uSubstr(f, Util.uLength(path + '/'), Util.uLength(f));
 				all[i] = f;
 			}
 		}

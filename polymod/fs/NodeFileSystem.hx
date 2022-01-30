@@ -65,7 +65,7 @@ class NodeFileSystem implements IFileSystem
 
 		// utility function for getting directory contents
 		jsCode.push("function getDirectoryContents(path, recursive, dirContents=null)");
-		jsCode.push("{");
+		jsCode.push('{');
 		jsCode.push("	if ( dirContents == null ) {");
 		jsCode.push("		dirContents = [];");
 		jsCode.push("	}");
@@ -85,7 +85,7 @@ class NodeFileSystem implements IFileSystem
 		jsCode.push("		}");
 		jsCode.push("	}");
 		jsCode.push("	return dirContents;");
-		jsCode.push("}");
+		jsCode.push('}');
 
 		// functions needed by Polymod
 		jsCode.push("function exists(path) { return _nodefs.existsSync(path); }");
@@ -119,7 +119,7 @@ class NodeFileSystem implements IFileSystem
 	{
 		if (!~/^\(.+\)$/.match(functionName))
 		{
-			var thisArg = functionName.split(".").slice(0, -1).join(".");
+			var thisArg = functionName.split('.').slice(0, -1).join('.');
 			if (thisArg.length > 0)
 			{
 				functionName += '.bind(${thisArg})';
@@ -137,7 +137,7 @@ class NodeFileSystem implements IFileSystem
 		for (i in 0...directories.length)
 		{
 			directories[i] = StringTools.replace(directories[i], path, '');
-			if (directories[i].charAt(0) == "/")
+			if (directories[i].charAt(0) == '/')
 			{
 				directories[i] = directories[i].substr(1);
 			}
@@ -198,7 +198,7 @@ class NodeFileSystem implements IFileSystem
 
 			if (!exists(metaFile))
 			{
-				Polymod.warning(MISSING_META, "Could not find mod metadata file: \"" + metaFile + "\"");
+				Polymod.warning(MISSING_META, 'Could not find mod metadata file: $metaFile');
 			}
 			else
 			{
@@ -207,7 +207,7 @@ class NodeFileSystem implements IFileSystem
 			}
 			if (!exists(iconFile))
 			{
-				Polymod.warning(MISSING_ICON, "Could not find mod icon file: \"" + iconFile + "\"");
+				Polymod.warning(MISSING_ICON, 'Could not find mod icon file: $iconFile');
 			}
 			else
 			{
@@ -224,7 +224,7 @@ class NodeFileSystem implements IFileSystem
 		}
 		else
 		{
-			Polymod.error(MISSING_MOD, "Could not find mod directory: \"" + modId + "\"");
+			Polymod.error(MISSING_MOD, 'Could not find mod directory: "$modId"');
 		}
 		return null;
 	}
@@ -238,7 +238,7 @@ class NodeFileSystem implements IFileSystem
 		{
 			var j = l - i - 1;
 			var dir = dirs[j];
-			var testDir = modRoot + "/" + dir;
+			var testDir = modRoot + '/' + dir;
 			if (!isDirectory(testDir) || !exists(testDir))
 			{
 				dirs.splice(j, 1);
