@@ -44,7 +44,7 @@ class HScriptMacro
 		var result = [];
 
 		// Find any classes with the @:hscript annotation on the class itself.
-		var scriptable_meta = classToEvaluate.meta.get().find(function(m) return m.name == ":hscript");
+		var scriptable_meta = classToEvaluate.meta.get().find(function(m) return m.name == ':hscript');
 		if (scriptable_meta != null)
 		{
 			for (p in scriptable_meta.params)
@@ -156,7 +156,7 @@ class HScriptMacro
 			return result;
 
 		// Find any classes with the @:hscript annotation on the class itself.
-		var scriptable_meta = classToEvaluate.meta.get().find(function(m) return m.name == ":hscript");
+		var scriptable_meta = classToEvaluate.meta.get().find(function(m) return m.name == ':hscript');
 		if (scriptable_meta != null)
 		{
 			// Get variables names from inside @:hscript(...) and add them to the list to pass to scripts.
@@ -239,7 +239,7 @@ class HScriptMacro
 		// Find all fields with @:hscript metadata
 		for (field in fields)
 		{
-			var scriptable_meta = field.meta.find(function(m) return m.name == ":hscript");
+			var scriptable_meta = field.meta.find(function(m) return m.name == ':hscript');
 			if (scriptable_meta != null)
 			{
 				switch field.kind
@@ -284,7 +284,7 @@ class HScriptMacro
 						{
 							var module:String = Context.getLocalModule();
 							module = StringTools.replace(module, '.', '/');
-							pathName = $v{module + '/' + pathName};
+							pathName = $v{'$module/$pathName'};
 						}
 
 						// If pathName is a string, set it.
@@ -377,7 +377,7 @@ class HScriptMacro
 								catch (e:Dynamic)
 								{
 									polymod.Polymod.error(polymod.Polymod.PolymodErrorCode.SCRIPT_EXCEPTION,
-										"Error: script " + $v{pathName} + " threw:\n" + e);
+                    'Error: script ' + $v{pathName} + ' threw:\n$e');
 									script_error = e;
 								}
 
@@ -397,7 +397,7 @@ class HScriptMacro
 						}
 						constructor_setup.push(macro
 							{
-								polymod.Polymod.debug("Loading hscript " + $v{pathName});
+								polymod.Polymod.debug('Loading hscript ' + $v{pathName});
 								_polymod_scripts.load($v{pathName}, Assets);
 							});
 

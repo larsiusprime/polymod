@@ -40,7 +40,7 @@ class Bee extends Mover
 
 		speed = 100;
 
-		var bmp = new Bitmap(Assets.getBitmapData("img/bee.png"));
+		var bmp = new Bitmap(Assets.getBitmapData('img/bee.png'));
 		addChild(bmp);
 
 		bmp.scaleX = 0.5;

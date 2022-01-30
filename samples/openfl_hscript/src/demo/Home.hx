@@ -34,7 +34,7 @@ class Home extends Sprite
 	public function new()
 	{
 		super();
-		var bmp = new Bitmap(Assets.getBitmapData("img/honey.png"));
+		var bmp = new Bitmap(Assets.getBitmapData('img/honey.png'));
 		addChild(bmp);
 
 		bmp.scaleX = 0.5;

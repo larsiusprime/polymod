@@ -231,7 +231,7 @@ class PolymodAssetLibrary
 
 		for (id in this.type.keys())
 		{
-			if (id.indexOf("_append") == 0 || id.indexOf("_merge") == 0)
+			if (id.indexOf('_append') == 0 || id.indexOf('_merge') == 0)
 				continue;
 			if (type == null || type == BYTES || check(id, type))
 			{

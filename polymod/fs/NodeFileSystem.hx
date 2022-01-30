@@ -98,7 +98,7 @@ class NodeFileSystem implements IFileSystem
 
 		// create the script element
 		var scriptElement:ScriptElement = Browser.document.createScriptElement();
-		scriptElement.type = "text/javascript";
+		scriptElement.type = 'text/javascript';
 		scriptElement.text = jsCode.join("\n");
 
 		// inject into the head tag
@@ -238,7 +238,7 @@ class NodeFileSystem implements IFileSystem
 		{
 			var j = l - i - 1;
 			var dir = dirs[j];
-			var testDir = modRoot + '/' + dir;
+			var testDir = '$modRoot/$dir';
 			if (!isDirectory(testDir) || !exists(testDir))
 			{
 				dirs.splice(j, 1);

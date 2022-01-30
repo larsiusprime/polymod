@@ -215,7 +215,7 @@ class NMEBackend implements IBackend
 
 	public function stripAssetsPrefix(id:String):String
 	{
-		if (Util.uIndexOf(id, "assets/") == 0 || Util.uIndexOf(id, "Assets/") == 0)
+		if (Util.uIndexOf(id, 'assets/') == 0 || Util.uIndexOf(id, 'Assets/') == 0)
 		{
 			id = Util.uSubstring(id, 7);
 		}

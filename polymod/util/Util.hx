@@ -60,7 +60,7 @@ class Util
 	}
 
 	/**
-	 * Looks for a "_merge" entry for an asset and tries to merge its contents into the original
+	 * Looks for a '_merge' entry for an asset and tries to merge its contents into the original
 	 * With the following rules:
 	 * - Only applies to XML, TSV, and CSV files (identified by extension)
 	 * - Adds single nodes from the merged asset into the original
@@ -134,7 +134,7 @@ class Util
 			joiner = endLine;
 		}
 
-		var otherEndline = endLine == "\n" ? "\r\n" : "\n";
+		var otherEndline = endLine == '\n' ? '\r\n' : '\n';
 		appendText = uSplitReplace(appendText, otherEndline, endLine);
 
 		return uCombine([baseText, joiner, appendText]);
@@ -291,7 +291,7 @@ class Util
 
 	public static inline function stripAssetsPrefix(id:String):String
 	{
-		if (uIndexOf(id, "assets/") == 0)
+		if (uIndexOf(id, 'assets/') == 0)
 		{
 			id = uSubstring(id, 7);
 		}
@@ -328,8 +328,8 @@ class Util
 
 	public static function cleanSlashes(str:String):String
 	{
-		str = uSplitReplace(str, "\\", '/');
-		str = uSplitReplace(str, "//", '/');
+		str = uSplitReplace(str, '\\', '/');
+		str = uSplitReplace(str, '//', '/');
 		return str;
 	}
 

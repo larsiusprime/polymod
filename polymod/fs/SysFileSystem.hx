@@ -72,7 +72,7 @@ class SysFileSystem implements IFileSystem
 		{
 			var j = l - i - 1;
 			var dir = dirs[j];
-			var testDir = modRoot + '/' + dir;
+			var testDir = '$modRoot/$dir';
 			if (!isDirectory(testDir) || !exists(testDir))
 			{
 				dirs.splice(j, 1);

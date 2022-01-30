@@ -71,7 +71,7 @@ class ModWidget extends DisplayObjectContainer
 	{
 		moveLeft.setText(Main.tongue.get('MOD_LEFT', 'mod'));
 		moveRight.setText(Main.tongue.get('MOD_RIGHT', 'mod'));
-		status.text = Main.tongue.get(active ? "MOD_ACTIVE" : "MOD_INACTIVE", 'mod');
+		status.text = Main.tongue.get(active ? 'MOD_ACTIVE' : 'MOD_INACTIVE', 'mod');
 	}
 
 	public function fixButtons()

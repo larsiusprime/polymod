@@ -290,7 +290,7 @@ class Polymod
 	 * @param errorCallback (optional) callback for any errors generated during scanning
 	 * @return Array<ModMetadata>
 	 */
-	public static function scan(modRoot:String, ?apiVersionStr:String = "*.*.*", ?errorCallback:PolymodError->Void, ?fileSystem:IFileSystem):Array<ModMetadata>
+	public static function scan(modRoot:String, ?apiVersionStr:String = '*.*.*', ?errorCallback:PolymodError->Void, ?fileSystem:IFileSystem):Array<ModMetadata>
 	{
 		onError = errorCallback;
 		var apiVersion:SemanticVersion = null;
@@ -322,7 +322,7 @@ class Polymod
 			return modMeta;
 		}
 		var dirs = fileSystem.readDirectory(modRoot);
-		Polymod.debug('scan found ' + dirs.length + ' folders in ' + modRoot);
+    Polymod.debug('Scan found ${dirs.length} folders in $modRoot');
 
 		// Filter to only directories.
 		var l = dirs.length;

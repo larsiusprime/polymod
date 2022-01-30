@@ -70,7 +70,7 @@ class Main extends Sprite
 				str += ',';
 			str += mod.title;
 		}
-		text2.text = "Current mods: " + str;
+		text2.text = 'Current mods: $str';
 	}
 
 	private function onKeyDown(e:KeyboardEvent)
@@ -125,9 +125,9 @@ class Main extends Sprite
 
 	private function loadMods()
 	{
-		var modRoot = "../../../mods/";
+		var modRoot = '../../../mods/';
 		#if mac
-		modRoot = "../../../../../../mods/";
+		modRoot = '../../../../../../mods/';
 		#end
 		activeMods = Polymod.init({
 			modRoot: modRoot,
@@ -140,6 +140,6 @@ class Main extends Sprite
 
 	private function onError(error:PolymodError)
 	{
-		trace(error.severity + '(' + error.code.toUpperCase() + "):" + error.message);
+		trace('[${error.severity}] (${error.code.toUpperCase}): ${error.message}');
 	}
 }

@@ -38,7 +38,7 @@ import lime.net.HTTPRequest;
 import lime.graphics.Image;
 import lime.text.Font;
 import lime.utils.Bytes;
-#if (lime >= "4.0.0")
+#if (lime >= '4.0.0')
 import lime.utils.AssetLibrary;
 import lime.media.AudioBuffer;
 import lime.utils.AssetType;
@@ -258,7 +258,7 @@ class LimeBackend implements IBackend
 
 	public function stripAssetsPrefix(id:String):String
 	{
-		if (Util.uIndexOf(id, "assets/") == 0)
+		if (Util.uIndexOf(id, 'assets/') == 0)
 		{
 			id = Util.uSubstring(id, 7);
 		}
@@ -526,8 +526,7 @@ class LimeModLibrary extends AssetLibrary
 			else
 				return fallback.loadBytes(id);
 		}
-		return Bytes.loadFromFile
-		'');
+		return Bytes.loadFromFile('');
 	}
 
 	public override function loadFont(id:String):Future<Font>
@@ -550,9 +549,9 @@ class LimeModLibrary extends AssetLibrary
 				return fallback.loadFont(id);
 		}
 		#if (js && html5)
-		return Font.loadFromName(paths.get ''));
+		return Font.loadFromName(paths.get(''));
 		#else
-		return Font.loadFromFile(paths.get ''));
+		return Font.loadFromFile(paths.get(''));
 		#end
 	}
 
@@ -572,8 +571,7 @@ class LimeModLibrary extends AssetLibrary
 			else
 				return fallback.loadImage(id);
 		}
-		return Image.loadFromFile
-		'');
+		return Image.loadFromFile('');
 	}
 
 	public override function loadAudioBuffer(id:String)
@@ -598,8 +596,7 @@ class LimeModLibrary extends AssetLibrary
 			else
 				return fallback.loadAudioBuffer(id);
 		}
-		return AudioBuffer.loadFromFile
-		'');
+		return AudioBuffer.loadFromFile('');
 	}
 
 	public override function loadText(id:String):Future<String>
@@ -619,8 +616,7 @@ class LimeModLibrary extends AssetLibrary
 				return fallback.loadText(id);
 		}
 		var request = new HTTPRequest<String>();
-		return request.load
-		'');
+		return request.load('');
 	}
 
 	public override function isLocal(id:String, type:String):Bool
@@ -729,12 +725,12 @@ class LimeModLibrary extends AssetLibrary
 /**
  * This helper class helps me deal with all the path nonsense of custom asset library asset calls
  * e.g. asking library 'foo' for 'bar.png' will result in:
- *   id = "foo:bar.png"
+ *   id = 'foo:bar.png'
  *   lib = 'foo'
  *   library = the 'foo' library
  *   nakedId = 'bar.png'
- *   modId = "foo/bar.png" (assuming 'foo' is the mod path prefix for the 'foo' library)
- *   fallbackId = "foo:bar.png" 
+ *   modId = 'foo/bar.png' (assuming 'foo' is the mod path prefix for the 'foo' library)
+ *   fallbackId = 'foo:bar.png' 
  */
 private class IdAndLibrary
 {

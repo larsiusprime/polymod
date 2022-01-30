@@ -57,10 +57,10 @@ class Main extends Sprite
 	private function loadMods(dirs:Array<String>)
 	{
 		var framework = Demo.usingOpenFL ? Framework.OPENFL : Framework.LIME;
-		var modRoot = "../../../mods/";
+		var modRoot = '../../../mods/';
 		#if mac
 		// account for <APPLICATION>.app/Contents/Resources
-		var modRoot = "../../../../../../mods";
+		var modRoot = '../../../../../../mods';
 		#end
 		var results = Polymod.init({
 			modRoot: modRoot,
@@ -73,6 +73,6 @@ class Main extends Sprite
 
 	private function onError(error:PolymodError)
 	{
-		trace(error.severity + '(' + error.code.toUpperCase() + "):" + error.message);
+		trace('[${error.severity}] (${error.code.toUpperCase}): ${error.message}');
 	}
 }

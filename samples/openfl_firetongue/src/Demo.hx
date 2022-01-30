@@ -96,10 +96,10 @@ class Demo extends Sprite
 
 	private function makeButtons()
 	{
-		var modDir:String = "../../../mods";
+		var modDir:String = '../../../mods';
 		#if mac
 		// account for <APPLICATION>.app/Contents/Resources
-		modDir = "../../../../../../mods";
+		modDir = '../../../../../../mods';
 		#end
 		#if sys
 		var mods = sys.FileSystem.readDirectory(modDir);
@@ -136,7 +136,7 @@ class Demo extends Sprite
 		// Make sure to redo any translation calls when you change language.
 		// This won't matter as much if you put your language select in a separate menu.
 		limeLabel.text = Main.tongue.get('ASSET_SYSTEM_LABEL');
-		limeToggle.setText(Main.tongue.get(usingOpenFL ? "ASSET_SYSTEM_OPENFL" : "ASSET_SYSTEM_LIME"));
+		limeToggle.setText(Main.tongue.get(usingOpenFL ? 'ASSET_SYSTEM_OPENFL' : 'ASSET_SYSTEM_LIME'));
 		localeLabel.text = Main.tongue.get('TRANSLATION_LABEL');
 		localeToggle.setText(Main.tongue.locale);
 	}
@@ -299,7 +299,7 @@ class Demo extends Sprite
 		// Exclude the flag images.
 		images = images.filter(function(str:String)
 		{
-			return str.startsWith("img/");
+			return str.startsWith('img/');
 		});
 
 		images.sort(function(a:String, b:String):Int
@@ -359,7 +359,7 @@ class Demo extends Sprite
 		// Exclude the locale configs.
 		texts = texts.filter(function(str:String)
 		{
-			return str.startsWith("data/");
+			return str.startsWith('data/');
 		});
 
 		texts.sort(function(a:String, b:String)

@@ -81,10 +81,10 @@ class Demo extends Sprite
 
 	private function makeButtons()
 	{
-		var modDir:String = "../../../mods";
+		var modDir:String = '../../../mods';
 		#if mac
 		// account for <APPLICATION>.app/Contents/Resources
-		modDir = "../../../../../../mods";
+		modDir = '../../../../../../mods';
 		#end
 		#if sys
 		var mods = sys.FileSystem.readDirectory(modDir);
@@ -120,7 +120,7 @@ class Demo extends Sprite
 		var limeLabel = getText(LEFT);
 		limeLabel.x = 10;
 		limeLabel.y = 400;
-		limeLabel.text = "Asset System:";
+		limeLabel.text = 'Asset System:';
 
 		limeToggle = new CheapButton(usingOpenFL ? 'openfl' : 'lime', onToggleOpenFL);
 		limeToggle.x = 10;

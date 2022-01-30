@@ -42,7 +42,7 @@ class Flower extends Sprite implements polymod.hscript.HScriptable
 	{
 		super();
 		pollen = maxPollen = i;
-		var bmp = new Bitmap(Assets.getBitmapData("img/flower" + i + ".png"));
+		var bmp = new Bitmap(Assets.getBitmapData('img/flower${i}.png'));
 		addChild(bmp);
 
 		bmp.scaleX = 0.5;

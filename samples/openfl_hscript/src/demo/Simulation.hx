@@ -61,8 +61,8 @@ class Simulation extends Sprite implements polymod.hscript.HScriptable
 		bees = [];
 		flowers = [];
 
-		numBees = loadInt("bees.txt");
-		numFlowers = loadInt("flowers.txt");
+		numBees = loadInt('bees.txt');
+		numFlowers = loadInt('flowers.txt');
 
 		if (numBees <= 0)
 			numBees = 1;
@@ -73,14 +73,14 @@ class Simulation extends Sprite implements polymod.hscript.HScriptable
 
 		score = new TextField();
 		addChild(score);
-		score.text = "Honey collected: 0";
+		score.text = 'Honey collected: 0';
 
 		Lib.current.stage.addEventListener(Event.ENTER_FRAME, onEnterFrame, false, 0, true);
 	}
 
 	public function loadInt(file:String):Int
 	{
-		var str = Assets.getText("data/" + file);
+		var str = Assets.getText('data/$file');
 		if (str != null && str != '')
 		{
 			var i = Std.parseInt(str);
@@ -123,13 +123,13 @@ class Simulation extends Sprite implements polymod.hscript.HScriptable
 
 	@:hscript({
 		context: [numFlowers, numBees, distTest, makeFlower, makeHome, makeBee, home],
-		pathName: "demo/Simulation/initSimulation"
+		pathName: 'demo/Simulation/initSimulation'
 	})
 	private function init():Void
 	{
 		if (script_error != null)
 		{
-			trace('hscript failed to load or threw: ' + script_error);
+			trace('hscript failed to load or threw: $script_error');
 			trace('TODO: Do something to recover from this failure.');
 		}
 		if (script_result == null)

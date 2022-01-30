@@ -26,7 +26,7 @@ package polymod.util;
 class SemanticVersion
 {
 	/**
-	 * Expects a string of the format "1.2.3", "1.2.3-blah", "1.2.3-alpha.1.blah.2", etc
+	 * Expects a string of the format '1.2.3', "1.2.3-blah", "1.2.3-alpha.1.blah.2", etc
 	 * @param str 
 	 * @return SemanticVersion
 	 */
@@ -147,10 +147,10 @@ class SemanticVersion
 				}
 			}
 		}
-		v.effective = v.major + '.' + v.minor + '.' + v.patch;
+		v.effective = '${v.major}.${v.minor}.${v.patch}';
 		if (v.preRelease != null && v.preRelease.length > 0)
 		{
-			v.effective = (v.effective + '-' + v.preRelease.join('.'));
+      v.effective += '-${v.preRelease.join(".")}';
 		}
 		return v;
 	}
@@ -271,11 +271,11 @@ enum abstract SemanticVersionScore(Int) from Int to Int
 		{
 			case 'NONE':
 				return NONE;
-			case "MATCH_MAJOR":
+			case 'MATCH_MAJOR':
 				return MATCH_MAJOR;
-			case "MATCH_MINOR":
+			case 'MATCH_MINOR':
 				return MATCH_MINOR;
-			case "MATCH_PATCH":
+			case 'MATCH_PATCH':
 				return MATCH_PATCH;
 			default:
 				throw 'SemanticVersionScore: Unknown value $value';

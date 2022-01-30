@@ -61,10 +61,10 @@ class Main extends Sprite
 		#else
 		var framework = Demo.usingOpenFL ? Framework.OPENFL : Framework.LIME;
 		#end
-		var modRoot = "../../../mods/";
+		var modRoot = '../../../mods/';
 		#if mac
 		// account for <APPLICATION>.app/Contents/Resources
-		var modRoot = "../../../../../../mods";
+		var modRoot = '../../../../../../mods';
 		#end
 		var results = Polymod.init({
 			modRoot: modRoot,
@@ -79,7 +79,7 @@ class Main extends Sprite
 	{
 		if (error.severity != PolymodErrorType.NOTICE)
 		{
-			trace(error.severity + '(' + error.code.toUpperCase() + "):" + error.message);
+			trace('[${error.severity}] (${error.code.toUpperCase}): ${error.message}');
 		}
 	}
 }
