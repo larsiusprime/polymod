@@ -34,9 +34,9 @@ class SemanticVersion
 	{
 		var v = new SemanticVersion();
 		v.original = str;
-		if (str == "" || str == null)
+		if (str == '' || str == null)
 			throw "SemanticVersion.hx: string is empty!";
-		var extra = "";
+		var extra = '';
 		if (str.indexOf("+") != -1)
 		{
 			var arr = str.split("+");
@@ -71,7 +71,7 @@ class SemanticVersion
 							case 0: "major";
 							case 1: "minor";
 							case 2: "patch";
-							default: "";
+							default: '';
 						}
 						throw "SemanticVersion.hx: couldn't parse " + word + " version! :\"" + str + "\"";
 				}
@@ -116,10 +116,10 @@ class SemanticVersion
 
 		if (maj == -1 || min == -1 || pat == -1)
 		{
-			extra = "";
+			extra = '';
 		}
 
-		if (extra != null && extra != "")
+		if (extra != null && extra != '')
 		{
 			if (maj > 1)
 				throw "SemanticVersion.hx: pre-release version not allowed post 1.0.0! :\"" + str + "\"";
@@ -216,11 +216,11 @@ class SemanticVersion
 			bits = otherBits;
 		for (i in 0...bits)
 		{
-			var bit = (preRelease != null && preRelease.length > i) ? preRelease[i] : "";
-			var otherBit = (other.preRelease != null && other.preRelease.length > i) ? other.preRelease[i] : "";
-			if (bit == "" && otherBit != "")
+			var bit = (preRelease != null && preRelease.length > i) ? preRelease[i] : '';
+			var otherBit = (other.preRelease != null && other.preRelease.length > i) ? other.preRelease[i] : '';
+			if (bit == '' && otherBit != '')
 				return -1;
-			if (bit != "" && otherBit == "")
+			if (bit != '' && otherBit == '')
 				return 1;
 			var i = Std.parseInt(bit);
 			var j = Std.parseInt(otherBit);

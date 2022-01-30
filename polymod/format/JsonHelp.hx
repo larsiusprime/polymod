@@ -27,10 +27,10 @@ class JsonHelp
 {
 	public static function bool(json:Dynamic, field:String, defaultValue:Bool = false):Bool
 	{
-		var str:String = "";
+		var str:String = '';
 		if (Reflect.hasField(json, field))
 			str = Reflect.field(json, field);
-		if (str == null || str == "")
+		if (str == null || str == '')
 			return defaultValue;
 		str = str.toLowerCase();
 		if (str == "true")
@@ -40,10 +40,10 @@ class JsonHelp
 
 	public static function int(json:Dynamic, field:String, defaultValue:Int = 0):Int
 	{
-		var str:String = "";
+		var str:String = '';
 		if (Reflect.hasField(json, field))
 			str = Reflect.field(json, field);
-		if (str == null || str == "")
+		if (str == null || str == '')
 			return defaultValue;
 		var i = Std.parseInt(str);
 		if (i == null)
@@ -53,10 +53,10 @@ class JsonHelp
 
 	public static function float(json:Dynamic, field:String, defaultValue:Float = 0):Float
 	{
-		var str:String = "";
+		var str:String = '';
 		if (Reflect.hasField(json, field))
 			str = Reflect.field(json, field);
-		if (str == null || str == "")
+		if (str == null || str == '')
 			return defaultValue;
 		var f = Math.NaN;
 		try
@@ -75,7 +75,7 @@ class JsonHelp
 	public static function mapStr(json:Dynamic, field:String):Map<String, String>
 	{
 		var map:Map<String, String> = new Map<String, String>();
-		if (json == null || field == "" || field == null)
+		if (json == null || field == '' || field == null)
 			return map;
 		var val = null;
 		if (Reflect.hasField(json, field))
@@ -91,12 +91,12 @@ class JsonHelp
 		return map;
 	}
 
-	public static function str(json:Dynamic, field:String, defaultValue:String = ""):String
+	public static function str(json:Dynamic, field:String, defaultValue:String = ''):String
 	{
-		var str:String = "";
+		var str:String = '';
 		if (Reflect.hasField(json, field))
 			str = Reflect.field(json, field);
-		if (str == null || str == "")
+		if (str == null || str == '')
 			return defaultValue;
 		return str;
 	}

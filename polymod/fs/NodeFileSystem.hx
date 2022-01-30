@@ -136,7 +136,7 @@ class NodeFileSystem implements IFileSystem
 	{
 		for (i in 0...directories.length)
 		{
-			directories[i] = StringTools.replace(directories[i], path, "");
+			directories[i] = StringTools.replace(directories[i], path, '');
 			if (directories[i].charAt(0) == "/")
 			{
 				directories[i] = directories[i].substr(1);

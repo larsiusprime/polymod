@@ -83,11 +83,11 @@ class CSV
 			endline = "\r\n";
 		var lines = input.split(endline);
 		var fieldLine = lines.shift();
-		var fields = fieldLine.split(",");
+		var fields = fieldLine.split(',');
 		var grid = [];
 		for (line in lines)
 		{
-			var cells = line.split(",");
+			var cells = line.split(',');
 			grid.push(cells);
 		}
 		var csv = new CSV();
@@ -107,14 +107,14 @@ class CSV
 	/********PRIVATE**********/
 	private var _rgx:EReg = null;
 
-	private var _delimeter:String = "";
+	private var _delimeter:String = '';
 	private var _quoted:Bool = false;
 
 	private function _parse(input:String, delimeter:String = ',', quoted:Bool = true)
 	{
 		_delimeter = delimeter;
 		_quoted = quoted;
-		if (input != "")
+		if (input != '')
 		{
 			processRows(getRows(input));
 		}
@@ -161,14 +161,14 @@ class CSV
 			if (_delimeter == ',')
 			{
 				_rgx = ~/,(?=(?:[^\x22]*\x22[^\x22]*\x22)*(?![^\x22]*\x22))/gm;
-				// Matches a well formed CSV cell, ie "thing1" or "thing ,, 5" etc
+				// Matches a well formed CSV cell, ie 'thing1' or 'thing ,, 5' etc
 				// "\x22" is the invocation for the double-quote mark.
 				// UTF-8 ONLY!!!!
 			}
 			else
 			{
 				// You can provide your own customer delimeter, but we generally don't recommend it
-				_rgx = new EReg(_delimeter + '(?=(?:[^\x22]*\x22[^\x22]*\x22)*(?![^\x22]*\x22))', "gm");
+				_rgx = new EReg(_delimeter + '(?=(?:[^\x22]*\x22[^\x22]*\x22)*(?![^\x22]*\x22))', 'gm');
 			}
 		}
 		return _rgx.split(row);
@@ -202,7 +202,7 @@ class CSV
 
 		for (i in 0...cells.length)
 		{
-			var cell:String = "";
+			var cell:String = '';
 			if (_quoted)
 			{
 				cell = cells[i].substr(1, cells[i].length - 2);

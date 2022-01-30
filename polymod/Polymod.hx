@@ -154,15 +154,15 @@ class Polymod
 		try
 		{
 			var apiStr = params.apiVersion;
-			if (apiStr == null || apiStr == "")
+			if (apiStr == null || apiStr == '')
 			{
-				apiStr = "*.*.*";
+				apiStr = '*.*.*';
 			}
 			apiVersion = SemanticVersion.fromString(apiStr);
 		}
 		catch (msg:Dynamic)
 		{
-			error(PARSE_API_VERSION, "Error parsing api version: (" + Std.string(msg) + ")", INIT);
+			error(PARSE_API_VERSION, 'Error parsing API version: (${msg})', INIT);
 			return [];
 		}
 
@@ -194,8 +194,8 @@ class Polymod
 				}
 				catch (msg:Dynamic)
 				{
-					error(PARAM_MOD_VERSION, "There was an error with one of the mod version patterns you provided: " + msg, INIT);
-					semVer = SemanticVersion.fromString("*.*.*");
+					error(PARAM_MOD_VERSION, 'There was an error with one of the mod version patterns you provided: (${msg})', INIT);
+					semVer = SemanticVersion.fromString('*.*.*');
 				}
 				modVers.push(semVer);
 			}
@@ -216,12 +216,7 @@ class Polymod
 					if (apiScore < PolymodConfig.apiVersionMatch)
 					{
 						error(VERSION_CONFLICT_API,
-							"Mod \""
-							+ origDir
-							+ "\" was built for incompatible API version "
-							+ meta.apiVersion.toString()
-							+ ", current API version is "
-							+ params.apiVersion.toString(),
+							'Mod "$origDir" was built for incompatible API version ${meta.apiVersion.toString()}, current API version is "${params.apiVersion.toString()}"',
 							INIT);
 					}
 					else
@@ -231,14 +226,9 @@ class Polymod
 							// if we're in pre-release
 							if (apiVersion.minor != meta.apiVersion.minor)
 							{
-								warning(VERSION_PRERELEASE_API,
-									"Modding API is in pre-release, some things might have changed!\n"
-									+ "Mod \""
-									+ origDir
-									+ "\" was built for API version "
-									+ meta.apiVersion.toString()
-									+ ", current API version is "
-									+ apiVersion.toString(),
+								Polymod.warning(VERSION_PRERELEASE_API,
+									'Modding API is in pre-release, some things might have changed!\n' +
+									'Mod "$origDir" was built for API version ${meta.apiVersion.toString()}, current API version is "${params.apiVersion.toString()}"',
 									INIT);
 							}
 						}
@@ -249,14 +239,8 @@ class Polymod
 						var score = modVer.checkCompatibility(meta.modVersion);
 						if (score < SemanticVersionScore.MATCH_PATCH)
 						{
-							error(VERSION_CONFLICT_MOD,
-								"Mod pack wants version "
-								+ modVer.toString()
-								+ " of mod("
-								+ meta.id
-								+ "), found incompatible version "
-								+ meta.modVersion.toString()
-								+ " instead",
+							Polymod.error(VERSION_CONFLICT_MOD,
+								'Mod pack wants version "${modVer.toString()}" of mod "${meta.id}", found incompatibile version ${meta.modVersion.toString()}" instead.',
 								INIT);
 						}
 					}
@@ -318,7 +302,7 @@ class Polymod
 		}
 		catch (msg:Dynamic)
 		{
-			error(PARSE_API_VERSION, "Error parsing api version: (" + Std.string(msg) + ")", SCAN);
+			Polymod.error('Error parsing provided API version (${msg})', SCAN);
 			return [];
 		}
 
@@ -369,7 +353,7 @@ class Polymod
 					var apiScore = meta.apiVersion.checkCompatibility(apiVersion);
 					if (apiScore < PolymodConfig.apiVersionMatch)
 					{
-						error(VERSION_CONFLICT_API,
+						Polymod.error(VERSION_CONFLICT_API,
 							"Mod \""
 							+ origDir
 							+ "\" was built for incompatible API version "
@@ -385,7 +369,7 @@ class Polymod
 							// if we're in pre-release
 							if (apiVersion.minor != meta.apiVersion.minor)
 							{
-								warning(VERSION_PRERELEASE_API,
+								Polymod.warning(VERSION_PRERELEASE_API,
 									"Modding API is in pre-release, some things might have changed!\n"
 									+ "Mod \""
 									+ origDir
@@ -563,29 +547,29 @@ class ModMetadata
 	public function toJsonStr():String
 	{
 		var json = {};
-		Reflect.setField(json, "title", title);
-		Reflect.setField(json, "description", description);
-		Reflect.setField(json, "author", _author);
-		Reflect.setField(json, "contributors", contributors);
-		Reflect.setField(json, "homepage", homepage);
-		Reflect.setField(json, "api_version", apiVersion.toString());
-		Reflect.setField(json, "mod_version", modVersion.toString());
-		Reflect.setField(json, "license", license);
-		Reflect.setField(json, "license_ref", licenseRef);
+		Reflect.setField(json, 'title', title);
+		Reflect.setField(json, 'description', description);
+		Reflect.setField(json, 'author', _author);
+		Reflect.setField(json, 'contributors', contributors);
+		Reflect.setField(json, 'homepage', homepage);
+		Reflect.setField(json, 'api_version', apiVersion.toString());
+		Reflect.setField(json, 'mod_version', modVersion.toString());
+		Reflect.setField(json, 'license', license);
+		Reflect.setField(json, 'license_ref', licenseRef);
 		var meta = {};
 		for (key in metaData.keys())
 		{
 			Reflect.setField(meta, key, metaData.get(key));
 		}
-		Reflect.setField(json, "metadata", meta);
-		return Json.stringify(json, null, "    ");
+		Reflect.setField(json, 'metadata', meta);
+		return Json.stringify(json, null, '    ');
 	}
 
 	public static function fromJsonStr(str:String)
 	{
-		if (str == null || str == "")
+		if (str == null || str == '')
 		{
-			Polymod.error(PARSE_MOD_META, "Error parsing mod metadata file, was null or empty.");
+			Polymod.error(PARSE_MOD_META, 'Error parsing mod metadata file, was null or empty.');
 			return null;
 		}
 
@@ -596,30 +580,25 @@ class ModMetadata
 		}
 		catch (msg:Dynamic)
 		{
-			Polymod.error(PARSE_MOD_META, "Error parsing mod metadata file: " + Std.string(msg));
+			Polymod.error(PARSE_MOD_META, 'Error parsing mod metadata file: (${msg})');
 			return null;
 		}
 
 		var m = new ModMetadata();
-		m.title = JsonHelp.str(json, "title");
-		m.description = JsonHelp.str(json, "description");
-		m._author = JsonHelp.str(json, "author");
-		m.contributors = JsonHelp.arrType(json, "contributors");
-		m.homepage = JsonHelp.str(json, "homepage");
-		var apiVersionStr = JsonHelp.str(json, "api_version");
-		var modVersionStr = JsonHelp.str(json, "mod_version");
+		m.title = JsonHelp.str(json, 'title');
+		m.description = JsonHelp.str(json, 'description');
+		m._author = JsonHelp.str(json, 'author');
+		m.contributors = JsonHelp.arrType(json, 'contributors');
+		m.homepage = JsonHelp.str(json, 'homepage');
+		var apiVersionStr = JsonHelp.str(json, 'api_version');
+		var modVersionStr = JsonHelp.str(json, 'mod_version');
 		try
 		{
 			m.apiVersion = SemanticVersion.fromString(apiVersionStr);
 		}
 		catch (msg:Dynamic)
 		{
-			Polymod.error(PARSE_MOD_API_VERSION, "Error parsing api version: ("
-				+ Std.string(msg)
-				+ ") "
-				+ PolymodConfig.modMetadataFile
-				+ " was : "
-				+ str);
+			Polymod.error(PARSE_MOD_API_VERSION, 'Error parsing API version: (${msg}) ${PolymodConfig.modMetadataFile} was ${str}');
 			return null;
 		}
 		try
@@ -628,17 +607,12 @@ class ModMetadata
 		}
 		catch (msg:Dynamic)
 		{
-			Polymod.error(PARSE_MOD_VERSION, "Error parsing api version: ("
-				+ Std.string(msg)
-				+ ") "
-				+ PolymodConfig.modMetadataFile
-				+ " was : "
-				+ str);
+			Polymod.error(PARSE_MOD_VERSION, 'Error parsing mod version: (${msg}) ${PolymodConfig.modMetadataFile} was ${str}');
 			return null;
 		}
-		m.license = JsonHelp.str(json, "license");
-		m.licenseRef = JsonHelp.str(json, "license_ref");
-		m.metaData = JsonHelp.mapStr(json, "metadata");
+		m.license = JsonHelp.str(json, 'license');
+		m.licenseRef = JsonHelp.str(json, 'license_ref');
+		m.metaData = JsonHelp.mapStr(json, 'metadata');
 		return m;
 	}
 }
@@ -659,192 +633,242 @@ class PolymodError
 	}
 }
 
+/**
+ * Indicates where the error occurred.
+ */
 @:enum abstract PolymodErrorOrigin(String) from String to String
 {
-	var SCAN:String = "scan";
-	var INIT:String = "init";
-	var UNKNOWN:String = "unknown";
+	/**
+	 * This error occurred while scanning for mods.
+	 */
+	var SCAN:String = 'scan';
+
+	/**
+	 * This error occurred while initializng Polymod.
+	 */
+	var INIT:String = 'init';
+
+	/**
+	 * This error occurred in an undefined location.
+	 */
+	var UNKNOWN:String = 'unknown';
 }
 
+/**
+ * Represents the severity level of a given error.
+ */
 enum PolymodErrorType
 {
+	/**
+	 * This message is merely an informational notice.
+	 * You can handle it with a popup, log it, or simply ignore it.
+	 */
 	NOTICE;
+
+	/**
+	 * This message is a warning.
+	 * Either the application developer, the mod developer, or the user did something wrong.
+	 */
 	WARNING;
+
+	/**
+	 * This message indicates a severe error occurred.
+	 * This almost certainly will cause unintended behavior. A certain mod may not load or may even cause crashes.
+	 */
 	ERROR;
 }
 
+/**
+ * Represents the particular type of error that occurred.
+ * Great to use as the condition of a switch statement to provide various handling.
+ */
 @:enum abstract PolymodErrorCode(String) from String to String
 {
 	/**
 	 * The mod's metadata file could not be parsed.
 	 * - Make sure the file contains valid JSON.
 	 */
-	var PARSE_MOD_META:String = "parse_mod_meta";
+	var PARSE_MOD_META:String = 'parse_mod_meta';
 
 	/**
 	 * The mod's version string could not be parsed.
 	 * - Make sure the metadata JSON contains a valid Semantic Version string.
 	 */
-	var PARSE_MOD_VERSION:String = "parse_mod_version";
+	var PARSE_MOD_VERSION:String = 'parse_mod_version';
 
 	/**
 	 * The mod's API version string could not be parsed.
 	 * - Make sure the metadata JSON contains a valid Semantic Version string.
 	 */
-	var PARSE_MOD_API_VERSION:String = "parse_mod_api_version";
+	var PARSE_MOD_API_VERSION:String = 'parse_mod_api_version';
 
 	/**
 	 * The app's API version string (passed to Polymod.init) could not be parsed.
 	 * - Make sure the string is a valid Semantic Version string.
 	 */
-	var PARSE_API_VERSION:String = "parse_api_version";
+	var PARSE_API_VERSION:String = 'parse_api_version';
 
 	/**
-	 * A mod with the given ID was not found in the mods folder.
+	 * You requested a mod to be loaded but that mod was not installed.
 	 * - Make sure a mod with that name is installed.
 	 * - Make sure to run Polymod.scan to get the list of valid mod IDs.
 	 */
-	var MISSING_MOD:String = "missing_mod";
+	var MISSING_MOD:String = 'missing_mod';
 
 	/**
-	 * A mod with the given ID is missing a metadata file.
+	 * You requested a mod to be loaded but its mod folder is missing a metadata file.
 	 * - Make sure the mod folder contains a metadata JSON file. Polymod won't recognize the mod without it.
 	 */
-	var MISSING_META:String = "missing_meta";
+	var MISSING_META:String = 'missing_meta';
 
 	/**
 	 * A mod with the given ID is missing a metadata file.
-	 * - Make sure the mod folder contains a metadata JSON file. Polymod will still load your mod, but it looks better if you add an icon.
+	 * - This is a warning and can be ignored. Polymod will still load your mod, but it looks better if you add an icon.
+	 * - The default location for icons is `_polymod_icon.png`.
 	 */
-	var MISSING_ICON:String = "missing_icon";
+	var MISSING_ICON:String = 'missing_icon';
 
 	/**
-	 * We are preparing to load a mod.
+	 * We are preparing to load a particular mod.
 	 * - This is an info message. You can log it or ignore it if you like.
 	 */
-	var MOD_LOAD_PREPARE:String = "mod_load_prepare";
+	var MOD_LOAD_PREPARE:String = 'mod_load_prepare';
 
 	/**
 	 * We couldn't load a particular mod.
 	 * - There will generally be a warning or error before this indicating the reason for the error.
 	 */
-	var MOD_LOAD_FAILED:String = "mod_load_failed";
+	var MOD_LOAD_FAILED:String = 'mod_load_failed';
 
 	/**
-	 * We are preparing to load a mod.
+	 * We have successfully completed loading a particular mod.
 	 * - This is an info message. You can log it or ignore it if you like.
 	 * - This is also a good trigger for a UI indicator like a toast notification.
 	 */
-	var MOD_LOAD_DONE:String = "mod_load_done";
+	var MOD_LOAD_DONE:String = 'mod_load_done';
+
+	/**
+	 * You attempted to perform an operation that requires Polymod to be initialized.
+	 * - Make sure you call Polymod.init before attempting to call this function.
+	 */
+	var POLYMOD_NOT_LOADED:String = 'polymod_not_loaded';
 
 	/**
 	 * The chosen script interpreter is not available.
-	 * - This message is only displayed if the HScript-EX config option is enabled, and HScript-EX is not installed.
-	 * - Either install HScript-EX or disable the config option.
+	 * - This message is only displayed if the HScript-EX config option is enabled, while HScript-EX is not installed.
+	 * - Either install the proper version of the `hscript-ex` library, or disable the config option.
 	 */
-	var SCRIPT_NO_INTERPRETER:String = "script_no_interpreter";
+	var SCRIPT_NO_INTERPRETER:String = 'script_no_interpreter';
 
 	/**
 	 * The scripted class does not import an `Assets` class to handle script loading.
 	 * - When loading scripts, the target of the HScriptable interface will call `Assets.getText` to read the relevant script file.
 	 * - You will need to import `openfl.util.Assets` on the HScriptable class, even if you don't otherwise use it.
 	 */
-	var SCRIPT_NO_ASSET_HANDLER:String = "script_no_asset_handler";
+	var SCRIPT_NO_ASSET_HANDLER:String = 'script_no_asset_handler';
 
 	/**
 	 * A script file of the given name could not be found.
 	 * - Make sure the script file exists in the proper location in your assets folder.
 	 * - Alternatively, you can expand your annotation to `@:hscript({optional: true})` to disable the error message,
-	 *     as long as it's fine for the script to be missing.
+	 *     as long as your application is built to function without it.
 	 */
-	var SCRIPT_NOT_FOUND:String = "script_not_found";
+	var SCRIPT_NOT_FOUND:String = 'script_not_found';
 
 	/**
-	 * A script file of the given name could not be loaded for whatever reason.
+	 * A script file of the given name could not be loaded for some unknown reason.
+	 * - Check the syntax of the script file is proper Haxe.
 	 */
-	var SCRIPT_NOT_LOADED:String = "script_not_loaded";
+	var SCRIPT_NOT_LOADED:String = 'script_not_loaded';
 
 	/**
-	 * When running a script, it threw an exception.
+	 * When running a script, it threw a runtime exception.
 	 * - The scripted function will assign the `script_error` variable, allowing you to handle the error gracefully.
 	 */
-	var SCRIPT_EXCEPTION:String = "script_exception";
+	var SCRIPT_EXCEPTION:String = 'script_exception';
 
 	/**
-	 * An installed modpack is looking for a mod with a specific version, but the mod is not of that version.
+	 * An installed mod is looking for another mod with a specific version, but the mod is not of that version.
+	 * - The mod may be a modpack that includes that mod, or it may be a mod that has the other mod as a dependency.
 	 * - Inform your users to install the proper mod version.
 	 */
-	var VERSION_CONFLICT_MOD:String = "version_conflict_mod";
+	var VERSION_CONFLICT_MOD:String = 'version_conflict_mod';
 
 	/**
 	 * The mod has an API version that conflicts with the application's API version.
 	 * - This means that the mod needs to be updated, checking for compatibility issues with any changes to API version.
 	 * - If you're getting this error even for patch versions, be sure to tweak the `POLYMOD_API_VERSION_MATCH` config option.
 	 */
-	var VERSION_CONFLICT_API:String = "version_conflict_api";
+	var VERSION_CONFLICT_API:String = 'version_conflict_api';
 
 	/**
 	 * A log warning thrown when the minor version of the mod differs from the minor version of the app, when the app version is 0.X.
 	 * - This warning is provided to remind mod developers that early mod APIs can change drastically. This can be ignored if desired,
 	 *   but should most likely be logged.
 	 */
-	var VERSION_PRERELEASE_API:String = "version_prerelease_api";
+	var VERSION_PRERELEASE_API:String = 'version_prerelease_api';
 
 	/**
 	 * One of the version strings you provided to Polymod.init is invalid.
 	 * - Make sure you're using a valid Semantic Version string.
 	 */
-	var PARAM_MOD_VERSION:String = "param_mod_version";
+	var PARAM_MOD_VERSION:String = 'param_mod_version';
 
 	/**
 	 * Indicates what asset framework Polymod has automatically detected for use.
 	 * - This is an info message, and can either be logged or ignored.
 	 */
-	var FRAMEWORK_AUTODETECT:String = "framework_autodetect";
+	var FRAMEWORK_AUTODETECT:String = 'framework_autodetect';
 
 	/**
 	 * Indicates what asset framework Polymod has been manually configured to use.
 	 * - This is an info message, and can either be logged or ignored.
 	 */
-	var FRAMEWORK_INIT:String = "framework_init";
+	var FRAMEWORK_INIT:String = 'framework_init';
 
 	/**
 	 * You configured Polymod to use the `CUSTOM` asset framework, then didn't provide a value for `params.customBackend`.
 	 * - Define a class which extends IBackend, and provide it to Polymod.
 	 */
-	var UNDEFINED_CUSTOM_BACKEND:String = "undefined_custom_backend";
+	var UNDEFINED_CUSTOM_BACKEND:String = 'undefined_custom_backend';
 
 	/**
 	 * Polymod could not create an instance of the class you provided for `params.customBackend`.
 	 * - Check that the class extends IBackend, and can be instantiated properly.
 	 */
-	var FAILED_CREATE_BACKEND:String = "failed_create_backend";
+	var FAILED_CREATE_BACKEND:String = 'failed_create_backend';
 
 	/**
 	 * You attempted to use a functionality of Polymod that is not fully implemented, or not implemented for the current framework.
 	 * - Report the issue here, and describe your setup and provide the error message:
 	 *   https://github.com/larsiusprime/polymod/issues
 	 */
-	var FUNCTIONALITY_NOT_IMPLEMENTED:String = "functionality_not_implemented";
+	var FUNCTIONALITY_NOT_IMPLEMENTED:String = 'functionality_not_implemented';
+
+	/**
+	 * You attempted to use a functionality of Polymod that has been deprecated and has/will be significantly reworked or altered.
+	 * - New features and their associated documentation will be provided in future updates.
+	 */
+	var FUNCTIONALITY_DEPRECATED:String = 'functionality_deprecated';
 
 	/**
 	 * There was an error attempting to perform a merge operation on a file.
 	 * - Check the source and target files are correctly formatted and try again.
 	 */
-	var MERGE:String = "merge_error";
+	var MERGE:String = 'merge_error';
 
 	/**
 	 * There was an error attempting to perform an append operation on a file.
 	 * - Check the source and target files are correctly formatted and try again.
 	 */
-	var APPEND:String = "append_error";
+	var APPEND:String = 'append_error';
 
 	/**
 	 * On the Lime and OpenFL platforms, if the base app defines multiple asset libraries,
 	 * each asset library must be assigned a path to allow mods to override their files.
 	 * - Provide a `frameworkParams.assetLibraryPaths` object to Polymod.init().
 	 */
-	var LIME_MISSING_ASSET_LIBRARY_INFO = "lime_missing_asset_library_info";
+	var LIME_MISSING_ASSET_LIBRARY_INFO = 'lime_missing_asset_library_info';
 
 	/**
 	 * On the Lime and OpenFL platforms, if the base app defines multiple asset libraries,
@@ -852,5 +876,5 @@ enum PolymodErrorType
 	 * - All libraries must have a value under `frameworkParams.assetLibraryPaths`.
 	 * - Set the value to `./` to fetch assets from the root of the mod folder.
 	 */
-	var LIME_MISSING_ASSET_LIBRARY_REFERENCE = "lime_missing_asset_library_reference";
+	var LIME_MISSING_ASSET_LIBRARY_REFERENCE = 'lime_missing_asset_library_reference';
 }

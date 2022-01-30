@@ -71,7 +71,7 @@ class Util
 	 * @param	mergeRules	formatting rules to help with merging
 	 * @return
 	 */
-	public static function mergeText(baseText:String, id:String, theDir:String = "", getModText:String->String->String, parseRules:ParseRules = null):String
+	public static function mergeText(baseText:String, id:String, theDir:String = '', getModText:String->String->String, parseRules:ParseRules = null):String
 	{
 		var extension = uExtension(id, true);
 		id = stripAssetsPrefix(id);
@@ -119,7 +119,7 @@ class Util
 	{
 		var lastChar = uCharAt(baseText, uLength(baseText) - 1);
 		var lastLastChar = uCharAt(baseText, uLength(baseText) - 1);
-		var joiner = "";
+		var joiner = '';
 		var endLine = "\n";
 		var crIndex = uIndexOf(baseText, "\r");
 		var lfIndex = uIndexOf(baseText, "\n");
@@ -279,12 +279,12 @@ class Util
 		return txt;
 	}
 
-	public static inline function pathMerge(id:String, theDir:String = ""):String
+	public static inline function pathMerge(id:String, theDir:String = ''):String
 	{
 		return pathSpecial(id, PolymodConfig.mergeFolder, theDir);
 	}
 
-	private static inline function pathAppend(id:String, theDir:String = ""):String
+	private static inline function pathAppend(id:String, theDir:String = ''):String
 	{
 		return pathSpecial(id, PolymodConfig.appendFolder, theDir);
 	}
@@ -298,14 +298,14 @@ class Util
 		return id;
 	}
 
-	public static function pathSpecial(id:String, special:String = "", theDir:String = ""):String
+	public static function pathSpecial(id:String, special:String = '', theDir:String = ''):String
 	{
 		#if (sys || nodefs)
 		id = stripAssetsPrefix(id);
 		var thePath = uCombine([theDir, sl(), special, sl(), id]);
 		return thePath;
 		#else
-		return "";
+		return '';
 		#end
 	}
 
@@ -313,7 +313,7 @@ class Util
 	{
 		var aSlash = (uLastIndexOf(a, "/") == uLength(a) - 1 || uLastIndexOf(a, "\\") == uLength(a) - 1);
 		var bSlash = (uIndexOf(b, "/") == 0 || uIndexOf(b, "\\") == 0);
-		var str = "";
+		var str = '';
 		if (aSlash || bSlash)
 		{
 			str = Util.uCombine([a, b]);
@@ -496,8 +496,8 @@ class Util
 	public static function uTrimFinalEndlines(str:String):String
 	{
 		var done = false;
-		var fix = "";
-		var last = "";
+		var fix = '';
+		var last = '';
 		while (!done)
 		{
 			var fix = Util.uTrimFinalCharIf(str, "\n");
@@ -529,8 +529,8 @@ class Util
 	public static function uTrimFirstEndlines(str:String):String
 	{
 		var done = false;
-		var fix = "";
-		var last = "";
+		var fix = '';
+		var last = '';
 		while (!done)
 		{
 			var fix = Util.uTrimFirstCharIf(str, "\n");

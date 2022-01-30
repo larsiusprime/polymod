@@ -124,12 +124,12 @@ class HEAPSBackend implements IBackend
 
 	public function list(type:PolymodAssetType = null):Array<String>
 	{
-		throw "Function not implemented";
+		throw 'Function not implemented';
 	}
 
 	public function getPath(id:String):String
 	{
-		throw "Function not implemented";
+		throw 'Function not implemented';
 	}
 
 	public function clearCache()
@@ -363,7 +363,7 @@ class ModFileSystem implements FileSystem
 
 	public function getRoot():FileEntry
 	{
-		return new ModFileEntry("", null, this, "");
+		return new ModFileEntry('', null, this, '');
 	}
 
 	public function get(path:String):FileEntry

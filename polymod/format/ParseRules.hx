@@ -178,7 +178,7 @@ class CSVParseFormat implements BaseParseFormat
 
 			for (r in 0...appendCSV.grid.length)
 			{
-				var line = "";
+				var line = '';
 				for (bi in 0...baseCSV.fields.length)
 				{
 					var baseField = baseCSV.fields[bi];
@@ -188,7 +188,7 @@ class CSVParseFormat implements BaseParseFormat
 						var appendValue = appendCSV.grid[r][appendField];
 						if (appendValue == null)
 						{
-							appendValue = "";
+							appendValue = '';
 						}
 						line += appendValue;
 					}
@@ -244,8 +244,8 @@ class CSVParseFormat implements BaseParseFormat
 
 		for (row in mergeCSV.grid)
 		{
-			var flag = row.length > 0 ? row[0] : "";
-			if (flag != "")
+			var flag = row.length > 0 ? row[0] : '';
+			if (flag != '')
 			{
 				for (i in 0...baseCSV.grid.length)
 				{
@@ -348,8 +348,8 @@ class TSVParseFormat implements BaseParseFormat
 		var mergeTSV = polymod.format.TSV.parse(mergeText);
 		for (row in mergeTSV.grid)
 		{
-			var flag = row.length > 0 ? row[0] : "";
-			if (flag != "")
+			var flag = row.length > 0 ? row[0] : '';
+			if (flag != '')
 			{
 				for (i in 0...baseTSV.grid.length)
 				{
@@ -432,10 +432,10 @@ class LinesParseFormat implements BaseParseFormat // <Array<String>>
 
 	public function parse(str:String):Array<String>
 	{
-		if (str == null || str == "")
+		if (str == null || str == '')
 			return [];
-		var other = "";
-		var endl = "";
+		var other = '';
+		var endl = '';
 		switch (endline)
 		{
 			case LF:
@@ -448,7 +448,7 @@ class LinesParseFormat implements BaseParseFormat // <Array<String>>
 				endl = "\r";
 				other = "\n";
 		}
-		if (other == "")
+		if (other == '')
 		{
 			return str.split(endl);
 		}
@@ -467,9 +467,9 @@ class LinesParseFormat implements BaseParseFormat // <Array<String>>
 
 	public function merge(baseText:String, mergeText:String, id:String):String
 	{
-		if (baseText == null || mergeText == "")
+		if (baseText == null || mergeText == '')
 			return baseText;
-		if (baseText == null || mergeText == "")
+		if (baseText == null || mergeText == '')
 			return baseText;
 		var lines = parse(baseText);
 		if (lines == null || lines.length <= 0)
@@ -611,8 +611,8 @@ class JSONParseFormat implements BaseParseFormat
 
 	public function parse(str:String):Dynamic
 	{
-    var result = Json.parse(~/(\r|\n|\t)/g.replace(str, ""));
-    return result;
+		var result = Json.parse(~/(\r|\n|\t)/g.replace(str, ''));
+		return result;
 	}
 
 	public function append(baseText:String, appendText:String, id:String):String
@@ -625,7 +625,7 @@ class JSONParseFormat implements BaseParseFormat
 		var lastAppendBracket = Util.uLastIndexOf(appendText, "}");
 		var injectText = Util.uSubstring(appendText, firstAppendBracket + 1, lastAppendBracket);
 
-		if (injectText == null || injectText == "")
+		if (injectText == null || injectText == '')
 			return baseText;
 
 		// var whiteSpace = [32,10,13,9]; //" ","\n","\r","\t"
@@ -676,11 +676,14 @@ class JSONParseFormat implements BaseParseFormat
 
 					target = entry.target;
 					payload = entry.payload;
-          try {
-            base = _mergeJson(base, entry, id);
-          } catch (msg:Dynamic) {
-            Polymod.error(MERGE, 'JSON merge error ($id): could not merge payload "${Json.stringify(payload)}" into target : ' + msg);
-          }
+					try
+					{
+						base = _mergeJson(base, entry, id);
+					}
+					catch (msg:Dynamic)
+					{
+						Polymod.error(MERGE, 'JSON merge error ($id): could not merge payload "${Json.stringify(payload)}" into target : ' + msg);
+					}
 				}
 			}
 			else
@@ -710,7 +713,7 @@ class JSONParseFormat implements BaseParseFormat
 		var done = false;
 		var last = obj;
 		var i:Int = 0;
-		var signatureSoFar = "";
+		var signatureSoFar = '';
 		var struct:
 			{
 				next:Dynamic,
@@ -736,7 +739,7 @@ class JSONParseFormat implements BaseParseFormat
 				next = struct.next;
 			}
 
-			if (signatureSoFar != "")
+			if (signatureSoFar != '')
 				signatureSoFar += ".";
 			signatureSoFar += _targSigElementToString(currTarget);
 			i++;
@@ -779,7 +782,7 @@ class JSONParseFormat implements BaseParseFormat
 		return str;
 	}
 
-	private function _inject(obj:Dynamic, target:String, arrIndex:Int, payload:Dynamic, signatureSoFar:String = "")
+	private function _inject(obj:Dynamic, target:String, arrIndex:Int, payload:Dynamic, signatureSoFar:String = '')
 	{
 		if (arrIndex == -1)
 		{
@@ -818,7 +821,7 @@ class JSONParseFormat implements BaseParseFormat
 		}
 	}
 
-	private function _mergeObjects(a:Dynamic, b:Dynamic, signatureSoFar:String = ""):Dynamic
+	private function _mergeObjects(a:Dynamic, b:Dynamic, signatureSoFar:String = ''):Dynamic
 	{
 		if (Std.isOfType(a, Array) && Std.isOfType(b, Array))
 		{
@@ -899,7 +902,7 @@ class JSONParseFormat implements BaseParseFormat
 		return false;
 	}
 
-	private function _descend(obj:Dynamic, target:TargetSignatureElement, signatureSoFar:String = "", struct:
+	private function _descend(obj:Dynamic, target:TargetSignatureElement, signatureSoFar:String = '', struct:
 		{
 			next:Dynamic,
 			parent:Dynamic,
@@ -1054,7 +1057,7 @@ class PlainTextParseFormat implements BaseParseFormat // <String>
 	{
 		var lastChar = Util.uCharAt(baseText, Util.uLength(baseText) - 1);
 		var lastLastChar = Util.uCharAt(baseText, Util.uLength(baseText) - 1);
-		var joiner = "";
+		var joiner = '';
 
 		var endLine = "\n";
 

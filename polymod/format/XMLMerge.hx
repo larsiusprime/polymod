@@ -102,8 +102,8 @@ class XMLMerge
 
 	public static function mergeXML(a:Xml, b:Xml, allSigs:Array<String>, mergeMap:Map<String, Array<String>>):Void
 	{
-		var aName = a.nodeType == Xml.XmlType.Document ? "" : a.nodeName;
-		var bName = b.nodeType == Xml.XmlType.Document ? "" : b.nodeName;
+		var aName = a.nodeType == Xml.XmlType.Document ? '' : a.nodeName;
+		var bName = b.nodeType == Xml.XmlType.Document ? '' : b.nodeName;
 
 		if (aName != bName)
 			return;
@@ -124,7 +124,7 @@ class XMLMerge
 					var keyValues = mergeMap.get(sig);
 					if (keyValues == null)
 					{
-						if (sig == "" && aSig == "")
+						if (sig == '' && aSig == '')
 						{
 							if (a.nodeType == Xml.XmlType.Document && b.nodeType == Xml.XmlType.Document)
 							{
@@ -173,7 +173,7 @@ class XMLMerge
 		if (b == null)
 			return;
 
-		var allSigs = [""];
+		var allSigs = ''];
 		var bMap:Map<String, Array<String>> = getNodeMergeMap(b, allSigs);
 
 		mergeXML(a, b, allSigs, bMap);
@@ -203,7 +203,7 @@ class XMLMerge
 				}
 				var arr = map.get(sig);
 
-				var mergeKey = f.node.merge.has.key ? f.node.merge.att.key : "";
+				var mergeKey = f.node.merge.has.key ? f.node.merge.att.key : '';
 				var mergeKeyValue = f.node.merge.x.get(mergeKey);
 
 				arr.push(mergeKey);
@@ -235,7 +235,7 @@ class XMLMerge
 				parent = null;
 			}
 		}
-		var str = "";
+		var str = '';
 		for (i in 0...arr.length)
 		{
 			var j = arr.length - 1 - i;

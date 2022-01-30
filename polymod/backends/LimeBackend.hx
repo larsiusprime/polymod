@@ -145,7 +145,7 @@ class LimeBackend implements IBackend
 		// Wrap each asset library in `LimeModLibrary`, register it with Lime, and store it here
 		for (key in defaultLibraries.keys())
 		{
-			var pathPrefix = "";
+			var pathPrefix = '';
 			if (hasMoreThanDefault)
 			{
 				if (!params.assetLibraryPaths.exists(key) && key != "default")
@@ -160,7 +160,7 @@ class LimeBackend implements IBackend
 				{
 					if (key == "default")
 					{
-						pathPrefix = "";
+						pathPrefix = '';
 					}
 					else
 					{
@@ -309,7 +309,7 @@ class LimeModLibrary extends AssetLibrary
 	var hasFallback:Bool;
 	var type(default, null):Map<String, AssetType>;
 
-	public function new(backend:LimeBackend, fallback:AssetLibrary, ?pathPrefix:String = "")
+	public function new(backend:LimeBackend, fallback:AssetLibrary, ?pathPrefix:String = '')
 	{
 		b = backend;
 		p = b.polymodLibrary;
@@ -526,7 +526,8 @@ class LimeModLibrary extends AssetLibrary
 			else
 				return fallback.loadBytes(id);
 		}
-		return Bytes.loadFromFile("");
+		return Bytes.loadFromFile
+		'');
 	}
 
 	public override function loadFont(id:String):Future<Font>
@@ -549,9 +550,9 @@ class LimeModLibrary extends AssetLibrary
 				return fallback.loadFont(id);
 		}
 		#if (js && html5)
-		return Font.loadFromName(paths.get(""));
+		return Font.loadFromName(paths.get ''));
 		#else
-		return Font.loadFromFile(paths.get(""));
+		return Font.loadFromFile(paths.get ''));
 		#end
 	}
 
@@ -571,7 +572,8 @@ class LimeModLibrary extends AssetLibrary
 			else
 				return fallback.loadImage(id);
 		}
-		return Image.loadFromFile("");
+		return Image.loadFromFile
+		'');
 	}
 
 	public override function loadAudioBuffer(id:String)
@@ -596,7 +598,8 @@ class LimeModLibrary extends AssetLibrary
 			else
 				return fallback.loadAudioBuffer(id);
 		}
-		return AudioBuffer.loadFromFile("");
+		return AudioBuffer.loadFromFile
+		'');
 	}
 
 	public override function loadText(id:String):Future<String>
@@ -616,7 +619,8 @@ class LimeModLibrary extends AssetLibrary
 				return fallback.loadText(id);
 		}
 		var request = new HTTPRequest<String>();
-		return request.load("");
+		return request.load
+		'');
 	}
 
 	public override function isLocal(id:String, type:String):Bool
@@ -752,13 +756,13 @@ private class IdAndLibrary
 		}
 		else if (libs != null)
 		{
-			if (lib == "" || lib == null)
+			if (lib == '' || lib == null)
 			{
 				lib = "default";
 			}
 			library = libs.get(lib);
 		}
-		if (library != null && library.pathPrefix != null && library.pathPrefix != "")
+		if (library != null && library.pathPrefix != null && library.pathPrefix != '')
 		{
 			modId = library.pathPrefix + "/" + nakedId;
 		}

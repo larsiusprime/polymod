@@ -172,7 +172,7 @@ class PolymodAssetLibrary
 	 * @param	theDir
 	 * @return
 	 */
-	public function getTextDirectly(id:String, directory:String = ""):String
+	public function getTextDirectly(id:String, directory:String = ''):String
 	{
 		var bytes = null;
 		if (checkDirectly(id, directory))
@@ -254,7 +254,7 @@ class PolymodAssetLibrary
 		if (exists && type != null && type != PolymodAssetType.BYTES)
 		{
 			var otherType = this.type.get(id);
-			exists = (otherType == type || otherType == PolymodAssetType.BYTES || otherType == null || otherType == "");
+			exists = (otherType == type || otherType == PolymodAssetType.BYTES || otherType == null || otherType == '');
 		}
 		return exists;
 	}
@@ -269,10 +269,10 @@ class PolymodAssetLibrary
 		return null;
 	}
 
-	public function checkDirectly(id:String, dir:String = ""):Bool
+	public function checkDirectly(id:String, dir:String = ''):Bool
 	{
 		id = backend.stripAssetsPrefix(id);
-		if (dir == null || dir == "")
+		if (dir == null || dir == '')
 		{
 			return fileSystem.exists(id);
 		}
@@ -293,15 +293,15 @@ class PolymodAssetLibrary
 	 * @param	id
 	 * @return
 	 */
-	public function file(id:String, theDir:String = ""):String
+	public function file(id:String, theDir:String = ''):String
 	{
 		var idStripped = backend.stripAssetsPrefix(id);
-		if (theDir != "")
+		if (theDir != '')
 		{
 			return Util.pathJoin(theDir, idStripped);
 		}
 
-		var result = "";
+		var result = '';
 		var resultLocalized = false;
 		for (modDir in dirs)
 		{
@@ -434,7 +434,7 @@ class PolymodAssetLibrary
 
 		var all:Array<String> = null;
 
-		if (d == "" || d == null)
+		if (d == '' || d == null)
 		{
 			all = [];
 		}
@@ -458,7 +458,7 @@ class PolymodAssetLibrary
 		for (f in all)
 		{
 			var doti = Util.uLastIndexOf(f, ".");
-			var ext:String = doti != -1 ? f.substring(doti + 1) : "";
+			var ext:String = doti != -1 ? f.substring(doti + 1) : '';
 			ext = ext.toLowerCase();
 			var assetType = getExtensionType(ext);
 			type.set(f, assetType);

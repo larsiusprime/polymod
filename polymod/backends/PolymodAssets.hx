@@ -56,7 +56,7 @@ typedef PolymodAssetsParams =
 
 	/**
 	 * paths to each mod's root directories.
-	 * This takes precedence over the "Dir" parameter and the order matters -- mod files will load from first to last, with last taking precedence
+	 * This takes precedence over the 'Dir' parameter and the order matters -- mod files will load from first to last, with last taking precedence
 	 */
 	dirs:Array<String>,
 
@@ -232,17 +232,17 @@ class PolymodAssets
 
 @:enum abstract PolymodAssetType(String) from String to String
 {
-	var BYTES = "BYTES";
-	var TEXT = "TEXT";
-	var IMAGE = "IMAGE";
-	var VIDEO = "VIDEO";
-	var FONT = "FONT";
-	var AUDIO_GENERIC = "AUDIO_GENERIC";
-	var AUDIO_MUSIC = "AUDIO_MUSIC";
-	var AUDIO_SOUND = "AUDIO_SOUND";
-	var MANIFEST = "MANIFEST";
-	var TEMPLATE = "TEMPLATE";
-	var UNKNOWN = "UNKNOWN";
+	var BYTES = 'BYTES';
+	var TEXT = 'TEXT';
+	var IMAGE = 'IMAGE';
+	var VIDEO = 'VIDEO';
+	var FONT = 'FONT';
+	var AUDIO_GENERIC = 'AUDIO_GENERIC';
+	var AUDIO_MUSIC = 'AUDIO_MUSIC';
+	var AUDIO_SOUND = 'AUDIO_SOUND';
+	var MANIFEST = 'MANIFEST';
+	var TEMPLATE = 'TEMPLATE';
+	var UNKNOWN = 'UNKNOWN';
 
 	public static function fromString(str:String):PolymodAssetType
 	{

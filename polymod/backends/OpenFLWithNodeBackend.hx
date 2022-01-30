@@ -155,7 +155,7 @@ class OpenFLNodeModLibrary extends LimeModLibrary
 	 * Constructor
 	 * @param	backend
 	 */
-	public function new(backend:OpenFLWithNodeBackend, fallback:AssetLibrary, ?pathPrefix:String = "")
+	public function new(backend:OpenFLWithNodeBackend, fallback:AssetLibrary, ?pathPrefix:String = '')
 	{
 		super(backend, fallback, pathPrefix);
 	}
@@ -353,7 +353,7 @@ class OpenFLNodeModLibrary extends LimeModLibrary
 		}
 		else
 		{
-			modText = "";
+			modText = '';
 		}
 
 		return modText;
