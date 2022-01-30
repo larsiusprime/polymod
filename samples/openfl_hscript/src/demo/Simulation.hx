@@ -81,7 +81,7 @@ class Simulation extends Sprite implements polymod.hscript.HScriptable
 	public function loadInt(file:String):Int
 	{
 		var str = Assets.getText("data/" + file);
-		if (str != null && str != "")
+		if (str != null && str != '')
 		{
 			var i = Std.parseInt(str);
 			if (i == null)

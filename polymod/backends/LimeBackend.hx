@@ -119,7 +119,7 @@ class LimeBackend implements IBackend
 		var hasMoreThanDefault = false;
 		for (key in defaultLibraries.keys())
 		{
-			if (key != "default")
+			if (key != 'default')
 			{
 				hasMoreThanDefault = true;
 				break;
@@ -148,7 +148,7 @@ class LimeBackend implements IBackend
 			var pathPrefix = '';
 			if (hasMoreThanDefault)
 			{
-				if (!params.assetLibraryPaths.exists(key) && key != "default")
+				if (!params.assetLibraryPaths.exists(key) && key != 'default')
 				{
 					Polymod.error(PolymodErrorCode.LIME_MISSING_ASSET_LIBRARY_REFERENCE,
 						"Your Lime/OpenFL configuration is using custom asset libraries, and you provided frameworkParams in Polymod.init(), but we couldn't find a match for this asset library: (" +
@@ -158,7 +158,7 @@ class LimeBackend implements IBackend
 				}
 				else
 				{
-					if (key == "default")
+					if (key == 'default')
 					{
 						pathPrefix = '';
 					}
@@ -728,12 +728,12 @@ class LimeModLibrary extends AssetLibrary
 
 /**
  * This helper class helps me deal with all the path nonsense of custom asset library asset calls
- * e.g. asking library "foo" for "bar.png" will result in:
+ * e.g. asking library 'foo' for 'bar.png' will result in:
  *   id = "foo:bar.png"
- *   lib = "foo"
- *   library = the "foo" library
- *   nakedId = "bar.png"
- *   modId = "foo/bar.png" (assuming "foo" is the mod path prefix for the "foo" library)
+ *   lib = 'foo'
+ *   library = the 'foo' library
+ *   nakedId = 'bar.png'
+ *   modId = "foo/bar.png" (assuming 'foo' is the mod path prefix for the 'foo' library)
  *   fallbackId = "foo:bar.png" 
  */
 private class IdAndLibrary
@@ -758,13 +758,13 @@ private class IdAndLibrary
 		{
 			if (lib == '' || lib == null)
 			{
-				lib = "default";
+				lib = 'default';
 			}
 			library = libs.get(lib);
 		}
 		if (library != null && library.pathPrefix != null && library.pathPrefix != '')
 		{
-			modId = library.pathPrefix + "/" + nakedId;
+			modId = '${library.pathPrefix}/$nakedId';
 		}
 		modId = nakedId;
 	}

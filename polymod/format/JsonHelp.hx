@@ -33,7 +33,7 @@ class JsonHelp
 		if (str == null || str == '')
 			return defaultValue;
 		str = str.toLowerCase();
-		if (str == "true")
+		if (str == 'true')
 			return true;
 		return false;
 	}

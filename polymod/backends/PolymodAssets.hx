@@ -94,11 +94,11 @@ class PolymodAssets
 		if (framework == null)
 		{
 			framework = autoDetectFramework();
-			Polymod.notice(PolymodErrorCode.FRAMEWORK_AUTODETECT, "Framework: Autodetect, going with " + framework);
+			Polymod.notice(PolymodErrorCode.FRAMEWORK_AUTODETECT, 'Framework: Autodetect, going with $framework');
 		}
 		else
 		{
-			Polymod.notice(PolymodErrorCode.FRAMEWORK_INIT, "Framework: User specified " + framework);
+			Polymod.notice(PolymodErrorCode.FRAMEWORK_INIT, 'Framework: User specified $framework');
 		}
 		var backend:IBackend = switch (framework)
 		{
@@ -124,7 +124,7 @@ class PolymodAssets
 		}
 		if (backend == null)
 		{
-			Polymod.error(PolymodErrorCode.FAILED_CREATE_BACKEND, "could not create a backend for framework(" + framework + ")!");
+			Polymod.error(PolymodErrorCode.FAILED_CREATE_BACKEND, 'Could not create a backend for framework: $framework');
 			return null;
 		}
 

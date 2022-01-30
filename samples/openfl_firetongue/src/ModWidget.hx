@@ -56,8 +56,8 @@ class ModWidget extends DisplayObjectContainer
 		status = text();
 
 		button = new CheapButton(str, onClick);
-		moveLeft = new CheapButton("", onMove.bind(-1));
-		moveRight = new CheapButton("", onMove.bind(1));
+		moveLeft = new CheapButton('', onMove.bind(-1));
+		moveRight = new CheapButton('', onMove.bind(1));
 
 		reloadText();
 
@@ -69,9 +69,9 @@ class ModWidget extends DisplayObjectContainer
 
 	public function reloadText()
 	{
-		moveLeft.setText(Main.tongue.get('MOD_LEFT', "mod"));
-		moveRight.setText(Main.tongue.get('MOD_RIGHT', "mod"));
-		status.text = Main.tongue.get(active ? "MOD_ACTIVE" : "MOD_INACTIVE", "mod");
+		moveLeft.setText(Main.tongue.get('MOD_LEFT', 'mod'));
+		moveRight.setText(Main.tongue.get('MOD_RIGHT', 'mod'));
+		status.text = Main.tongue.get(active ? "MOD_ACTIVE" : "MOD_INACTIVE", 'mod');
 	}
 
 	public function fixButtons()

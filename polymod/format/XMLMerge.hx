@@ -52,7 +52,7 @@ class XMLMerge
 			return;
 		}
 
-		if (a.nodeName == "merge" || b.nodeName == "merge")
+		if (a.nodeName == 'merge' || b.nodeName == 'merge')
 			return;
 
 		if (children)
@@ -61,7 +61,7 @@ class XMLMerge
 			{
 				if (el == null)
 					continue;
-				if (el.nodeName == "merge")
+				if (el.nodeName == 'merge')
 					continue;
 
 				var aCount = countNodes(a, el.nodeName);
@@ -173,7 +173,7 @@ class XMLMerge
 		if (b == null)
 			return;
 
-		var allSigs = ''];
+		var allSigs = [''];
 		var bMap:Map<String, Array<String>> = getNodeMergeMap(b, allSigs);
 
 		mergeXML(a, b, allSigs, bMap);
@@ -188,7 +188,7 @@ class XMLMerge
 
 		for (el in xml.elements())
 		{
-			if (el.nodeName == "merge")
+			if (el.nodeName == 'merge')
 				continue;
 			var subMap = getNodeMergeMap(el, addToArray);
 			map = mergeMapsDestructively(map, subMap);

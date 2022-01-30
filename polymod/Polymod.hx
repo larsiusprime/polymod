@@ -330,7 +330,7 @@ class Polymod
 		{
 			var j = l - i - 1;
 			var dir = dirs[j];
-			var testDir = modRoot + "/" + dir;
+			var testDir = '$modRoot/$dir';
 			if (!fileSystem.isDirectory(testDir) || !fileSystem.exists(testDir))
 			{
 				dirs.splice(j, 1);
@@ -342,7 +342,7 @@ class Polymod
 			if (dirs[i] != null)
 			{
 				var origDir = dirs[i];
-				dirs[i] = modRoot + "/" + dirs[i];
+				dirs[i] = '$modRoot/${dirs[i]}';
 				var meta:ModMetadata = fileSystem.getMetadata(dirs[i]);
 
 				if (meta != null)

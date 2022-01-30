@@ -63,10 +63,10 @@ class Main extends Sprite
 		text2.width = 300;
 		addChild(text2);
 		text2.y = text.y - text.height;
-		var str = "";
+		var str = '';
 		for (mod in activeMods)
 		{
-			if (str != "")
+			if (str != '')
 				str += ",";
 			str += mod.title;
 		}
@@ -78,16 +78,16 @@ class Main extends Sprite
 		var char = String.fromCharCode(e.keyCode);
 		switch (char)
 		{
-			case "R":
+			case 'R':
 				reset();
-			case "1":
-				toggleMod("mod1");
-			case "2":
-				toggleMod("mod2");
-			case "3":
-				toggleMod("mod3");
-			case "4":
-				toggleMod("mod4");
+			case '1':
+				toggleMod('mod1');
+			case '2':
+				toggleMod('mod2');
+			case '3':
+				toggleMod('mod3');
+			case '4':
+				toggleMod('mod4');
 			default: // donothing
 		}
 	}

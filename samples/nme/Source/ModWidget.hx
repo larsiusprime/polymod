@@ -54,7 +54,7 @@ class ModWidget extends Sprite
 		this.callback = callback;
 
 		status = text();
-		status.text = "inactive";
+		status.text = 'inactive';
 
 		var button = new CheapButton(str, onClick);
 		moveLeft = new CheapButton("←", onMove.bind(-1));
@@ -93,7 +93,7 @@ class ModWidget extends Sprite
 	private function onClick()
 	{
 		active = !active;
-		status.text = active ? "active" : "inactive";
+		status.text = active ? 'active' : 'inactive';
 		if (callback != null)
 		{
 			callback(this, 0);

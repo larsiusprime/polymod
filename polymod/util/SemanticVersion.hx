@@ -54,7 +54,7 @@ class SemanticVersion
 		for (ii in 0...arr.length)
 		{
 			var substr = arr[ii];
-			if (substr.length > 1 && substr.charAt(0) == "0")
+			if (substr.length > 1 && substr.charAt(0) == '0')
 			{
 				throw "SemanticVersion.hx: no leading zeroes allowed! :\"" + str + "\"";
 			}
@@ -63,14 +63,14 @@ class SemanticVersion
 				var char:String = substr.charAt(i);
 				switch (char)
 				{
-					case "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "*":
+					case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', "*":
 					// donothing, fine
 					default:
 						var word = switch (ii)
 						{
-							case 0: "major";
-							case 1: "minor";
-							case 2: "patch";
+							case 0: 'major';
+							case 1: 'minor';
+							case 2: 'patch';
 							default: '';
 						}
 						throw "SemanticVersion.hx: couldn't parse " + word + " version! :\"" + str + "\"";
@@ -138,7 +138,7 @@ class SemanticVersion
 					var i = Std.parseInt(substr);
 					if (i != null)
 					{
-						if (substr.length > 0 && substr.charAt(0) == "0")
+						if (substr.length > 0 && substr.charAt(0) == '0')
 						{
 							throw "SemanticVersion.hx: no leading zeroes allowed! :\"" + str + "\"";
 						}
@@ -269,7 +269,7 @@ enum abstract SemanticVersionScore(Int) from Int to Int
 	{
 		switch (value)
 		{
-			case "NONE":
+			case 'NONE':
 				return NONE;
 			case "MATCH_MAJOR":
 				return MATCH_MAJOR;

@@ -54,7 +54,7 @@ class ModWidget extends DisplayObjectContainer
 		this.callback = callback;
 
 		status = text();
-		status.text = "inactive";
+		status.text = 'inactive';
 
 		button = new CheapButton(str, onClick);
 		var left = "←";
@@ -108,7 +108,7 @@ class ModWidget extends DisplayObjectContainer
 	private function onClick()
 	{
 		active = !active;
-		status.text = active ? "active" : "inactive";
+		status.text = active ? 'active' : 'inactive';
 		if (callback != null)
 		{
 			callback(this, 0);

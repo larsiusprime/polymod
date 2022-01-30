@@ -189,12 +189,12 @@ class NMEBackend implements IBackend
 
 	public function list(type:PolymodAssetType = null):Array<String>
 	{
-		throw "Function not implemented";
+		throw 'Function not implemented';
 	}
 
 	public function getPath(id:String):String
 	{
-		throw "Function not implemented";
+		throw 'Function not implemented';
 	}
 
 	public function clearCache()

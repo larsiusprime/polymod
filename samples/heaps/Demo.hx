@@ -75,7 +75,7 @@ class Demo extends Object
 
 	private function makeButtons()
 	{
-		var modDir:String = "mods";
+		var modDir:String = 'mods';
 		var mods = sys.FileSystem.readDirectory(modDir);
 		var xx = 10;
 		var yy = 200;
@@ -148,7 +148,7 @@ class Demo extends Object
 		var xx = 10;
 		var yy = 10;
 
-		var images = list("img");
+		var images = list('img');
 		images.sort(function(a:String, b:String):Int
 		{
 			if (a < b)
@@ -183,7 +183,7 @@ class Demo extends Object
 		var xx = 500;
 		var yy = 10;
 
-		var texts = list("data");
+		var texts = list('data');
 		texts.sort(function(a:String, b:String):Int
 		{
 			if (a < b)
@@ -197,7 +197,7 @@ class Demo extends Object
 			var isXML:Bool = false;
 			var align:Align = Center;
 			var theWidth = 150;
-			if (t.indexOf("xml") != -1 || t.indexOf("json") != -1)
+			if (t.indexOf('xml') != -1 || t.indexOf('json') != -1)
 			{
 				isXML = true;
 				align = Left;
@@ -215,7 +215,7 @@ class Demo extends Object
 
 			var str = Res.loader.load(t).toText();
 
-			text.text = (str != null ? str : "null");
+			text.text = (str != null ? str : 'null');
 
 			var caption = getText(Center);
 			caption.x = xx;

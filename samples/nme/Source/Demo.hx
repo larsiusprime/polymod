@@ -213,7 +213,7 @@ class Demo extends Sprite
 		{
 			var isXML:Bool = false;
 			var align = TextFormatAlign.CENTER;
-			if (t.indexOf("xml") != -1 || t.indexOf("json") != -1)
+			if (t.indexOf('xml') != -1 || t.indexOf('json') != -1)
 			{
 				isXML = true;
 				align = TextFormatAlign.LEFT;
@@ -229,7 +229,7 @@ class Demo extends Sprite
 			text.multiline = true;
 
 			var str = Assets.getText(t);
-			text.text = (str != null ? str : "null");
+			text.text = (str != null ? str : 'null');
 
 			var caption = getText();
 			caption.x = xx;

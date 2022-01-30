@@ -56,7 +56,7 @@ class ModWidget extends Object
 		this.callback = callback;
 
 		status = text(this);
-		status.text = "inactive";
+		status.text = 'inactive';
 
 		button = new CheapButton(this, str, onClick);
 		moveLeft = new CheapButton(this, "<-", onMove.bind(-1));
@@ -90,12 +90,12 @@ class ModWidget extends Object
 		other.mod = mod;
 		other.active = active;
 		other.button.setText(other.mod);
-		other.status.text = other.active ? "active" : "inactive";
+		other.status.text = other.active ? 'active' : 'inactive';
 
 		mod = otherMod;
 		active = otherActive;
 		button.setText(mod);
-		status.text = active ? "active" : "inactive";
+		status.text = active ? 'active' : 'inactive';
 	}
 
 	public function showButtons(left:Bool, right:Bool)
@@ -119,7 +119,7 @@ class ModWidget extends Object
 	private function onClick()
 	{
 		active = !active;
-		status.text = active ? "active" : "inactive";
+		status.text = active ? 'active' : 'inactive';
 		if (callback != null)
 		{
 			callback(this, 0);

@@ -68,7 +68,7 @@ class OpenFLWithNodeBackend extends StubBackend
 	/**
 	 * Event that is dispatched when all assets are finished preloading.
 	 */
-	public static inline var FINISHED_PRELOADING_ASSETS:String = "OpenFLWithNodeBackend.finishedPreloadingAssets";
+	public static inline var FINISHED_PRELOADING_ASSETS:String = 'OpenFLWithNodeBackend.finishedPreloadingAssets';
 
 	// -----------------------------------------------------------------------------------------------
 	// -----------------------------------------------------------------------------------------------
@@ -78,7 +78,7 @@ class OpenFLWithNodeBackend extends StubBackend
 		#if !openfl
 		Polymod.error(FAILED_CREATE_BACKEND, "OpenFLWithNodeBackend requires the openfl library, did you forget to install it?");
 		#elseif !nodefs
-		Polymod.error(FAILED_CREATE_BACKEND, "OpenFLWithNodeBackend requires the nodefs flag to be defined.");
+		Polymod.error(FAILED_CREATE_BACKEND, 'OpenFLWithNodeBackend requires the nodefs flag to be defined.');
 		#end
 	}
 }
@@ -89,7 +89,7 @@ class OpenFLWithNodeBackend extends OpenFLBackend
 	/**
 	 * Event that is dispatched when all assets are finished preloading.
 	 */
-	public static inline var FINISHED_PRELOADING_ASSETS:String = "OpenFLWithNodeBackend.finishedPreloadingAssets";
+	public static inline var FINISHED_PRELOADING_ASSETS:String = 'OpenFLWithNodeBackend.finishedPreloadingAssets';
 
 	private static var _dispatcher:EventDispatcher;
 

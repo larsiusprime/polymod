@@ -147,7 +147,7 @@ class Demo extends Sprite
 		limeLabel.x = 10;
 		limeLabel.y = 400;
 
-		limeToggle = new CheapButton("", onToggleOpenFL, 144);
+		limeToggle = new CheapButton('', onToggleOpenFL, 144);
 		limeToggle.x = 10;
 		limeToggle.y = 420;
 
@@ -155,7 +155,7 @@ class Demo extends Sprite
 		localeLabel.x = 10;
 		localeLabel.y = 450;
 
-		localeToggle = new CheapButton("", onToggleLocale);
+		localeToggle = new CheapButton('', onToggleLocale);
 		localeToggle.x = 10;
 		localeToggle.y = 470;
 
@@ -375,7 +375,7 @@ class Demo extends Sprite
 		{
 			var isXML:Bool = false;
 			var align = TextFormatAlign.CENTER;
-			if (t.indexOf("xml") != -1 || t.indexOf("json") != -1)
+			if (t.indexOf('xml') != -1 || t.indexOf('json') != -1)
 			{
 				isXML = true;
 				align = TextFormatAlign.LEFT;
@@ -391,7 +391,7 @@ class Demo extends Sprite
 			text.multiline = true;
 
 			var str = AssetsGetText(t);
-			text.text = (str != null ? str : "null");
+			text.text = (str != null ? str : 'null');
 
 			var caption = getText();
 			caption.x = xx;

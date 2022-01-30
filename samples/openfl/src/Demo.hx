@@ -122,7 +122,7 @@ class Demo extends Sprite
 		limeLabel.y = 400;
 		limeLabel.text = "Asset System:";
 
-		limeToggle = new CheapButton(usingOpenFL ? "openfl" : "lime", onToggleOpenFL);
+		limeToggle = new CheapButton(usingOpenFL ? 'openfl' : 'lime', onToggleOpenFL);
 		limeToggle.x = 10;
 		limeToggle.y = 420;
 
@@ -136,11 +136,11 @@ class Demo extends Sprite
 
 		if (usingOpenFL)
 		{
-			limeToggle.setText("openfl");
+			limeToggle.setText('openfl');
 		}
 		else
 		{
-			limeToggle.setText("lime");
+			limeToggle.setText('lime');
 		}
 
 		reloadMods();
@@ -296,7 +296,7 @@ class Demo extends Sprite
 		{
 			var isXML:Bool = false;
 			var align = TextFormatAlign.CENTER;
-			if (t.indexOf("xml") != -1 || t.indexOf("json") != -1)
+			if (t.indexOf('xml') != -1 || t.indexOf('json') != -1)
 			{
 				isXML = true;
 				align = TextFormatAlign.LEFT;
@@ -312,7 +312,7 @@ class Demo extends Sprite
 			text.multiline = true;
 
 			var str = AssetsGetText(t);
-			text.text = (str != null ? str : "null");
+			text.text = (str != null ? str : 'null');
 
 			var caption = getText();
 			caption.x = xx;

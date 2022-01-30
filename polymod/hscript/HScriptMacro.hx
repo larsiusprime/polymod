@@ -272,7 +272,7 @@ class HScriptMacro
 						// Defaults to `return script_result` unless you return in your function body.
 						var return_expr = switch func.ret
 						{
-							case TPath({name: "Void", pack: [], params: []}):
+							case TPath({name: 'Void', pack: [], params: []}):
 								// Function sigture says Void, don't return anything
 								macro null;
 							default:
@@ -417,7 +417,7 @@ class HScriptMacro
 			}).fields)
 			fields.push(new_field);
 		// Find constructor, and inject script setup...
-		var constructor = fields.find(function(field) return field.name == "new");
+		var constructor = fields.find(function(field) return field.name == 'new');
 		if (constructor == null)
 			Context.error("Error: @:hscript requires a constructor", Context.currentPos());
 		switch constructor.kind

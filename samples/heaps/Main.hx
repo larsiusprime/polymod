@@ -68,7 +68,7 @@ class Main extends hxd.App
 
 	private function loadMods(dirs:Array<String>)
 	{
-		var modRoot = "mods";
+		var modRoot = 'mods';
 		Polymod.init({
 			modRoot: modRoot,
 			dirs: dirs,

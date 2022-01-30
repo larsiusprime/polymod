@@ -71,16 +71,16 @@ class CSV
 
 	/**
 	 * Parses CSV assuming 1) All cells are unquoted and 2) No commas or endlines exist within a cell
-	 * Endline format will be auto-detected: a single "\r\n" will make it split lines based on windows
-	 * style endlines, otherwise it will attempt splitting based on unix-style "\n" endlines.
+	 * Endline format will be auto-detected: a single '\r\n' will make it split lines based on windows
+	 * style endlines, otherwise it will attempt splitting based on unix-style '\n' endlines.
 	 * @param	input csv-formatted string
 	 * @return	the parsed CSV data
 	 */
 	public static function parseSimple(input:String):CSV
 	{
-		var endline:String = "\n";
-		if (input.indexOf("\r\n") != -1)
-			endline = "\r\n";
+		var endline:String = '\n';
+		if (input.indexOf('\r\n') != -1)
+			endline = '\r\n';
 		var lines = input.split(endline);
 		var fieldLine = lines.shift();
 		var fields = fieldLine.split(',');
@@ -162,7 +162,7 @@ class CSV
 			{
 				_rgx = ~/,(?=(?:[^\x22]*\x22[^\x22]*\x22)*(?![^\x22]*\x22))/gm;
 				// Matches a well formed CSV cell, ie 'thing1' or 'thing ,, 5' etc
-				// "\x22" is the invocation for the double-quote mark.
+				// '\x22' is the invocation for the double-quote mark.
 				// UTF-8 ONLY!!!!
 			}
 			else
@@ -176,11 +176,11 @@ class CSV
 
 	private function getRows(input:String):Array<String>
 	{
-		var endl:String = "\r\n";
+		var endl:String = '\r\n';
 
-		if (input.indexOf("\r\n") == -1) // no windows-style endlines...
+		if (input.indexOf('\r\n') == -1) // no windows-style endlines...
 		{
-			endl = "\n"; // try unix-style instead...
+			endl = '\n'; // try unix-style instead...
 		}
 
 		return input.split(endl);

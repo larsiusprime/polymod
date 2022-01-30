@@ -147,19 +147,19 @@ class NodeFileSystem implements IFileSystem
 	// -----------------------------------------------------------------------------------------------
 	public inline function exists(path:String):Bool
 	{
-		return callFunc("exists", path);
+		return callFunc('exists', path);
 	}
 
 	// -----------------------------------------------------------------------------------------------
 	public inline function isDirectory(path:String):Bool
 	{
-		return callFunc("isDirectory", path);
+		return callFunc('isDirectory', path);
 	}
 
 	// -----------------------------------------------------------------------------------------------
 	public inline function readDirectory(path:String):Array<String>
 	{
-		var arr:Array<String> = callFunc("readDirectory", path);
+		var arr:Array<String> = callFunc('readDirectory', path);
 		santizePaths(path, arr);
 		return arr;
 	}
@@ -167,20 +167,20 @@ class NodeFileSystem implements IFileSystem
 	// -----------------------------------------------------------------------------------------------
 	public inline function getFileContent(path:String):String
 	{
-		return callFunc("getFileContent", path);
+		return callFunc('getFileContent', path);
 	}
 
 	// -----------------------------------------------------------------------------------------------
 	public inline function getFileBytes(path:String):Bytes
 	{
-		var intArr:UInt8Array = callFunc("getFileBytes", path);
+		var intArr:UInt8Array = callFunc('getFileBytes', path);
 		return intArr != null ? intArr.view.buffer : null;
 	}
 
 	// -----------------------------------------------------------------------------------------------
 	public inline function readDirectoryRecursive(path:String):Array<String>
 	{
-		var arr:Array<String> = callFunc("readDirectoryRecursive", path);
+		var arr:Array<String> = callFunc('readDirectoryRecursive', path);
 		santizePaths(path, arr);
 		return arr;
 	}

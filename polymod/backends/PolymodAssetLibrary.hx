@@ -42,7 +42,7 @@ typedef PolymodAssetLibraryParams =
 
 	/**
 	 * paths to each mod's root directories.
-	 * This takes precedence over the "Dir" parameter and the order matters -- mod files will load from first to last, with last taking precedence
+	 * This takes precedence over the 'Dir' parameter and the order matters -- mod files will load from first to last, with last taking precedence
 	 */
 	dirs:Array<String>,
 
@@ -390,32 +390,32 @@ class PolymodAssetLibrary
 	private function initExtensions()
 	{
 		extensions = new Map<String, PolymodAssetType>();
-		_extensionSet("mp3", AUDIO_GENERIC);
-		_extensionSet("ogg", AUDIO_GENERIC);
-		_extensionSet("wav", AUDIO_GENERIC);
-		_extensionSet("jpg", IMAGE);
-		_extensionSet("png", IMAGE);
-		_extensionSet("gif", IMAGE);
-		_extensionSet("tga", IMAGE);
-		_extensionSet("bmp", IMAGE);
-		_extensionSet("tif", IMAGE);
-		_extensionSet("tiff", IMAGE);
-		_extensionSet("txt", TEXT);
-		_extensionSet("xml", TEXT);
-		_extensionSet("json", TEXT);
-		_extensionSet("csv", TEXT);
-		_extensionSet("tsv", TEXT);
-		_extensionSet("mpf", TEXT);
-		_extensionSet("tsx", TEXT);
-		_extensionSet("tmx", TEXT);
-		_extensionSet("vdf", TEXT);
-		_extensionSet("ttf", FONT);
-		_extensionSet("otf", FONT);
-		_extensionSet("webm", VIDEO);
-		_extensionSet("mp4", VIDEO);
-		_extensionSet("mov", VIDEO);
-		_extensionSet("avi", VIDEO);
-		_extensionSet("mkv", VIDEO);
+		_extensionSet('mp3', AUDIO_GENERIC);
+		_extensionSet('ogg', AUDIO_GENERIC);
+		_extensionSet('wav', AUDIO_GENERIC);
+		_extensionSet('jpg', IMAGE);
+		_extensionSet('png', IMAGE);
+		_extensionSet('gif', IMAGE);
+		_extensionSet('tga', IMAGE);
+		_extensionSet('bmp', IMAGE);
+		_extensionSet('tif', IMAGE);
+		_extensionSet('tiff', IMAGE);
+		_extensionSet('txt', TEXT);
+		_extensionSet('xml', TEXT);
+		_extensionSet('json', TEXT);
+		_extensionSet('csv', TEXT);
+		_extensionSet('tsv', TEXT);
+		_extensionSet('mpf', TEXT);
+		_extensionSet('tsx', TEXT);
+		_extensionSet('tmx', TEXT);
+		_extensionSet('vdf', TEXT);
+		_extensionSet('ttf', FONT);
+		_extensionSet('otf', FONT);
+		_extensionSet('webm', VIDEO);
+		_extensionSet('mp4', VIDEO);
+		_extensionSet('mov', VIDEO);
+		_extensionSet('avi', VIDEO);
+		_extensionSet('mkv', VIDEO);
 	}
 
 	private function _extensionSet(str:String, type:PolymodAssetType)
@@ -453,11 +453,11 @@ class PolymodAssetLibrary
 		catch (msg:Dynamic)
 		{
 			Polymod.error(MOD_LOAD_FAILED, 'Failed to load mod $d : $msg');
-			throw("ModAssetLibrary._initMod(" + d + ") failed : " + msg);
+			throw('ModAssetLibrary._initMod("$d") failed: $msg');
 		}
 		for (f in all)
 		{
-			var doti = Util.uLastIndexOf(f, ".");
+			var doti = Util.uLastIndexOf(f, '.');
 			var ext:String = doti != -1 ? f.substring(doti + 1) : '';
 			ext = ext.toLowerCase();
 			var assetType = getExtensionType(ext);

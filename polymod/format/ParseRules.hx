@@ -46,7 +46,7 @@ class ParseRules
 	{
 		var format:BaseParseFormat = switch (type)
 		{
-			case CSV: new CSVParseFormat(",", true);
+			case CSV: new CSVParseFormat(',', true);
 			case TSV: new TSVParseFormat();
 			case XML: new XMLParseFormat();
 			case JSON: new JSONParseFormat();
@@ -75,11 +75,11 @@ class ParseRules
 	public static function getDefault():ParseRules
 	{
 		var rules = new ParseRules();
-		rules.addFormat("csv", new CSVParseFormat(",", true));
-		rules.addFormat("tsv", new TSVParseFormat());
-		rules.addFormat("xml", new XMLParseFormat());
-		rules.addFormat("json", new JSONParseFormat());
-		rules.addFormat("txt", new PlainTextParseFormat());
+		rules.addFormat('csv', new CSVParseFormat(',', true));
+		rules.addFormat('tsv', new TSVParseFormat());
+		rules.addFormat('xml', new XMLParseFormat());
+		rules.addFormat('json', new JSONParseFormat());
+		rules.addFormat('txt', new PlainTextParseFormat());
 		return rules;
 	}
 }
@@ -101,7 +101,7 @@ class CSVParseFormat implements BaseParseFormat
 
 	private function get_isSimpleMode():Bool
 	{
-		return (delimeter == "," && quotedCells == false);
+		return (delimeter == ',' && quotedCells == false);
 	}
 
 	public function parse(str:String):CSV
@@ -112,9 +112,9 @@ class CSVParseFormat implements BaseParseFormat
 	public function append(baseText:String, appendText:String, id:String):String
 	{
 		var endLine:String = "\n";
-		if (baseText.indexOf("\r\n") != -1)
+		if (baseText.indexOf('\r\n') != -1)
 		{
-			endLine = "\r\n";
+			endLine = '\r\n';
 		}
 		if (lookForHeaders)
 		{
@@ -122,10 +122,10 @@ class CSVParseFormat implements BaseParseFormat
 			var appendCSV:polymod.format.CSV;
 
 			// Strip of a trailing endline from append if there is one
-			var appendEndLine = "\n";
-			if (appendText.indexOf("\r\n") != -1)
+			var appendEndLine = '\n';
+			if (appendText.indexOf('\r\n') != -1)
 			{
-				appendEndLine = "\r\n";
+				appendEndLine = '\r\n';
 			}
 			var appendLength = Util.uLength(appendText);
 			var appendLast = Util.uLastIndexOf(appendText, appendEndLine);
@@ -141,7 +141,7 @@ class CSVParseFormat implements BaseParseFormat
 			}
 			catch (msg:Dynamic)
 			{
-				Polymod.error(APPEND, "CSV Append error (" + id + ") : " + msg);
+				Polymod.error(APPEND, 'CSV append error ($id): $msg');
 				return baseText;
 			}
 
@@ -170,7 +170,7 @@ class CSVParseFormat implements BaseParseFormat
 			{
 				if (compareFields < Std.int(baseCSV.fields.length / 2))
 				{
-					Polymod.error(APPEND, "Mod file(" + id + ") is missing most or all of the expected header fields", INIT);
+					Polymod.error(APPEND, 'Mod file ($id) is missing most or all of the expected header fields', INIT);
 				}
 			}
 
@@ -238,7 +238,7 @@ class CSVParseFormat implements BaseParseFormat
 		}
 		catch (msg:Dynamic)
 		{
-			Polymod.error(MERGE, "CSV Merge error (" + id + ") : " + msg);
+			Polymod.error(MERGE, 'CSV merge error ($id): $msg');
 			return baseText;
 		}
 
@@ -286,9 +286,9 @@ class CSVParseFormat implements BaseParseFormat
 
 		var strSoFar = buf.toString();
 
-		if (strSoFar.indexOf("\n") == -1)
+		if (strSoFar.indexOf('\n') == -1)
 		{
-			buf.add(Std.string("\r\n"));
+			buf.add(Std.string('\r\n'));
 		}
 
 		var grid = csv.grid;
@@ -315,7 +315,7 @@ class CSVParseFormat implements BaseParseFormat
 			}
 			if (iy != grid.length - 1)
 			{
-				buf.add(Std.string("\r\n"));
+				buf.add(Std.string('\r\n'));
 			}
 		}
 
@@ -390,9 +390,9 @@ class TSVParseFormat implements BaseParseFormat
 
 		var strSoFar = buf.toString();
 
-		if (strSoFar.indexOf("\n") == -1)
+		if (strSoFar.indexOf('\n') == -1)
 		{
-			buf.add(Std.string("\r\n"));
+			buf.add(Std.string('\r\n'));
 		}
 
 		var grid = tsv.grid;
@@ -411,7 +411,7 @@ class TSVParseFormat implements BaseParseFormat
 			}
 			if (iy != grid.length - 1)
 			{
-				buf.add(Std.string("\r\n"));
+				buf.add(Std.string('\r\n'));
 			}
 		}
 
@@ -439,14 +439,14 @@ class LinesParseFormat implements BaseParseFormat // <Array<String>>
 		switch (endline)
 		{
 			case LF:
-				endl = "\n";
+				endl = '\n';
 			case CR:
-				endl = "\r";
+				endl = '\r';
 			case CRLF:
-				endl = "\r\n";
+				endl = '\r\n';
 			default:
-				endl = "\r";
-				other = "\n";
+				endl = '\r';
+				other = '\n';
 		}
 		if (other == '')
 		{
@@ -502,10 +502,10 @@ class LinesParseFormat implements BaseParseFormat // <Array<String>>
 	{
 		return switch (endline)
 		{
-			case LF: "\n";
-			case CR: "\r";
-			case CRLF: "\r\n";
-			default: "\n";
+			case LF: '\n';
+			case CR: '\r';
+			case CRLF: '\r\n';
+			default: '\n';
 		}
 	}
 }
@@ -558,7 +558,7 @@ class XMLParseFormat implements BaseParseFormat // <Xml>
 		}
 		catch (msg:Dynamic)
 		{
-			throw "Error parsing XML files during merge (" + id + ") " + msg;
+			throw 'Error parsing XML files during merge ($id): $msg';
 		}
 
 		try
@@ -567,7 +567,7 @@ class XMLParseFormat implements BaseParseFormat // <Xml>
 		}
 		catch (msg:Dynamic)
 		{
-			throw "Error combining XML files during merge (" + id + ") " + msg;
+			throw 'Error combining XML files during merge ($id): $msg';
 		}
 
 		return print(basex);
@@ -628,16 +628,16 @@ class JSONParseFormat implements BaseParseFormat
 		if (injectText == null || injectText == '')
 			return baseText;
 
-		// var whiteSpace = [32,10,13,9]; //" ","\n","\r","\t"
+		// var whiteSpace = [32,10,13,9]; //' ','\n','\r','\t'
 
 		baseFirst = Util.uTrimFinalEndlines(baseFirst);
 		injectText = Util.uTrimFinalEndlines(injectText);
 		injectText = Util.uTrimFirstEndlines(injectText);
 		baseEnd = Util.uTrimFinalEndlines(baseEnd);
 
-		var comma = ",";
+		var comma = ',';
 
-		return baseFirst + comma + "\n" + injectText + baseEnd;
+		return baseFirst + comma + '\n' + injectText + baseEnd;
 	}
 
 	public function merge(baseText:String, mergeText:String, id:String):String
@@ -664,7 +664,7 @@ class JSONParseFormat implements BaseParseFormat
 			return baseText;
 		}
 
-		if (Reflect.hasField(merge, "merge"))
+		if (Reflect.hasField(merge, 'merge'))
 		{
 			if (Std.isOfType(merge.merge, Array))
 			{
@@ -740,13 +740,13 @@ class JSONParseFormat implements BaseParseFormat
 			}
 
 			if (signatureSoFar != '')
-				signatureSoFar += ".";
+				signatureSoFar += '.';
 			signatureSoFar += _targSigElementToString(currTarget);
 			i++;
 
 			if (next == null)
 			{
-				Polymod.warning(MERGE, "JSON merge failed (" + id + "), could not find object \"" + signatureSoFar + "\")");
+				Polymod.warning(MERGE, "JSON merge failed (" + id + "), could not find object \"" + signatureSoFar + '")');
 				done = true;
 			}
 			else
@@ -852,7 +852,7 @@ class JSONParseFormat implements BaseParseFormat
 						// If a & b share a field, merge that field recursively
 						var aValue = Reflect.field(a, field);
 						var bValue = Reflect.field(b, field);
-						var mergedValue = copyVal(_mergeObjects(aValue, bValue, signatureSoFar + "." + field));
+						var mergedValue = copyVal(_mergeObjects(aValue, bValue, signatureSoFar + '.' + field));
 						Reflect.setField(a, field, mergedValue);
 					}
 					else
@@ -866,8 +866,8 @@ class JSONParseFormat implements BaseParseFormat
 		else
 		{
 			// if they're incompatible types, return a
-			var aArr = Std.isOfType(a, Array) ? "array" : "object";
-			var bArr = Std.isOfType(b, Array) ? "array" : "object";
+			var aArr = Std.isOfType(a, Array) ? 'array' : 'object';
+			var bArr = Std.isOfType(b, Array) ? 'array' : 'object';
 			Polymod.warning(MERGE, "JSON can't merge @ (" + signatureSoFar + ") because base is (" + aArr + ") but payload is (" + bArr + ")");
 		}
 		return a;
@@ -953,7 +953,7 @@ class JSONParseFormat implements BaseParseFormat
 				var arr:Array<Dynamic> = cast next;
 				var arrIndeces = target.arrayIndeces.copy();
 				var done = false;
-				signatureSoFar += "." + target.value;
+				signatureSoFar += '.' + target.value;
 				while (arrIndeces.length > 0)
 				{
 					var arrIndex = arrIndeces.shift();
@@ -1000,7 +1000,7 @@ class JSONParseFormat implements BaseParseFormat
 		if (str == null)
 			return [];
 		var result = [];
-		var arr = str.split(".");
+		var arr = str.split('.');
 		for (bit in arr)
 		{
 			if (bit.indexOf("[") != -1)
@@ -1059,20 +1059,20 @@ class PlainTextParseFormat implements BaseParseFormat // <String>
 		var lastLastChar = Util.uCharAt(baseText, Util.uLength(baseText) - 1);
 		var joiner = '';
 
-		var endLine = "\n";
+		var endLine = '\n';
 
-		var crIndex = Util.uIndexOf(baseText, "\r");
-		var lfIndex = Util.uIndexOf(baseText, "\n");
+		var crIndex = Util.uIndexOf(baseText, '\r');
+		var lfIndex = Util.uIndexOf(baseText, '\n');
 
 		if (crIndex != -1)
 		{
 			if (lfIndex == crIndex + 1)
 			{
-				endLine = "\r\n";
+				endLine = '\r\n';
 			}
 		}
 
-		if (lastChar != "\n")
+		if (lastChar != '\n')
 		{
 			joiner = endLine;
 		}
@@ -1082,7 +1082,7 @@ class PlainTextParseFormat implements BaseParseFormat // <String>
 
 	public function merge(baseText:String, mergeText:String, id:String):String
 	{
-		Polymod.warning(MERGE, "(" + id + ") Plain text does not support merging!");
+		Polymod.warning(MERGE, '($id) Plain text files do not support merge functionality!');
 		return baseText;
 	}
 
