@@ -4,10 +4,6 @@ import openfl.Lib;
 import polymod.Polymod;
 import polymod.Polymod.Framework;
 
-/**
- * ...
- * @author 
- */
 class Main extends Sprite
 {
 	private var demo:Demo = null;

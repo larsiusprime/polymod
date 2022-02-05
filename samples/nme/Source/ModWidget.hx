@@ -4,10 +4,6 @@ import nme.display.DisplayObjectContainer;
 import nme.events.MouseEvent;
 import nme.text.TextFormatAlign;
 
-/**
- * ...
- * @author 
- */
 class ModWidget extends Sprite
 {
 	public var active(default, null):Bool;

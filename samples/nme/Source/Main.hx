@@ -2,10 +2,6 @@ import nme.display.Sprite;
 import nme.Lib;
 import polymod.Polymod;
 
-/**
- * ...
- * @author 
- */
 class Main extends Sprite
 {
 	private var demo:Demo = null;

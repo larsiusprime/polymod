@@ -2,10 +2,6 @@ import flash.text.TextField;
 import openfl.display.Sprite;
 import openfl.text.TextFormatAlign;
 
-/**
- * ...
- * @author 
- */
 class ModWidget extends Sprite
 {
 	public var active(default, null):Bool;

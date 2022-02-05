@@ -8,10 +8,6 @@ import h2d.Bitmap;
 import h2d.Tile;
 import h2d.Interactive;
 
-/**
- * ...
- * @author 
- */
 class CheapButton extends Object
 {
 	private var callback:Void->Void = null;

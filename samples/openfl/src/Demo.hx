@@ -9,10 +9,6 @@ import openfl.text.TextField;
 import openfl.text.TextFormatAlign;
 import openfl.utils.AssetType;
 
-/**
- * ...
- * @author 
- */
 class Demo extends Sprite
 {
 	private var widgets:Array<ModWidget> = [];

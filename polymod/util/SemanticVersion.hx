@@ -127,7 +127,7 @@ class SemanticVersion
 		v.effective = '${v.major}.${v.minor}.${v.patch}';
 		if (v.preRelease != null && v.preRelease.length > 0)
 		{
-      v.effective += '-${v.preRelease.join(".")}';
+			v.effective += '-${v.preRelease.join(".")}';
 		}
 		return v;
 	}

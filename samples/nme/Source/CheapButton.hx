@@ -7,10 +7,6 @@ import nme.display.DisplayObjectContainer;
 import nme.events.MouseEvent;
 import nme.text.TextFormatAlign;
 
-/**
- * ...
- * @author 
- */
 class CheapButton extends Sprite
 {
 	public function new(str:String, callback:Void->Void = null)

@@ -4,10 +4,6 @@ import h2d.Object;
 import h2d.Text;
 import h2d.Scene;
 
-/**
- * ...
- * @author 
- */
 class ModWidget extends Object
 {
 	public var active(default, null):Bool;

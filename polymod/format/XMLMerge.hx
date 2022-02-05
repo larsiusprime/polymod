@@ -1,13 +1,7 @@
 package polymod.format;
 
-import haxe.xml.Fast;
-import haxe.xml.Printer;
 import polymod.util.Util;
 
-/**
- * ...
- * @author 
- */
 class XMLMerge
 {
 	public static function mergeXMLWork(a:Xml, b:Xml, children:Bool = true, attributes:Bool = true)

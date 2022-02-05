@@ -130,10 +130,10 @@ class Polymod
 	private static var tongue:FireTongue = null;
 	#end
 
-  /**
-   * The PolymodParams used when `init()` was last called.
-   */
-  private static var prevParams:PolymodParams = null;
+	/**
+	 * The PolymodParams used when `init()` was last called.
+	 */
+	private static var prevParams:PolymodParams = null;
 
 	/**
 	 * Initializes the chosen mod or mods.

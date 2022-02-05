@@ -3,10 +3,6 @@ import openfl.display.DisplayObjectContainer;
 import openfl.events.MouseEvent;
 import openfl.text.TextFormatAlign;
 
-/**
- * ...
- * @author 
- */
 class ModWidget extends DisplayObjectContainer
 {
 	public var active(default, null):Bool;

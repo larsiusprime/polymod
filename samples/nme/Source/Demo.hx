@@ -8,10 +8,6 @@ import nme.text.TextFormatAlign;
 import nme.AssetType;
 import sys.FileSystem;
 
-/**
- * ...
- * @author 
- */
 class Demo extends Sprite
 {
 	private var widgets:Array<ModWidget> = [];

@@ -191,8 +191,7 @@ class CSVParseFormat implements BaseParseFormat
 
 			for (baseField in missingFields)
 			{
-				Polymod.warning(PolymodErrorCode.APPEND,
-          'Mod file ($id) is missing expected field "$baseField", values will default to empty string.', INIT);
+				Polymod.warning(PolymodErrorCode.APPEND, 'Mod file ($id) is missing expected field "$baseField", values will default to empty string.', INIT);
 			}
 
 			return finalText;
@@ -608,7 +607,7 @@ class JSONParseFormat implements BaseParseFormat
 		injectText = Util.uTrimFirstEndlines(injectText);
 		baseEnd = Util.uTrimFinalEndlines(baseEnd);
 
-    return '$baseFirst,\n$injectText$baseEnd';
+		return '$baseFirst,\n$injectText$baseEnd';
 	}
 
 	public function merge(baseText:String, mergeText:String, id:String):String
@@ -660,13 +659,12 @@ class JSONParseFormat implements BaseParseFormat
 			else
 			{
 				Polymod.error(MERGE,
-          'JSON merge error ($id): merge file must contain a single top-level array named "merge" (expected an array, found an object)');
+					'JSON merge error ($id): merge file must contain a single top-level array named "merge" (expected an array, found an object)');
 			}
 		}
 		else
 		{
-			Polymod.error(MERGE,
-        'JSON merge error ($id): merge file must contain a single top-level array named "merge"');
+			Polymod.error(MERGE, 'JSON merge error ($id): merge file must contain a single top-level array named "merge"');
 		}
 		return print(base);
 	}
@@ -718,7 +716,7 @@ class JSONParseFormat implements BaseParseFormat
 
 			if (next == null)
 			{
-        Polymod.warning(MERGE, 'JSON merge failed ($id), could not find object "${signatureSoFar}"');
+				Polymod.warning(MERGE, 'JSON merge failed ($id), could not find object "${signatureSoFar}"');
 				done = true;
 			}
 			else
@@ -948,7 +946,7 @@ class JSONParseFormat implements BaseParseFormat
 					else
 					{
 						Polymod.warning(MERGE,
-              'JSON merge error : array index ($arrIndex) out of bounds on target "$signatureSoFar" with length ${arr.length}');
+							'JSON merge error : array index ($arrIndex) out of bounds on target "$signatureSoFar" with length ${arr.length}');
 						done = true;
 					}
 					signatureSoFar += '[$arrIndex]';

@@ -7,10 +7,6 @@ import polymod.PolymodConfig;
 import openfl.events.KeyboardEvent;
 import openfl.text.TextField;
 
-/**
- * ...
- * @author 
- */
 class Main extends Sprite
 {
 	private var sim:Simulation = null;

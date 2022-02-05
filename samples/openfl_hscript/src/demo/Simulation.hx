@@ -13,10 +13,6 @@ import openfl.utils.AssetType;
 import openfl.events.Event;
 import sys.FileSystem;
 
-/**
- * ...
- * @author 
- */
 @:hscript({
 	context: [Std, Math] // Std and Math will be included in all scripts.
 })

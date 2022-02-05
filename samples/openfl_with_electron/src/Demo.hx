@@ -11,10 +11,6 @@ import polymod.fs.NodeFileSystem;
 import sys.FileSystem;
 #end
 
-/**
- * ...
- * @author 
- */
 class Demo extends Sprite
 {
 	private var widgets:Array<ModWidget> = [];

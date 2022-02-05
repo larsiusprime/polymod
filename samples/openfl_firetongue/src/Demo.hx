@@ -7,10 +7,6 @@ import openfl.utils.AssetType;
 
 using StringTools;
 
-/**
- * ...
- * @author 
- */
 class Demo extends Sprite
 {
 	private var widgets:Array<ModWidget> = [];

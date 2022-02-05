@@ -353,8 +353,7 @@ class HScriptMacro
 								}
 								catch (e:Dynamic)
 								{
-									polymod.Polymod.error(polymod.Polymod.PolymodErrorCode.SCRIPT_EXCEPTION,
-                    'Error: script ' + $v{pathName} + ' threw:\n$e');
+									polymod.Polymod.error(polymod.Polymod.PolymodErrorCode.SCRIPT_EXCEPTION, 'Error: script ' + $v{pathName} + ' threw:\n$e');
 									script_error = e;
 								}
 

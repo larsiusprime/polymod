@@ -2,10 +2,6 @@ import flixel.FlxSprite;
 import flixel.group.FlxSpriteGroup.FlxTypedSpriteGroup;
 import flixel.text.FlxText;
 
-/**
- * ...
- * @author 
- */
 class ModWidget extends FlxTypedSpriteGroup<FlxSprite>
 {
 	public var isModActive(default, null):Bool;

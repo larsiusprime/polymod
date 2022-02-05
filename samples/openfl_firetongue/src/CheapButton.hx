@@ -7,10 +7,6 @@ import openfl.display.DisplayObjectContainer;
 import openfl.events.MouseEvent;
 import openfl.text.TextFormatAlign;
 
-/**
- * ...
- * @author 
- */
 class CheapButton extends Sprite
 {
 	private var upT:TextField;
