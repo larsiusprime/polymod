@@ -16,8 +16,19 @@ class OpenFLBackend extends LimeBackend
 	public override function clearCache()
 	{
 		super.clearCache();
-		// This destroys the bitmap cache completely, so we don't need to iterate with .
-		openfl.Assets.cache.clear();
+
+		for (key in openfl.Assets.cache.getBitmapKeys())
+		{
+			openfl.Assets.cache.removeBitmapData(key);
+		}
+		for (key in openfl.Assets.cache.getFontKeys())
+		{
+			openfl.Assets.cache.removeFont(key);
+		}
+		for (key in openfl.Assets.cache.getSoundKeys())
+		{
+			openfl.Assets.cache.removeSound(key);
+		}
 	}
 }
 #end

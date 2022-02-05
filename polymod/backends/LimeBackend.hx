@@ -1,32 +1,33 @@
 package polymod.backends;
 
-import polymod.Polymod;
-import polymod.util.Util;
 import polymod.Polymod.FrameworkParams;
+import polymod.Polymod;
 import polymod.backends.PolymodAssetLibrary;
 import polymod.backends.PolymodAssets.PolymodAssetType;
+import polymod.util.Util;
+
+using StringTools;
+
 #if unifill
 import unifill.Unifill;
 #end
 #if (lime && !nme)
 import lime.app.Future;
-import lime.utils.Assets;
-import lime.net.HTTPRequest;
 import lime.graphics.Image;
+import lime.net.HTTPRequest;
 import lime.text.Font;
+import lime.utils.Assets;
 import lime.utils.Bytes;
 #if (lime >= '4.0.0')
-import lime.utils.AssetLibrary;
 import lime.media.AudioBuffer;
+import lime.utils.AssetLibrary;
 import lime.utils.AssetType;
 #else
-import lime.Assets.AssetType;
 import lime.Assets.AssetLibrary;
+import lime.Assets.AssetType;
 import lime.audio.AudioBuffer;
 #end
 #end
-using StringTools;
-
 #if (!lime || nme)
 class LimeBackend extends StubBackend
 {
@@ -42,6 +43,8 @@ class LimeBackend implements IBackend
 {
 	// STATIC:
 	private static var defaultAssetLibraries:Map<String, AssetLibrary>;
+
+	var assetPrefix:String = 'assets/';
 
 	/**
 	 * Find all the registered access libraries and store keyed references to them
@@ -103,12 +106,10 @@ class LimeBackend implements IBackend
 			}
 		}
 
-		if (hasMoreThanDefault && params == null)
+		if (params == null)
 		{
-			Polymod.error(PolymodErrorCode.LIME_MISSING_ASSET_LIBRARY_INFO,
-				"Your Lime/OpenFL configuration is using custom asset libraries, but you have not provided any frameworkParams in Polymod.init() that tells Polymod which asset libraries to expect and what their mod sub-directory prefixes should be.",
-				PolymodErrorOrigin.INIT);
-			return false;
+			// Prevent null object reference errors.
+			params = {};
 		}
 
 		if (hasMoreThanDefault && params.assetLibraryPaths == null)
@@ -155,6 +156,11 @@ class LimeBackend implements IBackend
 			Assets.registerLibrary(key, modLibraries.get(key));
 		}
 
+		if (params.assetPrefix != null)
+		{
+			assetPrefix = params.assetPrefix;
+		}
+
 		return true;
 	}
 
@@ -163,6 +169,10 @@ class LimeBackend implements IBackend
 		return new LimeModLibrary(this, fallbackLibrary, pathPrefix);
 	}
 
+	/**
+	 * Gets called when the backend is being destroyed.
+	 * This happens when `Polymod.init()` is called again, which means mods are being reloaded.
+	 */
 	public function destroy()
 	{
 		polymodLibrary = null;
@@ -206,6 +216,9 @@ class LimeBackend implements IBackend
 
 	public function list(type:PolymodAssetType = null):Array<String>
 	{
+		if (modLibraries == null)
+			return [];
+
 		var arr = [];
 		for (modLibrary in modLibraries)
 		{
@@ -233,13 +246,37 @@ class LimeBackend implements IBackend
 		}
 	}
 
+	/**
+	 * Strip the `assets/` prefix from a file path, if it is present.
+	 * If your app uses a different asset path prefix, you can override this with the `assetPrefix` parameter.
+	 * 
+	 * @param id The path to strip.
+	 * @return The modified path
+	 */
 	public function stripAssetsPrefix(id:String):String
 	{
-		if (Util.uIndexOf(id, 'assets/') == 0)
+		if (Util.uIndexOf(id, assetPrefix) == 0)
 		{
 			id = Util.uSubstring(id, 7);
 		}
 		return id;
+	}
+
+	/**
+	 * Add the `assets/` prefix to a file path, if it isn't present.
+	 * If your app uses a different asset path prefix, you can override this with the `assetPrefix` parameter.
+	 * 
+	 * @param id The path to prepend
+	 * @return The modified path
+	 */
+	public function prependAssetsPrefix(id:String):String
+	{
+		if (Util.uIndexOf(id, assetPrefix) == 0)
+		{
+			return id;
+			id = Util.uSubstring(id, 7);
+		}
+		return '$assetPrefix$id';
 	}
 }
 
@@ -360,7 +397,7 @@ class LimeModLibrary extends AssetLibrary
 		#if firetongue
 		if (p.localePrefix != null)
 		{
-			var localePath = Util.pathJoin(p.localePrefix, id);
+			var localePath = Util.pathJoin(p.localePrefix, b.prependAssetsPrefix(id));
 			if (fallback.exists(localePath, type))
 			{
 				return true;
@@ -428,6 +465,7 @@ class LimeModLibrary extends AssetLibrary
 
 	public override function getImage(id:String):Image
 	{
+		Polymod.debug('Retrieving image $id via Polymod...');
 		var symbol = new IdAndLibrary(id, this);
 		if (p.check(symbol.modId))
 		{
@@ -627,7 +665,7 @@ class LimeModLibrary extends AssetLibrary
 				continue;
 			if (requestedType == null || exists(id, requestedType))
 			{
-				items.push(id);
+				items.push(b.prependAssetsPrefix(id));
 			}
 		}
 

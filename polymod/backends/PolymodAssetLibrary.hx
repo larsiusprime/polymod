@@ -1,11 +1,11 @@
 package polymod.backends;
 
-import polymod.fs.IFileSystem;
 import haxe.io.Bytes;
-import polymod.util.Util;
 import polymod.backends.IBackend;
 import polymod.backends.PolymodAssets.PolymodAssetType;
 import polymod.format.ParseRules;
+import polymod.fs.IFileSystem;
+import polymod.util.Util;
 #if firetongue
 import firetongue.FireTongue;
 #end
