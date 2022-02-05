@@ -28,11 +28,11 @@ Polymod.scan(modRoot, apiVersionStr, errorCallback);
 
 The metadata JSON contains data which is loaded when scanning mods, and is meant to provide readable information about the mod to users.
 
-```haxe
+```json
 {
 	"title":"Dragon",
 	"description":"Replaces Bees with Dragons",
-    "homepage": "https://example.com/dragons",
+	"homepage": "https://example.com/dragons",
 	"contributors": [
 		{
 			"name": "Lars A. Doucet",

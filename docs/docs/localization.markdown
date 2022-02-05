@@ -1,13 +1,21 @@
 ---
-title: Translation
+title: Localization
 ---
 {% include toc.html %}
 
-# Translation
-
-## WARNING: THE IMPLEMENTATION FOR THIS IS A WORK IN PROGRESS.
+# Localization
 
 Polymod provides easy integration for localization in your app or game. Not only can you retrieve separate data files based on the current language, you can retrieve separate assets as well. Modders can even add support for their own languages with minimal intervention from the development team.
+
+## NOTICE: Partial Support
+
+This functionality is only implemented on the following frameworks:
+
+- Lime
+- OpenFL
+- Flixel
+
+Support for other frameworks is planned for the future.
 
 ## Setup
 
@@ -17,7 +25,7 @@ Polymod depends on the FireTongue library for localization support. You can inst
 haxelib install firetongue
 ```
 
-FireTongue is optional if you are not utilizing the localization features of Polymod.
+The FireTongue library is entirely optional if you are not utilizing the localization features of Polymod.
 
 Before initializing Polymod, initialize a FireTongue instance for your locale:
 
@@ -78,7 +86,9 @@ Additionally, if a mod adds the file `assets/locales/pt-BR/assets/images/billboa
 
 ## Switching Locales
 
-To switch locales, call `tongue.init()`
+To switch locales, call `tongue.init()`, providing the new locale to use. Polymod will automatically update and start loading assets from the newly selected locale.
+
+Note that depending on your framework, you may have to call `Polymod.clearCache()`, and reload any localized assets that were loaded before the locale was changed.
 
 ## Adding New Locales
 
@@ -87,6 +97,8 @@ A mod can add a completely new locale to an existing application which utilizes 
 1. Add a new locale to the `locales` folder. Name it after the locale code, such as `en-US`, `pt-BR`, etc.
 2. Add your new assets and translations to the new locale folder.
 3. Create a file `_merge/assets/locales/index.xml` and add the new locale to it, like so:
+
+### TODO: Validate this example
 
 ```xml
 <?xml version="1.0" encoding="utf-8" ?>
@@ -102,8 +114,6 @@ A mod can add a completely new locale to an existing application which utilizes 
     </mode>
 </data>
 ```
-
-by adding a new folder to the `locales` folder. The folder name should be the locale code, such as `en-US`.
 
 ## Best Practices
 
