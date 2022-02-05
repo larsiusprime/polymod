@@ -3,6 +3,31 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.0] - 2022-02-??
+### Added
+- Added a new mod dependency system. See the documentation for more information.
+- Added a new `WIP: Dependencies` page to the documentation, describing how mod dependencies are configured.
+
+## [1.4.2] - 2022-02-04
+### Added
+- Added the optional `assetsPrefix` option to the `frameworkParams`.
+  - Use this if your project's `assets/` folder uses a different name.
+- Added a new Flixel sample project which ensures cache clearing when reloading mods.
+### Changed
+- Performed many internal code style improvements (please use template strings)
+- Improvements to documentation
+  - Renamed and cleaned up the `Localization` page (formerly known as `Translation`)
+  - Added a section to the `Localization` page describing its partial support (only available in Lime/OpenFL/Flixel as of this update).
+### Fixed
+- Fixed several issues that stopped the Flixel backend from working. It's finally actually working I swear check the sample.
+- Fixed several bugs related to 
+### Removed
+- Temporarily disabled the `HScript-EX` feature.
+  - The feature requires some complex code structure to properly work, and will be re-enabled in the future once scripted classes can be readily instantiated.
+- REMOVED the existing modpack functionality (based on the `_polymod_pack.txt` file).
+  - This will be replaced with a revamped system for modpacks in the future.
+- REMOVED the documentation associated with modpacks.
+
 ## [1.4.1] - 2022-01-20
 ### Changed
 - Added additional codedocs for each error code.

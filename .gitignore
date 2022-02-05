@@ -24,3 +24,5 @@ samples/openfl_with_electron/bin/
 samples/heaps/res/
 
 docs/Gemfile.lock
+
+samples/flixel/export/
