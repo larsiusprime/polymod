@@ -1,12 +1,7 @@
 {
-	"title":"Dragon",
-	"description":"Replaces Bees with Dragons",
-	"contributors": [
-		{
-			"name": "Lars A. Doucet",
-			"role": "Developer"
-		}
-	],
+	"title":"Daisy",
+	"description":"This mod has a daisy",
+	"author":"Lars A. Doucet",
 	"api_version":"0.1.0",
 	"mod_version":"1.0.0-alpha",
 	"license":"CC BY 4.0,MIT"
