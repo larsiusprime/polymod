@@ -69,12 +69,13 @@ class Main extends Sprite
 			errorCallback: onError,
 			ignoredFiles: Polymod.getDefaultIgnoreList(),
 			framework: framework,
+			assetPrefix: '',
 			firetongue: tongue,
 		});
 	}
 
 	private function onError(error:PolymodError)
 	{
-		trace('[${error.severity}] (${error.code.toUpperCase}): ${error.message}');
+		trace('[${error.severity}] (${error.code.toUpperCase()}): ${error.message}');
 	}
 }

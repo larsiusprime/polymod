@@ -3,6 +3,21 @@ package polymod.fs;
 import polymod.Polymod.ModMetadata;
 import haxe.io.Bytes;
 
+/**
+ * A set of parameters used to initialize the Polymod file system.
+ */
+typedef PolymodFileSystemParams =
+{
+	/**
+	 * The root directory which Polymod should read mods from.
+	 * May not be applicable for file systems which dicatate the directory, or use no directory.
+	 */
+	?modRoot:String,
+}
+
+/**
+ * A standard interface for the various file systems that Polymod supports.
+ */
 interface IFileSystem
 {
 	/**

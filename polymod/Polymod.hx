@@ -1,6 +1,5 @@
 package polymod;
 
-import openfl.geom.Point;
 import haxe.Json;
 import haxe.io.Bytes;
 import polymod.backends.IBackend;
@@ -17,12 +16,16 @@ import polymod.util.Util;
 import firetongue.FireTongue;
 #end
 
+/**
+ * The set of parameters which can be provided when intializing Polymod
+ */
 typedef PolymodParams =
 {
 	/**
 	 * root directory of all mods
+	    * Required if you are on desktop and using the SysFileSystem (may be optional on some file systems)
 	 */
-	modRoot:String,
+	?modRoot:String,
 
 	/**
 	 * directory names of one or more mods, relative to modRoot
@@ -70,6 +73,15 @@ typedef PolymodParams =
 	 * (optional) your own custom backend for accessing the file system
 	 */
 	?customFilesystem:Class<IFileSystem>,
+	/**
+	 * (optional) a set of additional parameters to initialize your custom filesystem
+	 */
+	?fileSystemParams:PolymodFileSystemParams,
+	/**
+	 * (optional) if your assets folder is not named `assets/`, you can specify the proper name here
+	 * This prevents some bugs when calling `Assets.list()`, among other things.
+	 */
+	?assetPrefix:String,
 
 	/**
 	 * (optional) a FireTongue instance for Polymod to hook into for localization support
@@ -89,14 +101,11 @@ typedef FrameworkParams =
 	 * (optional) if you're using Lime/OpenFL AND you're using custom or non-default asset libraries, then you must provide a key=>value store mapping the name of each asset library to a path prefix in your mod structure
 	 */
 	?assetLibraryPaths:Map<String, String>,
-
-	/**
-	 * (optional) if your assets folder is not named `assets/`, you can specify the proper name here
-	 * This prevents some bugs when calling `Assets.list()`, among other things.
-	 */
-	?assetPrefix:String,
 }
 
+/**
+ * The framework which your Haxe project is using to manage assets
+ */
 enum Framework
 {
 	CASTLE;
@@ -144,7 +153,7 @@ class Polymod
 	{
 		onError = params.errorCallback;
 
-		var modRoot = params.modRoot;
+		var modRoot = params.modRoot == null ? params.fileSystemParams.modRoot : params.modRoot;
 		var dirs = params.dirs;
 		var apiVersion:SemanticVersion = null;
 		try
@@ -164,18 +173,21 @@ class Polymod
 
 		var modMeta = [];
 		var modVers = [];
+
+		if (params.fileSystemParams != null && params.fileSystemParams.modRoot == null)
+			params.fileSystemParams.modRoot = modRoot;
 		var fileSystem = if (params.customFilesystem != null)
 		{
-			Type.createInstance(params.customFilesystem, []);
+			Type.createInstance(params.customFilesystem, [params.fileSystemParams]);
 		}
 		else
 		{
 			#if sys
-			new polymod.fs.SysFileSystem(params.modRoot);
+			new polymod.fs.SysFileSystem(params.fileSystemParams);
 			#elseif nodefs
-			new polymod.fs.NodeFileSystem(params.modRoot);
+			new polymod.fs.NodeFileSystem(params.fileSystemParams);
 			#else
-			new polymod.fs.StubFileSystem();
+			new polymod.fs.StubFileSystem(params.fileSystemParams);
 			#end
 		}
 
@@ -254,6 +266,7 @@ class Polymod
 			extensionMap: params.extensionMap,
 			frameworkParams: params.frameworkParams,
 			fileSystem: fileSystem,
+			assetPrefix: params.assetPrefix,
 			#if firetongue
 			firetongue: params.firetongue,
 			#end
@@ -261,9 +274,11 @@ class Polymod
 
 		if (assetLibrary == null)
 		{
-			//
 			return null;
 		}
+
+		// Store the params for later use (by loadMod, unloadMod, and clearMods)
+		prevParams = params;
 
 		if (PolymodAssets.exists((PolymodConfig.modPackFile)))
 		{
@@ -271,6 +286,143 @@ class Polymod
 		}
 
 		return modMeta;
+	}
+
+	/**
+	 * Reinitializes Polymod (with the same parameters) while enabling an individual mod.
+	 * The new mod will get added to the end of the modlist.
+	 * 
+	 * Depending on the framework you are using, especially if you loaded a specific file already.
+	 * you may have to call `clearCache()` for this to take effect.
+	 */
+	public static function loadMod(modId:String)
+	{
+		// Check if Polymod is loaded.
+		if (prevParams == null || assetLibrary == null)
+		{
+			Polymod.warning(POLYMOD_NOT_LOADED, 'Polymod is not loaded yet, cannot load mod "$modId".', INIT);
+			return;
+		}
+
+		var newParams = Reflect.copy(prevParams);
+		// Add the mod to the list of mods to load.
+		newParams.dirs = newParams.dirs.concat([modId]);
+
+		Polymod.init(newParams);
+	}
+
+	/**
+	 * Reinitializes Polymod (with the same parameters) while enabling individual mods.
+	 * The new mods will get added to the end of the modlist.
+	 * 
+	 * Depending on the framework you are using, especially if you loaded a specific file already.
+	 * you may have to call `clearCache()` for this to take effect.
+	 */
+	public static function loadMods(modIds:Array<String>)
+	{
+		// Check if Polymod is loaded.
+		if (prevParams == null || assetLibrary == null)
+		{
+			Polymod.warning(POLYMOD_NOT_LOADED, 'Polymod is not loaded yet, cannot load mod "$modIds".', INIT);
+			return;
+		}
+
+		var newParams = Reflect.copy(prevParams);
+		// Add the mod to the list of mods to load.
+		newParams.dirs = newParams.dirs.concat(modIds);
+
+		Polymod.init(newParams);
+	}
+
+	/**
+	 * Reinitializes Polymod (with the same parameters) while disabling an individual mod.
+	 * The specified mod will get removed from the modlist.
+	 * 
+	 * Depending on the framework you are using, especially if you loaded a specific file already.
+	 * you may have to call `clearCache()` for this to take effect.
+	 */
+	public static function unloadMod(modId:String)
+	{
+		// Check if Polymod is loaded.
+		if (prevParams == null || assetLibrary == null)
+		{
+			Polymod.warning(POLYMOD_NOT_LOADED, 'Polymod is not loaded yet, cannot load mod "$modId".', INIT);
+			return;
+		}
+
+		var newParams = Reflect.copy(prevParams);
+		// Add the mod to the list of mods to load.
+		newParams.dirs.remove(modId);
+
+		Polymod.init(newParams);
+	}
+
+	/**
+	 * Reinitializes Polymod (with the same parameters) while disabling an individual mod.
+	 * The specified mod will get removed from the modlist.
+	 * 
+	 * Depending on the framework you are using, especially if you loaded a specific file already.
+	 * you may have to call `clearCache()` for this to take effect.
+	 */
+	public static function unloadMods(modIds:Array<String>)
+	{
+		// Check if Polymod is loaded.
+		if (prevParams == null || assetLibrary == null)
+		{
+			Polymod.warning(POLYMOD_NOT_LOADED, 'Polymod is not loaded yet, cannot load mod "$modIds".', INIT);
+			return;
+		}
+
+		var newParams = Reflect.copy(prevParams);
+		// Add the mod to the list of mods to load.
+		for (modId in modIds)
+		{
+			newParams.dirs.remove(modId);
+		}
+
+		Polymod.init(newParams);
+	}
+
+	/**
+	 * Reinitializes Polymod (with the same parameters) while turning off all mods.
+	 * Localized asset replacements will still apply.
+	 * 
+	 * Depending on the framework you are using, especially if you loaded a specific file already.
+	 * you may have to call `clearCache()` for this to take effect.
+	 */
+	public static function unloadAllMods()
+	{
+		// Check if Polymod is loaded.
+		if (assetLibrary == null)
+		{
+			Polymod.warning(POLYMOD_NOT_LOADED, 'Polymod is not loaded yet, cannot clear mods.', INIT);
+			return;
+		}
+
+		var newParams = Reflect.copy(prevParams);
+		// Clear the modlist.
+		newParams.dirs = [];
+
+		Polymod.init(newParams);
+	}
+
+	/**
+	 * Fully disables Polymod and disables any asset replacements, from mods or from locales.
+	 * 
+	 * Depending on the framework you are using, especially if you loaded a specific file already.
+	 * you may have to call `clearCache()` for this to take effect.
+	 */
+	public static function disable()
+	{
+		// Check if Polymod is loaded.
+		if (assetLibrary == null)
+		{
+			Polymod.warning(POLYMOD_NOT_LOADED, 'Polymod is not loaded yet, cannot clear mods.', INIT);
+			return;
+		}
+
+		assetLibrary.destroy();
+		assetLibrary = null;
 	}
 
 	public static function getDefaultIgnoreList():Array<String>
@@ -412,12 +564,13 @@ class Polymod
 
 	public static function debug(message:String, ?posInfo:haxe.PosInfos):Void
 	{
-		#if POLYMOD_DEBUG
-		if (posInfo != null)
-			trace('[POLYMOD] (${posInfo.fileName}#${posInfo.lineNumber}): $message');
-		else
-			trace('[POLYMOD] $message');
-		#end
+		if (PolymodConfig.debug)
+		{
+			if (posInfo != null)
+				trace('[POLYMOD] (${posInfo.fileName}#${posInfo.lineNumber}): $message');
+			else
+				trace('[POLYMOD] $message');
+		}
 	}
 
 	/**
@@ -431,12 +584,12 @@ class Polymod
 		{
 			return assetLibrary.listModFiles(type);
 		}
-
-		Polymod.warning(POLYMOD_NOT_LOADED, 'Polymod is not loaded yet, cannot list files.');
-		return [];
+		else
+		{
+			Polymod.warning(POLYMOD_NOT_LOADED, 'Polymod is not loaded yet, cannot list files.');
+			return [];
+		}
 	}
-
-	/***PRIVATE***/
 }
 
 typedef ModContributor =
@@ -488,6 +641,7 @@ class ModMetadata
 
 	public function new()
 	{
+		// No-op constructor.
 	}
 
 	public function toJsonStr():String

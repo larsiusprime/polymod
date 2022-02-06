@@ -6,14 +6,15 @@ import polymod.util.Util;
 
 /**
  * An implementation of IFileSystem which accesses files from the local directory.
+ * This is the default file system for desktop platforms.
  */
 class SysFileSystem implements IFileSystem
 {
 	public var modRoot(default, null):String;
 
-	public function new(modRoot:String)
+	public function new(params:PolymodFileSystemParams)
 	{
-		this.modRoot = modRoot;
+		this.modRoot = params.modRoot;
 	}
 
 	public inline function exists(path:String)

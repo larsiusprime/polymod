@@ -21,6 +21,8 @@ class Demo extends Sprite
 	private var localeToggle:CheapButton;
 	private var localeLabel:TextField;
 
+	private var localeListLabel:TextField;
+
 	public static var usingOpenFL(default, null):Bool = true;
 
 	public function new(onModChange:Array<String>->Void, onLocaleChange:String->Void)
@@ -106,6 +108,7 @@ class Demo extends Sprite
 		limeToggle.setText(Main.tongue.get(usingOpenFL ? 'ASSET_SYSTEM_OPENFL' : 'ASSET_SYSTEM_LIME'));
 		localeLabel.text = Main.tongue.get('TRANSLATION_LABEL');
 		localeToggle.setText(Main.tongue.locale);
+		localeListLabel.text = Main.tongue.locales.join(', ');
 	}
 
 	private function addToggle()
@@ -126,10 +129,15 @@ class Demo extends Sprite
 		localeToggle.x = 10;
 		localeToggle.y = 470;
 
+		localeListLabel = getText(LEFT);
+		localeListLabel.x = 10;
+		localeListLabel.y = 510;
+
 		addChild(limeLabel);
 		addChild(limeToggle);
 		addChild(localeLabel);
 		addChild(localeToggle);
+		addChild(localeListLabel);
 	}
 
 	private function onToggleOpenFL()

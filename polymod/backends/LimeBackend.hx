@@ -44,8 +44,6 @@ class LimeBackend implements IBackend
 	// STATIC:
 	private static var defaultAssetLibraries:Map<String, AssetLibrary>;
 
-	var assetPrefix:String = 'assets/';
-
 	/**
 	 * Find all the registered access libraries and store keyed references to them
 	 */
@@ -156,11 +154,6 @@ class LimeBackend implements IBackend
 			Assets.registerLibrary(key, modLibraries.get(key));
 		}
 
-		if (params.assetPrefix != null)
-		{
-			assetPrefix = params.assetPrefix;
-		}
-
 		return true;
 	}
 
@@ -244,39 +237,6 @@ class LimeBackend implements IBackend
 				Assets.cache.image.remove(key);
 			}
 		}
-	}
-
-	/**
-	 * Strip the `assets/` prefix from a file path, if it is present.
-	 * If your app uses a different asset path prefix, you can override this with the `assetPrefix` parameter.
-	 * 
-	 * @param id The path to strip.
-	 * @return The modified path
-	 */
-	public function stripAssetsPrefix(id:String):String
-	{
-		if (Util.uIndexOf(id, assetPrefix) == 0)
-		{
-			id = Util.uSubstring(id, 7);
-		}
-		return id;
-	}
-
-	/**
-	 * Add the `assets/` prefix to a file path, if it isn't present.
-	 * If your app uses a different asset path prefix, you can override this with the `assetPrefix` parameter.
-	 * 
-	 * @param id The path to prepend
-	 * @return The modified path
-	 */
-	public function prependAssetsPrefix(id:String):String
-	{
-		if (Util.uIndexOf(id, assetPrefix) == 0)
-		{
-			return id;
-			id = Util.uSubstring(id, 7);
-		}
-		return '$assetPrefix$id';
 	}
 }
 
@@ -397,7 +357,7 @@ class LimeModLibrary extends AssetLibrary
 		#if firetongue
 		if (p.localePrefix != null)
 		{
-			var localePath = Util.pathJoin(p.localePrefix, b.prependAssetsPrefix(id));
+			var localePath = Util.pathJoin(p.localePrefix, p.prependAssetsPrefix(id));
 			if (fallback.exists(localePath, type))
 			{
 				return true;
@@ -661,11 +621,19 @@ class LimeModLibrary extends AssetLibrary
 
 		for (id in p.type.keys())
 		{
-			if (id.indexOf(PolymodConfig.appendFolder) == 0 || id.indexOf(PolymodConfig.mergeFolder) == 0)
+			if (id.startsWith(PolymodConfig.appendFolder) || id.startsWith(PolymodConfig.mergeFolder))
 				continue;
-			if (requestedType == null || exists(id, requestedType))
+			if (id.startsWith(p.localeAssetPrefix))
 			{
-				items.push(b.prependAssetsPrefix(id));
+				// This logic adds
+				var assetId = Util.stripPathPrefix(id, p.localeAssetPrefix);
+				if (id.startsWith(p.assetPrefix))
+					assetId = p.prependAssetsPrefix(assetId);
+				items.push(assetId);
+			}
+			else if (requestedType == null || exists(id, requestedType))
+			{
+				items.push(p.prependAssetsPrefix(id));
 			}
 		}
 
@@ -683,28 +651,24 @@ class LimeModLibrary extends AssetLibrary
 				if (fallbackId.startsWith(p.localeAssetPrefix))
 				{
 					// Localized asset file in CURRENT locale! (example: assets/locales/en-US/assets/...)
-					// We should register this with the locale path prefix removed.
-					var assetId = Util.stripPathPrefix(fallbackId, p.localeAssetPrefix);
-					if (fallbackId.startsWith('assets/'))
-						assetId = Util.pathJoin('assets', assetId);
-					if (items.indexOf(fallbackId) == -1)
+					if (requestedType == null || fallback.exists(fallbackId, type))
 					{
-						if (requestedType == null || fallback.exists(fallbackId, type))
-						{
-							items.push(assetId);
-						}
+						// The asset in the current locale should 'silently' override the default.
+						// We should register this with the locale path prefix removed.
+						var assetId = Util.stripPathPrefix(fallbackId, p.localeAssetPrefix);
+						if (fallbackId.startsWith(p.assetPrefix))
+							assetId = p.prependAssetsPrefix(assetId);
+						items.push(assetId);
 					}
 				}
 				else
 				{
 					// Localized FireTongue data file, or asset file in other locale! (example: assets/locales/en-US/data.tsv)
 					var assetId = fallbackId;
-					if (items.indexOf(assetId) == -1)
+					if (requestedType == null || fallback.exists(assetId, type))
 					{
-						if (requestedType == null || fallback.exists(assetId, type))
-						{
-							items.push(assetId);
-						}
+						// The asset in other locales should be added to the list normally.
+						items.push(assetId);
 					}
 				}
 			}
@@ -712,28 +676,22 @@ class LimeModLibrary extends AssetLibrary
 			{
 				// Unlocalized asset. Handle the original path.
 				var assetId = fallbackId;
-				if (items.indexOf(assetId) == -1)
-				{
-					if (requestedType == null || fallback.exists(assetId, type))
-					{
-						items.push(assetId);
-					}
-				}
-			}
-			#else
-			// Unlocalized asset. Handle the original path.
-			var assetId = fallbackId;
-			if (items.indexOf(assetId) == -1)
-			{
 				if (requestedType == null || fallback.exists(assetId, type))
 				{
 					items.push(assetId);
 				}
 			}
+			#else
+			// Unlocalized asset. Handle the original path.
+			var assetId = fallbackId;
+			if (requestedType == null || fallback.exists(assetId, type))
+			{
+				items.push(assetId);
+			}
 			#end
 		}
 
-		return items;
+		return Util.filterUnique(items);
 	}
 }
 

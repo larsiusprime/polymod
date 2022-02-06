@@ -16,7 +16,7 @@
 	-->
 	
 	<!--American English-->
-	<locale id="en-US" is_default="true" sort="0">	
+	<locale id="en-US" is_default="true" sort="0">
 		<ui language="Language" region="Region" accept="Okay" />
 		<label id="en-US,en-GB,en-CA" language="English" region="United States"/>
 		<label id="yr-HR" language="American English" region="Uni'ed States o' 'merica"/>

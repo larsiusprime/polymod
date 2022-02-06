@@ -1,12 +1,16 @@
 package polymod.fs;
 
+import polymod.fs.IFileSystem;
+
 /**
  * This stub file system returns false for all requests.
- * This is used when the actual file system can't be accessed.
+ * This is the fallback used when the desired file system can't be accessed.
+ *
+ * Mods WILL NOT LOAD if this is used, but asset localization will still work.
  */
 class StubFileSystem implements IFileSystem
 {
-	public function new()
+	public function new(params:PolymodFileSystemParams)
 	{
 	}
 

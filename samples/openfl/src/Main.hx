@@ -38,12 +38,15 @@ class Main extends Sprite
 			dirs: dirs,
 			errorCallback: onError,
 			ignoredFiles: Polymod.getDefaultIgnoreList(),
-			framework: framework
+			framework: framework,
+			frameworkParams: {
+				assetPrefix: '',
+			},
 		});
 	}
 
 	private function onError(error:PolymodError)
 	{
-		trace('[${error.severity}] (${error.code.toUpperCase}): ${error.message}');
+		trace('[${error.severity}] (${error.code.toUpperCase()}): ${error.message}');
 	}
 }

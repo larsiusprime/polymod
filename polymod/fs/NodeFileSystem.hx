@@ -20,9 +20,9 @@ class NodeFileSystem implements IFileSystem
 
 	public var modRoot(default, null):String;
 
-	public function new(modRoot:String)
+	public function new(params:PolymodFileSystemParams)
 	{
-		this.modRoot = modRoot;
+		this.modRoot = params.modRoot;
 	}
 
 	// -----------------------------------------------------------------------------------------------

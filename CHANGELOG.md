@@ -9,18 +9,30 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Added a new `WIP: Dependencies` page to the documentation, describing how mod dependencies are configured.
 
 ## [1.4.2] - 2022-02-04
+Publishing a bug fix + minor feature release before beginning development on dependencies.
 ### Added
 - Added the optional `assetsPrefix` option to the `frameworkParams`.
   - Use this if your project's `assets/` folder uses a different name.
 - Added a new Flixel sample project which ensures cache clearing when reloading mods.
+- Added several convenience functions to handle loading and unloading of mods at runtime.
+  - These convenience functions perform the proper steps to reload Polymod. Note you may need to call `clearCache()` depending on your framework and your app's current state.
+  - `loadMod()` and `loadMods()` enables an individual (or multiple) mods, by re-initializing the framework with the appropriate mods enabled.
+  - `unloadMod()` and `unloadMods()` disables an individual (or multiple) mods, by re-initializing the framework with the appropriate mods disabled.
+  - `unloadAllMods()` disables all mods, by re-initializing the framework with no mods enabled. 
+    - Localized asset replacements will still work, but no user-defined mods will be loaded.
+  - `disable()` fully disables Polymod, destroying the asset handler.
+    - Neither user-defined mods nor localized asset replacements will work until you call `init()` again.
 ### Changed
+- Added additional testing to the `openfl_firetongue` sample.
+  - `mod5` now loads a different image depending on the selected locale.
 - Performed many internal code style improvements (please use template strings)
 - Improvements to documentation
   - Renamed and cleaned up the `Localization` page (formerly known as `Translation`)
   - Added a section to the `Localization` page describing its partial support (only available in Lime/OpenFL/Flixel as of this update).
 ### Fixed
 - Fixed several issues that stopped the Flixel backend from working. It's finally actually working I swear check the sample.
-- Fixed several bugs related to 
+- Fixed several bugs related to asset retrieval.
+- Fixed a bug where debug printing would sometimes not enable.
 ### Removed
 - Temporarily disabled the `HScript-EX` feature.
   - The feature requires some complex code structure to properly work, and will be re-enabled in the future once scripted classes can be readily instantiated.

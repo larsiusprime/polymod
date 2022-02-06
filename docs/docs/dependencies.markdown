@@ -3,7 +3,9 @@ title: Localization
 ---
 {% include toc.html %}
 
-# Dependencies
+# WIP: Dependencies
+
+## THIS PROPOSAL IS WIP
 
 A mod may have dependencies on other mods. Through proper configuration, Polymod can sure that any dependencies are loaded before the mod is loaded, and that the proper versions are used.
 

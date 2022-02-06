@@ -40,6 +40,11 @@ typedef PolymodAssetLibraryParams =
 	 * (optional) maps file extensions to asset types. This ensures e.g. text files with unfamiliar extensions are handled properly.
 	 */
 	?extensionMap:Map<String, PolymodAssetType>,
+	/**
+	 * (optional) if your assets folder is not named `assets/`, you can specify the proper name here
+	 * This prevents some bugs when calling `Assets.list()`, among other things.
+	 */
+	?assetPrefix:String,
 
 	/**
 	 * (optional) a FireTongue instance for Polymod to hook into for localization support
@@ -56,6 +61,7 @@ class PolymodAssetLibrary
 
 	public var type(default, null):Map<String, PolymodAssetType>;
 
+	public var assetPrefix(default, null):String = "assets/";
 	public var dirs:Array<String> = null;
 	public var ignoredFiles:Array<String> = null;
 
@@ -71,6 +77,8 @@ class PolymodAssetLibrary
 		parseRules = params.parseRules;
 		ignoredFiles = params.ignoredFiles != null ? params.ignoredFiles.copy() : [];
 		extensions = params.extensionMap;
+		if (params.assetPrefix != null)
+			assetPrefix = params.assetPrefix;
 
 		#if firetongue
 		tongue = params.firetongue;
@@ -117,7 +125,7 @@ class PolymodAssetLibrary
 
 		rawTongueDirectory = tongue.directory;
 		localePrefix = Util.pathJoin(rawTongueDirectory, tongue.locale);
-		localeAssetPrefix = Util.pathJoin(localePrefix, 'assets');
+		localeAssetPrefix = Util.pathJoin(localePrefix, assetPrefix);
 	}
 	#end
 
@@ -248,7 +256,7 @@ class PolymodAssetLibrary
 
 	public function checkDirectly(id:String, dir:String = ''):Bool
 	{
-		id = backend.stripAssetsPrefix(id);
+		id = stripAssetsPrefix(id);
 		if (dir == null || dir == '')
 		{
 			return fileSystem.exists(id);
@@ -272,7 +280,7 @@ class PolymodAssetLibrary
 	 */
 	public function file(id:String, theDir:String = ''):String
 	{
-		var idStripped = backend.stripAssetsPrefix(id);
+		var idStripped = stripAssetsPrefix(id);
 		if (theDir != '')
 		{
 			return Util.pathJoin(theDir, idStripped);
@@ -316,7 +324,7 @@ class PolymodAssetLibrary
 		#if firetongue
 		if (localeAssetPrefix != null)
 		{
-			var idStripped = backend.stripAssetsPrefix(id);
+			var idStripped = stripAssetsPrefix(id);
 			return Util.pathJoin(localeAssetPrefix, idStripped);
 		}
 		// Else, Firetongue is not enabled.
@@ -329,7 +337,7 @@ class PolymodAssetLibrary
 	{
 		if (ignoredFiles.length > 0 && ignoredFiles.indexOf(id) != -1)
 			return false;
-		id = backend.stripAssetsPrefix(id);
+		id = stripAssetsPrefix(id);
 		for (d in dirs)
 		{
 			#if firetongue
@@ -441,5 +449,37 @@ class PolymodAssetLibrary
 			type.set(f, assetType);
 		}
 		Polymod.notice(MOD_LOAD_DONE, 'Done loading mod $d');
+	}
+
+	/**
+	 * Strip the `assets/` prefix from a file path, if it is present.
+	 * If your app uses a different asset path prefix, you can override this with the `assetPrefix` parameter.
+	 * 
+	 * @param id The path to strip.
+	 * @return The modified path
+	 */
+	public function stripAssetsPrefix(id:String):String
+	{
+		if (Util.uIndexOf(id, assetPrefix) == 0)
+		{
+			id = Util.uSubstring(id, assetPrefix.length);
+		}
+		return id;
+	}
+
+	/**
+	 * Add the `assets/` prefix to a file path, if it isn't present.
+	 * If your app uses a different asset path prefix, you can override this with the `assetPrefix` parameter.
+	 * 
+	 * @param id The path to prepend
+	 * @return The modified path
+	 */
+	public function prependAssetsPrefix(id:String):String
+	{
+		if (Util.uIndexOf(id, assetPrefix) == 0)
+		{
+			return id;
+		}
+		return '$assetPrefix$id';
 	}
 }

@@ -50,7 +50,7 @@ class Main extends Sprite
 	{
 		if (error.severity != PolymodErrorType.NOTICE)
 		{
-			trace('[${error.severity}] (${error.code.toUpperCase}): ${error.message}');
+			trace('[${error.severity}] (${error.code.toUpperCase()}): ${error.message}');
 		}
 	}
 }

@@ -574,4 +574,19 @@ class Util
 		return str.substring(startIndex, endIndex);
 		#end
 	}
+
+	@:generic
+	public static function filterUnique<T>(input:Array<T>)
+	{
+		var output = [];
+		for (item in input)
+		{
+			if (output.indexOf(item) == -1)
+			{
+				// Item not yet in output array
+				output.push(item);
+			}
+		}
+		return output;
+	}
 }

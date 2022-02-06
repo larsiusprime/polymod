@@ -53,6 +53,11 @@ typedef PolymodAssetsParams =
 	 * (optional) maps file extensions to asset types. This ensures e.g. text files with unfamiliar extensions are handled properly.
 	 */
 	?extensionMap:Map<String, PolymodAssetType>,
+	/**
+	 * (optional) if your assets folder is not named `assets/`, you can specify the proper name here
+	 * This prevents some bugs when calling `Assets.list()`, among other things.
+	 */
+	?assetPrefix:String,
 
 	/**
 	 * (optional) a FireTongue instance for Polymod to hook into for localization support
@@ -131,6 +136,7 @@ class PolymodAssets
 			ignoredFiles: params.ignoredFiles,
 			extensionMap: params.extensionMap,
 			fileSystem: params.fileSystem,
+			assetPrefix: params.assetPrefix,
 			#if firetongue
 			firetongue: params.firetongue,
 			#end
