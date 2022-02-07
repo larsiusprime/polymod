@@ -61,7 +61,7 @@ class Demo extends Sprite
 		#end
 
 		#if nodefs
-		var mods = new NodeFileSystem(modDir).readDirectory(modDir);
+		var mods = new NodeFileSystem({modRoot: modDir}).readDirectory(modDir);
 		#else
 		var mods = FileSystem.readDirectory(modDir);
 		#end

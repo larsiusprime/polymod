@@ -42,7 +42,8 @@ class Main extends Sprite
 			dirs: dirs,
 			errorCallback: onError,
 			ignoredFiles: Polymod.getDefaultIgnoreList(),
-			framework: framework
+			framework: framework,
+      assetPrefix: '',
 		});
 	}
 

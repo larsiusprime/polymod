@@ -7,6 +7,7 @@ import js.html.ScriptElement;
 import js.Lib;
 import polymod.Polymod.ModMetadata;
 import polymod.PolymodConfig;
+import polymod.fs.PolymodFileSystem.IFileSystem;
 import polymod.util.Util;
 
 /**
@@ -20,7 +21,7 @@ class NodeFileSystem implements IFileSystem
 
 	public var modRoot(default, null):String;
 
-	public function new(params:PolymodFileSystemParams)
+	public function new(params:polymod.fs.PolymodFileSystem.PolymodFileSystemParams)
 	{
 		this.modRoot = params.modRoot;
 	}
@@ -171,7 +172,6 @@ class NodeFileSystem implements IFileSystem
 
 			var metaFile = Util.pathJoin(modId, PolymodConfig.modMetadataFile);
 			var iconFile = Util.pathJoin(modId, PolymodConfig.modIconFile);
-			var packFile = Util.pathJoin(modId, PolymodConfig.modPackFile);
 
 			if (!exists(metaFile))
 			{
@@ -190,12 +190,6 @@ class NodeFileSystem implements IFileSystem
 			{
 				var iconBytes = getFileBytes(iconFile);
 				meta.icon = iconBytes;
-			}
-			if (exists(packFile))
-			{
-				meta.isModPack = true;
-				var packText = getFileContent(packFile);
-				meta.modPack = @:privateAccess Polymod.getModPack(packText);
 			}
 			return meta;
 		}

@@ -9,7 +9,7 @@ Dependencies:
 
 Steps:
 1. Run `lime build html5` in the `samples/openfl_with_electron` directory.
-2. Run `electron main.js` in the `samples/openfl_with_electron/build/html5` directory.
+2. Run `electron main.js` in the `samples/openfl_with_electron/bin/html5/bin` directory.
 3. Preview the resulting application.
 
 Eventually `lime test electron` will properly run, pending the resolution of the following fix:
