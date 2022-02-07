@@ -1,5 +1,3 @@
-package samples.heaps;
-
 import hxd.Res;
 import h2d.Object;
 import h2d.Tile;
@@ -222,7 +220,7 @@ class Demo extends Object
 
 	private function getText(align:Align):Text
 	{
-		var font = Res.customFont.toFont();
+		var font = hxd.res.DefaultFont.get();
 		var text = new Text(font, this);
 		text.textColor = 0x000000;
 		text.scale(1);

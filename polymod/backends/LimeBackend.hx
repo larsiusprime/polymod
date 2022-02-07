@@ -425,7 +425,6 @@ class LimeModLibrary extends AssetLibrary
 
 	public override function getImage(id:String):Image
 	{
-		Polymod.debug('Retrieving image $id via Polymod...');
 		var symbol = new IdAndLibrary(id, this);
 		if (p.check(symbol.modId))
 		{
@@ -623,15 +622,18 @@ class LimeModLibrary extends AssetLibrary
 		{
 			if (id.startsWith(PolymodConfig.appendFolder) || id.startsWith(PolymodConfig.mergeFolder))
 				continue;
+
+			#if firetongue
 			if (id.startsWith(p.localeAssetPrefix))
 			{
-				// This logic adds
 				var assetId = Util.stripPathPrefix(id, p.localeAssetPrefix);
 				if (id.startsWith(p.assetPrefix))
 					assetId = p.prependAssetsPrefix(assetId);
 				items.push(assetId);
 			}
-			else if (requestedType == null || exists(id, requestedType))
+			else
+			#end
+			if (requestedType == null || exists(id, requestedType))
 			{
 				items.push(p.prependAssetsPrefix(id));
 			}

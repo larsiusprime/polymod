@@ -4,12 +4,10 @@ import haxe.Json;
 import haxe.io.Bytes;
 import polymod.backends.IBackend;
 import polymod.backends.PolymodAssetLibrary;
-import polymod.backends.PolymodAssets.PolymodAssetType;
 import polymod.backends.PolymodAssets;
 import polymod.format.JsonHelp;
 import polymod.format.ParseRules;
-import polymod.fs.IFileSystem;
-import polymod.util.SemanticVersion.SemanticVersionScore;
+import polymod.fs.PolymodFileSystem;
 import polymod.util.SemanticVersion;
 import polymod.util.Util;
 #if firetongue
@@ -23,7 +21,7 @@ typedef PolymodParams =
 {
 	/**
 	 * root directory of all mods
-	    * Required if you are on desktop and using the SysFileSystem (may be optional on some file systems)
+	 		* Required if you are on desktop and using the SysFileSystem (may be optional on some file systems)
 	 */
 	?modRoot:String,
 
@@ -174,22 +172,11 @@ class Polymod
 		var modMeta = [];
 		var modVers = [];
 
-		if (params.fileSystemParams != null && params.fileSystemParams.modRoot == null)
+		if (params.fileSystemParams == null)
+			params.fileSystemParams = {modRoot: modRoot};
+		if (params.fileSystemParams.modRoot == null)
 			params.fileSystemParams.modRoot = modRoot;
-		var fileSystem = if (params.customFilesystem != null)
-		{
-			Type.createInstance(params.customFilesystem, [params.fileSystemParams]);
-		}
-		else
-		{
-			#if sys
-			new polymod.fs.SysFileSystem(params.fileSystemParams);
-			#elseif nodefs
-			new polymod.fs.NodeFileSystem(params.fileSystemParams);
-			#else
-			new polymod.fs.StubFileSystem(params.fileSystemParams);
-			#end
-		}
+		var fileSystem = PolymodFileSystem.makeFileSystem(params.customFilesystem, params.fileSystemParams);
 
 		if (params.modVersions != null)
 		{
@@ -453,13 +440,7 @@ class Polymod
 
 		if (fileSystem == null)
 		{
-			#if sys
-			fileSystem = new polymod.fs.SysFileSystem(modRoot);
-			#elseif nodefs
-			fileSystem = new polymod.fs.NodeFileSystem(modRoot);
-			#else
-			fileSystem = new polymod.fs.StubFileSystem();
-			#end
+			fileSystem = PolymodFileSystem.makeFileSystem(null, {modRoot: modRoot});
 		}
 
 		var modMeta = [];

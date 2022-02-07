@@ -1,7 +1,38 @@
 package polymod.fs;
 
-import polymod.Polymod.ModMetadata;
 import haxe.io.Bytes;
+import polymod.Polymod.ModMetadata;
+
+class PolymodFileSystem
+{
+	/**
+	 * Constructs a new PolymodFileSystem.
+	 */
+	public static function makeFileSystem(cls:Class<IFileSystem>, params:PolymodFileSystemParams):IFileSystem
+	{
+		if (cls == null)
+		{
+			return _detectFileSystem(params);
+		}
+
+		// Else, instantiate the provided class.
+		return Type.createInstance(cls, [params]);
+	}
+
+	/**
+	 * Determine which PolymodFileSystem to create based on the current platform.
+	 */
+	static function _detectFileSystem(params:PolymodFileSystemParams)
+	{
+		#if sys
+		return new polymod.fs.SysFileSystem(params);
+		#elseif nodefs
+		return new polymod.fs.NodeFileSystem(params);
+		#else
+		return new polymod.fs.StubFileSystem(params);
+		#end
+	}
+}
 
 /**
  * A set of parameters used to initialize the Polymod file system.
@@ -13,7 +44,7 @@ typedef PolymodFileSystemParams =
 	 * May not be applicable for file systems which dicatate the directory, or use no directory.
 	 */
 	?modRoot:String,
-}
+};
 
 /**
  * A standard interface for the various file systems that Polymod supports.

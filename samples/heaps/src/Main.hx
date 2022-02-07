@@ -1,5 +1,3 @@
-package samples.heaps;
-
 import hxd.App;
 import polymod.Polymod;
 import polymod.Polymod.PolymodError;

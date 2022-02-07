@@ -1,5 +1,3 @@
-package samples.heaps;
-
 import h2d.Object;
 import h2d.Text;
 import h2d.Scene;
@@ -109,7 +107,7 @@ class ModWidget extends Object
 
 	private function text(spr:Object):Text
 	{
-		var font = hxd.Res.customFont.toFont();
+		var font = hxd.res.DefaultFont.get();
 		var text = new h2d.Text(font, spr);
 		text.textColor = 0x000000;
 		text.scale(1);

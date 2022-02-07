@@ -1,5 +1,3 @@
-package samples.heaps;
-
 import hxd.Res;
 import h2d.Object;
 import h2d.Text;
@@ -123,7 +121,7 @@ class CheapButton extends Object
 
 	private function getText(align:h2d.Text.Align):h2d.Text
 	{
-		var font = Res.customFont.toFont();
+		var font = hxd.res.DefaultFont.get();
 		var text = new Text(font, this);
 		text.textColor = 0x000000;
 		text.scale(1);

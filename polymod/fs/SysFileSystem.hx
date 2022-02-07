@@ -2,6 +2,7 @@ package polymod.fs;
 
 #if sys
 import polymod.Polymod.ModMetadata;
+import polymod.fs.PolymodFileSystem;
 import polymod.util.Util;
 
 /**

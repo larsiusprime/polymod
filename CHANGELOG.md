@@ -3,12 +3,9 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.5.0] - 2022-02-??
-### Added
-- Added a new mod dependency system. See the documentation for more information.
-- Added a new `WIP: Dependencies` page to the documentation, describing how mod dependencies are configured.
+## [???] - 2022-02-??
 
-## [1.4.2] - 2022-02-04
+## [1.4.2] - 2022-02-06
 Publishing a bug fix + minor feature release before beginning development on dependencies.
 ### Added
 - Added the optional `assetsPrefix` option to the `frameworkParams`.
@@ -33,12 +30,17 @@ Publishing a bug fix + minor feature release before beginning development on dep
 - Fixed several issues that stopped the Flixel backend from working. It's finally actually working I swear check the sample.
 - Fixed several bugs related to asset retrieval.
 - Fixed a bug where debug printing would sometimes not enable.
+- Fixed a bug where the project would not build if Firetongue was not installed.
+- Fixed several issues with the HEAPS sample (seriously was it ever working?).
 ### Removed
 - Temporarily disabled the `HScript-EX` feature.
-  - The feature requires some complex code structure to properly work, and will be re-enabled in the future once scripted classes can be readily instantiated.
+  - Additional work to implement the scripted class functionality is required.
 - REMOVED the existing modpack functionality (based on the `_polymod_pack.txt` file).
   - This will be replaced with a revamped system for modpacks in the future.
 - REMOVED the documentation associated with modpacks.
+### Known Issues
+- The `openfl_firetongue` sample mod which implements an additional language is currently broken.
+
 
 ## [1.4.1] - 2022-01-20
 ### Changed

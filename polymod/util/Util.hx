@@ -1,18 +1,18 @@
 package polymod.util;
 
-import polymod.fs.IFileSystem;
-import polymod.Polymod;
+import haxe.Utf8;
 import polymod.Polymod.PolymodError;
 import polymod.Polymod.PolymodErrorType;
+import polymod.Polymod;
+import polymod.format.BaseParseFormat;
 import polymod.format.CSV;
-import polymod.format.ParseRules;
 import polymod.format.ParseRules.CSVParseFormat;
 import polymod.format.ParseRules.TextFileFormat;
-import polymod.format.BaseParseFormat;
+import polymod.format.ParseRules;
+import polymod.fs.PolymodFileSystem.IFileSystem;
 #if unifill
 import unifill.Unifill;
 #end
-import haxe.Utf8;
 
 class Util
 {

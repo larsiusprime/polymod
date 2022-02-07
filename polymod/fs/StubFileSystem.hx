@@ -1,6 +1,6 @@
 package polymod.fs;
 
-import polymod.fs.IFileSystem;
+import polymod.fs.PolymodFileSystem;
 
 /**
  * This stub file system returns false for all requests.
@@ -8,9 +8,9 @@ import polymod.fs.IFileSystem;
  *
  * Mods WILL NOT LOAD if this is used, but asset localization will still work.
  */
-class StubFileSystem implements IFileSystem
+class StubFileSystem implements PolymodFileSystem.IFileSystem
 {
-	public function new(params:PolymodFileSystemParams)
+	public function new(params:PolymodFileSystem.PolymodFileSystemParams)
 	{
 	}
 

@@ -142,7 +142,6 @@ class PlayState extends FlxState
 
 		var images = Assets.list(AssetType.IMAGE).filter(function(item:String)
 		{
-			trace(item);
 			return item.startsWith('assets/img/') && item.endsWith('.png');
 		});
 		images.sort(function(a:String, b:String):Int

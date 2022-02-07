@@ -4,7 +4,7 @@ import haxe.io.Bytes;
 import polymod.backends.IBackend;
 import polymod.backends.PolymodAssets.PolymodAssetType;
 import polymod.format.ParseRules;
-import polymod.fs.IFileSystem;
+import polymod.fs.PolymodFileSystem.IFileSystem;
 import polymod.util.Util;
 #if firetongue
 import firetongue.FireTongue;

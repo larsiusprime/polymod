@@ -1,9 +1,11 @@
 package polymod.backends;
 
+import polymod.backends.PolymodAssets.PolymodAssetType;
+#if flixel
 import lime.utils.Assets as LimeAssets;
 import openfl.Assets as OpenFLAssets;
 import openfl.utils.AssetType;
-import polymod.backends.PolymodAssets.PolymodAssetType;
+#end
 
 #if (!flixel)
 class FlixelBackend extends StubBackend
