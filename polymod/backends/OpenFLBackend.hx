@@ -17,17 +17,17 @@ class OpenFLBackend extends LimeBackend
 	{
 		super.clearCache();
 
-		for (key in openfl.Assets.cache.getBitmapKeys())
+		for (key in openfl.utils.AssetCache.getBitmapKeys())
 		{
-			openfl.Assets.cache.removeBitmapData(key);
+			openfl.utils.AssetCache.removeBitmapData(key);
 		}
-		for (key in openfl.Assets.cache.getFontKeys())
+		for (key in openfl.utils.AssetCache.getFontKeys())
 		{
-			openfl.Assets.cache.removeFont(key);
+			openfl.utils.AssetCache.removeFont(key);
 		}
-		for (key in openfl.Assets.cache.getSoundKeys())
+		for (key in openfl.utils.AssetCache.getSoundKeys())
 		{
-			openfl.Assets.cache.removeSound(key);
+			openfl.utils.AssetCache.removeSound(key);
 		}
 	}
 }
