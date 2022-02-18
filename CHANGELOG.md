@@ -3,12 +3,20 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.0] - 2022-02-??
+### Added
+- Added the new `polymod.hscript.PolymodScriptClass` class, which contains utility functions that allow defining custom classes in scripts.
+  - These scripted classes can extend existing classes or even other scripted classes.
+  - Parse any scripted classes with `registerAllScriptClasses()`, get the list of scripted classes extending a given class with `listScriptClassesExtendingClass()`, then instantiate it with `createScriptClassInstance(className, args)`. You can cast the `AbstractScriptClass` to the appropriate type once instantiated.
+  - Note this interface is subject to change and may be deprecated in favor of a more seamless interface in the future.
+### Removed
+- The `POLYMOD_USE_HSCRIPTEX` flag has been made redundant. `hscript-ex` will be used if available, and `hscript` will be used otherwise.
 ## [1.4.3] - 2022-02-18
 ### Fixed
 - OpenFLBackend no longer breaks when you are using the main version of OpenFL.
 
 ## [1.4.2] - 2022-02-06
-Publishing a bug fix + minor feature release before beginning development on dependencies.
+Version 1.4.2 includes a large number of bug fixes and tweaks to improve reliability.
 ### Added
 - Added the optional `assetsPrefix` option to the `frameworkParams`.
   - Use this if your project's `assets/` folder uses a different name.

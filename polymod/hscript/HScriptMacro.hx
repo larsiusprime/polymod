@@ -110,11 +110,11 @@ class HScriptMacro
 					{
 						case EConst(CString(value)):
 							// Passed a string, this means pathName is constant.
-							// Context.info('Found value for pathName: ${value}', paramField.expr.pos);
+							// Context.info('Found value for pathName: ${value}', Context.currentPos());
 							result.pathName = value;
 						case EConst(CIdent(value)):
 							// Passed an identifier, this means pathName is dynamic.
-							// Context.info('Found IDENTIFIER for pathName, that means it is dynamic: ${value}', paramField.expr.pos);
+							// Context.info('Found IDENTIFIER for pathName, that means it is dynamic: ${value}', Context.currentPos());
 							result.pathNameDynId = value;
 						default:
 							throw '@:hscript({pathName}) must be a String value.';
@@ -125,6 +125,9 @@ class HScriptMacro
 		}
 	}
 
+	/**
+	 * Parse `@:hscript({})` on a class.
+	 */
 	static function getClassHScriptParams(classToEvaluate:haxe.macro.Type.ClassType):HScriptParams
 	{
 		var result = new HScriptParams();
@@ -181,7 +184,7 @@ class HScriptMacro
 			{
 				case EObjectDecl(paramFields):
 					// New and preferred syntax. Pass in a parameter object.
-					// Context.info('New @:hscript detected.', paramFields[0].expr.pos);
+					// Context.info('New @:hscript detected.', Context.currentPos());
 					parseParamObjectFields(paramFields, result);
 				case EConst(CIdent(name)):
 					// Legacy support. Allow passing context as a set of parameters.
@@ -192,12 +195,12 @@ class HScriptMacro
 							case EConst(CIdent(name)):
 								return name;
 							default:
-								Context.error('@:hscript only accepts a single parameter object or a set of context objects.', p.pos);
+								Context.error('@:hscript only accepts a single parameter object or a set of context objects.', Context.currentPos());
 								return null;
 						}
 					}).filter(function(p) return p != null));
 				default:
-					Context.error('The parameters for your @:hscript annotation are incorrect.', params[0].pos);
+					Context.error('The parameters for your @:hscript annotation are incorrect.', Context.currentPos());
 			}
 		}
 
@@ -206,16 +209,41 @@ class HScriptMacro
 
 	public static macro function build():Array<Field>
 	{
-		var cls = Context.getLocalClass().get();
+		var cls:haxe.macro.Type.ClassType = Context.getLocalClass().get();
 		var fields:Array<Field> = Context.getBuildFields();
 
-		var constructor_setup:Array<Expr> = null;
+		var alreadyProcessed_metadata = cls.meta.get().find(function(m) return m.name == ':hscriptProcessed');
 
+		if (alreadyProcessed_metadata == null)
+		{
+			Context.info('HScriptable: Class ' + cls.name + ' ready to process...', Context.currentPos());
+
+			// Process @:hscriptClass({}) annotations.
+			fields = buildHScriptClass(cls, fields);
+			// Process @:hscript({}) annotations.
+			fields = buildHScriptFields(cls, fields);
+
+			cls.meta.add(":hscriptProcessed", [], cls.pos);
+
+			return fields;
+		}
+		else
+		{
+			Context.info('HScriptable: Class ' + cls.name + ' already processed, skipping...', Context.currentPos());
+			return null;
+		}
+	}
+
+	public static function buildHScriptFields(cls:haxe.macro.Type.ClassType, fields:Array<Field>):Array<Field>
+	{
+		var constructor_setup:Array<Expr> = null;
 		var classParams = getClassHScriptParams(cls);
 
 		// Find all fields with @:hscript metadata
 		for (field in fields)
 		{
+			if (field.meta == null)
+				continue;
 			var scriptable_meta = field.meta.find(function(m) return m.name == ':hscript');
 			if (scriptable_meta != null)
 			{
@@ -267,7 +295,7 @@ class HScriptMacro
 						// If pathName is a string, set it.
 						if (hscriptParams.pathName != null)
 						{
-							// Context.info('Using path: ${hscriptParams.pathName}', field.pos);
+							// Context.info('Using path: ${hscriptParams.pathName}', Context.currentPos());
 							pathName = hscriptParams.pathName;
 						}
 
@@ -276,7 +304,7 @@ class HScriptMacro
 
 						if (hscriptParams.pathNameDynId != null)
 						{
-							// Context.info('Using path (identifier): ${hscriptParams.pathNameDynId}', field.pos);
+							// Context.info('Using path (identifier): ${hscriptParams.pathNameDynId}', Context.currentPos());
 							scriptFetchExpr = macro
 								{
 									if (Reflect.isFunction($i{hscriptParams.pathNameDynId}))
@@ -378,7 +406,7 @@ class HScriptMacro
 							});
 
 					default:
-						Context.error("Error: The @:hscript meta is only allowed on functions", field.pos);
+						Context.error("Error: The @:hscript meta is only allowed on functions", Context.currentPos());
 				}
 			}
 		}
@@ -409,4 +437,396 @@ class HScriptMacro
 		}
 		return fields;
 	}
+
+	/**
+	 * Parse `@:hscriptClass({})`. Don't get this confused!
+	 */
+	static function parseHScriptClassParams(metaEntry:MetadataEntry):HScriptClassParams
+	{
+		var result:HScriptClassParams = {};
+
+		switch (metaEntry.params[0].expr)
+		{
+			case EObjectDecl(paramFields):
+				// paramFields
+				for (paramField in paramFields)
+				{
+					switch (paramField.field)
+					{
+						case 'baseClass':
+							switch (paramField.expr.expr)
+							{
+								case EConst(CIdent(baseClassName)):
+									result.baseClass = baseClassName;
+								default:
+									Context.error("Error: @:hscriptClass baseClass must be a string", Context.currentPos());
+							}
+							break;
+					}
+				}
+				trace(paramFields);
+			default:
+				Context.error("Error: @:hscriptClass({}) must contain an object", Context.currentPos());
+		}
+
+		return result;
+	}
+
+	public static function buildHScriptClass(cls:haxe.macro.Type.ClassType, fields:Array<Field>):Array<Field>
+	{
+		var cls:haxe.macro.Type.ClassType = Context.getLocalClass().get();
+
+		var script_class_meta = cls.meta.get().find(function(m) return m.name == ':hscriptClass');
+		if (script_class_meta != null)
+		{
+			var superCls:haxe.macro.Type.ClassType = cls.superClass.t.get();
+
+			// Create scripted class override for constructor.
+			var constructor = fields.find(function(field) return field.name == 'new');
+
+			if (constructor != null)
+			{
+				Context.error("Error: Constructor already defined for this class", Context.currentPos());
+			}
+			else
+			{
+				if (superCls.constructor != null)
+				{
+					switch (superCls.constructor.get().type)
+					{
+						case TFun(args, ret):
+							// Build a new constructor, which has the same signature as the superclass constructor.
+							var constArgs = [
+								for (arg in args)
+									{name: arg.name, opt: arg.opt, type: Context.toComplexType(arg.t)}
+							];
+              // Create scripted class utility functions.
+					    var utilFields:Array<Field> = buildScriptedClassUtils(cls, superCls, constArgs);
+					    fields = fields.concat(utilFields);
+							constructor = buildScriptedClassConstructor(constArgs);
+						case TLazy(builder):
+							switch (builder())
+							{
+								case TFun(args, ret):
+                  // Build a new constructor, which has the same signature as the superclass constructor.
+									var constArgs = [
+										for (arg in args)
+											{name: arg.name, opt: arg.opt, type: Context.toComplexType(arg.t)}
+									];
+                  // Create scripted class utility functions.
+                  var utilFields:Array<Field> = buildScriptedClassUtils(cls, superCls, constArgs);
+					        fields = fields.concat(utilFields);
+									constructor = buildScriptedClassConstructor(constArgs);
+								default:
+									Context.error('Error: Lazy superclass constructor is not a function (got ${superCls.constructor.get().type})',
+										Context.currentPos());
+							}
+						default:
+							Context.error('Error: super constructor is not a function (got ${superCls.constructor.get().type})', Context.currentPos());
+					}
+				}
+				else
+				{
+					constructor = buildEmptyScriptedClassConstructor();
+					// Create scripted class utility functions.
+					var utilFields:Array<Field> = buildScriptedClassUtils(cls, superCls, []);
+					fields = fields.concat(utilFields);
+				}
+				fields.push(constructor);
+			}
+
+			// Create scripted class overrides for all fields (except constructor).
+			// Create scripted class overrides for non-constructor fields.
+			fields = fields.concat(buildScriptedClassFieldOverrides(cls));
+		}
+		// Else, do nothing.
+
+		return fields;
+	}
+
+	static function buildScriptedClassUtils(cls:haxe.macro.Type.ClassType, superCls:haxe.macro.Type.ClassType, superConstArgs:Array<FunctionArg>):Array<Field>
+	{
+		Context.info('Building scripted class utils', Context.currentPos());
+		var clsTypeName:String = cls.pack.join('.') != '' ? '${cls.pack.join('.')}.${cls.name}' : cls.name;
+    var superClsTypeName:String = superCls.pack.join('.') != '' ? '${superCls.pack.join('.')}.${superCls.name}' : superCls.name;
+
+		// var _asc:AbstractScriptClass = null;
+		var var__asc:Field = {
+			name: '_asc',
+			doc: "The AbstractScriptClass instance which any variable or function calls are redirected to internally.",
+			access: [APrivate], // Private instance variable
+			kind: FVar(Context.toComplexType(Context.getType('hscript.AbstractScriptClass'))),
+			pos: cls.pos,
+		};
+
+		// public static function listScriptClasses():Array<String>;
+		var function_listScriptClasses:Field = {
+			name: 'listScriptClasses',
+			doc: "Returns a list of all the scripted classes which extend this class.",
+			access: [APublic, AStatic],
+			meta: null,
+			pos: cls.pos,
+			kind: FFun({
+				args: [],
+				params: null,
+				ret: Context.toComplexType(Context.typeof(macro
+					{var x:Array<String>; x;})),
+				expr: macro
+				{
+					return polymod.hscript.PolymodScriptClass.listScriptClassesExtending($v{superClsTypeName});
+				},
+			}),
+		};
+
+		// public static function init(clsName:String, ...args):T;
+		var constArgs = [for (arg in superConstArgs) macro $i{arg.name}];
+    var castExpr:Expr = { pos: Context.currentPos(), expr: EVars([
+      {
+        name: 'scriptedObj',
+        type: Context.toComplexType(Context.getType(clsTypeName)),
+        expr: macro cast asc.superClass,
+      }
+    ])};
+		var typePath:haxe.macro.TypePath = {
+			pack: cls.pack,
+			name: cls.name,
+		};
+		var function_init:Field = {
+			name: 'init',
+			doc: "Initializes a scripted class instance using the given scripted class name and constructor arguments.",
+			access: [APublic, AStatic],
+			meta: null,
+			pos: cls.pos,
+			kind: FFun({
+				args: [{name: 'clsName', type: Context.toComplexType(Context.getType('String'))},].concat(superConstArgs),
+				params: null,
+				ret: Context.toComplexType(Context.getType(clsTypeName)),
+				expr: macro {
+          @:privateAccess
+          hscript.InterpEx._scriptClassOverrides.set($v{superClsTypeName}, Type.resolveClass($v{clsTypeName}));
+
+					var asc:hscript.AbstractScriptClass = polymod.hscript.PolymodScriptClass.createScriptClassInstance(clsName, $a{constArgs});
+          $e{castExpr};
+
+          Reflect.setField(scriptedObj, '_asc', asc);
+          
+          return scriptedObj;
+				},
+			}),
+		};
+
+		return [var__asc, function_listScriptClasses, function_init];
+	}
+
+	/**
+	 * For each function in the superclass, create a function in the subclass
+   * that redirects to the internal abstract script class.
+	 */
+	static function buildScriptedClassFieldOverrides(cls:haxe.macro.Type.ClassType):Array<Field>
+	{
+    var fieldDone:Array<String> = [];
+    var fieldArray:Array<Field> = [];
+
+    var targetClass:haxe.macro.Type.ClassType = cls;
+
+    while (targetClass != null) {
+      Context.info('Processing overrides for class: ${targetClass.name}', Context.currentPos());
+      var newFields:Array<Field> = buildScriptedClassFieldOverrides_inner(targetClass);
+      for (newField in newFields) {
+        if (newField != null && !fieldDone.contains(newField.name)) {
+          Context.info('Registering new override: ${newField.name}', Context.currentPos());
+          fieldDone.push(newField.name);
+          fieldArray.push(newField);
+        } else {
+          //Context.info('Discarding redundant override: ${fieldName}', Context.currentPos());
+        }
+      }
+      Context.info('Moving on... ${targetClass.superClass}', Context.currentPos());
+      if (targetClass.superClass != null) {
+        targetClass = targetClass.superClass.t.get();
+      } else {
+        targetClass = null;
+      }
+    }
+
+		return fieldArray;
+	}
+
+  static function buildScriptedClassFieldOverrides_inner(cls:haxe.macro.Type.ClassType):Array<Field> {
+    var fields:Array<Field> = new Array<Field>();
+
+    // Context.info('Mapping overrides of class: ${cls.name}', Context.currentPos());
+    for (field in cls.fields.get()) {
+      // Context.info('Attempting to build instance override: ${field.name}', Context.currentPos());
+      if (field.name != 'new') {
+        fields.push(overrideField(field, false));
+      }
+    }
+    for (field in cls.statics.get()) {
+      // Context.info('Attempting to build static override: ${field.name}', Context.currentPos());
+
+      // TODO: Figure out a workaround for this error in order to support static fields
+      // HScriptMacro.hx: Cannot access _asc in static function
+      // fields.push(overrideField(field, true));
+    }
+
+    return fields.filter(function(field:Field):Bool {
+      return field != null;
+    });
+  }
+
+  static function overrideField(field:haxe.macro.Type.ClassField, isStatic:Bool, ?type:haxe.macro.Type = null):Field {
+    if (type == null) {
+      type = field.type;
+    }
+    switch(type) {
+      case TLazy(lt):
+        // A lazy wrapper for another field.
+        // We have to call the function to get the true value.
+        var ltv:haxe.macro.Type = lt();
+        // Context.info('Lazy field type: ${field}', Context.currentPos());
+        return overrideField(field, isStatic, ltv);
+        // return [];
+      case TFun(args, ret):
+        // This field is a function of the class.
+        // We need to redirect to the scripted class in case our scripted class overrides it.
+        // If it isn't overridden, the AbstractScriptClass will call the original function.
+        // Context.info('Function: "${field.name}"', Context.currentPos());
+
+        // Generate the list of input arguments for the function.
+        var func_inputArgs:Array<FunctionArg> = [
+          for (arg in args) ({
+            name: arg.name,
+            opt: arg.opt,
+            type: Context.toComplexType(arg.t),
+            value: null,
+            meta: null,
+          })
+        ];
+ 
+        // Generate the list of call arguments for the function.
+        var func_callArgs:Array<Expr> = [for (arg in args) macro $i{arg.name}];
+        var func_access = [field.isPublic ? APublic : APrivate];
+        if (field.isFinal) func_access.push(AFinal);
+        if (isStatic) {
+          func_access.push(AStatic);
+        } else {
+          func_access.push(AOverride);
+        }
+
+        var doesReturnVoid:Bool = false;
+        var test:String = ret.toString();
+
+        var func_over:Field = {
+          name: field.name,
+          doc: field.doc == null ? 'Polymod ScriptedClass override of ${field.name}.'
+            : 'Polymod ScriptedClass override of ${field.name}.\n${field.doc}',
+          access: func_access,
+          meta: field.meta.get(),
+          pos: field.pos,
+          kind: FFun({
+            args: func_inputArgs,
+            params: null,
+            ret: Context.toComplexType(ret),
+            expr: macro {
+              return _asc.callFunction($v{field.name}, [$a{func_callArgs}]);
+            },
+          }),
+        };
+
+        return func_over;
+      case TInst(_t, _params):
+        // This field is an instance of a class.
+        // Example: var test:TestClass = new TestClass();
+
+        // Originally, I planned to replace all variables on the class with properties,
+        // however this is not possible because properties are merely a compile-time feature.
+
+        // However, since scripted classes correctly access the superclass variables anyway,
+        // there is no need to override the value.
+        // Context.info('Field: Instance variable "${field.name}"', Context.currentPos());
+        return null;
+      case TEnum(_t, _params):
+        // Enum instance
+        // Context.info('Field: Enum variable "${field.name}"', Context.currentPos());
+        return null;
+      case TMono(_t):
+        // Monomorph instance
+        // https://haxe.org/manual/types-monomorph.html
+        // Context.info('Field: Monomorph variable "${field.name}"', Context.currentPos());
+        return null;
+      case TAnonymous(_t):
+        // Context.info('Field: Anonymous variable "${field.name}"', Context.currentPos());
+        return null;
+      case TDynamic(_t):
+        // Context.info('Field: Dynamic variable "${field.name}"', Context.currentPos());
+        return null;
+      case TAbstract(_t, _params):
+        // Context.info('Field: Abstract variable "${field.name}"', Context.currentPos());
+        return null;
+      default:
+        // Context.info('Unknown field type: ${field}', Context.currentPos());
+        return null;
+    }
+  }
+
+	static function buildScriptedClassConstructor(superConstArgs:Array<FunctionArg>):Field
+	{
+		var ascArg:FunctionArg = {
+			name: '_asc',
+			opt: false,
+			type: Context.toComplexType(Context.getType('hscript.AbstractScriptClass')),
+			value: null,
+			meta: null,
+		};
+
+		var constArgs:Array<FunctionArg> = [ascArg].concat([for (arg in superConstArgs) arg]);
+		var superCallArgs:Array<Expr> = [for (arg in superConstArgs) macro $i{arg.name}];
+
+		return {
+			name: 'new',
+			access: [APrivate],
+			pos: Context.currentPos(),
+			kind: FFun({
+				args: constArgs,
+				expr: macro
+				{
+					// Call the super constructor with appropriate args
+					super($a{superCallArgs});
+					// Run any additional setup
+					Reflect.setField(this, '_asc', _asc); // this._asc is not available to access at compile time.
+				},
+			}),
+		};
+	}
+
+	static function buildEmptyScriptedClassConstructor():Field
+	{
+		var ascArg:FunctionArg = {
+			name: '_asc',
+			opt: false,
+			type: Context.toComplexType(Context.getType('hscript.AbstractScriptClass')),
+			value: null,
+			meta: null,
+		}
+
+		return ({
+			name: "new",
+			access: [APrivate],
+			pos: Context.currentPos(),
+			kind: FFun({
+				args: [ascArg],
+				expr: macro
+				{
+					// Run any additional setup
+					Reflect.setField(this, '_asc', _asc); // this._asc is not available to access at compile time.
+				}
+			})
+		});
+	}
+}
+
+typedef HScriptClassParams =
+{
+	?baseClass:String,
 }

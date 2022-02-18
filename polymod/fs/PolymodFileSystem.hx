@@ -7,16 +7,24 @@ class PolymodFileSystem
 {
 	/**
 	 * Constructs a new PolymodFileSystem.
+   * @param cls An input file system. Might be an IFileSystem or a Class<IFileSystem>.
 	 */
-	public static function makeFileSystem(cls:Class<IFileSystem>, params:PolymodFileSystemParams):IFileSystem
+	public static function makeFileSystem(cls:Dynamic = null, params:PolymodFileSystemParams):IFileSystem
 	{
 		if (cls == null)
 		{
+      // We need to determine the class to instantiate.
 			return _detectFileSystem(params);
-		}
+		} else if (cls is IFileSystem) {
+      return cls;
+    } else if (cls is Class) {
+      // Else, instantiate the provided class.
+		  return cast Type.createInstance(cls, [params]);
+    } else {
+      Polymod.error(BAD_CUSTOM_FILESYSTEM, "Passed an unknown type for a custom filesystem. Reverting to default...");
+      return makeFileSystem(null, params);
+    }
 
-		// Else, instantiate the provided class.
-		return Type.createInstance(cls, [params]);
 	}
 
 	/**

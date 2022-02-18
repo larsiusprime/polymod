@@ -2,6 +2,7 @@ import openfl.display.Sprite;
 import openfl.Lib;
 import polymod.Polymod;
 import polymod.Polymod.Framework;
+import haxe.io.Path;
 
 class Main extends Sprite
 {

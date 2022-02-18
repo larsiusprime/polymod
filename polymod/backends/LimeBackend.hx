@@ -465,6 +465,7 @@ class LimeModLibrary extends AssetLibrary
 		var modText = null;
 		if (p.check(symbol.modId))
 		{
+      // Don't worry, getText falls back to calling getBytes.
 			modText = super.getText(symbol.modId);
 		}
 		else if (hasFallback)

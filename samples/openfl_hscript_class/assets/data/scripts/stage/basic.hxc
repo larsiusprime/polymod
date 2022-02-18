@@ -1,0 +1,23 @@
+import Stage;
+import openfl.Assets;
+
+class BasicStage extends Stage {
+  public function new() {
+    super("basic");
+    trace('Initialized basicStage! Hello, world!');
+  }
+
+  public override function create():Void {
+    super.create();
+
+    this.stageName = "Basic Stage";
+
+    var landscapeBg = new Bitmap(Assets.getBitmapData('img/stage/landscape.png'));
+    landscapeBg.x = 0;
+    landscapeBg.y = 0;
+    landscapeBg.width = 480;
+    landscapeBg.width = 360;
+
+    this.addChild(landscapeBg);
+  }
+}

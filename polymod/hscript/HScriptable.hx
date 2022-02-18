@@ -274,52 +274,20 @@ class Script
 
 	public static function buildParser():hscript.Parser
 	{
-		// TODO: What is the correct compile define?
 		#if hscript_ex
-		if (PolymodConfig.useHScriptEX)
-		{
-			return new hscript.ParserEx();
-		}
-		else
-		{
-			return new hscript.Parser();
-		}
+    return new hscript.ParserEx();
 		#else
-		if (PolymodConfig.useHScriptEX)
-		{
-			Polymod.error(PolymodErrorCode.SCRIPT_NO_INTERPRETER, 'HScript-EX is not available on this platform. Make sure to install it.');
-			return new hscript.Parser();
-		}
-		else
-		{
-			return new hscript.Parser();
-		}
+		return new hscript.Parser();
 		#end
 	}
 
 	public static function buildInterp():hscript.Interp
 	{
-		// TODO: What is the correct compile define?
 		#if hscript_ex
-		if (PolymodConfig.useHScriptEX)
-		{
-			return new hscript.InterpEx();
-		}
-		else
-		{
-			return new hscript.Interp();
-		}
+		return new hscript.InterpEx();
 		#else
-		if (PolymodConfig.useHScriptEX)
-		{
-			Polymod.error(PolymodErrorCode.SCRIPT_NO_INTERPRETER, 'HScript-EX is not available on this platform. Make sure to install it.');
-			return new hscript.Interp();
-		}
-		else
-		{
-			return new hscript.Interp();
-		}
-		#end
+    return new hscript.Interp();
+    #end
 	}
 
 	public function new(script:String)

@@ -68,7 +68,6 @@ class SysFileSystem implements IFileSystem
 
 			var metaFile = Util.pathJoin(modId, PolymodConfig.modMetadataFile);
 			var iconFile = Util.pathJoin(modId, PolymodConfig.modIconFile);
-			var packFile = Util.pathJoin(modId, PolymodConfig.modPackFile);
 
 			if (!exists(metaFile))
 			{

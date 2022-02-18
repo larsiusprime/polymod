@@ -1,0 +1,8 @@
+{
+  "files.associations": {
+    "*.hscript": "haxe",
+    "*.haxe": "haxe",
+    "*.hxs": "haxe",
+    "*.hxc": "haxe"
+  }
+}

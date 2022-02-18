@@ -4,8 +4,10 @@
   "license": "MIT",
   "tags": ["mod","game","data","asset"],
   "description": "An atomic modding framework for Haxe games",
-  "version": "1.4.3",
+  "version": "1.5.0",
   "releasenote": "Minor bug fix to the OpenFL backend",
   "contributors": ["MasterEric", "larsiusprime"],
-  "dependencies": {}
+  "dependencies": {
+    "hscript-ex": "0.0.0"
+  }
 }

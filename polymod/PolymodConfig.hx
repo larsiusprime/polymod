@@ -67,7 +67,7 @@ class PolymodConfig
 	}
 
 	/**
-	 * The file extension for script files.
+	 * The file extension for script files. It is recommended to change this to `.hxs`.
 	 * 
 	 * Set this option by setting the `POLYMOD_SCRIPT_EXT` Haxe define at compile time,
 	 * or by setting this value in your code.
@@ -82,6 +82,24 @@ class PolymodConfig
 		if (scriptExt == null)
 			scriptExt = DefineUtil.getDefineString('POLYMOD_SCRIPT_EXT', '.txt');
 		return scriptExt;
+	}
+
+  /**
+	 * The file extension for scripted class files.
+	 * 
+	 * Set this option by setting the `POLYMOD_SCRIPT_CLASS_EXT` Haxe define at compile time,
+	 * or by setting this value in your code.
+	 * 
+	 * @default `.hclass`
+	 */
+	public static var scriptClassExt(get, default):String;
+
+	static function get_scriptClassExt()
+	{
+		// If the value is null, retrieve the value as a Haxe define.
+		if (scriptClassExt == null)
+			scriptClassExt = DefineUtil.getDefineString('POLYMOD_SCRIPT_CLASS_EXT', '.hxc');
+		return scriptClassExt;
 	}
 
 	/**
@@ -146,28 +164,6 @@ class PolymodConfig
 	}
 
 	/**
-	 * Determines which HScript interpreter to use. The HScript-EX interpreter is experimental but boasts support for custom classes.
-	 * 
-	 * If `false`, the default HScript interpreter will be used.
-	 * If `true`, the HScript-EX interpreter will be used.
-	 * 
-	 * @default `false`
-	 */
-	public static var useHScriptEX(get, default):Null<Bool> = null;
-
-	static function get_useHScriptEX()
-	{
-		/*
-			// If the value is null, retrieve the value as a Haxe define.
-			if (useHScriptEX == null)
-				useHScriptEX = DefineUtil.getDefineBool('POLYMOD_USE_HSCRIPTEX', true);
-			return useHScriptEX;
-		 */
-		// TODO: Implement this.
-		return false;
-	}
-
-	/**
 	 * The directory from which to read data merge files.
 	 * 
 	 * Set this option by setting the `POLYMOD_MERGE_FOLDER` Haxe define at compile time,
@@ -193,6 +189,7 @@ class PolymodConfig
 	 * 
 	 * @default `_polymod_pack.txt`
 	 */
+  // @:deprecated("Functionality removed, new implementation pending")
 	public static var modPackFile(get, default):String;
 
 	static function get_modPackFile()

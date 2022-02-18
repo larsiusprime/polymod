@@ -1,5 +1,6 @@
 package polymod.util;
 
+import haxe.io.Path;
 import haxe.Utf8;
 import polymod.Polymod.PolymodError;
 import polymod.Polymod.PolymodErrorType;
@@ -16,6 +17,21 @@ import unifill.Unifill;
 
 class Util
 {
+	/**
+	 * For a given file, return a list of all its parent directories.
+	 * @param filePath
+	 * @return Array<String>
+	 */
+  public static function listAllParentDirs(filePath:String):Array<String> {
+    var parentDirs:Array<String> = new Array<String>();
+    var parentDir:String = filePath;
+    while (parentDir != null && parentDir != "") {
+      parentDirs.push(parentDir);
+      parentDir = Path.directory(parentDir);
+    }
+    return parentDirs;
+  }
+
 	public static function mergeAndAppendText(baseText:String, id:String, dirs:Array<String>, getModText:String->String->String, fileSystem:IFileSystem,
 			parseRules:ParseRules = null):String
 	{

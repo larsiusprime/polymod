@@ -3,6 +3,7 @@ package polymod;
 import haxe.Json;
 import haxe.io.Bytes;
 import polymod.backends.IBackend;
+import polymod.hscript.PolymodScriptClass;
 import polymod.backends.PolymodAssetLibrary;
 import polymod.backends.PolymodAssets;
 import polymod.format.JsonHelp;
@@ -69,10 +70,12 @@ typedef PolymodParams =
 	?extensionMap:Map<String, PolymodAssetType>,
 	/**
 	 * (optional) your own custom backend for accessing the file system
+   * Provide either an IFileSystem or a Class<IFileSystem>.
 	 */
-	?customFilesystem:Class<IFileSystem>,
+  ?customFilesystem:Dynamic,
 	/**
 	 * (optional) a set of additional parameters to initialize your custom filesystem
+   * Use only if you provided a Class<IFileSystem> for the customFilesystem.
 	 */
 	?fileSystemParams:PolymodFileSystemParams,
 	/**
@@ -87,6 +90,11 @@ typedef PolymodParams =
 	#if firetongue
 	?firetongue:FireTongue,
 	#end
+
+  /**
+   * (optional) whether to parse and allow for initialization of classes in script files
+   */
+  ?useScriptedClasses:Bool,
 }
 
 /**
@@ -264,16 +272,42 @@ class Polymod
 			return null;
 		}
 
+    // If we're here... Polymod initialized successfully!
+    // Time for some post-initialization cleanup.
+
 		// Store the params for later use (by loadMod, unloadMod, and clearMods)
 		prevParams = params;
 
-		if (PolymodAssets.exists((PolymodConfig.modPackFile)))
-		{
-			Polymod.warning(FUNCTIONALITY_DEPRECATED, 'The pack.txt modpack format has been deprecated', INIT);
-		}
+    // Do scripted class initialization now that the assetLibrary is 
+    #if hscript_ex
+    if (params.useScriptedClasses) {
+      Polymod.notice(PolymodErrorCode.SCRIPT_CLASS_PARSING, 'Parsing script classes...');
+      PolymodScriptClass.registerAllScriptClasses();
+
+      var classList = PolymodScriptClass.listScriptClasses();
+      Polymod.notice(PolymodErrorCode.SCRIPT_CLASS_PARSED, 'Parsed and registered ${classList.length} scripted classes.');
+    }
+    #else
+    if (params.useScriptedClasses) {
+      Polymod.error(PolymodErrorCode.SCRIPT_NO_INTERPRETER,
+        'Polymod does not support useScriptedClasses unless the library "hscript-ex" is installed.');
+    }
+    #end
 
 		return modMeta;
 	}
+
+  /**
+   * Retrieve the IFileSystem instance currently in use by Polymod.
+   * This may be useful if you're using a MemoryFileSystem or a custom file system.
+   */
+  public static function getFileSystem():IFileSystem {
+    if (assetLibrary == null) {
+      Polymod.warning(POLYMOD_NOT_LOADED, 'Polymod is not loaded yet, cannot return file system.', INIT);
+      return null;
+    }
+    return assetLibrary.fileSystem;
+  }
 
 	/**
 	 * Reinitializes Polymod (with the same parameters) while enabling an individual mod.
@@ -438,10 +472,8 @@ class Polymod
 			return [];
 		}
 
-		if (fileSystem == null)
-		{
-			fileSystem = PolymodFileSystem.makeFileSystem(null, {modRoot: modRoot});
-		}
+    if (fileSystem == null)
+      fileSystem = PolymodFileSystem.makeFileSystem(null, {modRoot: modRoot});
 
 		var modMeta = [];
 
@@ -828,6 +860,18 @@ enum PolymodErrorType
 	 */
 	var MOD_LOAD_DONE:String = 'mod_load_done';
 
+  /**
+   * You passed a bad argument to Polymod.init({customFilesystem}).
+   * - Ensure the input is either an IFileSystem or a Class<IFileSystem>.
+   */
+  var BAD_CUSTOM_FILESYSTEM:String = 'bad_custom_filesystem';
+
+  /**
+   * You attempted to register a new scripted class with a name that is already in use.
+   * - If you need to clear the class descriptor, call `PolymodScriptClass.clearClasses()`.
+   */
+   var SCRIPT_CLASS_ALREADY_REGISTERED:String = 'bad_custom_filesystem';
+
 	/**
 	 * You attempted to perform an operation that requires Polymod to be initialized.
 	 * - Make sure you call Polymod.init before attempting to call this function.
@@ -855,6 +899,25 @@ enum PolymodErrorType
 	 *     as long as your application is built to function without it.
 	 */
 	var SCRIPT_NOT_FOUND:String = 'script_not_found';
+
+	/**
+	 * A script file contains an unknown class name.
+	 * - Make sure your scripted class extends an existing class.
+   * - If your scripted class extends another scripted class, make sure both get loaded.
+	 */
+   var SCRIPT_CLASS_NOT_FOUND:String = 'script_class_not_found';
+
+  /**
+	 * One or more scripted classes are about to be parsed in preparation to be initialized later.
+   * - This is an info message. You can log it or ignore it if you like.
+	 */
+  var SCRIPT_CLASS_PARSING:String = 'script_class_parsing';
+
+  /**
+	 * One or more scripted classes have been parsed and are ready to be initialized.
+   * - This is an info message. You can log it or ignore it if you like.
+	 */
+   var SCRIPT_CLASS_PARSED:String = 'script_class_parsed';
 
 	/**
 	 * A script file of the given name could not be loaded for some unknown reason.
