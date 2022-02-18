@@ -11,28 +11,23 @@ class OpenFLBackend extends StubBackend
 }
 #else
 #if !nme
-
-import openfl.utils.AssetCache;
-
 class OpenFLBackend extends LimeBackend
 {
-	var assetCache = new AssetCache();
-
 	public override function clearCache()
 	{
 		super.clearCache();
 
-		for (key in assetCache.getBitmapKeys())
+		for (key in openfl.Assets.cache.getBitmapKeys())
 		{
-			assetCache.removeBitmapData(key);
+			openfl.Assets.cache.removeBitmapData(key);
 		}
-		for (key in assetCache.getFontKeys())
+		for (key in openfl.Assets.cache.getFontKeys())
 		{
-			assetCache.removeFont(key);
+			openfl.Assets.cache.removeFont(key);
 		}
-		for (key in assetCache.getSoundKeys())
+		for (key in openfl.Assets.cache.getSoundKeys())
 		{
-			assetCache.removeSound(key);
+			openfl.Assets.cache.removeSound(key);
 		}
 	}
 }
