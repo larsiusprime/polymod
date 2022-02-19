@@ -17,17 +17,51 @@ class OpenFLBackend extends LimeBackend
 	{
 		super.clearCache();
 
-		for (key in openfl.Assets.cache.getBitmapKeys())
+		clearBitmapCache();
+		clearFontCache();
+		clearSoundCache();
+	}
+
+	/**
+	 * These lines are needed until a PR merges:
+	 * https://github.com/openfl/openfl/pull/2534
+	 */
+	static function clearBitmapCache():Void
+	{
+		// for (key in openfl.Assets.cache.getBitmapKeys())
+		// {
+		//   openfl.Assets.cache.removeBitmapData(key);
+		// }
+		var cache:openfl.utils.AssetCache = cast openfl.utils.Assets.cache;
+		for (key in cache.bitmapData.keys())
 		{
-			openfl.Assets.cache.removeBitmapData(key);
+			cache.bitmapData.remove(key);
 		}
-		for (key in openfl.Assets.cache.getFontKeys())
+	}
+
+	static function clearFontCache():Void
+	{
+		// for (key in openfl.Assets.cache.getFontKeys())
+		// {
+		//   openfl.Assets.cache.removeFont(key);
+		// }
+		var cache:openfl.utils.AssetCache = cast openfl.utils.Assets.cache;
+		for (key in cache.font.keys())
 		{
-			openfl.Assets.cache.removeFont(key);
+			cache.font.remove(key);
 		}
-		for (key in openfl.Assets.cache.getSoundKeys())
+	}
+
+	static function clearSoundCache():Void
+	{
+		// for (key in openfl.Assets.cache.getSoundKeys())
+		// {
+		//   openfl.Assets.cache.removeSound(key);
+		// }
+		var cache:openfl.utils.AssetCache = cast openfl.utils.Assets.cache;
+		for (key in cache.sound.keys())
 		{
-			openfl.Assets.cache.removeSound(key);
+			cache.sound.remove(key);
 		}
 	}
 }
