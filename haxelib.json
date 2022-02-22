@@ -6,8 +6,5 @@
   "description": "An atomic modding framework for Haxe games",
   "version": "1.5.0",
   "releasenote": "Added a new framework to support scripted classes",
-  "contributors": ["MasterEric", "larsiusprime"],
-  "dependencies": {
-    "hscript-ex": "0.0.0"
-  }
+  "contributors": ["MasterEric", "larsiusprime"]
 }
