@@ -278,8 +278,7 @@ class Polymod
 		// Store the params for later use (by loadMod, unloadMod, and clearMods)
 		prevParams = params;
 
-    // Do scripted class initialization now that the assetLibrary is 
-    #if hscript_ex
+    // Do scripted class initialization now that the assetLibrary is loaded.
     if (params.useScriptedClasses) {
       Polymod.notice(PolymodErrorCode.SCRIPT_CLASS_PARSING, 'Parsing script classes...');
       PolymodScriptClass.registerAllScriptClasses();
@@ -287,12 +286,6 @@ class Polymod
       var classList = PolymodScriptClass.listScriptClasses();
       Polymod.notice(PolymodErrorCode.SCRIPT_CLASS_PARSED, 'Parsed and registered ${classList.length} scripted classes.');
     }
-    #else
-    if (params.useScriptedClasses) {
-      Polymod.error(PolymodErrorCode.SCRIPT_NO_INTERPRETER,
-        'Polymod does not support useScriptedClasses unless the library "hscript-ex" is installed.');
-    }
-    #end
 
 		return modMeta;
 	}

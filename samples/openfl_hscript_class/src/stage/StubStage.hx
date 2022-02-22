@@ -1,14 +1,15 @@
 package stage;
 
-import openfl.Assets;
+class StubStage extends Stage
+{
+	public function new()
+	{
+		super('stub');
+		this.stageName = "Stub Stage";
+	}
 
-class StubStage extends Stage {
-  public function new() {
-    super('stub');
-    this.stageName = "Stub Stage";
-  }
-
-  public override function create() {
-    super.create();
-  }
+	public override function create()
+	{
+		super.create();
+	}
 }

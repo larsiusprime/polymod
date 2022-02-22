@@ -12,17 +12,18 @@ class Main extends Sprite
 	public function new()
 	{
 		super();
-    // Initialize Polymod but load no mods
-    loadMods([]);
+		// Initialize Polymod but load no mods
+		loadMods([]);
 		loadDemo();
-    // test();
+		// test();
 	}
 
-  function test() {
-    var defaultStageId:String = 'STAGE_${Std.random(256)}';
-    var stage:ScriptedStage = ScriptedStage.init('BasicStage', defaultStageId);
-    stage.create();
-  }
+	function test()
+	{
+		var defaultStageId:String = 'STAGE_${Std.random(256)}';
+		var stage:ScriptedStage = ScriptedStage.init('BasicStage', defaultStageId);
+		stage.create();
+	}
 
 	private function loadDemo()
 	{
@@ -51,7 +52,7 @@ class Main extends Sprite
 			ignoredFiles: Polymod.getDefaultIgnoreList(),
 			framework: framework,
 			assetPrefix: '',
-      useScriptedClasses: true,
+			useScriptedClasses: true,
 		});
 	}
 

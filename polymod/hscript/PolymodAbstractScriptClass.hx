@@ -45,8 +45,8 @@ abstract PolymodAbstractScriptClass(PolymodScriptClass) from PolymodScriptClass 
                     return Reflect.getProperty(this.superClass, name);
                 } else if (Reflect.hasField(this.superClass, name)) {
                     return Reflect.field(this.superClass, name);
-                } else if (this.superClass != null && Std.is(this.superClass, ScriptClass)) {
-                    var superScriptClass:AbstractScriptClass = cast(this.superClass, ScriptClass);
+                } else if (this.superClass != null && Std.isOfType(this.superClass, PolymodScriptClass)) {
+                    var superScriptClass:PolymodAbstractScriptClass = cast(this.superClass, PolymodScriptClass);
                     try {
                         return superScriptClass.fieldRead(name);
                     } catch (e:Dynamic) { } 
@@ -73,8 +73,8 @@ abstract PolymodAbstractScriptClass(PolymodScriptClass) from PolymodScriptClass 
                 } else if (Reflect.hasField(this.superClass, name)) {
                     Reflect.setProperty(this.superClass, name, value);
                     return value;
-                } else if (this.superClass != null && Std.is(this.superClass, ScriptClass)) {
-                    var superScriptClass:AbstractScriptClass = cast(this.superClass, ScriptClass);
+                } else if (this.superClass != null && Std.isOfType(this.superClass, PolymodScriptClass)) {
+                    var superScriptClass:PolymodAbstractScriptClass = cast(this.superClass, PolymodScriptClass);
                     try {
                         return superScriptClass.fieldWrite(name, value);
                     } catch (e:Dynamic) { } 

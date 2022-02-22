@@ -1,7 +1,9 @@
 package polymod.hscript;
-#if hscript_ex
+
 import hscript.AbstractScriptClass;
 import hscript.Interp;
+import hscript.Expr;
+import hscript.Tools;
 
 /**
  * Based on code by Ian Harrigan
@@ -11,15 +13,19 @@ import hscript.Interp;
 @:access(polymod.hscript.PolymodAbstractScriptClass)
 class PolymodInterpEx extends Interp {
   var targetCls:Class<Dynamic>;
-  public function new(targetCls:Class<Dynamic>, proxy:AbstractScriptClass) {
-    super(proxy);
+  public function new(targetCls:Class<Dynamic>, proxy:PolymodAbstractScriptClass) {
+    super();
+    _proxy = proxy;
+		variables.set("Type", Type);
+		variables.set("Math", Math);
+		variables.set("Std", Std);
     this.targetCls = targetCls;
   }
 
   override function cnew(cl:String, args:Array<Dynamic>):Dynamic {
     if (_scriptClassDescriptors.exists(cl)) {
       // OVERRIDE CHANGE: Create a PolymodScriptClass instead of a hscript.ScriptClass
-			var proxy:AbstractScriptClass = new PolymodScriptClass(_scriptClassDescriptors.get(cl), args);
+			var proxy:PolymodAbstractScriptClass = new PolymodScriptClass(_scriptClassDescriptors.get(cl), args);
 			return proxy;
 		} else if (_proxy != null) {
       @:privateAccess
@@ -28,7 +34,7 @@ class PolymodInterpEx extends Interp {
 				var packagedClass = _proxy._c.pkg.join(".") + "." + cl;
 				if (_scriptClassDescriptors.exists(packagedClass)) {
           // OVERRIDE CHANGE: Create a PolymodScriptClass instead of a hscript.ScriptClass
-					var proxy:AbstractScriptClass = new PolymodScriptClass(_scriptClassDescriptors.get(packagedClass), args);
+					var proxy:PolymodAbstractScriptClass = new PolymodScriptClass(_scriptClassDescriptors.get(packagedClass), args);
 					return proxy;
 				}
 			}
@@ -38,7 +44,7 @@ class PolymodInterpEx extends Interp {
 				var importedClass = _proxy._c.imports.get(cl).join(".");
 				if (_scriptClassDescriptors.exists(importedClass)) {
           // OVERRIDE CHANGE: Create a PolymodScriptClass instead of a hscript.ScriptClass
-					var proxy:AbstractScriptClass = new PolymodScriptClass(_scriptClassDescriptors.get(importedClass), args);
+					var proxy:PolymodAbstractScriptClass = new PolymodScriptClass(_scriptClassDescriptors.get(importedClass), args);
 					return proxy;
 				}
 
@@ -57,36 +63,23 @@ class PolymodInterpEx extends Interp {
    */
   override function fcall(o:Dynamic, f:String, args:Array<Dynamic>):Dynamic {
     // OVERRIDE CHANGE: Custom logic to handle super calls to prevent infinite recursion
-    // trace('fcall: ${Type.typeof(o)}.${f}()');
-    // trace('compare: ${targetCls}');
 		if (Std.isOfType(o, targetCls)) {
       // Force call super function.
-      //trace('Force call to __super_');
       return super.fcall(o, '__super_${f}', args);  
     } else if (Std.isOfType(o, PolymodScriptClass)) {
 			_nextCallObject = null;
-      //trace('Fix call to self');
 			var proxy:PolymodScriptClass = cast(o, PolymodScriptClass);
 			return proxy.callFunction(f, args);
 		}
-    //trace('Call to other function');
 		return super.fcall(o, f, args);
 	}
 
-  private var _proxy:AbstractScriptClass = null;
+  private var _proxy:PolymodAbstractScriptClass = null;
 
-	public function new(proxy:AbstractScriptClass = null) {
-		super();
-		_proxy = proxy;
-		variables.set("Type", Type);
-		variables.set("Math", Math);
-		variables.set("Std", Std);
-	}
-
-	private static var _scriptClassDescriptors:Map<String, ClassDeclEx> = new Map<String, ClassDeclEx>();
+	private static var _scriptClassDescriptors:Map<String, PolymodClassDeclEx> = new Map<String, PolymodClassDeclEx>();
 	private static var _scriptClassOverrides:Map<String, Class<Dynamic>> = new Map<String, Class<Dynamic>>();
 
-	private static function registerScriptClass(c:ClassDeclEx) {
+	private static function registerScriptClass(c:PolymodClassDeclEx) {
 		var name = c.name;
 		if (c.pkg != null) {
 			name = c.pkg.join(".") + "." + name;
@@ -102,12 +95,18 @@ class PolymodInterpEx extends Interp {
 		var v = expr(e2);
 		switch (Tools.expr(e1)) {
 			case EIdent(id):
-				if (_proxy.superClass != null && Reflect.hasField(_proxy.superClass, id)) {
-					Reflect.setProperty(_proxy.superClass, id, v);
-					return v;
-				}
+        if (_proxy.superClass != null) {
+          if (Reflect.hasField(_proxy.superClass, id)) {
+            Reflect.setProperty(_proxy.superClass, id, v);
+            return v;
+          } else if (Type.getInstanceFields(Type.getClass(_proxy.superClass)).contains(id)){
+            Reflect.setProperty(_proxy.superClass, id, v);
+            return v;
+          }
+        }
 			case _:
 		}
+    // trace('Call super assign');
 		return super.assign(e1, e2);
 	}
 
@@ -122,11 +121,10 @@ class PolymodInterpEx extends Interp {
 	}
 
 	override function get(o:Dynamic, f:String):Dynamic {
-		trace('get ${f}');
 		if (o == null)
 			error(EInvalidAccess(f));
-		if (Std.is(o, ScriptClass)) {
-			var proxy:AbstractScriptClass = cast(o, ScriptClass);
+		if (Std.isOfType(o, PolymodScriptClass)) {
+			var proxy:PolymodAbstractScriptClass = cast(o, PolymodScriptClass);
 			if (proxy._interp.variables.exists(f)) {
 				return proxy._interp.variables.get(f);
 			} else if (proxy.superClass != null && Reflect.hasField(proxy.superClass, f)) {
@@ -144,8 +142,8 @@ class PolymodInterpEx extends Interp {
 	override function set(o:Dynamic, f:String, v:Dynamic):Dynamic {
 		if (o == null)
 			error(EInvalidAccess(f));
-		if (Std.is(o, ScriptClass)) {
-			var proxy:ScriptClass = cast(o, ScriptClass);
+		if (Std.isOfType(o, PolymodScriptClass)) {
+			var proxy:PolymodScriptClass = cast(o, PolymodScriptClass);
 			if (proxy._interp.variables.exists(f)) {
 				proxy._interp.variables.set(f, v);
 			} else if (proxy.superClass != null && Reflect.hasField(proxy.superClass, f)) {
@@ -161,7 +159,6 @@ class PolymodInterpEx extends Interp {
 	private var _nextCallObject:Dynamic = null;
 
 	override function resolve(id:String):Dynamic {
-		trace('resolve ${id}');
 		_nextCallObject = null;
 		if (id == "super" && _proxy != null) {
 			if (_proxy.superClass == null) {
@@ -175,20 +172,16 @@ class PolymodInterpEx extends Interp {
 
 		var l = locals.get(id);
 		if (l != null) {
-			trace('returning local');
 			return l.r;
 		}
 		var v = variables.get(id);
 		if (v != null) {
-			trace('returning variable');
 			return v;
 		}
     // OVERRIDE CHANGE: Allow access to modules for calling static functions.
     var m = _proxy._c.imports.get(id);
     if (m != null) {
       var importedClass = m.join(".");
-
-      trace('returning imported module ${importedClass}');
 
       // TODO: Somehow allow accessing static fields of a ScriptClass without instantiating it.
 
@@ -197,25 +190,20 @@ class PolymodInterpEx extends Interp {
 
 		if (_proxy != null && _proxy.findFunction(id) != null) {
 			_nextCallObject = _proxy;
-			trace('returning resolve');
 			return _proxy.resolveField(id);
 		} else if (_proxy != null
 			&& _proxy.superClass != null
 			&& (Reflect.hasField(_proxy.superClass, id) || Reflect.getProperty(_proxy.superClass, id) != null)) {
 			_nextCallObject = _proxy.superClass;
-      trace('returning reflect');
 			return Reflect.getProperty(_proxy.superClass, id);
 		} else if (_proxy != null) {
 			try {
 				var r = _proxy.resolveField(id);
 				_nextCallObject = _proxy;
-        trace('returning proxy resolve');
 				return r;
 			} catch (e:Dynamic) {}
-			trace('unknown variable and nonnull proxy');
 			error(EUnknownVariable(id));
 		} else {
-			trace('unknown variable and null proxy');
 			error(EUnknownVariable(id));
 		}
     return null;
@@ -227,11 +215,11 @@ class PolymodInterpEx extends Interp {
 		registerModule(decls);
 	}
 
-	public function createScriptClassInstance(className:String, args:Array<Dynamic> = null):AbstractScriptClass {
+	public function createScriptClassInstance(className:String, args:Array<Dynamic> = null):PolymodAbstractScriptClass {
 		if (args == null) {
 			args = [];
 		}
-		var r:AbstractScriptClass = cnew(className, args);
+		var r:PolymodAbstractScriptClass = cnew(className, args);
 		return r;
 	}
 
@@ -248,7 +236,7 @@ class PolymodInterpEx extends Interp {
 				case DClass(c):
 					var extend = c.extend;
 					if (extend != null) {
-						var superClassPath = new Printer().typeToString(extend);
+						var superClassPath = new hscript.Printer().typeToString(extend);
 						if (imports.exists(superClassPath)) {
 							switch (extend) {
 								case CTPath(_, params):
@@ -257,7 +245,7 @@ class PolymodInterpEx extends Interp {
 							}
 						}
 					}
-					var classDecl:ClassDeclEx = {
+					var classDecl:PolymodClassDeclEx = {
 						imports: imports,
 						pkg: pkg,
 						name: c.name,
@@ -275,4 +263,3 @@ class PolymodInterpEx extends Interp {
 		}
 	}
 }
-#end

@@ -196,12 +196,18 @@ typedef ScriptOutput =
 
 class ScriptRunner
 {
-	private var scripts:Map<String, Script>;
+	/**
+	 * No reason not to make this static! Load a script once instead of 50 times.
+	 */
+	private static var scripts:Map<String, Script> = new Map<String, Script>();
 
 	public function new()
 	{
-		scripts = new Map<String, Script>();
 	}
+
+  public static function clearScripts():Void {
+    scripts.clear();
+  }
 
 	public function load(name:String, assetHandler:Dynamic):Script
 	{
@@ -274,20 +280,12 @@ class Script
 
 	public static function buildParser():hscript.Parser
 	{
-		#if hscript_ex
-    return new hscript.ParserEx();
-		#else
-		return new hscript.Parser();
-		#end
+    return new polymod.hscript.PolymodParserEx();
 	}
 
 	public static function buildInterp():hscript.Interp
 	{
-		#if hscript_ex
-		return new hscript.InterpEx();
-		#else
-    return new hscript.Interp();
-    #end
+		return new hscript.Interp();
 	}
 
 	public function new(script:String)

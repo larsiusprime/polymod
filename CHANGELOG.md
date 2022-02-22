@@ -5,7 +5,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [1.5.0] - 2022-02-??
 ### Added
-- Added the new `polymod.hscript.PolymodScriptClass` class, which contains utility functions that allow defining custom classes in scripts.
+- Added new functionality which allows for parsing and instantiation of classes defined in scripts. See [Scripted Classes](https://polymod.io/docs/scripted-classes) for more information.
+- Incorporated the functionality of `hscript-ex` into Polymod.
+### Changed
+- 
   - These scripted classes can extend existing classes or even other scripted classes.
   - Parse any scripted classes with `registerAllScriptClasses()`, get the list of scripted classes extending a given class with `listScriptClassesExtendingClass()`, then instantiate it with `createScriptClassInstance(className, args)`. You can cast the `AbstractScriptClass` to the appropriate type once instantiated.
   - Note this interface is subject to change and may be deprecated in favor of a more seamless interface in the future.

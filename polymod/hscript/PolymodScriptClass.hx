@@ -2,7 +2,11 @@ package polymod.hscript;
 
 using StringTools;
 
-#if hscript_ex
+import hscript.Expr.FieldDecl;
+import hscript.Expr.FunctionDecl;
+import hscript.Expr.VarDecl;
+import hscript.Printer;
+
 enum Param {
   Unused;
 }
@@ -62,7 +66,7 @@ class PolymodScriptClass
 	public static function clearScriptClasses()
 	{
 		@:privateAccess
-		InterpEx._scriptClassDescriptors.clear();
+		PolymodInterpEx._scriptClassDescriptors.clear();
 	}
 
 	/**
@@ -127,7 +131,7 @@ class PolymodScriptClass
 		}
 
 		// Check if the superclass is a scripted class.
-		var classDescriptor = InterpEx.findScriptClassDescriptor(extendString);
+		var classDescriptor = PolymodInterpEx.findScriptClassDescriptor(extendString);
 
 		if (classDescriptor != null)
 		{
@@ -182,10 +186,21 @@ class PolymodScriptClass
 				trace('Could not determine target class for: ${c}');
 		}
 		_interp = new PolymodInterpEx(targetClass, this);
-		super(c, args);
+    _c = c;
+    buildCaches();
+    
+    var ctorField = findField("new");
+    if (ctorField != null) {
+        callFunction("new", args);
+        if (superClass == null && _c.extend != null) {
+            @:privateAccess _interp.error(ECustom("super() not called"));
+        }
+    } else if (_c.extend != null) {
+        createSuperClass(args);
+    }
 	}
 
-	private override function createSuperClass(args:Array<Dynamic> = null)
+	private function createSuperClass(args:Array<Dynamic> = null)
 	{
 		if (args == null)
 		{
@@ -198,7 +213,7 @@ class PolymodScriptClass
 			extendString = _c.pkg.join(".") + "." + extendString;
 		}
 
-		var classDescriptor = InterpEx.findScriptClassDescriptor(extendString);
+		var classDescriptor = PolymodInterpEx.findScriptClassDescriptor(extendString);
 		if (classDescriptor != null)
 		{
 			var abstractSuperClass:PolymodAbstractScriptClass = new PolymodScriptClass(classDescriptor, args);
@@ -227,7 +242,7 @@ class PolymodScriptClass
 		}
 	}
 
-	public override function callFunction(name:String, args:Array<Dynamic> = null):Dynamic
+	public function callFunction(name:String, args:Array<Dynamic> = null):Dynamic
 	{
 		// trace('Calling function ${name} on scripted class.');
 		var field = findField(name);
@@ -282,9 +297,9 @@ class PolymodScriptClass
 			var fixedName = '__super_${name}';
 			for (a in args)
 			{
-				if (Std.is(a, ScriptClass))
+				if (Std.is(a, PolymodScriptClass))
 				{
-					fixedArgs.push(cast(a, ScriptClass).superClass);
+					fixedArgs.push(cast(a, PolymodScriptClass).superClass);
 				}
 				else
 				{
@@ -296,8 +311,8 @@ class PolymodScriptClass
 		return r;
 	}
 
-  private var _c:ClassDeclEx;
-  private var _interp:InterpEx;
+  private var _c:PolymodClassDeclEx;
+  private var _interp:PolymodInterpEx;
   
   public var superClass:Dynamic = null;
   
@@ -320,23 +335,23 @@ class PolymodScriptClass
       createSuperClass(args);
   }
   
-  private inline function callFunction0(name:String) {
+  private inline function callFunction0(name:String):Dynamic {
       return callFunction(name);
   }
   
-  private inline function callFunction1(name:String, arg0:Dynamic) {
+  private inline function callFunction1(name:String, arg0:Dynamic):Dynamic {
       return callFunction(name, [arg0]);
   }
 
-  private inline function callFunction2(name:String, arg0:Dynamic, arg1:Dynamic) {
+  private inline function callFunction2(name:String, arg0:Dynamic, arg1:Dynamic):Dynamic {
       return callFunction(name, [arg0, arg1]);
   }
   
-  private inline function callFunction3(name:String, arg0:Dynamic, arg1:Dynamic, arg2:Dynamic) {
+  private inline function callFunction3(name:String, arg0:Dynamic, arg1:Dynamic, arg2:Dynamic):Dynamic {
       return callFunction(name, [arg0, arg1, arg2]);
   }
   
-  private inline function callFunction4(name:String, arg0:Dynamic, arg1:Dynamic, arg2:Dynamic, arg3:Dynamic) {
+  private inline function callFunction4(name:String, arg0:Dynamic, arg1:Dynamic, arg2:Dynamic, arg3:Dynamic):Dynamic {
       return callFunction(name, [arg0, arg1, arg2, arg3]);
   }
   
@@ -416,4 +431,3 @@ class PolymodScriptClass
       }
   }
 }
-#end
