@@ -28,7 +28,7 @@ typedef PolymodParams =
 	/**
 	 * directory names of one or more mods, relative to modRoot
 	 */
-	dirs:Array<String>,
+	?dirs:Array<String>,
 
 	/**
 	 * (optional) the Haxe framework you're using (OpenFL, HEAPS, Kha, NME, etc..). If not provided, Polymod will attempt to determine this automatically
