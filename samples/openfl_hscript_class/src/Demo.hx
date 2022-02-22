@@ -1,7 +1,6 @@
-import lime.utils.Assets;
-import openfl.Assets;
-import openfl.display.DisplayObject;
-import openfl.text.TextFieldType;
+import stage.Stage;
+import stage.StubStage;
+import stage.ScriptedStage;
 import openfl.display.Bitmap;
 import openfl.display.BitmapData;
 import openfl.display.Sprite;
@@ -12,13 +11,16 @@ import openfl.utils.AssetType;
 class Demo extends Sprite
 {
 	private var widgets:Array<ModWidget> = [];
+  private var stageButtons:Array<CheapButton> = [];
 	private var callback:Array<String>->Void;
 	private var stuff:Array<Dynamic> = [];
 	private var limeToggle:CheapButton;
 
-	private var stg:Stage;
+	private var curStage:Stage;
 
 	public static var usingOpenFL(default, null):Bool = true;
+
+  var dirty:Bool = false;
 
 	public function new(callback:Array<String>->Void)
 	{
@@ -26,8 +28,10 @@ class Demo extends Sprite
 
 		this.callback = callback;
 
-		makeButtons();
+    initStageData();
 		setStage();
+
+		makeButtons();
 
 		drawStage();
 		drawImages();
@@ -51,13 +55,18 @@ class Demo extends Sprite
 			removeChild(cast thing);
 		}
 		stuff.splice(0, stuff.length);
+    drawStage();
 		drawImages();
 		drawText();
+
+    initStageData();
+    drawStageButtons();
 	}
 
 	private function makeButtons()
 	{
 		addModWidgets();
+    drawStageButtons();
 		updateWidgets();
 		addToggle();
 	}
@@ -96,23 +105,69 @@ class Demo extends Sprite
 		}
 	}
 
-	private function setStage()
+  var stageData:Array<Stage> = null;
+  function initStageData():Void {
+    stageData = [];
+    var stageClassNames:Array<String> = ScriptedStage.listScriptClasses();
+
+    stageData.push(new StubStage());
+    for (stageClassName in stageClassNames) {
+      var defaultStageId:String = 'STAGE_${Std.random(256)}';
+      var stage:ScriptedStage = ScriptedStage.init(stageClassName, defaultStageId);
+      if (stage != null) {
+        stageData.push(stage);
+      }
+    }
+  }
+
+  function listStages():Array<String> {
+    return [for (stage in stageData) stage.stageId ];
+  }
+
+	function setStage(?stageId:String = 'stub'):Void
 	{
-    Stage.initStageData();
-    trace(Stage.listStages());
-		if (stg == null)
-		{
-			stg = new StubStage();
-		}
+    if (curStage != null) {
+      removeChild(curStage);
+      curStage = null;
+    }
+    for (stage in stageData) {
+      if (stage.stageId == stageId) {
+        curStage = stage;
+      }
+    }
 	}
 
 	private function drawStage()
 	{
-		stg.x = 5;
-		stg.y = 5;
-		stg.create();
-		addChild(stg);
+		curStage.x = 5;
+		curStage.y = 5;
+		curStage.create();
+		addChild(curStage);
 	}
+
+  private function drawStageButtons() {
+    stageButtons = [];
+    for (stage in stageData) {
+      trace('STAGE BUTTON : ${stage.stageName} : ${stage.stageId} : ${stage}');
+      var button = new CheapButton(stage.stageName, function() {
+        trace('Pressed button: ${stage.stageName}');
+        setStage(stage.stageId);
+        refresh();
+      });
+      stageButtons.push(button);
+      stuff.push(button);
+    }
+
+    var xx = 10 + 72 + 10;
+    for (button in stageButtons) {
+      button.x = xx;
+      button.y = 550;
+      // Make sure the buttons get cleaned up when reloading mods.
+      stuff.push(button);
+      addChild(button);
+      xx += 72 + 10;
+    }
+  }
 
 	private function addToggle()
 	{

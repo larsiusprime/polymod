@@ -16,7 +16,6 @@
 	<source path="src" />
 	<haxelib name="openfl" />
   <haxelib name="hscript" />
-  <haxelib name="hscript-ex" />
 	<haxelib name="polymod" />
 	
 	<!-- assets -->

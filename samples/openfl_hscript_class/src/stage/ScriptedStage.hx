@@ -1,4 +1,4 @@
-package test;
+package stage;
 
 import polymod.hscript.HScriptable;
 

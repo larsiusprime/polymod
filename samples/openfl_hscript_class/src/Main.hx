@@ -1,3 +1,4 @@
+import stage.ScriptedStage;
 import openfl.display.Sprite;
 import openfl.Lib;
 import polymod.Polymod;
@@ -14,7 +15,14 @@ class Main extends Sprite
     // Initialize Polymod but load no mods
     loadMods([]);
 		loadDemo();
+    // test();
 	}
+
+  function test() {
+    var defaultStageId:String = 'STAGE_${Std.random(256)}';
+    var stage:ScriptedStage = ScriptedStage.init('BasicStage', defaultStageId);
+    stage.create();
+  }
 
 	private function loadDemo()
 	{
@@ -45,12 +53,6 @@ class Main extends Sprite
 			assetPrefix: '',
       useScriptedClasses: true,
 		});
-
-    // Enable scripted classes.
-    // PolymodScriptClass.registerAllScriptClasses();
-    // 
-    // 
-    // trace('[${classList.join(", ")}]');
 	}
 
 	private function onError(error:PolymodError)

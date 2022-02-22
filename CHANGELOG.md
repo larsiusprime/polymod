@@ -10,7 +10,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   - Parse any scripted classes with `registerAllScriptClasses()`, get the list of scripted classes extending a given class with `listScriptClassesExtendingClass()`, then instantiate it with `createScriptClassInstance(className, args)`. You can cast the `AbstractScriptClass` to the appropriate type once instantiated.
   - Note this interface is subject to change and may be deprecated in favor of a more seamless interface in the future.
 ### Removed
-- The `POLYMOD_USE_HSCRIPTEX` flag has been made redundant. `hscript-ex` will be used if available, and `hscript` will be used otherwise.
+- The `POLYMOD_USE_HSCRIPTEX` flag has been made redundant. A fork of `hscript-ex` is now bundled into Polymod.
+
 ## [1.4.3] - 2022-02-18
 ### Fixed
 - OpenFLBackend no longer breaks when you are using the main version of OpenFL.

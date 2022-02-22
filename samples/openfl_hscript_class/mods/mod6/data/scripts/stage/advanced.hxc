@@ -1,10 +1,11 @@
-import Stage;
-import openfl.Assets;
+import stage.Stage;
+import openfl.utils.Assets;
+import openfl.display.Bitmap;
 
 class AdvancedStage extends Stage {
   public function new() {
     super("advanced");
-    this.stageName = "Advanced Stage";
+    stageName = "Advanced Stage";
   }
 
   public override function create():Void {
@@ -14,7 +15,7 @@ class AdvancedStage extends Stage {
     landscapeBg.x = 0;
     landscapeBg.y = 0;
     landscapeBg.width = 480;
-    landscapeBg.width = 360;
+    landscapeBg.height = 360;
 
     this.addChild(landscapeBg);
   }

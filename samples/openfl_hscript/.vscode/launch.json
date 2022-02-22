@@ -8,6 +8,11 @@
       "name": "Lime",
       "type": "lime",
       "request": "launch"
-    }
+    },
+    {
+			"name": "Haxe Interpreter",
+			"type": "haxe-eval",
+			"request": "launch"
+		}
   ]
 }
