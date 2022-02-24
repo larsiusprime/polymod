@@ -791,36 +791,11 @@ class HScriptMacro
 							var isOptional = (arg.value != null);
 							var tfuncMeta:haxe.macro.Metadata = arg.v.meta.get();
 							var tfuncExpr:haxe.macro.Expr = arg.value == null ? null : Context.getTypedExpr(arg.value);
-							var tfuncType:haxe.macro.ComplexType = null;
-							if (isOptional)
-							{
-								Context.info('  Skipping: FIX THIS "${field.name}" has an optional argument', Context.currentPos());
-								return [];
-								// Convert haxe.macro.Type(T) to haxe.macro.Type(Null<T>)
-								// There has to be a better way of doing this...
-								var exprStr:String = 'var n:Null<${arg.v.t.toString()}>;';
-								var expr:haxe.macro.Expr = macro
-									{
-										$e{Context.parse(exprStr, Context.currentPos())};
-										n;
-									};
-								var nullType = Context.typeof(expr);
-								// TODO: Remove once we get the fix for optional arguments working.
-								// tfuncType = {
-								//   name: "Null",
-								//   module: "StdTypes",
-								//   params: [Context.toComplexType(arg.v.t)],
-								// };
-								tfuncType = Context.toComplexType(nullType);
-							}
-							else
-							{
-								tfuncType = Context.toComplexType(arg.v.t);
-							}
+							var tfuncType:haxe.macro.ComplexType = Context.toComplexType(arg.v.t);
 							var tfuncArg:FunctionArg = {
 								name: arg.v.name,
 								type: tfuncType,
-								opt: isOptional,
+								// opt: isOptional,
 								meta: tfuncMeta,
 								value: tfuncExpr,
 							};
