@@ -160,7 +160,7 @@ class Polymod
 		onError = params.errorCallback;
 
 		var modRoot = params.modRoot == null ? params.fileSystemParams.modRoot : params.modRoot;
-		var dirs = params.dirs;
+		var dirs = params.dirs == null ? [] : params.dirs;
 		var apiVersion:SemanticVersion = null;
 		try
 		{
