@@ -780,6 +780,13 @@ class HScriptMacro
 						// Do nothing.
 				}
 
+        for (fieldMeta in field.meta.get()) {
+          if (fieldMeta.name == ':generic') {
+            Context.info('  Skipping: "${field.name}" is marked with @:generic', Context.currentPos());
+            return [];
+          }
+        }
+
 				var func_inputArgs:Array<FunctionArg> = [];
 
 				// We only get limited information about the args from Type, we need to use TypedExprDef.

@@ -98,10 +98,13 @@ There are many things which you can do within a scripted class, including but no
 There are some things to watch out for though:
 
 * You can't override `static` functions from a script.
+  - This is because the scripted class needs to be instantiated in order to have something to redirect function calls to.
 * You can't override a function which uses a private class as an argument.
-  * This is not possible in any Haxe program so don't worry about this.
-* You can't use string interpolation from a script.
-  * For example, `trace('Value is ${abc}')` will actually print `Value is ${abc}` instead of `Value is 123`.
-  * Thankfully, you can still use string concatenation, for example, `trace('Value is ' + abc)`.
-* You can't (CURRENTLY) override functions which utilize a constrained generic type like `function test<T:Iterable<String>>(a:T)`
-* You can't (CURRENTLY) override functions with an optional argument like `function create(?name:String = 'test')`
+  - This cannot be done in Haxe either. This is because the private class cannot be accessed outside the module, even by macros.
+* You can't override functions which use the `@:generic` annotation.
+  - This cannot be done in Haxe either. This is because the `@:generic` annotation is actually syntax sugar that, at compile time, creates a separate function for each type it is used with.
+  - You can still
+* You can't use string interpolation within a script.
+  - For example, `trace('Value is ${abc}')` will literally print `Value is ${abc}` instead of `Value is 123`.
+  - This is because implementing string interpolation would drastically complicate the script parser.
+  - Thankfully, you can still use string concatenation, for example, `trace('Value is ' + abc)`.

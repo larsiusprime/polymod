@@ -59,7 +59,9 @@ class FlixelBackend extends OpenFLBackend
 		var count = 0;
 		for (key in bitmapsToClear)
 		{
+			#if !macro
 			flixel.FlxG.bitmap.removeByKey(key);
+			#end
 			openfl.Assets.cache.removeBitmapData(key);
 		}
 		Polymod.debug('Cleared $count items from Flixel bitmap cache.');

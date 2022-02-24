@@ -113,7 +113,7 @@ class PolymodScriptClass
 		return listScriptClassesExtending(Type.getClassName(cls));
 	}
 
-	static function getSuperClasses(classDecl:hscript.ClassDeclEx):Array<String>
+	static function getSuperClasses(classDecl:polymod.hscript.PolymodClassDeclEx):Array<String>
 	{
 		if (classDecl.extend == null)
 		{
@@ -131,7 +131,7 @@ class PolymodScriptClass
 		}
 
 		// Check if the superclass is a scripted class.
-		var classDescriptor = PolymodInterpEx.findScriptClassDescriptor(extendString);
+		var classDescriptor:polymod.hscript.PolymodClassDeclEx = PolymodInterpEx.findScriptClassDescriptor(extendString);
 
 		if (classDescriptor != null)
 		{
@@ -175,7 +175,7 @@ class PolymodScriptClass
 	/**
 	 * INSTANCE METHODS
 	 */
-	public function new(c:hscript.ClassDeclEx, args:Array<Dynamic>)
+	public function new(c:polymod.hscript.PolymodClassDeclEx, args:Array<Dynamic>)
 	{
 		var targetClass:Class<Dynamic> = null;
 		switch (c.extend)
@@ -297,7 +297,7 @@ class PolymodScriptClass
 			var fixedName = '__super_${name}';
 			for (a in args)
 			{
-				if (Std.is(a, PolymodScriptClass))
+				if (Std.isOfType(a, PolymodScriptClass))
 				{
 					fixedArgs.push(cast(a, PolymodScriptClass).superClass);
 				}

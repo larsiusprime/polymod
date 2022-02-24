@@ -3,15 +3,22 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.5.0] - 2022-02-??
-### Added
-- Added new functionality which allows for parsing and instantiation of classes defined in scripts. See [Scripted Classes](https://polymod.io/docs/scripted-classes) for more information.
-- Incorporated the functionality of `hscript-ex` into Polymod.
+## [???] - 2022-02-??
 ### Changed
-- 
+- The `dirs` parameter of Polymod is now optional. This is useful if Polymod is only used for localization.
+### Fixed
+- Fixed a bug where scripted classes would fail to build when encountering fields marked with `@:generic`.
+  - These fields are now skipped completely (and cannot be overridden by scripted classes).
+- Fixed a bug where scripted classes did not properly support overriding functions with optional arguments.
+- Fixed a bug related to using macros while using the FlixelBackend.
+- Fixed a bug where the library would not build without the `hscript-ex` library installed (the library is no longer required).
+
+## [1.5.0] - 2022-02-22
+### Added
+- Added new functionality which allows for parsing and instantiation of classes defined in scripts.
   - These scripted classes can extend existing classes or even other scripted classes.
-  - Parse any scripted classes with `registerAllScriptClasses()`, get the list of scripted classes extending a given class with `listScriptClassesExtendingClass()`, then instantiate it with `createScriptClassInstance(className, args)`. You can cast the `AbstractScriptClass` to the appropriate type once instantiated.
-  - Note this interface is subject to change and may be deprecated in favor of a more seamless interface in the future.
+  - See [Scripted Classes](https://polymod.io/docs/scripted-classes) for more information.
+- Incorporated the functionality of `hscript-ex` into Polymod.
 ### Removed
 - The `POLYMOD_USE_HSCRIPTEX` flag has been made redundant. A fork of `hscript-ex` is now bundled into Polymod.
 

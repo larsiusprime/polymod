@@ -1,6 +1,5 @@
 package polymod.hscript;
 
-import hscript.AbstractScriptClass;
 import hscript.Interp;
 import hscript.Expr;
 import hscript.Tools;
@@ -210,7 +209,7 @@ class PolymodInterpEx extends Interp {
 	}
 
 	public function addModule(moduleContents:String) {
-		var parser = new hscript.ParserEx();
+		var parser = new polymod.hscript.PolymodParserEx();
 		var decls = parser.parseModule(moduleContents);
 		registerModule(decls);
 	}
