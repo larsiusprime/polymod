@@ -872,13 +872,6 @@ enum PolymodErrorType
 	var POLYMOD_NOT_LOADED:String = 'polymod_not_loaded';
 
 	/**
-	 * The chosen script interpreter is not available.
-	 * - This message is only displayed if the HScript-EX config option is enabled, while HScript-EX is not installed.
-	 * - Either install the proper version of the `hscript-ex` library, or disable the config option.
-	 */
-	var SCRIPT_NO_INTERPRETER:String = 'script_no_interpreter';
-
-	/**
 	 * The scripted class does not import an `Assets` class to handle script loading.
 	 * - When loading scripts, the target of the HScriptable interface will call `Assets.getText` to read the relevant script file.
 	 * - You will need to import `openfl.util.Assets` on the HScriptable class, even if you don't otherwise use it.
