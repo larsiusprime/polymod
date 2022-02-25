@@ -6,12 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ## [???] - 2022-02-??
 ### Changed
 - The `dirs` parameter of Polymod is now optional. This is useful if Polymod is only used for localization.
+- Reduced the amount of compile-time logging created by scripted classes.
+### Removed
+- Removed an unused PolymodErrorCode.
 ### Fixed
 - Fixed a bug where scripted classes would fail to build when encountering fields marked with `@:generic`.
   - These fields are now skipped completely (and cannot be overridden by scripted classes).
+- Fixed a bug where scripted classes would fail to build when encountering arguments or return types using a type parameter.
+- Fixed a bug where scripted classes would override functions with the return type `Void` with a function that attempts to return `null`.
 - Fixed a bug where scripted classes did not properly support overriding functions with optional arguments.
 - Fixed a bug related to using macros while using the FlixelBackend.
 - Fixed a bug where the library would not build without the `hscript-ex` library installed (the library is no longer required).
+
 
 ## [1.5.0] - 2022-02-22
 ### Added
