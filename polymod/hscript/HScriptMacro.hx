@@ -630,25 +630,37 @@ class HScriptMacro
 		var tClass = Context.toComplexType(tType);
 
 		// Start with a custom implementation of .toString()
-		var func_toString:Field = buildScriptedClass_toString(targetClass);
+		var func_toString:haxe.macro.Expr.Field = buildScriptedClass_toString(targetClass);
 		fieldArray.push(func_toString);
 		fieldDone.push('toString');
 
 		while (targetClass != null)
 		{
 			Context.info('Processing overrides for class: ${targetClass.name}<${mappedParams}>', Context.currentPos());
-			var newFields:Array<Field> = buildScriptedClassFieldOverrides_inner(targetClass, mappedParams);
-			for (newField in newFields)
+			// Values will be either of type haxe.macro.Expr.Field or Bool. This is because setting a Map value to null removes the key.
+			var newFields:Map<String, Dynamic> = buildScriptedClassFieldOverrides_inner(targetClass, mappedParams);
+			for (newFieldName => newField in newFields)
 			{
-				if (newField != null && !fieldDone.contains(newField.name))
+				if (Std.isOfType(newField, Bool))
 				{
-					// Context.info('  Registering: ${newField.name}', Context.currentPos());
-					fieldDone.push(newField.name);
-					fieldArray.push(newField);
+					// Sometimes a child version needs to be skipped but the parent version doesn't.
+					// In this case, the parent needs to be skipped also.
+					// Example: A child function override can be inline when the parent isn't.
+					// Context.info('  Skipping field: ${newFieldName}', Context.currentPos());
+					fieldDone.push(newFieldName);
 				}
 				else
 				{
-					// Context.info('Redundant: ${newField.name}', Context.currentPos());
+					if (!fieldDone.contains(newFieldName))
+					{
+						// Context.info('  Registering: ${newFieldName}', Context.currentPos());
+						fieldArray.push(newField);
+						fieldDone.push(newFieldName);
+					}
+					else
+					{
+						// Context.info('  Redundant: ${newField.name}', Context.currentPos());
+					}
 				}
 			}
 			// Context.info('Moving on... ${targetClass.superClass}', Context.currentPos());
@@ -702,9 +714,10 @@ class HScriptMacro
 		};
 	}
 
-	static function buildScriptedClassFieldOverrides_inner(cls:haxe.macro.Type.ClassType, targetParams:Map<String, haxe.macro.Type>):Array<Field>
+	static function buildScriptedClassFieldOverrides_inner(cls:haxe.macro.Type.ClassType, targetParams:Map<String, haxe.macro.Type>):Map<String, Dynamic>
 	{
-		var fields:Array<Field> = new Array<Field>();
+		// Values will be either of type haxe.macro.Expr.Field or Bool. This is because setting a Map value to null removes the key.
+		var fields:Map<String, Dynamic> = new Map<String, Dynamic>();
 
 		// Context.info('Mapping overrides of class: ${cls.name}', Context.currentPos());
 		for (field in cls.fields.get())
@@ -716,7 +729,18 @@ class HScriptMacro
 			}
 			else
 			{
-				fields = fields.concat(overrideField(field, false, targetParams));
+				var results:Array<Field> = overrideField(field, false, targetParams);
+				if (results.length == 0)
+				{
+					fields.set(field.name, false);
+				}
+				else
+				{
+					for (result in results)
+					{
+						fields.set(result.name, result);
+					}
+				}
 			}
 		}
 		for (field in cls.statics.get())
@@ -724,10 +748,7 @@ class HScriptMacro
 			// Context.info('  Skipping: ${field.name} is static', Context.currentPos());
 		}
 
-		return fields.filter(function(field:Field):Bool
-		{
-			return field != null;
-		});
+		return fields;
 	}
 
 	static function overrideField(field:haxe.macro.Type.ClassField, isStatic:Bool, targetParams:Map<String, haxe.macro.Type>,
@@ -931,21 +952,20 @@ class HScriptMacro
 							if (_asc != null)
 							{
 								// trace('ASC: Calling $fieldName() in macro-generated function...');
-                ${doesReturnVoid ? (
-                  macro _asc.callFunction(fieldName, [$a{func_callArgs}])
-                ) : (
-                  macro return _asc.callFunction(fieldName, [$a{func_callArgs}])
-                )}
+								$
+								{
+									doesReturnVoid ? (macro _asc.callFunction(fieldName,
+										[$a{func_callArgs}])) : (macro return _asc.callFunction(fieldName, [$a{func_callArgs}]))
+								}
 							}
 							else
 							{
 								// Fallback, call the original function.
 								// trace('ASC: Fallback to original ${fieldName}');
-                ${doesReturnVoid ? (
-								  macro super.$funcName($a{func_callArgs})
-                ) : (
-                  macro return super.$funcName($a{func_callArgs})
-                )}
+								$
+								{
+									doesReturnVoid ? (macro super.$funcName($a{func_callArgs})) : (macro return super.$funcName($a{func_callArgs}))
+								}
 							}
 						},
 					}),
@@ -965,11 +985,10 @@ class HScriptMacro
 							var fieldName:String = $v{funcName};
 							// Fallback, call the original function.
 							// trace('ASC: Force call to super ${fieldName}');
-							${doesReturnVoid ? (
-                macro super.$funcName($a{func_callArgs});
-              ) : (
-                macro return super.$funcName($a{func_callArgs});
-              )}
+							$
+							{
+								doesReturnVoid ? (macro super.$funcName($a{func_callArgs})) : (macro return super.$funcName($a{func_callArgs}))
+							}
 						},
 					}),
 				}

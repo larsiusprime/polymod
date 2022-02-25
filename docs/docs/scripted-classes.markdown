@@ -101,6 +101,9 @@ There are some things to watch out for though:
   - This is because the scripted class needs to be instantiated in order to have something to redirect function calls to.
 * You can't override a function which uses a private class as an argument.
   - This cannot be done in Haxe either. This is because the private class cannot be accessed outside the module, even by macros.
+* You can't override inline functions.
+  - This cannot be done in Haxe either. This is because each call to the function is replaced with the function body at compile time.
+  - Note that this may apply for functions which are not inline, if a child of the class that defines it overrides that function with an inline one.
 * You can't override functions which use the `@:generic` annotation.
   - This cannot be done in Haxe either. This is because the `@:generic` annotation is actually syntax sugar that, at compile time, creates a 
   separate function for each type it is used with.
