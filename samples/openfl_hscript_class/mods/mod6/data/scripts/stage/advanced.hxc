@@ -6,6 +6,7 @@ class AdvancedStage extends Stage {
   public function new() {
     super("advanced");
     stageName = "Advanced Stage";
+    carSprite = null;
   }
 
   var carSprite:Bitmap;
@@ -33,11 +34,14 @@ class AdvancedStage extends Stage {
   public override function onUpdate():Void {
     super.onUpdate();
 
-    carSprite.x += carSpeed;
+    if (carSprite != null) {
 
-    if (carSprite.x > 330 || carSprite.x < 50) {
-      trace('Bounce!');
-      carSpeed *= -1;
+      carSprite.x += carSpeed;
+      
+      if (carSprite.x > 330 || carSprite.x < 50) {
+        trace('Bounce!');
+        carSpeed *= -1;
+      }
     }
     // trace('car: '+carSpeed+' : '+carSprite.x);
   }

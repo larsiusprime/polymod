@@ -167,7 +167,9 @@ class PolymodInterpEx extends Interp {
 			}
 		} else if (id == "this" && _proxy != null) {
 			return _proxy;
-		}
+		} else if (id == "null") {
+      return null;
+    }
 
 		var l = locals.get(id);
 		if (l != null) {
