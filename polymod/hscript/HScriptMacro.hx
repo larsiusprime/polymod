@@ -9,6 +9,7 @@ import polymod.hscript.HScriptable.ScriptOutput;
 
 using haxe.macro.ExprTools;
 using haxe.macro.TypeTools;
+using haxe.macro.ComplexTypeTools;
 using Lambda;
 
 class HScriptMacro
@@ -229,7 +230,7 @@ class HScriptMacro
 		}
 		else
 		{
-			Context.info('HScriptable: Class ' + cls.name + ' already processed, skipping...', Context.currentPos());
+			// Context.info('HScriptable: Class ' + cls.name + ' already processed, skipping...', Context.currentPos());
 			return null;
 		}
 	}
@@ -616,7 +617,7 @@ class HScriptMacro
 
 	/**
 	 * For each function in the superclass, create a function in the subclass
-	    * that redirects to the internal abstract script class.
+	 		* that redirects to the internal abstract script class.
 	 */
 	static function buildScriptedClassFieldOverrides(cls:haxe.macro.Type.ClassType):Array<Field>
 	{
@@ -624,7 +625,9 @@ class HScriptMacro
 		var fieldArray:Array<Field> = [];
 
 		var targetClass:haxe.macro.Type.ClassType = cls;
-		var tClass = Context.toComplexType(Context.getType(cls.name));
+		var mappedParams:Map<String, haxe.macro.Type> = new Map<String, haxe.macro.Type>();
+		var tType = Context.getType(cls.name);
+		var tClass = Context.toComplexType(tType);
 
 		// Start with a custom implementation of .toString()
 		var func_toString:Field = buildScriptedClass_toString(targetClass);
@@ -633,8 +636,8 @@ class HScriptMacro
 
 		while (targetClass != null)
 		{
-			Context.info('Processing overrides for class: ${targetClass.name}', Context.currentPos());
-			var newFields:Array<Field> = buildScriptedClassFieldOverrides_inner(targetClass);
+			Context.info('Processing overrides for class: ${targetClass.name}<${mappedParams}>', Context.currentPos());
+			var newFields:Array<Field> = buildScriptedClassFieldOverrides_inner(targetClass, mappedParams);
 			for (newField in newFields)
 			{
 				if (newField != null && !fieldDone.contains(newField.name))
@@ -651,7 +654,15 @@ class HScriptMacro
 			// Context.info('Moving on... ${targetClass.superClass}', Context.currentPos());
 			if (targetClass.superClass != null)
 			{
+				var targetParams:Array<haxe.macro.Type> = targetClass.superClass.params;
 				targetClass = targetClass.superClass.t.get();
+				for (paramIndex in 0...targetClass.params.length)
+				{
+					var paramType = targetParams[paramIndex];
+					var paramName = targetClass.params[paramIndex].name;
+					var paramFullName = '${targetClass.pack.join('.')}.${targetClass.name}.${paramName}';
+					mappedParams.set(paramFullName, paramType);
+				}
 			}
 			else
 			{
@@ -691,7 +702,7 @@ class HScriptMacro
 		};
 	}
 
-	static function buildScriptedClassFieldOverrides_inner(cls:haxe.macro.Type.ClassType):Array<Field>
+	static function buildScriptedClassFieldOverrides_inner(cls:haxe.macro.Type.ClassType, targetParams:Map<String, haxe.macro.Type>):Array<Field>
 	{
 		var fields:Array<Field> = new Array<Field>();
 
@@ -705,16 +716,12 @@ class HScriptMacro
 			}
 			else
 			{
-				fields = fields.concat(overrideField(field, false));
+				fields = fields.concat(overrideField(field, false, targetParams));
 			}
 		}
 		for (field in cls.statics.get())
 		{
-			// Context.info('Attempting to build static override: ${field.name}', Context.currentPos());
-
-			// TODO: Figure out a workaround for this error in order to support static fields
-			// HScriptMacro.hx: Cannot access _asc in static function
-			// fields.push(overrideField(field, true));
+			// Context.info('  Skipping: ${field.name} is static', Context.currentPos());
 		}
 
 		return fields.filter(function(field:Field):Bool
@@ -723,7 +730,8 @@ class HScriptMacro
 		});
 	}
 
-	static function overrideField(field:haxe.macro.Type.ClassField, isStatic:Bool, ?type:haxe.macro.Type = null):Array<Field>
+	static function overrideField(field:haxe.macro.Type.ClassField, isStatic:Bool, targetParams:Map<String, haxe.macro.Type>,
+			?type:haxe.macro.Type = null):Array<Field>
 	{
 		if (type == null)
 		{
@@ -737,7 +745,7 @@ class HScriptMacro
 				// We have to call the function to get the true value.
 				var ltv:haxe.macro.Type = lt();
 				// Context.info('Lazy field type: ${field}', Context.currentPos());
-				return overrideField(field, isStatic, ltv);
+				return overrideField(field, isStatic, targetParams, ltv);
 			// return [];
 			case TFun(args, ret):
 				// This field is a function of the class.
@@ -758,7 +766,7 @@ class HScriptMacro
 							var typ = ty.get();
 							if (typ.isPrivate)
 							{
-								Context.info('  Skipping: "${field.name}" contains private type ${typ.module}.${typ.name}', Context.currentPos());
+								// Context.info('  Skipping: "${field.name}" contains private type ${typ.module}.${typ.name}', Context.currentPos());
 								return [];
 							}
 						default:
@@ -771,7 +779,7 @@ class HScriptMacro
 						switch (k)
 						{
 							case MethInline:
-								Context.info('  Skipping: "${field.name}" is inline function', Context.currentPos());
+								// Context.info('  Skipping: "${field.name}" is inline function', Context.currentPos());
 								return [];
 							default:
 								// Do nothing.
@@ -780,12 +788,14 @@ class HScriptMacro
 						// Do nothing.
 				}
 
-        for (fieldMeta in field.meta.get()) {
-          if (fieldMeta.name == ':generic') {
-            Context.info('  Skipping: "${field.name}" is marked with @:generic', Context.currentPos());
-            return [];
-          }
-        }
+				for (fieldMeta in field.meta.get())
+				{
+					if (fieldMeta.name == ':generic')
+					{
+						// Context.info('  Skipping: "${field.name}" is marked with @:generic', Context.currentPos());
+						return [];
+					}
+				}
 
 				var func_inputArgs:Array<FunctionArg> = [];
 
@@ -799,6 +809,41 @@ class HScriptMacro
 							var tfuncMeta:haxe.macro.Metadata = arg.v.meta.get();
 							var tfuncExpr:haxe.macro.Expr = arg.value == null ? null : Context.getTypedExpr(arg.value);
 							var tfuncType:haxe.macro.ComplexType = Context.toComplexType(arg.v.t);
+							switch (arg.v.t)
+							{
+								case TInst(ty, params):
+									var typ = ty.get();
+									if (targetParams.exists(ty.toString()))
+									{
+										// Argument type is T.
+										tfuncType = Context.toComplexType(targetParams.get(ty.toString()));
+										// Context.info('  Uses parameter type: ${ty.toString()}, replacing with ${tfuncType}', Context.currentPos());
+									}
+									else if (params.length != 0)
+									{
+										for (paramIndex in 0...params.length)
+										{
+											var param = params[paramIndex];
+											switch (param)
+											{
+												case TInst(pty, ppr):
+													if (targetParams.exists(pty.toString()))
+													{
+														// Argument type is Foobar<T>.
+														// Context.info('  Argument type uses parameter ${pty.toString()}, which should be ${targetParams.get(pty.toString())}', Context.currentPos());
+														// Okay uhhh we have to mutate the ComplexType.
+														tfuncType = Context.toComplexType(arg.v.t.applyTypeParameters(typ.params,
+															[targetParams.get(pty.toString())]));
+														// func_ret_t = TypeTools.applyTypeParameters(func_ret_t, targetParams.get(pty.toString()));
+													}
+												default:
+													// Nothing.
+											}
+										}
+									}
+								default:
+									// Nothing.
+							}
 							var tfuncArg:FunctionArg = {
 								name: arg.v.name,
 								type: tfuncType,
@@ -832,6 +877,43 @@ class HScriptMacro
 				// TODO: This breaks if there's a type constraint on the parameter.
 				var func_params = [for (param in field.params) {name: param.name}];
 
+				var func_ret = doesReturnVoid ? null : Context.toComplexType(ret);
+
+				switch (ret)
+				{
+					case TInst(ty, params):
+						var typ = ty.get();
+						if (targetParams.exists(ty.toString()))
+						{
+							// Return type is T.
+							// Context.info('  Function returns ${ty}, replacing with ${func_ret}', Context.currentPos());
+							func_ret = Context.toComplexType(targetParams.get(ty.toString()));
+						}
+						else if (params.length != 0)
+						{
+							for (paramIndex in 0...params.length)
+							{
+								var param = params[paramIndex];
+								switch (param)
+								{
+									case TInst(pty, ppr):
+										if (targetParams.exists(pty.toString()))
+										{
+											// Return type is Foobar<T>.
+											// Context.info('  Return type uses parameter ${pty.toString()}, which should be ${targetParams.get(pty.toString())}', Context.currentPos());
+											// Okay uhhh we have to mutate the ComplexType.
+											func_ret = Context.toComplexType(ret.applyTypeParameters(typ.params, [targetParams.get(pty.toString())]));
+											// func_ret_t = TypeTools.applyTypeParameters(func_ret_t, targetParams.get(pty.toString()));
+										}
+									default:
+										// Nothing.
+								}
+							}
+						}
+					default:
+						// Do nothing.
+				}
+
 				var funcName:String = field.name;
 				var func_over:Field = {
 					name: funcName,
@@ -842,7 +924,7 @@ class HScriptMacro
 					kind: FFun({
 						args: func_inputArgs,
 						params: func_params,
-						ret: doesReturnVoid ? null : Context.toComplexType(ret),
+						ret: func_ret,
 						expr: macro
 						{
 							var fieldName:String = $v{funcName};
@@ -869,7 +951,7 @@ class HScriptMacro
 					kind: FFun({
 						args: func_inputArgs,
 						params: func_params,
-						ret: doesReturnVoid ? null : Context.toComplexType(ret),
+						ret: func_ret,
 						expr: macro
 						{
 							var fieldName:String = $v{funcName};
