@@ -4,5 +4,4 @@
   <haxedef name="hscriptPos" value="true" if="debug" />
 
   <haxelib name="hscript" />
-  <haxelib name="hscript-ex" />
 </project>

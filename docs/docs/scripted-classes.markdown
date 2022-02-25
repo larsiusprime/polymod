@@ -102,8 +102,12 @@ There are some things to watch out for though:
 * You can't override a function which uses a private class as an argument.
   - This cannot be done in Haxe either. This is because the private class cannot be accessed outside the module, even by macros.
 * You can't override functions which use the `@:generic` annotation.
-  - This cannot be done in Haxe either. This is because the `@:generic` annotation is actually syntax sugar that, at compile time, creates a separate function for each type it is used with.
-  - You can still
+  - This cannot be done in Haxe either. This is because the `@:generic` annotation is actually syntax sugar that, at compile time, creates a 
+  separate function for each type it is used with.
+* You can't override functions which use (as an argument or return value) a type parameter under more than one layer of nesting.
+  - Example: `Foo<Bar<T>>`.
+  - Doing so will throw an error while compiling, that looks like `Type not found: T`.
+  - This issue exists because type parameters are not being parsed fully recursively right now. Make a GitHub issue explaining your use case if you need this fixed.
 * You can't use string interpolation within a script.
   - For example, `trace('Value is ${abc}')` will literally print `Value is ${abc}` instead of `Value is 123`.
   - This is because implementing string interpolation would drastically complicate the script parser.
