@@ -3,7 +3,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [???] - 2022-02-??
+## [1.5.2] - 2022-03-01
+A small bug fix update.
+### Fixed
+- Fixed a bug where scripted classes would fail while attempting to import and use an enum.
+- Standardized code style across several files.
+
+## [1.5.1] - 2022-02-25
+A large number of bug fixes for scripted classes.
 ### Changed
 - The `dirs` parameter of Polymod is now optional. This is useful if Polymod is only used for localization.
 - Reduced the amount of compile-time logging created by scripted classes.

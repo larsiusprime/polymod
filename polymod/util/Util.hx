@@ -22,15 +22,17 @@ class Util
 	 * @param filePath
 	 * @return Array<String>
 	 */
-  public static function listAllParentDirs(filePath:String):Array<String> {
-    var parentDirs:Array<String> = new Array<String>();
-    var parentDir:String = filePath;
-    while (parentDir != null && parentDir != "") {
-      parentDirs.push(parentDir);
-      parentDir = Path.directory(parentDir);
-    }
-    return parentDirs;
-  }
+	public static function listAllParentDirs(filePath:String):Array<String>
+	{
+		var parentDirs:Array<String> = new Array<String>();
+		var parentDir:String = filePath;
+		while (parentDir != null && parentDir != "")
+		{
+			parentDirs.push(parentDir);
+			parentDir = Path.directory(parentDir);
+		}
+		return parentDirs;
+	}
 
 	public static function mergeAndAppendText(baseText:String, id:String, dirs:Array<String>, getModText:String->String->String, fileSystem:IFileSystem,
 			parseRules:ParseRules = null):String

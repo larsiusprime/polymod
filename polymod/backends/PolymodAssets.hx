@@ -65,11 +65,10 @@ typedef PolymodAssetsParams =
 	#if firetongue
 	?firetongue:FireTongue,
 	#end
-
-  /**
-   * (optional) whether to parse and allow for initialization of classes in script files
-   */
-  ?useScriptedClasses:Bool,
+	/**
+	 * (optional) whether to parse and allow for initialization of classes in script files
+	 */
+	?useScriptedClasses:Bool,
 }
 
 class PolymodAssets

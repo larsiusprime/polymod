@@ -43,7 +43,7 @@ class Main extends Sprite
 			errorCallback: onError,
 			ignoredFiles: Polymod.getDefaultIgnoreList(),
 			framework: framework,
-      assetPrefix: '',
+			assetPrefix: '',
 		});
 	}
 

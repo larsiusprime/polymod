@@ -84,7 +84,7 @@ class PolymodConfig
 		return scriptExt;
 	}
 
-  /**
+	/**
 	 * The file extension for scripted class files.
 	 * 
 	 * Set this option by setting the `POLYMOD_SCRIPT_CLASS_EXT` Haxe define at compile time,
@@ -189,7 +189,7 @@ class PolymodConfig
 	 * 
 	 * @default `_polymod_pack.txt`
 	 */
-  // @:deprecated("Functionality removed, new implementation pending")
+	// @:deprecated("Functionality removed, new implementation pending")
 	public static var modPackFile(get, default):String;
 
 	static function get_modPackFile():String

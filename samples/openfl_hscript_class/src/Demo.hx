@@ -37,17 +37,18 @@ class Demo extends Sprite
 		drawStage();
 		drawImages();
 		drawText();
-  
 	}
 
-  public function addListeners() {
-    stage.addEventListener(KeyboardEvent.KEY_DOWN, onKeyDown);
-  }
+	public function addListeners()
+	{
+		stage.addEventListener(KeyboardEvent.KEY_DOWN, onKeyDown);
+	}
 
-  function onKeyDown(e:KeyboardEvent) {
-    if (curStage != null)
-      curStage.onKeyDown(e);
-  }
+	function onKeyDown(e:KeyboardEvent)
+	{
+		if (curStage != null)
+			curStage.onKeyDown(e);
+	}
 
 	public function destroy()
 	{
@@ -72,8 +73,8 @@ class Demo extends Sprite
 
 		initStageData();
 		drawStageButtons();
-    
-    addListeners();
+
+		addListeners();
 	}
 
 	private function makeButtons()

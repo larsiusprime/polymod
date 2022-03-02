@@ -18,7 +18,7 @@ class Stage extends Sprite
 		super();
 		trace('Initializing Stage: $id');
 		this.stageId = id;
-    this.stageName = id;
+		this.stageName = id;
 
 		addEventListener(Event.ENTER_FRAME, onUpdate);
 	}
@@ -36,9 +36,10 @@ class Stage extends Sprite
 
 	public function onUpdate(event:Event):Void
 	{
-    //trace('onUpdate');
+		// trace('onUpdate');
 	}
 
-  public function onKeyDown(event:KeyboardEvent):Void {
-  }
+	public function onKeyDown(event:KeyboardEvent):Void
+	{
+	}
 }

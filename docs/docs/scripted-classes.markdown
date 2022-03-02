@@ -115,3 +115,5 @@ There are some things to watch out for though:
   - For example, `trace('Value is ${abc}')` will literally print `Value is ${abc}` instead of `Value is 123`.
   - This is because implementing string interpolation would drastically complicate the script parser.
   - Thankfully, you can still use string concatenation, for example, `trace('Value is ' + abc)`.
+* You can't define `final` variables within a script.
+  - Just don't change the variable.

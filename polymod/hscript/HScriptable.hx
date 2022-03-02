@@ -205,9 +205,10 @@ class ScriptRunner
 	{
 	}
 
-  public static function clearScripts():Void {
-    scripts.clear();
-  }
+	public static function clearScripts():Void
+	{
+		scripts.clear();
+	}
 
 	public function load(name:String, assetHandler:Dynamic):Script
 	{
@@ -280,7 +281,7 @@ class Script
 
 	public static function buildParser():hscript.Parser
 	{
-    return new polymod.hscript.PolymodParserEx();
+		return new polymod.hscript.PolymodParserEx();
 	}
 
 	public static function buildInterp():hscript.Interp
