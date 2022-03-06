@@ -11,7 +11,6 @@ import openfl.text.TextField;
 import openfl.text.TextFormatAlign;
 import openfl.utils.AssetType;
 import openfl.events.Event;
-import sys.FileSystem;
 
 @:hscript({
 	context: [Std, Math] // Std and Math will be included in all scripts.

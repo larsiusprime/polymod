@@ -1,6 +1,6 @@
 package polymod.backends;
 
-#if lime
+#if (lime && !macro)
 import lime.app.Future;
 import lime.graphics.Image;
 import lime.media.AudioBuffer;

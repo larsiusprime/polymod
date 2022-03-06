@@ -224,6 +224,10 @@ class HScriptMacro
 			// Process @:hscript({}) annotations.
 			fields = buildHScriptFields(cls, fields);
 
+			// Ensure unused scripted classes are still available to initialize in scripts.
+			// SORRY, DCE gets run before this, so we can't use the @:keep metadata.
+			// cls.meta.add(":keep", [], cls.pos);
+
 			cls.meta.add(":hscriptProcessed", [], cls.pos);
 
 			return fields;
@@ -612,7 +616,80 @@ class HScriptMacro
 			}),
 		};
 
-		return [var__asc, function_listScriptClasses, function_init];
+		var function_scriptCall:Field = {
+			name: 'scriptCall',
+			doc: 'Calls a function of the scripted class with the given name and arguments.',
+			access: [APublic],
+			meta: null,
+			pos: cls.pos,
+			kind: FFun({
+				args: [
+					{name: 'funcName', type: Context.toComplexType(Context.getType('Dynamic'))},
+					{
+						name: 'funcArgs',
+						type: Context.toComplexType(Context.typeof(macro
+							{var x:Array<Dynamic>; x;})),
+						value: macro null,
+					}
+				],
+				params: null,
+				ret: Context.toComplexType(Context.getType('Dynamic')),
+				expr: macro
+				{
+					return _asc.callFunction(funcName, funcArgs == null ? [] : funcArgs);
+				},
+			}),
+		};
+
+		var function_scriptGet:Field = {
+			name: 'scriptGet',
+			doc: 'Retrieves the value of a local variable of a scripted class.',
+			access: [APublic],
+			meta: null,
+			pos: cls.pos,
+			kind: FFun({
+				args: [{name: 'varName', type: Context.toComplexType(Context.getType('String'))}],
+				params: null,
+				ret: Context.toComplexType(Context.getType('Dynamic')),
+				expr: macro
+				{
+					return _asc.fieldRead(varName);
+				},
+			}),
+		}
+
+		var function_scriptSet:Field = {
+			name: 'scriptSet',
+			doc: 'Directly modifies the value of a local variable of a scripted class.',
+			access: [APublic],
+			meta: null,
+			pos: cls.pos,
+			kind: FFun({
+				args: [
+					{name: 'varName', type: Context.toComplexType(Context.getType('String'))},
+					{
+						name: 'varValue',
+						type: Context.toComplexType(Context.getType('Dynamic')),
+						value: macro null,
+					}
+				],
+				params: null,
+				ret: Context.toComplexType(Context.getType('Dynamic')),
+				expr: macro
+				{
+					return _asc.fieldWrite(varName, varValue);
+				},
+			}),
+		}
+
+		return [
+			var__asc,
+			function_listScriptClasses,
+			function_init,
+			function_scriptCall,
+			function_scriptGet,
+			function_scriptSet
+		];
 	}
 
 	/**
@@ -821,6 +898,11 @@ class HScriptMacro
 				var func_inputArgs:Array<FunctionArg> = [];
 
 				// We only get limited information about the args from Type, we need to use TypedExprDef.
+				if (field == null || field.expr() == null)
+				{
+					// Context.info('  Skipping: "${field.name}" is not an expression', Context.currentPos());
+					return [];
+				}
 				switch (field.expr().expr)
 				{
 					case TFunction(tfunc):

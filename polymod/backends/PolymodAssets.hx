@@ -86,7 +86,9 @@ class PolymodAssets
 		{
 			Polymod.notice(PolymodErrorCode.FRAMEWORK_INIT, 'Framework: User specified $framework');
 		}
-		var backend:IBackend = switch (framework)
+		var backend:IBackend = null;
+		#if !macro
+		backend = switch (framework)
 		{
 			case CASTLE: new polymod.backends.CastleBackend();
 			case NME: new polymod.backends.NMEBackend();
@@ -108,6 +110,7 @@ class PolymodAssets
 				}
 			default: null;
 		}
+		#end
 		if (backend == null)
 		{
 			Polymod.error(PolymodErrorCode.FAILED_CREATE_BACKEND, 'Could not create a backend for framework: $framework');

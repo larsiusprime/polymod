@@ -10,7 +10,7 @@ class OpenFLBackend extends StubBackend
 	}
 }
 #else
-#if !nme
+#if (!nme && !macro)
 class OpenFLBackend extends LimeBackend
 {
 	public override function clearCache()

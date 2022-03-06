@@ -266,7 +266,7 @@ class ScriptRunner
 		var script = get(name, assetHandler);
 		if (script == null)
 		{
-			Polymod.error(PolymodErrorCode.SCRIPT_NOT_LOADED, 'Could not load script $name for execution.');
+			Polymod.error(PolymodErrorCode.SCRIPT_NOT_FOUND, 'Could not load script $name for execution.');
 		}
 		return script.execute();
 	}
@@ -274,19 +274,20 @@ class ScriptRunner
 
 class Script
 {
-	private static var parser:hscript.Parser;
+	private static var parser:polymod.hscript.PolymodParserEx;
 
 	public var program:hscript.Expr;
-	public var interp:hscript.Interp;
+	public var interp:polymod.hscript.PolymodInterpEx;
 
-	public static function buildParser():hscript.Parser
+	public static function buildParser():polymod.hscript.PolymodParserEx
 	{
 		return new polymod.hscript.PolymodParserEx();
 	}
 
-	public static function buildInterp():hscript.Interp
+	public static function buildInterp():polymod.hscript.PolymodInterpEx
 	{
-		return new hscript.Interp();
+    // Arguments are only needed in a scripted class context.
+		return new polymod.hscript.PolymodInterpEx(null, null);
 	}
 
 	public function new(script:String)

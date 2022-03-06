@@ -7,7 +7,7 @@ class PolymodFileSystem
 {
 	/**
 	 * Constructs a new PolymodFileSystem.
-	    * @param cls An input file system. Might be an IFileSystem or a Class<IFileSystem>.
+	 		* @param cls An input file system. Might be an IFileSystem or a Class<IFileSystem>.
 	 */
 	public static function makeFileSystem(cls:Dynamic = null, params:PolymodFileSystemParams):IFileSystem
 	{

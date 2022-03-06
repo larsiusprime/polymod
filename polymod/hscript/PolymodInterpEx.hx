@@ -86,13 +86,16 @@ class PolymodInterpEx extends Interp
 			var proxy:PolymodScriptClass = cast(o, PolymodScriptClass);
 			return proxy.callFunction(f, args);
 		}
-		return super.fcall(o, f, args);
+
+		var func = get(o, f);
+		if (func == null)
+			error(EInvalidAccess(f));
+		return call(o, func, args);
 	}
 
 	private var _proxy:PolymodAbstractScriptClass = null;
 
 	private static var _scriptClassDescriptors:Map<String, PolymodClassDeclEx> = new Map<String, PolymodClassDeclEx>();
-	private static var _scriptClassOverrides:Map<String, Class<Dynamic>> = new Map<String, Class<Dynamic>>();
 
 	private static function registerScriptClass(c:PolymodClassDeclEx)
 	{
@@ -109,13 +112,39 @@ class PolymodInterpEx extends Interp
 		return _scriptClassDescriptors.get(name);
 	}
 
+	override function setVar(id:String, v:Dynamic)
+	{
+		if (_proxy != null && _proxy.superClass != null)
+		{
+			if (Reflect.hasField(_proxy.superClass, id))
+			{
+				// Set in super class.
+				Reflect.setProperty(_proxy.superClass, id, v);
+				return;
+			}
+			else if (Type.getInstanceFields(Type.getClass(_proxy.superClass)).contains(id))
+			{
+				// Set in super class (alternate).
+				Reflect.setProperty(_proxy.superClass, id, v);
+				return;
+			}
+		}
+
+		// Fallback to setting in local scope.
+		super.setVar(id, v);
+	}
+
 	override function assign(e1:Expr, e2:Expr):Dynamic
 	{
+		return super.assign(e1, e2);
 		var v = expr(e2);
+
 		switch (Tools.expr(e1))
 		{
 			case EIdent(id):
-				if (_proxy.superClass != null)
+				// Make sure setting superclass fields directly works.
+				// Also ensures property functions are accounted for.
+				if (_proxy != null && _proxy.superClass != null)
 				{
 					if (Reflect.hasField(_proxy.superClass, id))
 					{
@@ -128,9 +157,58 @@ class PolymodInterpEx extends Interp
 						return v;
 					}
 				}
-			case _:
+			case EField(e0, id):
+				// Make sure setting superclass fields works when using this.
+				// Also ensures property functions are accounted for.
+				switch (Tools.expr(e0))
+				{
+					case EIdent(id0):
+						if (id0 == "this")
+						{
+							if (_proxy != null && _proxy.superClass != null)
+							{
+								if (Reflect.hasField(_proxy.superClass, id))
+								{
+									Reflect.setProperty(_proxy.superClass, id, v);
+									return v;
+								}
+								else if (Type.getInstanceFields(Type.getClass(_proxy.superClass)).contains(id))
+								{
+									Reflect.setProperty(_proxy.superClass, id, v);
+									return v;
+								}
+							}
+						}
+					default:
+						// Do nothing
+				}
+			default:
 		}
+		// Fallback, which calls set()
 		return super.assign(e1, e2);
+	}
+
+	override function makeIterator(v:Dynamic):Iterator<Dynamic>
+	{
+		if (v.iterator != null)
+		{
+			try
+			{
+				v = v.iterator();
+			}
+			catch (e:Dynamic)
+			{
+			};
+		}
+		if (Std.isOfType(v, Array))
+		{
+			v = new ArrayIterator(v);
+		}
+		if (v.hasNext == null || v.next == null)
+		{
+			error(EInvalidIterator(v));
+		}
+		return v;
 	}
 
 	override function call(o:Dynamic, f:Dynamic, args:Array<Dynamic>):Dynamic
@@ -140,7 +218,13 @@ class PolymodInterpEx extends Interp
 		{
 			o = _nextCallObject;
 		}
-		var r = super.call(o, f, args);
+
+		if (f == null)
+		{
+			error(EInvalidAccess(f));
+		}
+
+		var r = Reflect.callMethod(o, f, args);
 		_nextCallObject = null;
 		return r;
 	}
@@ -157,6 +241,10 @@ class PolymodInterpEx extends Interp
 				return proxy._interp.variables.get(f);
 			}
 			else if (proxy.superClass != null && Reflect.hasField(proxy.superClass, f))
+			{
+				return Reflect.getProperty(proxy.superClass, f);
+			}
+			else if (proxy.superClass != null && Type.getInstanceFields(Type.getClass(_proxy.superClass)).contains(f))
 			{
 				return Reflect.getProperty(proxy.superClass, f);
 			}
@@ -187,6 +275,10 @@ class PolymodInterpEx extends Interp
 				proxy._interp.variables.set(f, v);
 			}
 			else if (proxy.superClass != null && Reflect.hasField(proxy.superClass, f))
+			{
+				Reflect.setProperty(proxy.superClass, f, v);
+			}
+			else if (proxy.superClass != null && Type.getInstanceFields(Type.getClass(_proxy.superClass)).contains(f))
 			{
 				Reflect.setProperty(proxy.superClass, f, v);
 			}
@@ -235,10 +327,9 @@ class PolymodInterpEx extends Interp
 			return v;
 		}
 		// OVERRIDE CHANGE: Allow access to modules for calling static functions.
-		var m = _proxy._c.imports.get(id);
-		if (m != null)
+		if (_proxy != null && _proxy._c.imports.get(id) != null)
 		{
-			var importedClass = m.join(".");
+			var importedClass = _proxy._c.imports.get(id).join(".");
 
 			// TODO: Somehow allow accessing static fields of a ScriptClass without instantiating it.
 
@@ -297,8 +388,13 @@ class PolymodInterpEx extends Interp
 		{
 			args = [];
 		}
-		var r:PolymodAbstractScriptClass = cnew(className, args);
-		return r;
+		if (_scriptClassDescriptors.exists(className))
+		{
+			// OVERRIDE CHANGE: Create a PolymodScriptClass instead of a hscript.ScriptClass
+			var proxy:PolymodAbstractScriptClass = new PolymodScriptClass(_scriptClassDescriptors.get(className), args);
+			return proxy;
+		}
+		return null;
 	}
 
 	public function registerModule(module:Array<ModuleDecl>)
@@ -345,5 +441,27 @@ class PolymodInterpEx extends Interp
 				case DTypedef(_):
 			}
 		}
+	}
+}
+
+private class ArrayIterator<T>
+{
+	var a:Array<T>;
+	var pos:Int;
+
+	public inline function new(a)
+	{
+		this.a = a;
+		this.pos = 0;
+	}
+
+	public inline function hasNext()
+	{
+		return pos < a.length;
+	}
+
+	public inline function next()
+	{
+		return a[pos++];
 	}
 }
