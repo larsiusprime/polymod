@@ -20,7 +20,7 @@ class PolymodConfig
 	 */
 	public static var debug(get, default):Null<Bool>;
 
-	static function get_debug():Null<Bool>
+	public static function get_debug():Null<Bool>
 	{
 		// If the value is null, retrieve the value as a Haxe define.
 		if (debug == null)
@@ -38,7 +38,7 @@ class PolymodConfig
 	 */
 	public static var rootPath(get, default):String;
 
-	static function get_rootPath():String
+	public static function get_rootPath():String
 	{
 		// If the value is null, retrieve the value as a Haxe define.
 		if (rootPath == null)
@@ -76,7 +76,7 @@ class PolymodConfig
 	 */
 	public static var scriptExt(get, default):String;
 
-	static function get_scriptExt():String
+	public static function get_scriptExt():String
 	{
 		// If the value is null, retrieve the value as a Haxe define.
 		if (scriptExt == null)
@@ -94,7 +94,7 @@ class PolymodConfig
 	 */
 	public static var scriptClassExt(get, default):String;
 
-	static function get_scriptClassExt():String
+	public static function get_scriptClassExt():String
 	{
 		// If the value is null, retrieve the value as a Haxe define.
 		if (scriptClassExt == null)
@@ -113,7 +113,7 @@ class PolymodConfig
 	 */
 	public static var scriptLibrary(get, default):String;
 
-	static function get_scriptLibrary():String
+	public static function get_scriptLibrary():String
 	{
 		// If the value is null, retrieve the value as a Haxe define.
 		if (scriptLibrary == null)
@@ -131,7 +131,7 @@ class PolymodConfig
 	 */
 	public static var appendFolder(get, default):String;
 
-	static function get_appendFolder():String
+	public static function get_appendFolder():String
 	{
 		// If the value is null, retrieve the value as a Haxe define.
 		if (appendFolder == null)
@@ -155,7 +155,7 @@ class PolymodConfig
 	 */
 	public static var apiVersionMatch(get, default):Null<SemanticVersionScore> = null;
 
-	static function get_apiVersionMatch():Null<SemanticVersionScore>
+	public static function get_apiVersionMatch():Null<SemanticVersionScore>
 	{
 		// If the value is null, retrieve the value as a Haxe define.
 		if (apiVersionMatch == null)
@@ -173,7 +173,7 @@ class PolymodConfig
 	 */
 	public static var mergeFolder(get, default):String;
 
-	static function get_mergeFolder():String
+	public static function get_mergeFolder():String
 	{
 		// If the value is null, retrieve the value as a Haxe define.
 		if (mergeFolder == null)
@@ -190,7 +190,7 @@ class PolymodConfig
 	 * @default `_polymod_pack.txt`
 	 */
 	// @:deprecated("Functionality removed, new implementation pending")
-	public static var modPackFile(get, default):String;
+	public public static var modPackFile(get, default):String;
 
 	static function get_modPackFile():String
 	{
@@ -210,7 +210,7 @@ class PolymodConfig
 	 */
 	public static var modMetadataFile(get, default):String;
 
-	static function get_modMetadataFile():String
+	public static function get_modMetadataFile():String
 	{
 		// If the value is null, retrieve the value as a Haxe define.
 		if (modMetadataFile == null)
@@ -228,7 +228,7 @@ class PolymodConfig
 	 */
 	public static var modIconFile(get, default):String;
 
-	static function get_modIconFile():String
+	public static function get_modIconFile():String
 	{
 		// If the value is null, retrieve the value as a Haxe define.
 		if (modIconFile == null)
@@ -247,7 +247,7 @@ class PolymodConfig
 	 */
 	public static var modIgnoreFiles(get, default):Array<String>;
 
-	static function get_modIgnoreFiles():Array<String>
+	public static function get_modIgnoreFiles():Array<String>
 	{
 		// If the value is null, retrieve the value as a Haxe define.
 		if (modIgnoreFiles == null)
