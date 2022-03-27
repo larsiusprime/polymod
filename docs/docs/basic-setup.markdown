@@ -20,7 +20,7 @@ Be sure to do this BEFORE your game loads any assets, and Polymod will do the re
 
 After that, all you do is load your game's assets like you normally do, making sure to utilize your framework's asset management systems:
 
-OpenFL / HaxeFlxiel / NME:
+OpenFL / HaxeFlixel / NME:
 ```haxe
 var myImage = Assets.getBitmapData("myImage.png");
 ```
