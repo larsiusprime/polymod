@@ -90,6 +90,7 @@ class SysFileSystem implements IFileSystem
 			{
 				var iconBytes = getFileBytes(iconFile);
 				meta.icon = iconBytes;
+				meta.iconPath = iconFile;
 			}
 			return meta;
 		}

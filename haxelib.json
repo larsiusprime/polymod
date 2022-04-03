@@ -4,7 +4,7 @@
   "license": "MIT",
   "tags": ["mod","game","data","asset"],
   "description": "An atomic modding framework for Haxe games",
-  "version": "1.5.2",
-  "releasenote": "Fixed bug accessing enums in scripted classes",
+  "version": "1.5.3",
+  "releasenote": "New utilities for scripted classes",
   "contributors": ["MasterEric", "larsiusprime"]
 }

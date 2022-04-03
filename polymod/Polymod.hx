@@ -202,13 +202,15 @@ class Polymod
 			}
 		}
 
-		for (i in 0...dirs.length)
+		// Modify the 'dirs' array to include the modRoot, and exclude any broken mods.
+		var localDirs:Array<String> = Reflect.copy(dirs);
+		for (i in 0...localDirs.length)
 		{
-			if (dirs[i] != null)
+			if (localDirs[i] != null)
 			{
-				var origDir = dirs[i];
-				dirs[i] = Util.pathJoin(modRoot, dirs[i]);
-				var meta:ModMetadata = fileSystem.getMetadata(dirs[i]);
+				var origDir = localDirs[i];
+				localDirs[i] = Util.pathJoin(modRoot, localDirs[i]);
+				var meta:ModMetadata = fileSystem.getMetadata(localDirs[i]);
 
 				if (meta != null)
 				{
@@ -252,7 +254,7 @@ class Polymod
 
 		assetLibrary = PolymodAssets.init({
 			framework: params.framework,
-			dirs: dirs,
+			dirs: localDirs,
 			parseRules: params.parseRules,
 			ignoredFiles: params.ignoredFiles,
 			customBackend: params.customBackend,
@@ -347,6 +349,15 @@ class Polymod
 		newParams.dirs = newParams.dirs.concat(modIds);
 
 		Polymod.init(newParams);
+	}
+
+	/**
+	 * Reinitializes Polymod, with the same parameters.
+	 * Useful to force Polymod to detect newly added files.
+	 */
+	public static function reload()
+	{
+		Polymod.init(Reflect.copy(prevParams));
 	}
 
 	/**
@@ -618,6 +629,7 @@ class ModMetadata
 	public var license:String;
 	public var licenseRef:String;
 	public var icon:Bytes;
+	public var iconPath:String;
 	public var metaData:Map<String, String>;
 
 	/**

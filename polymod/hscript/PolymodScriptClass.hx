@@ -27,8 +27,8 @@ class PolymodScriptClass
 	/*
 	 * STATIC VARIABLES
 	 */
-	private static var scriptInterp = new PolymodInterpEx(null, null);
-	public static var scriptClassOverrides:Map<String, Class<Dynamic>> = new Map<String, Class<Dynamic>>();
+	private static final scriptInterp = new PolymodInterpEx(null, null);
+	public static final scriptClassOverrides:Map<String, Class<Dynamic>> = new Map<String, Class<Dynamic>>();
 
 	/*
 	 * STATIC METHODS
