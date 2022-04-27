@@ -70,9 +70,9 @@ typedef PolymodParams =
 	?extensionMap:Map<String, PolymodAssetType>,
 	/**
 	 * (optional) your own custom backend for accessing the file system
-   * Provide either an IFileSystem or a Class<IFileSystem>.
+         * Provide either an IFileSystem or a Class<IFileSystem>.
 	 */
-  ?customFilesystem:Dynamic,
+        ?customFilesystem:Dynamic,
 	/**
 	 * (optional) a set of additional parameters to initialize your custom filesystem
    * Use only if you provided a Class<IFileSystem> for the customFilesystem.
