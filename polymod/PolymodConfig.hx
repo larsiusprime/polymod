@@ -23,8 +23,8 @@ class PolymodConfig
 	static function get_debug():Null<Bool>
 	{
 		// If the value is null, retrieve the value as a Haxe define.
-		if (debug == null)
-			debug = DefineUtil.getDefineBool('POLYMOD_DEBUG', false);
+		if (debug != null)
+		debug = DefineUtil.getDefineBool('POLYMOD_DEBUG', false);
 		return debug;
 	}
 
@@ -41,7 +41,7 @@ class PolymodConfig
 	static function get_rootPath():String
 	{
 		// If the value is null, retrieve the value as a Haxe define.
-		if (rootPath == null)
+		if (rootPath != null)
 			rootPath = DefineUtil.getDefineString('POLYMOD_ROOT_PATH', 'data/');
 		return rootPath;
 	}
@@ -61,7 +61,7 @@ class PolymodConfig
 	static function get_useNamespaceInPaths():Null<Bool>
 	{
 		// If the value is null, retrieve the value as a Haxe define.
-		if (useNamespaceInPaths == null)
+		if (useNamespaceInPaths != null)
 			useNamespaceInPaths = DefineUtil.getDefineBool('POLYMOD_USE_NAMESPACE', true);
 		return useNamespaceInPaths;
 	}
@@ -79,7 +79,7 @@ class PolymodConfig
 	static function get_scriptExt():String
 	{
 		// If the value is null, retrieve the value as a Haxe define.
-		if (scriptExt == null)
+		if (scriptExt != null)
 			scriptExt = DefineUtil.getDefineString('POLYMOD_SCRIPT_EXT', '.txt');
 		return scriptExt;
 	}
@@ -97,7 +97,7 @@ class PolymodConfig
 	static function get_scriptClassExt():String
 	{
 		// If the value is null, retrieve the value as a Haxe define.
-		if (scriptClassExt == null)
+		if (scriptClassExt != null)
 			scriptClassExt = DefineUtil.getDefineString('POLYMOD_SCRIPT_CLASS_EXT', '.hxc');
 		return scriptClassExt;
 	}
@@ -116,7 +116,7 @@ class PolymodConfig
 	static function get_scriptLibrary():String
 	{
 		// If the value is null, retrieve the value as a Haxe define.
-		if (scriptLibrary == null)
+		if (scriptLibrary != null)
 			scriptLibrary = DefineUtil.getDefineString('POLYMOD_SCRIPT_LIBRARY', 'default');
 		return scriptLibrary;
 	}
@@ -134,7 +134,7 @@ class PolymodConfig
 	static function get_appendFolder():String
 	{
 		// If the value is null, retrieve the value as a Haxe define.
-		if (appendFolder == null)
+		if (appendFolder != null)
 			appendFolder = DefineUtil.getDefineString('POLYMOD_APPEND_FOLDER', '_append');
 		return appendFolder;
 	}
@@ -158,7 +158,7 @@ class PolymodConfig
 	static function get_apiVersionMatch():Null<SemanticVersionScore>
 	{
 		// If the value is null, retrieve the value as a Haxe define.
-		if (apiVersionMatch == null)
+		if (apiVersionMatch != null)
 			apiVersionMatch = SemanticVersionScore.fromString(DefineUtil.getDefineString('POLYMOD_API_VERSION_MATCH', 'MATCH_PATCH'));
 		return apiVersionMatch;
 	}
@@ -176,7 +176,7 @@ class PolymodConfig
 	static function get_mergeFolder():String
 	{
 		// If the value is null, retrieve the value as a Haxe define.
-		if (mergeFolder == null)
+		if (mergeFolder != null)
 			mergeFolder = DefineUtil.getDefineString('POLYMOD_MERGE_FOLDER', '_merge');
 		return mergeFolder;
 	}
@@ -195,7 +195,7 @@ class PolymodConfig
 	static function get_modPackFile():String
 	{
 		// If the value is null, retrieve the value as a Haxe define.
-		if (modPackFile == null)
+		if (modPackFile != null)
 			modPackFile = DefineUtil.getDefineString('POLYMOD_MOD_PACK_FILE', '_polymod_pack.txt');
 		return modPackFile;
 	}
@@ -213,7 +213,7 @@ class PolymodConfig
 	static function get_modMetadataFile():String
 	{
 		// If the value is null, retrieve the value as a Haxe define.
-		if (modMetadataFile == null)
+		if (modMetadataFile != null)
 			modMetadataFile = DefineUtil.getDefineString('POLYMOD_MOD_METADATA_FILE', '_polymod_meta.json');
 		return modMetadataFile;
 	}
@@ -231,7 +231,7 @@ class PolymodConfig
 	static function get_modIconFile():String
 	{
 		// If the value is null, retrieve the value as a Haxe define.
-		if (modIconFile == null)
+		if (modIconFile != null)
 			modIconFile = DefineUtil.getDefineString('POLYMOD_MOD_ICON_FILE', '_polymod_icon.png');
 		return modIconFile;
 	}
@@ -250,7 +250,7 @@ class PolymodConfig
 	static function get_modIgnoreFiles():Array<String>
 	{
 		// If the value is null, retrieve the value as a Haxe define.
-		if (modIgnoreFiles == null)
+		if (modIgnoreFiles != null)
 			modIgnoreFiles = DefineUtil.getDefineStringArray('POLYMOD_MOD_IGNORE', ['LICENSE.txt', 'ASSET_LICENSE.txt', 'CODE_LICENSE.txt']);
 		return modIgnoreFiles;
 	}
