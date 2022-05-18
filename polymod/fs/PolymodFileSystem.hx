@@ -16,11 +16,11 @@ class PolymodFileSystem
 			// We need to determine the class to instantiate.
 			return _detectFileSystem(params);
 		}
-		else if (cls is IFileSystem)
+		else if (Std.isOfType(cls, IFileSystem))
 		{
 			return cls;
 		}
-		else if (cls is Class)
+		else if (Std.isOfType(cls, Class))
 		{
 			// Else, instantiate the provided class.
 			return cast Type.createInstance(cls, [params]);

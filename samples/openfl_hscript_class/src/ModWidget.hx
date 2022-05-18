@@ -34,6 +34,10 @@ class ModWidget extends DisplayObjectContainer
 		left = "<--";
 		right = "-->";
 		#end
+		#if linux
+		left = "<--";
+		right = "-->";
+		#end
 		moveLeft = new CheapButton(left, onMove.bind(-1));
 		moveRight = new CheapButton(right, onMove.bind(1));
 

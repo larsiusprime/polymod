@@ -15,6 +15,7 @@ Polymod supports the following Haxe frameworks:
 
 - KHA (Coming Soon)
 - Castle (Coming Soon)
+- Ceramic (Coming Soon)
 
 ## Basic sample:
 ![A visual preview of the polymod OpenFL sample](preview.gif)
