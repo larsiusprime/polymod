@@ -98,6 +98,7 @@ class PolymodAssets
 			case LIME: new polymod.backends.LimeBackend();
 			case HEAPS: new polymod.backends.HEAPSBackend();
 			case KHA: new polymod.backends.KhaBackend();
+			case CERAMIC: new polymod.backends.CeramicBackend();
 			case CUSTOM:
 				if (params.customBackend != null)
 				{
@@ -123,6 +124,7 @@ class PolymodAssets
 			if (framework == polymod.Framework.NME
 				|| framework == polymod.Framework.HEAPS
 				|| framework == polymod.Framework.KHA
+				|| framework == polymod.Framework.CERAMIC
 				|| framework == polymod.Framework.CASTLE)
 			{
 				Polymod.error(PolymodErrorCode.FUNCTIONALITY_NOT_IMPLEMENTED,
@@ -200,6 +202,9 @@ class PolymodAssets
 		#end
 		#if heaps
 		return HEAPS;
+		#end
+		#if ceramic
+		return CERAMIC;
 		#end
 		#if nme
 		return NME;

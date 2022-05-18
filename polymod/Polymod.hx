@@ -120,6 +120,7 @@ enum Framework
 	FLIXEL;
 	HEAPS;
 	KHA;
+	CERAMIC;
 	CUSTOM;
 	UNKNOWN;
 }
