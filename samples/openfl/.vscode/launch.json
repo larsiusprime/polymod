@@ -1,12 +1,16 @@
 {
-  // Use IntelliSense to learn about possible attributes.
-  // Hover to view descriptions of existing attributes.
-  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
   "version": "0.2.0",
   "configurations": [
     {
+			// Launch in native/CPP
       "name": "Lime",
       "type": "lime",
+      "request": "launch"
+    },
+    {
+			// Evaluate macros with debugging enabled
+      "name": "Haxe Eval",
+      "type": "haxe-eval",
       "request": "launch"
     }
   ]

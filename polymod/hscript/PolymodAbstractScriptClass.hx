@@ -86,12 +86,12 @@ abstract PolymodAbstractScriptClass(PolymodScriptClass) from PolymodScriptClass
 		}
 	}
 
-	@:op(a.b) private function fieldRead(name:String):Dynamic
+	@:op(a.b) public function fieldRead(name:String):Dynamic
 	{
 		return resolveField(name);
 	}
 
-	@:op(a.b) private function fieldWrite(name:String, value:Dynamic)
+	@:op(a.b) public function fieldWrite(name:String, value:Dynamic):Dynamic
 	{
 		switch (name)
 		{

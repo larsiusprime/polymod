@@ -11,11 +11,11 @@ using StringTools;
 #if unifill
 import unifill.Unifill;
 #end
-#if (lime && !nme)
-import lime.app.Future;
+#if (lime && !nme && !macro)
+import lime.text.Font;
 import lime.graphics.Image;
 import lime.net.HTTPRequest;
-import lime.text.Font;
+import lime.app.Future;
 import lime.utils.Assets;
 import lime.utils.Bytes;
 #if (lime >= '4.0.0')
@@ -38,7 +38,7 @@ class LimeBackend extends StubBackend
 	}
 }
 #else
-#if !nme
+#if (!nme && !macro)
 class LimeBackend implements IBackend
 {
 	// STATIC:
@@ -648,7 +648,7 @@ class LimeModLibrary extends AssetLibrary
 		for (fallbackId in fallbackList)
 		{
 			#if firetongue
-			if (fallbackId.startsWith(p.rawTongueDirectory))
+			if (p.rawTongueDirectory != null && fallbackId.startsWith(p.rawTongueDirectory))
 			{
 				// Localized file (example: assets/locales/en-US/...)
 				if (fallbackId.startsWith(p.localeAssetPrefix))

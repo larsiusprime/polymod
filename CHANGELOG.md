@@ -3,6 +3,32 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.3] - 2022-05-18
+Lots of tiny bug fixes and several new utilities. Overall a better experience if you're debugging a tricky script.
+## Added
+- Added the following utility functions to scripted classes.
+  - `scriptCall(methodName, [...args])`: Calls a given function from a scripted class with the given arguments.
+  - `scriptGet(fieldName)`: Gets the value of a given field from a scripted class.
+  - `scriptSet(fieldName, value)`: Sets the value of a given field in a scripted class.
+  - Note that these functions are only necessary when the field is defined on the scripted class itself. Functions and fields defined on the superclass will be accessible automatically.
+- Added the `Polymod.reload()` function.
+  - This function will reload Polymod, with the same modlist and parameters as the last time you initialized.
+- Added the `iconPath` attribute to the ModMetadata class.
+  - This provides the full path of the mod's icon, if available.
+- Added a stub backend for the Ceramic framework.
+## Changed
+- Drastically improved error logging for scripted classes, with the new `SCRIPT_PARSE_ERROR` and `SCRIPT_EXCEPTION` error codes.
+- Scripted functions now use the scripted class interpreter; this provides improved error logging in some cases.
+## Fixed
+- Improved error handling for certain scripts.
+- Fixed a bug where Polymod would mutate the mod directory list (fixes a bug with `loadMod()` and `unloadMod()`).
+- Improved compatibility with build macros, especially when building for HTML5.
+- Fixed a compatibility issue with older versions of Haxe (syntax error in PolymodFileSystem).
+# Known Issues
+- Passing a function of a scripted class as an argument (for example, when used as a sort function) clears all the variables in the local scope.
+  - As a workaround, define and use an anonymous function instead.
+
+
 ## [1.5.2] - 2022-03-01
 A small bug fix update.
 ### Fixed

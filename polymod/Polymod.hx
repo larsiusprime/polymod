@@ -22,7 +22,7 @@ typedef PolymodParams =
 {
 	/**
 	 * root directory of all mods
-	 		* Required if you are on desktop and using the SysFileSystem (may be optional on some file systems)
+	 * Required if you are on desktop and using the SysFileSystem (may be optional on some file systems)
 	 */
 	?modRoot:String,
 
@@ -30,7 +30,6 @@ typedef PolymodParams =
 	 * directory names of one or more mods, relative to modRoot
 	 */
 	?dirs:Array<String>,
-
 	/**
 	 * (optional) the Haxe framework you're using (OpenFL, HEAPS, Kha, NME, etc..). If not provided, Polymod will attempt to determine this automatically
 	 */
@@ -70,12 +69,12 @@ typedef PolymodParams =
 	?extensionMap:Map<String, PolymodAssetType>,
 	/**
 	 * (optional) your own custom backend for accessing the file system
-   * Provide either an IFileSystem or a Class<IFileSystem>.
+	 * Provide either an IFileSystem or a Class<IFileSystem>.
 	 */
-  ?customFilesystem:Dynamic,
+	?customFilesystem:Dynamic,
 	/**
 	 * (optional) a set of additional parameters to initialize your custom filesystem
-   * Use only if you provided a Class<IFileSystem> for the customFilesystem.
+	 * Use only if you provided a Class<IFileSystem> for the customFilesystem.
 	 */
 	?fileSystemParams:PolymodFileSystemParams,
 	/**
@@ -90,11 +89,10 @@ typedef PolymodParams =
 	#if firetongue
 	?firetongue:FireTongue,
 	#end
-
-  /**
-   * (optional) whether to parse and allow for initialization of classes in script files
-   */
-  ?useScriptedClasses:Bool,
+	/**
+	 * (optional) whether to parse and allow for initialization of classes in script files
+	 */
+	?useScriptedClasses:Bool,
 }
 
 /**
@@ -122,6 +120,7 @@ enum Framework
 	FLIXEL;
 	HEAPS;
 	KHA;
+	CERAMIC;
 	CUSTOM;
 	UNKNOWN;
 }
@@ -204,13 +203,15 @@ class Polymod
 			}
 		}
 
-		for (i in 0...dirs.length)
+		// Modify the 'dirs' array to include the modRoot, and exclude any broken mods.
+		var localDirs:Array<String> = Reflect.copy(dirs);
+		for (i in 0...localDirs.length)
 		{
-			if (dirs[i] != null)
+			if (localDirs[i] != null)
 			{
-				var origDir = dirs[i];
-				dirs[i] = Util.pathJoin(modRoot, dirs[i]);
-				var meta:ModMetadata = fileSystem.getMetadata(dirs[i]);
+				var origDir = localDirs[i];
+				localDirs[i] = Util.pathJoin(modRoot, localDirs[i]);
+				var meta:ModMetadata = fileSystem.getMetadata(localDirs[i]);
 
 				if (meta != null)
 				{
@@ -254,7 +255,7 @@ class Polymod
 
 		assetLibrary = PolymodAssets.init({
 			framework: params.framework,
-			dirs: dirs,
+			dirs: localDirs,
 			parseRules: params.parseRules,
 			ignoredFiles: params.ignoredFiles,
 			customBackend: params.customBackend,
@@ -272,35 +273,38 @@ class Polymod
 			return null;
 		}
 
-    // If we're here... Polymod initialized successfully!
-    // Time for some post-initialization cleanup.
+		// If we're here... Polymod initialized successfully!
+		// Time for some post-initialization cleanup.
 
 		// Store the params for later use (by loadMod, unloadMod, and clearMods)
 		prevParams = params;
 
-    // Do scripted class initialization now that the assetLibrary is loaded.
-    if (params.useScriptedClasses) {
-      Polymod.notice(PolymodErrorCode.SCRIPT_CLASS_PARSING, 'Parsing script classes...');
-      PolymodScriptClass.registerAllScriptClasses();
+		// Do scripted class initialization now that the assetLibrary is loaded.
+		if (params.useScriptedClasses)
+		{
+			Polymod.notice(PolymodErrorCode.SCRIPT_CLASS_PARSING, 'Parsing script classes...');
+			PolymodScriptClass.registerAllScriptClasses();
 
-      var classList = PolymodScriptClass.listScriptClasses();
-      Polymod.notice(PolymodErrorCode.SCRIPT_CLASS_PARSED, 'Parsed and registered ${classList.length} scripted classes.');
-    }
+			var classList = PolymodScriptClass.listScriptClasses();
+			Polymod.notice(PolymodErrorCode.SCRIPT_CLASS_PARSED, 'Parsed and registered ${classList.length} scripted classes.');
+		}
 
 		return modMeta;
 	}
 
-  /**
-   * Retrieve the IFileSystem instance currently in use by Polymod.
-   * This may be useful if you're using a MemoryFileSystem or a custom file system.
-   */
-  public static function getFileSystem():IFileSystem {
-    if (assetLibrary == null) {
-      Polymod.warning(POLYMOD_NOT_LOADED, 'Polymod is not loaded yet, cannot return file system.', INIT);
-      return null;
-    }
-    return assetLibrary.fileSystem;
-  }
+	/**
+	 * Retrieve the IFileSystem instance currently in use by Polymod.
+	 * This may be useful if you're using a MemoryFileSystem or a custom file system.
+	 */
+	public static function getFileSystem():IFileSystem
+	{
+		if (assetLibrary == null)
+		{
+			Polymod.warning(POLYMOD_NOT_LOADED, 'Polymod is not loaded yet, cannot return file system.', INIT);
+			return null;
+		}
+		return assetLibrary.fileSystem;
+	}
 
 	/**
 	 * Reinitializes Polymod (with the same parameters) while enabling an individual mod.
@@ -346,6 +350,15 @@ class Polymod
 		newParams.dirs = newParams.dirs.concat(modIds);
 
 		Polymod.init(newParams);
+	}
+
+	/**
+	 * Reinitializes Polymod, with the same parameters.
+	 * Useful to force Polymod to detect newly added files.
+	 */
+	public static function reload()
+	{
+		Polymod.init(Reflect.copy(prevParams));
 	}
 
 	/**
@@ -465,8 +478,8 @@ class Polymod
 			return [];
 		}
 
-    if (fileSystem == null)
-      fileSystem = PolymodFileSystem.makeFileSystem(null, {modRoot: modRoot});
+		if (fileSystem == null)
+			fileSystem = PolymodFileSystem.makeFileSystem(null, {modRoot: modRoot});
 
 		var modMeta = [];
 
@@ -617,6 +630,7 @@ class ModMetadata
 	public var license:String;
 	public var licenseRef:String;
 	public var icon:Bytes;
+	public var iconPath:String;
 	public var metaData:Map<String, String>;
 
 	/**
@@ -853,17 +867,17 @@ enum PolymodErrorType
 	 */
 	var MOD_LOAD_DONE:String = 'mod_load_done';
 
-  /**
-   * You passed a bad argument to Polymod.init({customFilesystem}).
-   * - Ensure the input is either an IFileSystem or a Class<IFileSystem>.
-   */
-  var BAD_CUSTOM_FILESYSTEM:String = 'bad_custom_filesystem';
+	/**
+	 * You passed a bad argument to Polymod.init({customFilesystem}).
+	 * - Ensure the input is either an IFileSystem or a Class<IFileSystem>.
+	 */
+	var BAD_CUSTOM_FILESYSTEM:String = 'bad_custom_filesystem';
 
-  /**
-   * You attempted to register a new scripted class with a name that is already in use.
-   * - If you need to clear the class descriptor, call `PolymodScriptClass.clearClasses()`.
-   */
-   var SCRIPT_CLASS_ALREADY_REGISTERED:String = 'bad_custom_filesystem';
+	/**
+	 * You attempted to register a new scripted class with a name that is already in use.
+	 * - If you need to clear the class descriptor, call `PolymodScriptClass.clearClasses()`.
+	 */
+	var SCRIPT_CLASS_ALREADY_REGISTERED:String = 'bad_custom_filesystem';
 
 	/**
 	 * You attempted to perform an operation that requires Polymod to be initialized.
@@ -889,31 +903,32 @@ enum PolymodErrorType
 	/**
 	 * A script file contains an unknown class name.
 	 * - Make sure your scripted class extends an existing class.
-   * - If your scripted class extends another scripted class, make sure both get loaded.
+	 * - If your scripted class extends another scripted class, make sure both get loaded.
 	 */
-   var SCRIPT_CLASS_NOT_FOUND:String = 'script_class_not_found';
+	var SCRIPT_CLASS_NOT_FOUND:String = 'script_class_not_found';
 
-  /**
+	/**
 	 * One or more scripted classes are about to be parsed in preparation to be initialized later.
-   * - This is an info message. You can log it or ignore it if you like.
+	 * - This is an info message. You can log it or ignore it if you like.
 	 */
-  var SCRIPT_CLASS_PARSING:String = 'script_class_parsing';
+	var SCRIPT_CLASS_PARSING:String = 'script_class_parsing';
 
-  /**
+	/**
 	 * One or more scripted classes have been parsed and are ready to be initialized.
-   * - This is an info message. You can log it or ignore it if you like.
+	 * - This is an info message. You can log it or ignore it if you like.
 	 */
-   var SCRIPT_CLASS_PARSED:String = 'script_class_parsed';
+	var SCRIPT_CLASS_PARSED:String = 'script_class_parsed';
 
 	/**
 	 * A script file of the given name could not be loaded for some unknown reason.
 	 * - Check the syntax of the script file is proper Haxe.
 	 */
-	var SCRIPT_NOT_LOADED:String = 'script_not_loaded';
+	var SCRIPT_PARSE_ERROR:String = 'script_parse_error';
 
 	/**
-	 * When running a script, it threw a runtime exception.
-	 * - The scripted function will assign the `script_error` variable, allowing you to handle the error gracefully.
+	 * When parsing or running a script, it threw a runtime exception.
+	 * - On a scripted function, the value `script_error` will be assigned, allowing you to handle the error gracefully.
+	 * - On a scripted class, use the message of this error to present useful debug information to the user.
 	 */
 	var SCRIPT_EXCEPTION:String = 'script_exception';
 

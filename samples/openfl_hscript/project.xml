@@ -18,6 +18,8 @@
 	<haxelib name="polymod" />
 	<haxelib name="hscript"/>
 	
+  <haxeflag name="--dce no" />
+
 	<!-- assets -->
 	<icon path="assets/openfl.svg" />
 	<assets path="assets/img" rename="img" />
@@ -39,6 +41,4 @@
     To use classes in scripts, enable this option.
   -->
 	<haxedef name="POLYMOD_USE_HSCRIPTEX" value="true" />
-  <!-- You also need to add the hscript-ex library to the project. -->
-  <haxelib name="hscript-ex"/>
 </project>

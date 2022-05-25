@@ -7,7 +7,7 @@ class PolymodFileSystem
 {
 	/**
 	 * Constructs a new PolymodFileSystem.
-	    * @param cls An input file system. Might be an IFileSystem or a Class<IFileSystem>.
+	 		* @param cls An input file system. Might be an IFileSystem or a Class<IFileSystem>.
 	 */
 	public static function makeFileSystem(cls:Dynamic = null, params:PolymodFileSystemParams):IFileSystem
 	{
@@ -16,11 +16,11 @@ class PolymodFileSystem
 			// We need to determine the class to instantiate.
 			return _detectFileSystem(params);
 		}
-		else if (cls is IFileSystem)
+		else if (Std.isOfType(cls, IFileSystem))
 		{
 			return cls;
 		}
-		else if (cls is Class)
+		else if (Std.isOfType(cls, Class))
 		{
 			// Else, instantiate the provided class.
 			return cast Type.createInstance(cls, [params]);

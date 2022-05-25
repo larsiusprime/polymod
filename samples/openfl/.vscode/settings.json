@@ -1,0 +1,18 @@
+{
+  "lime.targetConfigurations": [
+		{
+			"label": "Windows / Debug",
+			"target": "windows",
+			"args": [
+				"-debug"
+			]
+		},
+		{
+			"label": "HTML5 / Debug",
+			"target": "html5",
+			"args": [
+				"-debug"
+			]
+		}
+	],
+}
