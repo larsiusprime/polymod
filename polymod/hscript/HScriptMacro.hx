@@ -828,6 +828,43 @@ class HScriptMacro
 		return fields;
 	}
 
+	/**
+	 * Insert real types into a parameterized type.
+	 * For example, `TypeA<TypeB<TypeC<T>>>` becomes `TypeA<TypeB<TypeC<int>>>` if T is `int`.
+	 *
+	 * Note, function runs recursively.
+	 */
+	static function deparameterizeType(targetType:haxe.macro.Type, targetParams:Map<String, haxe.macro.Type>):haxe.macro.Type {
+		var resultType:haxe.macro.Type = targetType;
+
+		switch(targetType) {
+			case TInst(ty, params):
+				// Check if the haxe.macro.Type is itself one of the parameters we recognize.
+				if (targetParams.exists(ty.toString())) {
+					// If so, replace it with the real type.
+					Context.info('Replacing type: ${ty} with ${targetParams.get(ty.toString())}', Context.currentPos());
+					resultType = targetParams.get(ty.toString());
+				} else if (params.length != 0) {
+					// We need to deparameterize the parameters.
+					// We do this recursively so that nested parameters are handled correctly.
+					Context.info('Deparameterizing parameters: ${params}', Context.currentPos());
+					var newParams:Array<haxe.macro.Type> = params.map(function(param) {
+						return deparameterizeType(param, targetParams);
+					});
+					// Then we can apply those parameters to the type.
+					resultType = resultType.applyTypeParameters(ty.get().params, newParams);
+				}
+			default:
+				// Do nothing.
+		}
+
+		return resultType;
+	}
+
+	/**
+	 * Given a ClassField from the target class, create one or more Fields that override the target field,
+	 * redirecting any calls to the internal AbstractScriptedClass.
+	 */
 	static function overrideField(field:haxe.macro.Type.ClassField, isStatic:Bool, targetParams:Map<String, haxe.macro.Type>,
 			?type:haxe.macro.Type = null):Array<Field>
 	{
@@ -844,52 +881,43 @@ class HScriptMacro
 				var ltv:haxe.macro.Type = lt();
 				// Context.info('Lazy field type: ${field}', Context.currentPos());
 				return overrideField(field, isStatic, targetParams, ltv);
-			// return [];
 			case TFun(args, ret):
 				// This field is a function of the class.
 				// We need to redirect to the scripted class in case our scripted class overrides it.
 				// If it isn't overridden, the AbstractScriptClass will call the original function.
 
-				// We need to skip overriding functions which meet the following:
-				// 1. One or more argments are private types.
-				// 2. The function is an inline function.
-				// Neither scripted NOR normal classes can override these functions anyway, so it is safe to skip them.
-				// TODO: We are also skipping functions which take Null<Bool> as an argument, since the type building function isn't handling them properly.
-
-				for (arg in args)
-				{
-					switch (arg.t)
-					{
+				// We need to skip overriding functions which meet have a private type as an argument.
+				// Normal Haxe classes can't override these functions anyway, so we can skip them.
+				for (arg in args) {
+					switch (arg.t) {
 						case TInst(ty, pa):
 							var typ = ty.get();
-							if (typ.isPrivate)
-							{
+							if (typ != null && typ.isPrivate) {
 								// Context.info('  Skipping: "${field.name}" contains private type ${typ.module}.${typ.name}', Context.currentPos());
 								return [];
 							}
-						default:
-							// Do nothing.
+						default: // Do nothing.
 					}
 				}
-				switch (field.kind)
-				{
+
+				// We need to skip overriding functions which are inline.
+				// Normal Haxe classes can't override these functions anyway, so we can skip them.
+				switch (field.kind) {
 					case FMethod(k):
-						switch (k)
-						{
+						switch (k) {
 							case MethInline:
 								// Context.info('  Skipping: "${field.name}" is inline function', Context.currentPos());
 								return [];
-							default:
-								// Do nothing.
+							default: // Do nothing.
 						}
-					default:
-						// Do nothing.
+					default: // Do nothing.
 				}
 
-				for (fieldMeta in field.meta.get())
-				{
-					if (fieldMeta.name == ':generic')
-					{
+				// Skip overriding functions which are Generics.
+				// This is because this actually creates several different functions at compile time.
+				// TODO: Can we somehow override these functions?
+				for (fieldMeta in field.meta.get()) {
+					if (fieldMeta.name == ':generic') {
 						// Context.info('  Skipping: "${field.name}" is marked with @:generic', Context.currentPos());
 						return [];
 					}
@@ -898,55 +926,27 @@ class HScriptMacro
 				var func_inputArgs:Array<FunctionArg> = [];
 
 				// We only get limited information about the args from Type, we need to use TypedExprDef.
-				if (field == null || field.expr() == null)
-				{
+				
+				if (field == null || field.expr() == null) {
 					// Context.info('  Skipping: "${field.name}" is not an expression', Context.currentPos());
 					return [];
 				}
-				switch (field.expr().expr)
-				{
+
+				switch (field.expr().expr) {
 					case TFunction(tfunc):
-						for (arg in tfunc.args)
-						{
+						// Create an array of FunctionArg from the TFunction's argument objects.
+						for (arg in tfunc.args) {
+							// Whether the argument is optional.
 							var isOptional = (arg.value != null);
+							// The argument's metadata (if any).
 							var tfuncMeta:haxe.macro.Metadata = arg.v.meta.get();
+							// The argument's expression/default value (if any).
 							var tfuncExpr:haxe.macro.Expr = arg.value == null ? null : Context.getTypedExpr(arg.value);
-							var tfuncType:haxe.macro.ComplexType = Context.toComplexType(arg.v.t);
-							switch (arg.v.t)
-							{
-								case TInst(ty, params):
-									var typ = ty.get();
-									if (targetParams.exists(ty.toString()))
-									{
-										// Argument type is T.
-										tfuncType = Context.toComplexType(targetParams.get(ty.toString()));
-										// Context.info('  Uses parameter type: ${ty.toString()}, replacing with ${tfuncType}', Context.currentPos());
-									}
-									else if (params.length != 0)
-									{
-										for (paramIndex in 0...params.length)
-										{
-											var param = params[paramIndex];
-											switch (param)
-											{
-												case TInst(pty, ppr):
-													if (targetParams.exists(pty.toString()))
-													{
-														// Argument type is Foobar<T>.
-														// Context.info('  Argument type uses parameter ${pty.toString()}, which should be ${targetParams.get(pty.toString())}', Context.currentPos());
-														// Okay uhhh we have to mutate the ComplexType.
-														tfuncType = Context.toComplexType(arg.v.t.applyTypeParameters(typ.params,
-															[targetParams.get(pty.toString())]));
-														// func_ret_t = TypeTools.applyTypeParameters(func_ret_t, targetParams.get(pty.toString()));
-													}
-												default:
-													// Nothing.
-											}
-										}
-									}
-								default:
-									// Nothing.
-							}
+							// The argument type. We have to handle any type parameters, and deparameterizeType does so recursively.
+							var tfuncType:haxe.macro.ComplexType = Context.toComplexType(
+								deparameterizeType(arg.v.t, targetParams)
+							);
+
 							var tfuncArg:FunctionArg = {
 								name: arg.v.name,
 								type: tfuncType,
