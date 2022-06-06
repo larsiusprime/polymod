@@ -134,7 +134,7 @@ class PolymodInterpEx extends Interp
 		super.setVar(id, v);
 	}
 
-	override function assign(e1:Expr, e2:Expr):Dynamic
+	public function assign(e1:Expr, e2:Expr):Dynamic
 	{
 		return super.assign(e1, e2);
 		var v = expr(e2);
