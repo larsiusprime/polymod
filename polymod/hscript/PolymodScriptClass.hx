@@ -68,10 +68,10 @@ class PolymodScriptClass
 					// EInvalidOp
 					case EUnexpected(s):
 						Polymod.error(SCRIPT_PARSE_ERROR,
-							'Error while parsing function ${path}#${err.line}: EUnexpected' + '\n' +
+							'Error while parsing function ${path}#${err}: EUnexpected' + '\n' +
 							'Unexpected error: Unexpected token "${s}", is there invalid syntax on this line?');
 					default:
-						Polymod.error(SCRIPT_PARSE_ERROR, 'Error while executing function ${path}#${err.line}: ' + '\n' + 'An unknown error occurred: ${err}');
+						Polymod.error(SCRIPT_PARSE_ERROR, 'Error while executing function ${path}#${err}: ' + '\n' + 'An unknown error occurred: ${err}');
 				}
 			}
 		}
@@ -354,7 +354,7 @@ class PolymodScriptClass
 			}
 			catch (err:hscript.Expr.Error)
 			{
-				switch (err.e)
+				switch (err)
 				{
 					// EInvalidChar
 					// EUnexpected
@@ -370,30 +370,30 @@ class PolymodScriptClass
 						{
 							var superCls:String = msg.substring(SUPER_CLASS_PREFIX.length);
 							Polymod.error(SCRIPT_EXCEPTION,
-								'Error while executing function ${className}.${name}()#${err.line}: ' + '\n' +
+								'Error while executing function ${className}.${name}()#${err}: ' + '\n' +
 								'Could not resolve super class type "${superCls}".');
 						}
 						else if (msg.startsWith('super() not called'))
 						{
 							Polymod.error(SCRIPT_EXCEPTION,
-								'Error while executing function ${className}.${name}()#${err.line}: ' + '\n' + 'Custom constructor does not call "super()".');
+								'Error while executing function ${className}.${name}()#${err}: ' + '\n' + 'Custom constructor does not call "super()".');
 						}
 						else
 						{
 							Polymod.error(SCRIPT_EXCEPTION,
-								'Error while executing function ${className}.${name}()#${err.line}: ' + '\n' + 'An unknown error occurred: ${err}');
+								'Error while executing function ${className}.${name}()#${err}: ' + '\n' + 'An unknown error occurred: ${err}');
 						}
 					case EUnknownVariable(v):
 						Polymod.error(SCRIPT_EXCEPTION,
-							'Error while executing function ${className}.${name}()#${err.line}: EUnknownVariable' + '\n' +
+							'Error while executing function ${className}.${name}()#${err}: EUnknownVariable' + '\n' +
 							'UnknownVariable error: Tried to access "${v}", an unknown variable.');
 					case EInvalidAccess(f):
 						Polymod.error(SCRIPT_EXCEPTION,
-							'Error while executing function ${className}.${name}()#${err.line}: EInvalidAccess' + '\n' +
+							'Error while executing function ${className}.${name}()#${err}: EInvalidAccess' + '\n' +
 							'InvalidAccess error: Tried to access "${f}", but it is not a valid field or method. Is the target object null?');
 					default:
 						Polymod.error(SCRIPT_EXCEPTION,
-							'Error while executing function ${className}.${name}()#${err.line}: ' + '\n' + 'An unknown error occurred: ${err}');
+							'Error while executing function ${className}.${name}()#${err}: ' + '\n' + 'An unknown error occurred: ${err}');
 				}
 				return null;
 			}
