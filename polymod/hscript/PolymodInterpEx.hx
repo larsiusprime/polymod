@@ -190,6 +190,27 @@ class PolymodInterpEx extends Interp
 		return super.assign(e1, e2);
 	}
 
+	public override function expr( e : Expr ) : Dynamic {
+		// Override to provide some fixes, falling back to super.expr() when not needed.
+		#if hscriptPos
+		curExpr = e;
+		switch(e.e) {
+		#else
+		switch(e) {
+		#end
+			// This specific case was crashing under some circumstances,
+			// so this
+			case EVar(n,_,e):
+				declared.push({ n : n, old : locals.get(n) });
+				locals.set(n,{ r : (e == null)?null:expr(e) });
+				return null;
+			default:
+				// Do nothing.
+		}
+		// Default case.
+		return super.expr(e);
+	}
+
 	override function makeIterator(v:Dynamic):Iterator<Dynamic>
 	{
 		if (v.iterator != null)
