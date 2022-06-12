@@ -202,7 +202,8 @@ class PolymodInterpEx extends Interp
 			// so this
 			case EVar(n,_,e):
 				declared.push({ n : n, old : locals.get(n) });
-				locals.set(n,{ r : (e == null)?null:expr(e) });
+				var result = (e == null) ? null : expr(e);
+				locals.set(n,{ r: result });
 				return null;
 			default:
 				// Do nothing.
