@@ -75,7 +75,9 @@ class ZipFileSystem extends MemoryFileSystem
             var data = haxe.zip.Reader.unzip(_entry);
             if (_entry.fileName.substring(_entry.fileName.lastIndexOf('/') + 1) == '' && _entry.data.toString() == '')
             {
-                // do nothing with plain directory entries
+                @:privateAccess
+                if(!zipfs.directories.contains(_entry.fileName))
+                    zipfs.directories.push(_entry.fileName);
             } 
             else
             {

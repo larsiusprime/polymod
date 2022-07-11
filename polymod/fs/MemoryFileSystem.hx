@@ -1,10 +1,10 @@
 package polymod.fs;
 
-import polymod.Polymod.ModMetadata;
-import haxe.io.Path;
 import haxe.io.Bytes;
-import polymod.util.Util;
+import haxe.io.Path;
+import polymod.Polymod.ModMetadata;
 import polymod.fs.PolymodFileSystem;
+import polymod.util.Util;
 
 /**
  * This simple virtual file system demonstrates that anything can be used
@@ -61,7 +61,7 @@ class MemoryFileSystem implements PolymodFileSystem.IFileSystem
 
 	public inline function exists(path:String)
 	{
-		return files.exists(path);
+		return files.exists(path) || directories.contains(path); // checks both files and folders
 	}
 
 	public inline function isDirectory(path:String)
@@ -74,6 +74,7 @@ class MemoryFileSystem implements PolymodFileSystem.IFileSystem
 	 */
 	public inline function readDirectory(path:String):Array<String>
 	{
+		path = Path.removeTrailingSlashes(path);
 		var result = [];
 		for (key => _v in files)
 		{
@@ -85,7 +86,8 @@ class MemoryFileSystem implements PolymodFileSystem.IFileSystem
 		}
 		for (dir in directories)
 		{
-			if (Path.directory(dir) == path)
+			// avoiding pushing duplicates
+			if (Path.directory(dir) == path && !result.contains(dir))
 			{
 				result.push(dir);
 			}
@@ -140,7 +142,7 @@ class MemoryFileSystem implements PolymodFileSystem.IFileSystem
 		return dirs;
 	}
 
-	public inline function getMetadata(modId:String)
+	public function getMetadata(modId:String)
 	{
 		if (exists(modId))
 		{
