@@ -7,10 +7,10 @@ import haxe.macro.ExprTools;
 import polymod.hscript.HScriptable.HScriptParams;
 import polymod.hscript.HScriptable.ScriptOutput;
 
+using Lambda;
+using haxe.macro.ComplexTypeTools;
 using haxe.macro.ExprTools;
 using haxe.macro.TypeTools;
-using haxe.macro.ComplexTypeTools;
-using Lambda;
 
 class HScriptMacro
 {
@@ -213,6 +213,7 @@ class HScriptMacro
 		var cls:haxe.macro.Type.ClassType = Context.getLocalClass().get();
 		var fields:Array<Field> = Context.getBuildFields();
 
+		// If the class already has `@:hscriptProcessed` on it, we don't need to do anything.
 		var alreadyProcessed_metadata = cls.meta.get().find(function(m) return m.name == ':hscriptProcessed');
 
 		if (alreadyProcessed_metadata == null)
@@ -226,15 +227,12 @@ class HScriptMacro
 
 			// Ensure unused scripted classes are still available to initialize in scripts.
 			// SORRY, DCE gets run before this, so we can't use the @:keep metadata.
-			// cls.meta.add(":keep", [], cls.pos);
-
 			cls.meta.add(":hscriptProcessed", [], cls.pos);
-
 			return fields;
 		}
 		else
 		{
-			// Context.info('HScriptable: Class ' + cls.name + ' already processed, skipping...', Context.currentPos());
+			// Returning null is equal to "don't do anything".
 			return null;
 		}
 	}
@@ -433,7 +431,7 @@ class HScriptMacro
 		var constructor = fields.find(function(field) return field.name == 'new');
 		if (constructor == null)
 			Context.error("Error: @:hscript requires a constructor", Context.currentPos());
-		switch constructor.kind
+		switch (constructor.kind)
 		{
 			case FFun(func):
 				func.expr = macro
@@ -444,6 +442,7 @@ class HScriptMacro
 			default:
 				Context.error("Error: constructor is not a function?!", Context.currentPos());
 		}
+
 		return fields;
 	}
 
@@ -604,6 +603,9 @@ class HScriptMacro
 				ret: Context.toComplexType(Context.getType(clsTypeName)),
 				expr: macro
 				{
+					trace("Setting scripted class overrides: ");
+					trace($v{superClsTypeName});
+					trace($v{clsTypeName});
 					polymod.hscript.PolymodScriptClass.scriptClassOverrides.set($v{superClsTypeName}, Type.resolveClass($v{clsTypeName}));
 
 					var asc:polymod.hscript.PolymodAbstractScriptClass = polymod.hscript.PolymodScriptClass.createScriptClassInstance(clsName, $a{constArgs});
@@ -624,7 +626,8 @@ class HScriptMacro
 			pos: cls.pos,
 			kind: FFun({
 				args: [
-					{name: 'funcName', type: Context.toComplexType(Context.getType('Dynamic'))},
+					// {name: 'funcName', type: Context.toComplexType(Context.getType('Dynamic'))},
+					{name: 'funcName', type: Context.toComplexType(Context.getType('String'))},
 					{
 						name: 'funcArgs',
 						type: Context.toComplexType(Context.typeof(macro
@@ -828,34 +831,149 @@ class HScriptMacro
 		return fields;
 	}
 
+	static function getBaseParamsOfType(parentType:haxe.macro.Type, paramTypes:Array<haxe.macro.Type>):Array<haxe.macro.Type.TypeParameter>
+	{
+		var parentParams:Array<haxe.macro.Type.TypeParameter> = [];
+
+		switch (parentType)
+		{
+			case TMono(t):
+				var ty = t.get();
+				return getBaseParamsOfType(ty, paramTypes);
+
+			case TInst(t, params):
+				// Continue
+				parentParams = t.get().params;
+
+			case TType(t, params):
+				// Recurse
+				var ty:haxe.macro.Type = t.get().type;
+				return getBaseParamsOfType(ty, paramTypes);
+
+			case TDynamic(t):
+				// Recurse
+				return getBaseParamsOfType(t, paramTypes);
+
+			case TLazy(f):
+				// Recurse
+				var ty:haxe.macro.Type = f();
+				return getBaseParamsOfType(ty, paramTypes);
+
+			case TAbstract(t, _params):
+				// Continue
+				parentParams = t.get().params;
+
+			// case TEnum(t:Ref<EnumType>, params:Array<Type>):
+			// case TFun(args:Array<{name:String, opt:Bool, t:Type}>, ret:Type):
+			// case TAnonymous(a:Ref<AnonType>):
+			default:
+				Context.error('Unsupported type: ${parentType}', Context.currentPos());
+		}
+
+		var result:Array<haxe.macro.Type.TypeParameter> = [];
+
+		for (i => parentParam in parentParams)
+		{
+			var newParam:haxe.macro.Type.TypeParameter = {
+				name: parentParam.name,
+				t: paramTypes[i],
+			};
+			result.push(newParam);
+		}
+
+		return result;
+	}
+
 	/**
 	 * Insert real types into a parameterized type.
 	 * For example, `TypeA<TypeB<TypeC<T>>>` becomes `TypeA<TypeB<TypeC<int>>>` if T is `int`.
 	 *
 	 * Note, function runs recursively.
 	 */
-	static function deparameterizeType(targetType:haxe.macro.Type, targetParams:Map<String, haxe.macro.Type>):haxe.macro.Type {
+	static function deparameterizeType(targetType:haxe.macro.Type, targetParams:Map<String, haxe.macro.Type>):haxe.macro.Type
+	{
 		var resultType:haxe.macro.Type = targetType;
 
-		switch(targetType) {
-			case TInst(ty, params):
-				// Check if the haxe.macro.Type is itself one of the parameters we recognize.
-				if (targetParams.exists(ty.toString())) {
+		switch (targetType)
+		{
+			case TFun(args, ret):
+				// Function type.
+				// This is not referring to functions of a class, but rather a function taken as a parameter (like a callback).
+
+				// Deparameterize the return type.
+				var retType:haxe.macro.Type = deparameterizeType(ret, targetParams);
+				// Deparameterize the argument types.
+				var argTypes:Array<{name:String, opt:Bool, t:haxe.macro.Type}> = args.map(function(arg)
+				{
+					return {
+						name: arg.name,
+						opt: arg.opt,
+						t: deparameterizeType(arg.t, targetParams),
+					};
+				});
+
+				// Construct the new type.
+				resultType = TFun(argTypes, retType);
+
+			case TAbstract(ty, params):
+				// Abstract type. Sometimes used by types like Null<T>.
+
+				var name = ty.toString();
+				var typ = ty.get();
+
+				// Check if the Abstract type is a parameter we recognize and can replace.
+				if (targetParams.exists(ty.toString()))
+				{
 					// If so, replace it with the real type.
-					Context.info('Replacing type: ${ty} with ${targetParams.get(ty.toString())}', Context.currentPos());
 					resultType = targetParams.get(ty.toString());
-				} else if (params.length != 0) {
-					// We need to deparameterize the parameters.
-					// We do this recursively so that nested parameters are handled correctly.
-					Context.info('Deparameterizing parameters: ${params}', Context.currentPos());
-					var newParams:Array<haxe.macro.Type> = params.map(function(param) {
+				}
+				else if (params.length != 0)
+				{
+					// This type has parameters that we may need to replace.
+					// Call this function recursively on each nested parameter.
+					var newParams:Array<haxe.macro.Type> = params.map(function(param)
+					{
 						return deparameterizeType(param, targetParams);
 					});
 					// Then we can apply those parameters to the type.
-					resultType = resultType.applyTypeParameters(ty.get().params, newParams);
+					var baseParams = getBaseParamsOfType(resultType, params);
+					Context.info('Building new abst (${baseParams} + ${newParams})...', Context.currentPos());
+					resultType = resultType.applyTypeParameters(baseParams, newParams);
+					Context.info('Deparameterized instance type: ${resultType}', Context.currentPos());
 				}
+				else
+				{
+					// Else, there are no parameters related this type and we don't need to mutate it.
+				}
+			case TInst(ty, params):
+				// Instance type. Used by most variables.
+
+				// Check if the Instance type is a parameter we recognize and can replace.
+				if (targetParams.exists(ty.toString()))
+				{
+					// If so, replace it with the real type.
+					resultType = targetParams.get(ty.toString());
+				}
+				else if (params.length != 0)
+				{
+					// This type has parameters that we may need to replace.
+					// Call this function recursively on each nested parameter.
+					var newParams:Array<haxe.macro.Type> = params.map(function(param)
+					{
+						return deparameterizeType(param, targetParams);
+					});
+					// Then we can apply those parameters to the type.
+					var baseParams = getBaseParamsOfType(resultType, newParams);
+					resultType = resultType.applyTypeParameters(baseParams, newParams);
+				}
+				else
+				{
+					// Else, there are no parameters related this type and we don't need to mutate it.
+				}
+
 			default:
 				// Do nothing.
+				Context.info('You failed to handle this! ${targetType}', Context.currentPos());
 		}
 
 		return resultType;
@@ -888,11 +1006,14 @@ class HScriptMacro
 
 				// We need to skip overriding functions which meet have a private type as an argument.
 				// Normal Haxe classes can't override these functions anyway, so we can skip them.
-				for (arg in args) {
-					switch (arg.t) {
+				for (arg in args)
+				{
+					switch (arg.t)
+					{
 						case TInst(ty, pa):
 							var typ = ty.get();
-							if (typ != null && typ.isPrivate) {
+							if (typ != null && typ.isPrivate)
+							{
 								// Context.info('  Skipping: "${field.name}" contains private type ${typ.module}.${typ.name}', Context.currentPos());
 								return [];
 							}
@@ -902,9 +1023,11 @@ class HScriptMacro
 
 				// We need to skip overriding functions which are inline.
 				// Normal Haxe classes can't override these functions anyway, so we can skip them.
-				switch (field.kind) {
+				switch (field.kind)
+				{
 					case FMethod(k):
-						switch (k) {
+						switch (k)
+						{
 							case MethInline:
 								// Context.info('  Skipping: "${field.name}" is inline function', Context.currentPos());
 								return [];
@@ -916,8 +1039,10 @@ class HScriptMacro
 				// Skip overriding functions which are Generics.
 				// This is because this actually creates several different functions at compile time.
 				// TODO: Can we somehow override these functions?
-				for (fieldMeta in field.meta.get()) {
-					if (fieldMeta.name == ':generic') {
+				for (fieldMeta in field.meta.get())
+				{
+					if (fieldMeta.name == ':generic')
+					{
 						// Context.info('  Skipping: "${field.name}" is marked with @:generic', Context.currentPos());
 						return [];
 					}
@@ -926,16 +1051,19 @@ class HScriptMacro
 				var func_inputArgs:Array<FunctionArg> = [];
 
 				// We only get limited information about the args from Type, we need to use TypedExprDef.
-				
-				if (field == null || field.expr() == null) {
+
+				if (field == null || field.expr() == null)
+				{
 					// Context.info('  Skipping: "${field.name}" is not an expression', Context.currentPos());
 					return [];
 				}
 
-				switch (field.expr().expr) {
+				switch (field.expr().expr)
+				{
 					case TFunction(tfunc):
 						// Create an array of FunctionArg from the TFunction's argument objects.
-						for (arg in tfunc.args) {
+						for (arg in tfunc.args)
+						{
 							// Whether the argument is optional.
 							var isOptional = (arg.value != null);
 							// The argument's metadata (if any).
@@ -943,9 +1071,7 @@ class HScriptMacro
 							// The argument's expression/default value (if any).
 							var tfuncExpr:haxe.macro.Expr = arg.value == null ? null : Context.getTypedExpr(arg.value);
 							// The argument type. We have to handle any type parameters, and deparameterizeType does so recursively.
-							var tfuncType:haxe.macro.ComplexType = Context.toComplexType(
-								deparameterizeType(arg.v.t, targetParams)
-							);
+							var tfuncType:haxe.macro.ComplexType = Context.toComplexType(deparameterizeType(arg.v.t, targetParams));
 
 							var tfuncArg:FunctionArg = {
 								name: arg.v.name,
