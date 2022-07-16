@@ -6,6 +6,7 @@ import haxe.macro.Expr;
 import haxe.macro.ExprTools;
 import polymod.hscript.HScriptable.HScriptParams;
 import polymod.hscript.HScriptable.ScriptOutput;
+
 using Lambda;
 using haxe.macro.ComplexTypeTools;
 using haxe.macro.ExprTools;
@@ -603,7 +604,8 @@ class HScriptMacro
 					polymod.hscript.PolymodScriptClass.scriptClassOverrides.set($v{superClsTypeName}, Type.resolveClass($v{clsTypeName}));
 
 					var asc:polymod.hscript.PolymodAbstractScriptClass = polymod.hscript.PolymodScriptClass.createScriptClassInstance(clsName, $a{constArgs});
-					if (asc == null) {
+					if (asc == null)
+					{
 						polymod.Polymod.error(SCRIPT_EXCEPTION, 'Could not construct instance of scripted class (${clsName} extends ' + $v{clsTypeName} + ')');
 						return null;
 					}
@@ -1138,6 +1140,18 @@ class HScriptMacro
 					return [];
 				}
 
+				var func_access = [field.isPublic ? APublic : APrivate];
+				if (field.isFinal)
+					func_access.push(AFinal);
+				if (isStatic)
+				{
+					func_access.push(AStatic);
+				}
+				else
+				{
+					func_access.push(AOverride);
+				}
+
 				switch (field.expr().expr)
 				{
 					case TFunction(tfunc):
@@ -1163,6 +1177,11 @@ class HScriptMacro
 							};
 							func_inputArgs.push(tfuncArg);
 						}
+					case TConst(tcon):
+						// Okay, so uh, this is actually a VARIABLE storing a function.
+						// Don't attempt to re-define it.
+
+						return [];
 					default:
 						Context.warning('Expected a function and got ${field.expr().expr}', Context.currentPos());
 				}
@@ -1173,17 +1192,6 @@ class HScriptMacro
 				// Generate the list of call arguments for the function.
 				// Context.info('${args}', Context.currentPos());
 				var func_callArgs:Array<Expr> = [for (arg in args) macro $i{arg.name}];
-				var func_access = [field.isPublic ? APublic : APrivate];
-				if (field.isFinal)
-					func_access.push(AFinal);
-				if (isStatic)
-				{
-					func_access.push(AStatic);
-				}
-				else
-				{
-					func_access.push(AOverride);
-				}
 
 				var func_params = [for (param in field.params) {name: param.name}];
 
