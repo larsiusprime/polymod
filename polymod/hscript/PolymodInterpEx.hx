@@ -62,6 +62,8 @@ class PolymodInterpEx extends Interp
 				if (c != null)
 				{
 					return Type.createInstance(c, args);
+				} else {
+					error(ECustom('Could not resolve imported module: ${importedClass}'));
 				}
 			}
 		}
@@ -188,6 +190,28 @@ class PolymodInterpEx extends Interp
 		return super.assign(e1, e2);
 	}
 
+	public override function expr( e : Expr ) : Dynamic {
+		// Override to provide some fixes, falling back to super.expr() when not needed.
+		#if hscriptPos
+		curExpr = e;
+		switch(e.e) {
+		#else
+		switch(e) {
+		#end
+			// This specific case was crashing under some circumstances,
+			// so this
+			case EVar(n,_,e):
+				declared.push({ n : n, old : locals.get(n) });
+				var result = (e == null) ? null : expr(e);
+				locals.set(n,{ r: result });
+				return null;
+			default:
+				// Do nothing.
+		}
+		// Default case.
+		return super.expr(e);
+	}
+
 	override function makeIterator(v:Dynamic):Iterator<Dynamic>
 	{
 		if (v.iterator != null)
@@ -211,22 +235,64 @@ class PolymodInterpEx extends Interp
 		return v;
 	}
 
-	override function call(o:Dynamic, f:Dynamic, args:Array<Dynamic>):Dynamic
+	/**
+	 * Call a given function on a given target with the given arguments.
+	 * @param target The object to call the function on.
+	 *   If null, defaults to `this`.
+	 * @param fun The function to call.
+	 * @param args The arguments to apply to that function.
+	 * @return The result of the function call.
+	 */
+	override function call(target:Dynamic, fun:Dynamic, args:Array<Dynamic>):Dynamic
 	{
-		// TODO: not sure if this make sense !! seems hacky, but fn() in hscript wont resolve an object first (this.fn() or super.fn() would work fine)
-		if (o == null && _nextCallObject != null)
+		// Calling fn() in hscript won't resolve an object first. Thus, we need to change it to use this.fn() instead.
+		if (target == null && _nextCallObject != null)
 		{
-			o = _nextCallObject;
+			target = _nextCallObject;
 		}
 
-		if (f == null)
+		if (fun == null)
 		{
-			error(EInvalidAccess(f));
+			error(EInvalidAccess(fun));
 		}
 
-		var r = Reflect.callMethod(o, f, args);
-		_nextCallObject = null;
-		return r;
+		if (target == _proxy) {
+			// If we are calling this.fn(), special handling is needed to prevent the local scope from being destroyed.
+			// By checking `target == _proxy`, we handle BOTH fn() and this.fn().
+			// super.fn() is exempt since it is not scripted.
+			return callThis(fun, args);
+		} else {
+			var result = Reflect.callMethod(target, fun, args);
+			_nextCallObject = null;
+			return result;
+		}
+	}
+
+	/**
+	 * Call a given function on the current proxy with the given arguments.
+	 * Ensures that the local scope is not destroyed.
+	 * @param fun The function to call.
+	 * @param args The arguments to apply to that function.
+	 * @return The result of the function call.
+	 */
+	function callThis(fun:Dynamic, args:Array<Dynamic>):Dynamic {
+		// If we are calling this.fn(), special handling is needed to prevent the local scope from being destroyed.
+		// Store the local scope.
+		var capturedLocals = this.duplicate(locals);
+		var capturedDeclared = this.declared;
+		var capturedDepth = this.depth;
+		
+		this.depth++;
+
+		// Call the function.
+		var result = Reflect.callMethod(_proxy, fun, args);
+
+		// Restore the local scope.
+		this.locals = capturedLocals;
+		this.declared = capturedDeclared;
+		this.depth = capturedDepth;
+
+		return result;
 	}
 
 	override function get(o:Dynamic, f:String):Dynamic
@@ -343,6 +409,7 @@ class PolymodInterpEx extends Interp
 				return result;
 		}
 
+		// We are calling a LOCAL function from the same module.
 		if (_proxy != null && _proxy.findFunction(id) != null)
 		{
 			_nextCallObject = _proxy;

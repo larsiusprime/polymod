@@ -357,7 +357,19 @@ class PolymodScriptClass
 			}
 			catch (err:hscript.Expr.Error)
 			{
+				var errLine:String =
+				#if hscriptPos
+					'${err.line}'
+				#else
+					"#???"
+				#end
+					;
+				
+				#if hscriptPos
 				switch (err.e)
+				#else
+				switch (err)
+				#end
 				{
 					// EInvalidChar
 					// EUnexpected
@@ -366,33 +378,40 @@ class PolymodScriptClass
 					// EInvalidPreprocessor
 					// EInvalidIterator
 					// EInvalidOp
-					// ECustom
 					case ECustom(msg):
 						var SUPER_CLASS_PREFIX:String = "Could not resolve super class: ";
+						var SUPER_NOT_CALLED_PREFIX:String = "super() not called";
+						var MODULE_PREFIX:String = "Could not resolve imported module: ";
 						if (msg.startsWith(SUPER_CLASS_PREFIX))
 						{
 							var superCls:String = msg.substring(SUPER_CLASS_PREFIX.length);
 							Polymod.error(SCRIPT_EXCEPTION,
-								'Error while executing function ${className}.${name}()#${err.line}: ' + '\n' +
+								'Error while executing function ${className}.${name}()#${errLine}: ' + '\n' +
 								'Could not resolve super class type "${superCls}".');
 						}
-						else if (msg.startsWith('super() not called'))
+						else if (msg.startsWith(SUPER_NOT_CALLED_PREFIX))
 						{
 							Polymod.error(SCRIPT_EXCEPTION,
-								'Error while executing function ${className}.${name}()#${err.line}: ' + '\n' + 'Custom constructor does not call "super()".');
+								'Error while executing function ${className}.${name}()#${errLine}: ' + '\n' + 'Custom constructor does not call "super()".');
+						}
+						else if (msg.startsWith(MODULE_PREFIX)) {
+							var module:String = msg.substring(MODULE_PREFIX.length);
+							Polymod.error(SCRIPT_EXCEPTION,
+								'Error while executing function ${className}.${name}()#${errLine}: ' + '\n' +
+								'Could not resolve imported module type "${module}".');
 						}
 						else
 						{
 							Polymod.error(SCRIPT_EXCEPTION,
-								'Error while executing function ${className}.${name}()#${err.line}: ' + '\n' + 'An unknown error occurred: ${err}');
+								'Error while executing function ${className}.${name}()#${errLine}: ' + '\n' + 'An unknown error occurred: ${err}');
 						}
 					case EUnknownVariable(v):
 						Polymod.error(SCRIPT_EXCEPTION,
-							'Error while executing function ${className}.${name}()#${err.line}: EUnknownVariable' + '\n' +
+							'Error while executing function ${className}.${name}()#${errLine}: EUnknownVariable' + '\n' +
 							'UnknownVariable error: Tried to access "${v}", an unknown variable.');
 					case EInvalidAccess(f):
 						Polymod.error(SCRIPT_EXCEPTION,
-							'Error while executing function ${className}.${name}()#${err.line}: EInvalidAccess' + '\n' +
+							'Error while executing function ${className}.${name}()#${errLine}: EInvalidAccess' + '\n' +
 							'InvalidAccess error: Tried to access "${f}", but it is not a valid field or method. Is the target object null?');
 					default:
 						Polymod.error(SCRIPT_EXCEPTION,

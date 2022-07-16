@@ -3,6 +3,19 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.4] - 2022-??-??
+Additional bug fixes.
+## Added
+- Added a new error message which occurs when a script cannot locate a module you try to import.
+  - If you encounter this message, make sure you typed the package name correctly, and make sure the module is exempt from Haxe's Dead Code Elimination.
+## Fixed
+- Fixed an issue where, if a function in a scripted class calls another function within that class, the local variable scope is destroyed.
+- Fixed a compilation issue which occurs when `hscriptPos` is not enabled (`hscript.Error has no field line`)
+  - Line numbers will now display as `#???` unless you add the `hscriptPos` compile flag to your build.
+## Known Issues
+- A build error `hscript.Interp has no field setVar` may occur. If this happens, make sure you are using the git version of HScript.
+  - `haxelib git hscript https://github.com/HaxeFoundation/hscript`
+
 ## [1.5.3] - 2022-05-18
 Lots of tiny bug fixes and several new utilities. Overall a better experience if you're debugging a tricky script.
 ## Added

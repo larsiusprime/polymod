@@ -205,6 +205,8 @@ class Polymod
 
 		// Modify the 'dirs' array to include the modRoot, and exclude any broken mods.
 		var localDirs:Array<String> = Reflect.copy(dirs);
+		if (localDirs == null) localDirs = [];
+
 		for (i in 0...localDirs.length)
 		{
 			if (localDirs[i] != null)
