@@ -543,12 +543,6 @@ class HScriptMacro
 		}
 		// Else, do nothing.
 
-		if (cls.name == "ScriptedFlxSpriteGroup")
-		{
-			// return fields.slice(0, Std.int(fields.length / 2));
-			return fields.slice(Std.int(fields.length / 2), fields.length);
-		}
-
 		return fields;
 	}
 
@@ -1015,15 +1009,39 @@ class HScriptMacro
 				}
 				else if (params.length != 0)
 				{
-					// This type has parameters that we may need to replace.
-					// Call this function recursively on each nested parameter.
-					var newParams:Array<haxe.macro.Type> = params.map(function(param)
+					var oldParams:Array<haxe.macro.Type> = [];
+					var newParams:Array<haxe.macro.Type> = [];
+					for (param in params)
 					{
-						return deparameterizeType(param, targetParams);
-					});
-					// Then we can apply those parameters to the type.
-					var baseParams = getBaseParamsOfType(resultType, newParams);
-					resultType = resultType.applyTypeParameters(baseParams, newParams);
+						var baseTypes = scanBaseTypes(param);
+
+						for (baseType in baseTypes)
+						{
+							var newParam = deparameterizeType(baseType, targetParams);
+							if (newParam.toString() == "Void")
+							{
+								// Skipping Void...
+							}
+							else
+							{
+								oldParams.push(baseType);
+								newParams.push(newParam);
+							}
+						}
+					}
+					var baseParams = getBaseParamsOfType(resultType, oldParams);
+					newParams = newParams.slice(0, baseParams.length);
+
+					if (newParams.length > 0)
+					{
+						// Context.info('Building new abstract (${baseParams} + ${newParams})...', Context.currentPos());
+						resultType = resultType.applyTypeParameters(baseParams, newParams);
+						// Context.info('Deparameterized abstract type: ${resultType.toString()}', Context.currentPos());
+					}
+					else
+					{
+						// Leave the type as is.
+					}
 				}
 				else
 				{
@@ -1032,7 +1050,8 @@ class HScriptMacro
 
 			default:
 				// Do nothing.
-				Context.warning('You failed to handle this! ${targetType}', Context.currentPos());
+				// Muted because I haven't actually seen any issues caused by this. Maybe investigate in the future.
+				// Context.warning('You failed to handle this! ${targetType}', Context.currentPos());
 		}
 
 		return resultType;
@@ -1120,7 +1139,7 @@ class HScriptMacro
 				{
 					case TFunction(tfunc):
 						// Create an array of FunctionArg from the TFunction's argument objects.
-						Context.info('  Processing args of function "${field.name}"', Context.currentPos());
+						// Context.info('  Processing args of function "${field.name}"', Context.currentPos());
 						for (arg in tfunc.args)
 						{
 							// Whether the argument is optional.
@@ -1162,12 +1181,9 @@ class HScriptMacro
 					func_access.push(AOverride);
 				}
 
-				// TODO: This breaks if there's a type constraint on the parameter.
 				var func_params = [for (param in field.params) {name: param.name}];
 
-				// var func_ret = Context.toComplexType(ret);
-
-				Context.info('Processing return of function "${field.name}"', Context.currentPos());
+				// Context.info('  Processing return of function "${field.name}"', Context.currentPos());
 				var func_ret = doesReturnVoid ? null : Context.toComplexType(deparameterizeType(ret, targetParams));
 
 				var funcName:String = field.name;
