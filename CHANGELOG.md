@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ## Added
 - Scripted classes now allow functions with up to 8 arguments, up from 4.
 ## Fixed
+- Fixed an issue where attempting to annotate `@:hscriptClass` on a class which utilized variables whose type is a function.
+  - This now allows for FlxUIState to be scripted.
 - Cleanup extraneous compile-time logging.
 
 
