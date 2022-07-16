@@ -6,7 +6,6 @@ import haxe.macro.Expr;
 import haxe.macro.ExprTools;
 import polymod.hscript.HScriptable.HScriptParams;
 import polymod.hscript.HScriptable.ScriptOutput;
-
 using Lambda;
 using haxe.macro.ComplexTypeTools;
 using haxe.macro.ExprTools;
@@ -604,6 +603,10 @@ class HScriptMacro
 					polymod.hscript.PolymodScriptClass.scriptClassOverrides.set($v{superClsTypeName}, Type.resolveClass($v{clsTypeName}));
 
 					var asc:polymod.hscript.PolymodAbstractScriptClass = polymod.hscript.PolymodScriptClass.createScriptClassInstance(clsName, $a{constArgs});
+					if (asc == null) {
+						polymod.Polymod.error(SCRIPT_EXCEPTION, 'Could not construct instance of scripted class (${clsName} extends ' + $v{clsTypeName} + ')');
+						return null;
+					}
 					var scriptedObj = asc.superClass;
 
 					Reflect.setField(scriptedObj, '_asc', asc);
@@ -1161,13 +1164,14 @@ class HScriptMacro
 							func_inputArgs.push(tfuncArg);
 						}
 					default:
-						Context.error('Expected a function and got ${field.expr().expr}', Context.currentPos());
+						Context.warning('Expected a function and got ${field.expr().expr}', Context.currentPos());
 				}
 
 				// Is there a better way to do this?
 				var doesReturnVoid:Bool = ret.toString() == "Void";
 
 				// Generate the list of call arguments for the function.
+				// Context.info('${args}', Context.currentPos());
 				var func_callArgs:Array<Expr> = [for (arg in args) macro $i{arg.name}];
 				var func_access = [field.isPublic ? APublic : APrivate];
 				if (field.isFinal)
