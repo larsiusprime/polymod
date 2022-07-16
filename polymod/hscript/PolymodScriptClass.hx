@@ -234,7 +234,7 @@ class PolymodScriptClass
 					}
 				}
 
-				trace(scriptClassOverrides);
+				// trace(scriptClassOverrides);
 
 				targetClass = scriptClassOverrides.get(clsPath);
 
@@ -357,14 +357,8 @@ class PolymodScriptClass
 			}
 			catch (err:hscript.Expr.Error)
 			{
-				var errLine:String =
-				#if hscriptPos
-					'${err.line}'
-				#else
-					"#???"
-				#end
-					;
-				
+				var errLine:String = #if hscriptPos '${err.line}' #else "#???" #end;
+
 				#if hscriptPos
 				switch (err.e)
 				#else
@@ -394,7 +388,8 @@ class PolymodScriptClass
 							Polymod.error(SCRIPT_EXCEPTION,
 								'Error while executing function ${className}.${name}()#${errLine}: ' + '\n' + 'Custom constructor does not call "super()".');
 						}
-						else if (msg.startsWith(MODULE_PREFIX)) {
+						else if (msg.startsWith(MODULE_PREFIX))
+						{
 							var module:String = msg.substring(MODULE_PREFIX.length);
 							Polymod.error(SCRIPT_EXCEPTION,
 								'Error while executing function ${className}.${name}()#${errLine}: ' + '\n' +
@@ -516,6 +511,28 @@ class PolymodScriptClass
 	private inline function callFunction4(name:String, arg0:Dynamic, arg1:Dynamic, arg2:Dynamic, arg3:Dynamic):Dynamic
 	{
 		return callFunction(name, [arg0, arg1, arg2, arg3]);
+	}
+
+	private inline function callFunction5(name:String, arg0:Dynamic, arg1:Dynamic, arg2:Dynamic, arg3:Dynamic, arg4:Dynamic):Dynamic
+	{
+		return callFunction(name, [arg0, arg1, arg2, arg3, arg4]);
+	}
+
+	private inline function callFunction6(name:String, arg0:Dynamic, arg1:Dynamic, arg2:Dynamic, arg3:Dynamic, arg4:Dynamic, arg5:Dynamic):Dynamic
+	{
+		return callFunction(name, [arg0, arg1, arg2, arg3, arg4, arg5]);
+	}
+
+	private inline function callFunction7(name:String, arg0:Dynamic, arg1:Dynamic, arg2:Dynamic, arg3:Dynamic, arg4:Dynamic, arg5:Dynamic,
+			arg6:Dynamic):Dynamic
+	{
+		return callFunction(name, [arg0, arg1, arg2, arg3, arg4, arg5, arg6]);
+	}
+
+	private inline function callFunction8(name:String, arg0:Dynamic, arg1:Dynamic, arg2:Dynamic, arg3:Dynamic, arg4:Dynamic, arg5:Dynamic, arg6:Dynamic,
+			arg7:Dynamic):Dynamic
+	{
+		return callFunction(name, [arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7]);
 	}
 
 	private function findFunction(name:String):FunctionDecl

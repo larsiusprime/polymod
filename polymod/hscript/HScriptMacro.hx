@@ -598,9 +598,9 @@ class HScriptMacro
 				ret: Context.toComplexType(Context.getType(clsTypeName)),
 				expr: macro
 				{
-					trace("Setting scripted class overrides: ");
-					trace($v{superClsTypeName});
-					trace($v{clsTypeName});
+					// trace("Setting scripted class overrides: ");
+					// trace($v{superClsTypeName});
+					// trace($v{clsTypeName});
 					polymod.hscript.PolymodScriptClass.scriptClassOverrides.set($v{superClsTypeName}, Type.resolveClass($v{clsTypeName}));
 
 					var asc:polymod.hscript.PolymodAbstractScriptClass = polymod.hscript.PolymodScriptClass.createScriptClassInstance(clsName, $a{constArgs});

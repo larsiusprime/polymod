@@ -3,6 +3,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.5] - 2022-??-??
+## Added
+- Scripted classes now allow functions with up to 8 arguments, up from 4.
+## Fixed
+- Cleanup extraneous compile-time logging.
+
+
 ## [1.5.4] - 2022-07-16
 This patch includes several major bug fixes and convenience improvements.
 ## Added
@@ -16,6 +23,7 @@ This patch includes several major bug fixes and convenience improvements.
   - Line numbers will now display as `#???` by default. To enable line numbers on script errors (highly recommended), add `<haxedef name="hscriptPos" value="true" />` to your `project.xml` file.
 ## Known Issues
 - A build error `hscript.Interp has no field setVar` may occur. If this happens, make sure you are using the latest version of HScript, version 2.5.0.
+
 
 ## [1.5.3] - 2022-05-18
 Lots of tiny bug fixes and several new utilities. Overall a better experience if you're debugging a tricky script.
@@ -49,6 +57,7 @@ A small bug fix update.
 - Fixed a bug where scripted classes would fail while attempting to import and use an enum.
 - Standardized code style across several files.
 
+
 ## [1.5.1] - 2022-02-25
 A large number of bug fixes for scripted classes.
 ### Changed
@@ -75,9 +84,11 @@ A large number of bug fixes for scripted classes.
 ### Removed
 - The `POLYMOD_USE_HSCRIPTEX` flag has been made redundant. A fork of `hscript-ex` is now bundled into Polymod.
 
+
 ## [1.4.3] - 2022-02-18
 ### Fixed
 - OpenFLBackend no longer breaks when you are using the main version of OpenFL.
+
 
 ## [1.4.2] - 2022-02-06
 Version 1.4.2 includes a large number of bug fixes and tweaks to improve reliability.
@@ -123,6 +134,7 @@ Version 1.4.2 includes a large number of bug fixes and tweaks to improve reliabi
 - Fixed a compile bug for Flixel backends.
 - Fixed a bug where embedded default assets would not load properly.
 
+
 ## [1.4.0] - 2022-01-17
 This release marks the migration of the project documentation to [polymod.io](https://polymod.io), a new website for the project hosted by Github Pages.
 ### Added
@@ -163,6 +175,7 @@ This release marks the migration of the project documentation to [polymod.io](ht
 ### Fixed
 - Fixed a crash bug which occured when LimeBackend was used without a `frameworkParams` argument.
 - Fixed a bug where `MOD_LOAD_PREPARE` and `MOD_LOAD_DONE` were showing as errors rather than notices.
+
 
 ## [1.3.1] - 2021-12-05
 ### New Contributors
