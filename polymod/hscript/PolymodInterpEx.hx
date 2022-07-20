@@ -1,7 +1,7 @@
 package polymod.hscript;
 
-import hscript.Interp;
 import hscript.Expr;
+import hscript.Interp;
 import hscript.Tools;
 
 /**
@@ -138,7 +138,7 @@ class PolymodInterpEx extends Interp
 
 	override function assign(e1:Expr, e2:Expr):Dynamic
 	{
-		return super.assign(e1, e2);
+		// return super.assign(e1, e2);
 		var v = expr(e2);
 
 		switch (Tools.expr(e1))
@@ -198,13 +198,104 @@ class PolymodInterpEx extends Interp
 		#else
 		switch(e) {
 		#end
-			// This specific case was crashing under some circumstances,
-			// so this
-			case EVar(n,_,e):
+			// These overrides are used to handle specific cases where problems occur.
+			
+			case EVar(n,_,e): // Fix to ensure local variables are committed properly.
 				declared.push({ n : n, old : locals.get(n) });
 				var result = (e == null) ? null : expr(e);
 				locals.set(n,{ r: result });
 				return null;
+			case EFunction(params, fexpr, name, _): // Fix to ensure callback functions catch thrown errors.
+				var capturedLocals = duplicate(locals);
+				var me = this;
+				var hasOpt = false, minParams = 0;
+				for (p in params) {
+					if (p.opt) {
+						hasOpt = true;
+					} else {
+						minParams++;
+					}
+				}
+
+				// This CREATES a new function in memory, that we call later.
+				var newFun = function(args:Array<Dynamic>) {
+					if(((args == null) ? 0 : args.length) != params.length ) {
+						if(args.length < minParams) {
+							var str = "Invalid number of parameters. Got " + args.length + ", required " + minParams;
+							if (name != null) str += " for function '" + name + "'";
+							error(ECustom(str));
+						}
+						// make sure mandatory args are forced
+						var args2 = [];
+						var extraParams = args.length - minParams;
+						var pos = 0;
+						for (p in params) {
+							if (p.opt) {
+								if (extraParams > 0) {
+									args2.push(args[pos++]);
+									extraParams--;
+								} else {	
+									args2.push(null);
+								}
+							} else {
+								args2.push(args[pos++]);
+							}
+						}
+						args = args2;
+					}
+					var old = me.locals;
+					var depth = me.depth;
+					me.depth++;
+					me.locals = me.duplicate(capturedLocals);
+					for (i in 0...params.length) {
+						me.locals.set(params[i].name, { r: args[i] });
+					}
+					var r = null;
+					var oldDecl = declared.length;
+					if (inTry) {
+						// True if the SCRIPT wraps the function in a try/catch block.
+						try {
+							r = me.exprReturn(fexpr);
+						} catch( e : Dynamic ) {
+							me.locals = old;
+							me.depth = depth;
+							#if neko
+							neko.Lib.rethrow(e);
+							#else
+							throw e;
+							#end
+						}
+					} else {
+						// There is no try/catch block. We can add some custom error handling.
+						try {
+							r = me.exprReturn(fexpr);
+						} catch (err:hscript.Expr.Error) {
+							_proxy.reportError(err, 'anonymous');
+							r = null;
+						} catch (err:Dynamic) {
+							throw err;
+						}
+					}
+					restore(oldDecl);
+					me.locals = old;
+					me.depth = depth;
+					return r;
+				};
+
+				newFun = Reflect.makeVarArgs(newFun);
+				if (name != null) {
+					if (depth == 0) {
+						// Store the function as a global.
+						variables.set(name, newFun);
+					} else {
+						// function-in-function is a local function
+						declared.push( { n: name, old: locals.get(name) } );
+						var ref = { r: newFun };
+						locals.set(name, ref);
+						capturedLocals.set(name, ref); // allow self-recursion
+					}
+				}
+				return newFun;
 			default:
 				// Do nothing.
 		}
@@ -295,6 +386,27 @@ class PolymodInterpEx extends Interp
 		return result;
 	}
 
+	override function execute(expr:Expr):Dynamic {
+		// If this function is being called (and not executeEx),
+		// PolymodScriptClass is not being used to call the expression.
+		// This happens during callbacks and in some other niche cases.
+		// In this case, we know the parent caller doesn't have error handling!
+		// That means we have to do it here.
+		try {
+			return super.execute(expr);
+		} catch (err:hscript.Expr.Error) {
+			_proxy.reportError(err, 'anonymous');
+			return null;
+		} catch (err:Dynamic) {
+			throw err;
+		}
+	}
+
+	public function executeEx( expr : Expr ) : Dynamic {
+		// Directly call execute (error handling happens higher).
+		return super.execute(expr);
+	}
+
 	override function get(o:Dynamic, f:String):Dynamic
 	{
 		if (o == null)
@@ -358,6 +470,18 @@ class PolymodInterpEx extends Interp
 	}
 
 	private var _nextCallObject:Dynamic = null;
+
+	override function exprReturn(expr:Expr) : Dynamic {
+		try {
+			return super.exprReturn(expr);
+		} catch (err:hscript.Expr.Error) {
+			#if hscriptPos
+			throw err;
+			#else
+			throw err;
+			#end
+		}
+	}
 
 	override function resolve(id:String):Dynamic
 	{
