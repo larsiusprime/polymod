@@ -145,14 +145,15 @@ class PolymodInterpEx extends Interp
 				// Also ensures property functions are accounted for.
 				if (_proxy != null && _proxy.superClass != null)
 				{
-					var v = expr(e2);
 					if (Reflect.hasField(_proxy.superClass, id))
 					{
+						var v = expr(e2);
 						Reflect.setProperty(_proxy.superClass, id, v);
 						return v;
 					}
 					else if (Type.getInstanceFields(Type.getClass(_proxy.superClass)).contains(id))
 					{
+						var v = expr(e2);
 						Reflect.setProperty(_proxy.superClass, id, v);
 						return v;
 					}
@@ -167,14 +168,15 @@ class PolymodInterpEx extends Interp
 						{
 							if (_proxy != null && _proxy.superClass != null)
 							{
-								var v = expr(e2);
 								if (Reflect.hasField(_proxy.superClass, id))
 								{
+									var v = expr(e2);
 									Reflect.setProperty(_proxy.superClass, id, v);
 									return v;
 								}
 								else if (Type.getInstanceFields(Type.getClass(_proxy.superClass)).contains(id))
 								{
+									var v = expr(e2);
 									Reflect.setProperty(_proxy.superClass, id, v);
 									return v;
 								}
