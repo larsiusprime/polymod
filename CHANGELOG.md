@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ## Fixed
 - Fixed an issue where attempting to annotate `@:hscriptClass` on a class which utilized variables whose type is a function.
   - This now allows for FlxUIState to be scripted.
+- Fixed an issue where the right-hand side of a variable assignment was being executed twice.
 - Cleanup extraneous compile-time logging.
 
 

@@ -138,9 +138,6 @@ class PolymodInterpEx extends Interp
 
 	override function assign(e1:Expr, e2:Expr):Dynamic
 	{
-		// return super.assign(e1, e2);
-		var v = expr(e2);
-
 		switch (Tools.expr(e1))
 		{
 			case EIdent(id):
@@ -148,6 +145,7 @@ class PolymodInterpEx extends Interp
 				// Also ensures property functions are accounted for.
 				if (_proxy != null && _proxy.superClass != null)
 				{
+					var v = expr(e2);
 					if (Reflect.hasField(_proxy.superClass, id))
 					{
 						Reflect.setProperty(_proxy.superClass, id, v);
@@ -169,6 +167,7 @@ class PolymodInterpEx extends Interp
 						{
 							if (_proxy != null && _proxy.superClass != null)
 							{
+								var v = expr(e2);
 								if (Reflect.hasField(_proxy.superClass, id))
 								{
 									Reflect.setProperty(_proxy.superClass, id, v);
