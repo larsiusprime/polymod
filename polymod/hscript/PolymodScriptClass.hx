@@ -1,11 +1,12 @@
 package polymod.hscript;
 
-using StringTools;
-
 import hscript.Expr.FieldDecl;
 import hscript.Expr.FunctionDecl;
 import hscript.Expr.VarDecl;
 import hscript.Printer;
+
+using StringTools;
+
 #if hscriptPos
 import hscript.Expr.ErrorDef;
 #else
@@ -232,6 +233,8 @@ class PolymodScriptClass
 						clsPath = c.imports.get(clsPath).join('.');
 					}
 				}
+
+				trace(scriptClassOverrides);
 
 				targetClass = scriptClassOverrides.get(clsPath);
 

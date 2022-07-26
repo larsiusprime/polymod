@@ -6,6 +6,7 @@ import polymod.hscript.HScriptable;
 class ScriptedStage extends Stage implements HScriptable
 {
 }
+
 /*
 	```
 	class BasicStage extends Stage {

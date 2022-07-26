@@ -12,10 +12,11 @@
 			"request": "launch",
 			"preLaunchTask": null
 		},
-		{
-			"name": "Macro",
-			"type": "haxe-eval",
-			"request": "launch"
-		}
+    {
+      // Evaluate macros with debugging enabled
+      "name": "Haxe Eval",
+      "type": "haxe-eval",
+      "request": "launch"
+    },
 	]
 }
