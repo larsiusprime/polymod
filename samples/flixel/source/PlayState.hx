@@ -4,6 +4,7 @@ import flixel.FlxState;
 import flixel.addons.ui.FlxInputText;
 import flixel.graphics.frames.FlxAtlasFrames;
 import flixel.text.FlxText;
+import flixel.ui.FlxButton;
 import haxe.io.Bytes;
 import openfl.events.Event;
 import openfl.net.FileFilter;
@@ -41,8 +42,36 @@ class PlayState extends FlxState
 		this.bgColor = 0xFFFFFFFF;
 
 		makeButtons();
+		makeZipLoadingButton();
 		drawImages();
 		drawText();
+	}
+
+	var ziploader:ZipLoader;
+
+	private function makeZipLoadingButton()
+	{
+		var loadZipButton = new FlxButton(0, FlxG.height - 50, "Load a zipped mod", () ->
+		{
+			ziploader = new ZipLoader(() ->
+			{
+				trace('zip name: ${ziploader.zipname}');
+				var rootfolder = ziploader.zipname.substring(0, ziploader.zipname.length - 4);
+				trace('rootfolder: $rootfolder');
+				var loadedmods = Polymod.scan(rootfolder, "*.*.*", (e) ->
+				{
+					trace('[polymod]: $e');
+				}, ziploader.zfs);
+				trace('mods: ${loadedmods}');
+				// makeButtons([for (m in loadedmods) m.id]);
+				refresh();
+			});
+			ziploader.loadZip();
+		});
+		loadZipButton.scale.set(loadZipButton.scale.x * 2.5, loadZipButton.scale.y * 2.5);
+		loadZipButton.updateHitbox();
+		loadZipButton.screenCenter(X);
+		add(loadZipButton);
 	}
 
 	private function makeButtons()
