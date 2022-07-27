@@ -4,11 +4,17 @@ import flixel.FlxState;
 import flixel.addons.ui.FlxInputText;
 import flixel.graphics.frames.FlxAtlasFrames;
 import flixel.text.FlxText;
+import haxe.io.Bytes;
+import openfl.events.Event;
+import openfl.net.FileFilter;
+import openfl.net.FileReference;
 import openfl.utils.AssetManifest;
 import openfl.utils.AssetType;
 import openfl.utils.Assets;
+import openfl.utils.ByteArray;
 import polymod.Polymod.Framework;
 import polymod.Polymod;
+import polymod.fs.ZipFileSystem;
 
 using StringTools;
 
@@ -219,8 +225,9 @@ class PlayState extends FlxState
 			}
 
 			var text = new FlxInputText(xx, yy, 250);
-			text.setFormat("Arial", 12, 0xFF000000, FlxTextAlign.CENTER);
-			text.height = 150;
+			// these 2 lines break on html5 for some reason
+			// text.setFormat("Arial", 12, 0xFF000000, FlxTextAlign.CENTER);
+			// text.height = 150;
 			text.wordWrap = true;
 			text.lines = 10;
 
@@ -281,5 +288,74 @@ class PlayState extends FlxState
 	private function onError(error:PolymodError)
 	{
 		trace('[${error.severity}] (${error.code.toUpperCase()}): ${error.message}');
+	}
+}
+
+class ZipLoader
+{
+	var _download_fileref:FileReference;
+	var zipBytes:Bytes;
+
+	public var zipname:String;
+	public var zfs:ZipFileSystem;
+
+	var postLoad:Void->Void;
+
+	public function new(?postLoad:Void->Void)
+	{
+		init();
+		this.postLoad = postLoad;
+	}
+
+	function init()
+	{
+		_download_fileref = new FileReference();
+		_download_fileref.addEventListener(Event.SELECT, (e) ->
+		{
+			_download_fileref.load();
+		});
+		_download_fileref.addEventListener(Event.COMPLETE, onLoadComplete);
+	}
+
+	public function loadZip()
+	{
+		if (_download_fileref == null)
+		{
+			init();
+		}
+		_download_fileref.browse([new FileFilter("Zip files", "*.zip")]);
+	}
+
+	function onLoadComplete(e:Event)
+	{
+		zipBytes = getHaxeBytes(_download_fileref.data);
+		zipname = _download_fileref.name;
+
+		_download_fileref.removeEventListener(Event.SELECT, (e) ->
+		{
+			_download_fileref.load();
+		});
+		_download_fileref.removeEventListener(Event.COMPLETE, onLoadComplete);
+		_download_fileref = null;
+
+		zfs = new ZipFileSystem({
+			zipBytes: zipBytes,
+			zipName: zipname
+		});
+		if (postLoad != null)
+		{
+			postLoad();
+		}
+	}
+
+	function getHaxeBytes(b:ByteArray)
+	{
+		// not sure how else to convert a ByteArray into haxe.io.Bytes :/
+		var el_bytes = Bytes.alloc(b.length);
+		for (i in 0...b.length)
+		{
+			el_bytes.fill(i, 1, b.readByte());
+		}
+		return el_bytes;
 	}
 }
