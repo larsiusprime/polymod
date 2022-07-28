@@ -9,31 +9,42 @@ using haxe.macro.TypeTools;
 
 class HScriptedClassMacro
 {
+	static var secondaryPassInitialized:Bool = false;
+
+	/**
+	 * The first step creates the interface functions.
+	 * The second build step (called in an onAfterTyping callback) creates the rest of the functions,
+	 *   which require initial typing to be completed before they can be created.
+	 */
 	public static macro function build():Array<Field>
 	{
 		var cls:haxe.macro.Type.ClassType = Context.getLocalClass().get();
-		var fields:Array<Field> = Context.getBuildFields();
+		var initialFields:Array<Field> = Context.getBuildFields();
+		var fields:Array<Field> = [].concat(initialFields);
 
-		// If the class already has `@:hscriptProcessed` on it, we don't need to do anything.
-		var alreadyProcessed_metadata = cls.meta.get().find(function(m) return m.name == ':hscriptProcessed');
+		// If the class already has `@:hscriptClassPreProcessed` on it, we don't need to do anything.
+		var alreadyProcessed_metadata = cls.meta.get().find(function(m) return m.name == ':hscriptClassPreProcessed');
 
-		if (alreadyProcessed_metadata == null)
-		{
-			Context.info('HScriptedClass: Class ' + cls.name + ' ready to process...', Context.currentPos());
+		if (alreadyProcessed_metadata == null) {
+			Context.info('HScriptedClass: Class ' + cls.name + ' ready to pre-process...', Context.currentPos());
 
-			// Process @:hscriptClass({}) annotations.
+			var superCls:haxe.macro.Type.ClassType = cls.superClass.t.get();
+
+			var newFields:Array<Field> = buildScriptedClassUtils(cls, superCls);
+			fields = fields.concat(newFields);
+
 			fields = buildHScriptClass(cls, fields);
 			
 			// Ensure unused scripted classes are still available to initialize in scripts.
 			// SORRY, DCE gets run before this, so we can't use the @:keep metadata.
-			cls.meta.add(":hscriptProcessed", [], cls.pos);
+			cls.meta.add(":hscriptClassPreProcessed", [], cls.pos);
 			return fields;
+		} else {
+			// Already processed.
 		}
-		else
-		{
-			// Returning null is equal to "don't do anything".
-			return null;
-		}
+		
+		// Returning null is equal to "don't do anything".
+		return null;
 	}
 
 	/**
@@ -69,6 +80,10 @@ class HScriptedClassMacro
 		return result;
 	}
 
+	/**
+	 * Create the complicated parts of the generated class,
+	 * specifically the `init()` function and the override methods.
+	 */
 	public static function buildHScriptClass(cls:haxe.macro.Type.ClassType, fields:Array<Field>):Array<Field>
 	{
 		// var cls:haxe.macro.Type.ClassType = Context.getLocalClass().get();
@@ -88,22 +103,21 @@ class HScriptedClassMacro
 			else
 			{
 				if (superCls.constructor != null) {
-					switch (superCls.constructor.get().type) {
+					var superClsConstType:haxe.macro.Type = superCls.constructor.get().type;
+					//Context.follow(superCls.constructor.get().type);
+					switch (superClsConstType) {
 						case TFun(args, ret):
 							// Build a new constructor, which has the same signature as the superclass constructor.
 							var constArgs = [
 								for (arg in args)
 									{name: arg.name, opt: arg.opt, type: Context.toComplexType(arg.t)}
 							];
-							// Create scripted class utility functions.
-							Context.info('  Creating scripted class utils...', Context.currentPos());
-							var utilFields:Array<Field> = buildScriptedClassUtils(cls, superCls, constArgs);
-							fields = fields.concat(utilFields);
+							var initField:Field = buildScriptedClassInit(cls, superCls, constArgs);
+							fields.push(initField);
 							constructor = buildScriptedClassConstructor(constArgs);
 						case TLazy(builder):
-							Context.info('  Lazy constructor', Context.currentPos());
-							var builtConstructor = builder();
-							switch (builtConstructor)
+							var builtValue = builder();
+							switch (builtValue)
 							{
 								case TFun(args, ret):
 									// Build a new constructor, which has the same signature as the superclass constructor.
@@ -111,26 +125,24 @@ class HScriptedClassMacro
 										for (arg in args)
 											{name: arg.name, opt: arg.opt, type: Context.toComplexType(arg.t)}
 									];
-									// Create scripted class utility functions.
-									Context.info('  Creating scripted class utils...', Context.currentPos());
-									var utilFields:Array<Field> = buildScriptedClassUtils(cls, superCls, constArgs);
-									fields = fields.concat(utilFields);
+									var initField:Field = buildScriptedClassInit(cls, superCls, constArgs);
+									fields.push(initField);
 									constructor = buildScriptedClassConstructor(constArgs);
 								default:
-									Context.error('Error: Lazy superclass constructor is not a function (got ${superCls.constructor.get().type})',
+									Context.error('Error: Lazy superclass constructor is not a function (got ${builtValue})',
 										Context.currentPos());
 							}
 						default:
-							Context.error('Error: super constructor is not a function (got ${superCls.constructor.get().type})', Context.currentPos());
+							Context.error('Error: super constructor is not a function (got ${superClsConstType})', Context.currentPos());
 					}
 				} else {
 					constructor = buildEmptyScriptedClassConstructor();
 					// Create scripted class utility functions.
 					Context.info('  Creating scripted class utils...', Context.currentPos());
-					var utilFields:Array<Field> = buildScriptedClassUtils(cls, superCls, []);
-					fields = fields.concat(utilFields);
+					var initField:Field = buildScriptedClassInit(cls, superCls, []);
+					fields.push(initField);
+					fields.push(constructor);
 				}
-				fields.push(constructor);
 			}
 
 			// Create scripted class overrides for all fields (except constructor).
@@ -142,41 +154,12 @@ class HScriptedClassMacro
 		return fields;
 	}
 
-	static function buildScriptedClassUtils(cls:haxe.macro.Type.ClassType, superCls:haxe.macro.Type.ClassType, superConstArgs:Array<FunctionArg>):Array<Field>
+	static function buildScriptedClassInit(cls:haxe.macro.Type.ClassType, superCls:haxe.macro.Type.ClassType, superConstArgs:Array<FunctionArg>):Field
 	{
-		Context.info('Building scripted class utils', Context.currentPos());
+		// Context.info('  Building scripted class init() function', Context.currentPos());
 		var clsTypeName:String = cls.pack.join('.') != '' ? '${cls.pack.join('.')}.${cls.name}' : cls.name;
 		var superClsTypeName:String = superCls.pack.join('.') != '' ? '${superCls.pack.join('.')}.${superCls.name}' : superCls.name;
 
-		// var _asc:AbstractScriptClass = null;
-		var var__asc:Field = {
-			name: '_asc',
-			doc: "The AbstractScriptClass instance which any variable or function calls are redirected to internally.",
-			access: [APrivate], // Private instance variable
-			kind: FVar(Context.toComplexType(Context.getType('polymod.hscript._internal.PolymodAbstractScriptClass'))),
-			pos: cls.pos,
-		};
-
-		// public static function listScriptClasses():Array<String>;
-		var function_listScriptClasses:Field = {
-			name: 'listScriptClasses',
-			doc: "Returns a list of all the scripted classes which extend this class.",
-			access: [APublic, AStatic],
-			meta: null,
-			pos: cls.pos,
-			kind: FFun({
-				args: [],
-				params: null,
-				ret: Context.toComplexType(Context.typeof(macro
-					{var x:Array<String>; x;})),
-				expr: macro
-				{
-					return polymod.hscript._internal.PolymodScriptClass.listScriptClassesExtending($v{superClsTypeName});
-				},
-			}),
-		};
-
-		// public static function init(clsName:String, ...args):T;
 		var constArgs = [for (arg in superConstArgs) macro $i{arg.name}];
 		var typePath:haxe.macro.TypePath = {
 			pack: cls.pack,
@@ -194,9 +177,6 @@ class HScriptedClassMacro
 				ret: Context.toComplexType(Context.getType(clsTypeName)),
 				expr: macro
 				{
-					// trace("Setting scripted class overrides: ");
-					// trace($v{superClsTypeName});
-					// trace($v{clsTypeName});
 					polymod.hscript._internal.PolymodScriptClass.scriptClassOverrides.set($v{superClsTypeName}, Type.resolveClass($v{clsTypeName}));
 
 					var asc:polymod.hscript._internal.PolymodAbstractScriptClass = polymod.hscript._internal.PolymodScriptClass.createScriptClassInstance(clsName, $a{constArgs});
@@ -214,33 +194,12 @@ class HScriptedClassMacro
 			}),
 		};
 
-		Context.info('~~~Scripted class util scriptCall: ' + clsTypeName, Context.currentPos());
+		return function_init;
+	}
 
-		var function_scriptCall:Field = {
-			name: 'scriptCall',
-			doc: 'Calls a function of the scripted class with the given name and arguments.',
-			access: [APublic],
-			meta: null,
-			pos: cls.pos,
-			kind: FFun({
-				args: [
-					// {name: 'funcName', type: Context.toComplexType(Context.getType('Dynamic'))},
-					{name: 'funcName', type: Context.toComplexType(Context.getType('String'))},
-					{
-						name: 'funcArgs',
-						type: Context.toComplexType(Context.typeof(macro
-							{var x:Array<Dynamic>; x;})),
-						value: macro null,
-					}
-				],
-				params: null,
-				ret: Context.toComplexType(Context.getType('Dynamic')),
-				expr: macro
-				{
-					return _asc.callFunction(funcName, funcArgs == null ? [] : funcArgs);
-				},
-			}),
-		};
+	static function buildScriptedClassUtils(cls:haxe.macro.Type.ClassType, superCls:haxe.macro.Type.ClassType):Array<Field> {
+		var clsTypeName:String = cls.pack.join('.') != '' ? '${cls.pack.join('.')}.${cls.name}' : cls.name;
+		var superClsTypeName:String = superCls.pack.join('.') != '' ? '${superCls.pack.join('.')}.${superCls.name}' : superCls.name;
 
 		var function_scriptGet:Field = {
 			name: 'scriptGet',
@@ -283,10 +242,58 @@ class HScriptedClassMacro
 			}),
 		}
 
+		var function_scriptCall:Field = {
+			name: 'scriptCall',
+			doc: 'Calls a function of the scripted class with the given name and arguments.',
+			access: [APublic],
+			meta: null,
+			pos: cls.pos,
+			kind: FFun({
+				args: [
+					{name: 'funcName', type: Context.toComplexType(Context.getType('String'))},
+					{
+						name: 'funcArgs',
+						type: toComplexTypeArray(Context.toComplexType(Context.getType('Dynamic'))),
+						value: macro null,
+					}
+				],
+				params: null,
+				ret: Context.toComplexType(Context.getType('Dynamic')),
+				expr: macro
+				{
+					return _asc.callFunction(funcName, funcArgs == null ? [] : funcArgs);
+				},
+			}),
+		};
+		
+		var var__asc:Field = {
+			name: '_asc',
+			doc: "The AbstractScriptClass instance which any variable or function calls are redirected to internally.",
+			access: [APrivate], // Private instance variable
+			kind: FVar(Context.toComplexType(Context.getType('polymod.hscript._internal.PolymodAbstractScriptClass'))),
+			pos: cls.pos,
+		};
+
+		var function_listScriptClasses:Field = {
+			name: 'listScriptClasses',
+			doc: "Returns a list of all the scripted classes which extend this class.",
+			access: [APublic, AStatic],
+			meta: null,
+			pos: cls.pos,
+			kind: FFun({
+				args: [],
+				params: null,
+				ret: toComplexTypeArray(Context.toComplexType(Context.getType('String'))),
+				expr: macro
+				{
+					return polymod.hscript._internal.PolymodScriptClass.listScriptClassesExtending($v{superClsTypeName});
+				},
+			}),
+		};
+
 		return [
 			var__asc,
 			function_listScriptClasses,
-			function_init,
 			function_scriptCall,
 			function_scriptGet,
 			function_scriptSet
@@ -420,7 +427,6 @@ class HScriptedClassMacro
 		{
 			// Context.info('  Skipping: ${field.name} is static', Context.currentPos());
 		}
-
 		return fields;
 	}
 
@@ -910,6 +916,25 @@ class HScriptedClassMacro
 				},
 			}),
 		};
+	}
+
+	/**
+	 * Create the type corresponding to an array of the given type.
+	 * For example, toComplexTypeArray(String) will return Array<String>.
+	 */
+	static function toComplexTypeArray(inputType:ComplexType):haxe.macro.ComplexType {
+		var typeParams = (inputType != null)
+			? [TPType(inputType)]
+			: [TPType(TPath({pack: [], name: 'Dynamic', sub: null, params: []}))];
+
+		var result:ComplexType = TPath({
+			pack: [],
+			name: 'Array',
+			sub: null,
+			params: typeParams,
+		});
+
+		return result;
 	}
 
 	static function buildEmptyScriptedClassConstructor():Field

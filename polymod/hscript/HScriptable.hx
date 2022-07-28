@@ -1,8 +1,6 @@
 package polymod.hscript;
 
 import haxe.Json;
-import polymod.Polymod.PolymodErrorCode;
-import polymod.Polymod.PolymodErrorCode;
 import polymod.Polymod;
 
 /**
@@ -290,14 +288,14 @@ class Script
 		return new polymod.hscript._internal.PolymodInterpEx(null, null);
 	}
 
-	public function new(script:String)
+	public function new(script:String, ?origin:String = null)
 	{
 		if (parser == null)
 		{
 			parser = buildParser();
 			parser.allowTypes = true;
 		}
-		program = parser.parseString(script);
+		program = parser.parseString(script, origin);
 		interp = buildInterp();
 	}
 

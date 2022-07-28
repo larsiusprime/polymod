@@ -3,6 +3,7 @@ package polymod.hscript._internal;
 import hscript.Expr;
 import hscript.Interp;
 import hscript.Tools;
+import polymod.hscript._internal.PolymodExprEx;
 
 /**
  * Based on code by Ian Harrigan
@@ -22,6 +23,12 @@ class PolymodInterpEx extends Interp
 		variables.set("Math", Math);
 		variables.set("Std", Std);
 		this.targetCls = targetCls;
+	}
+
+	inline function errorEx(e : #if hscriptPos ErrorDefEx #else Error #end, rethrow=false ) : Dynamic {
+		#if hscriptPos var e = new ErrorEx(e, curExpr.pmin, curExpr.pmax, curExpr.origin, curExpr.line); #end
+		if( rethrow ) this.rethrow(e) else throw e;
+		return null;
 	}
 
 	override function cnew(cl:String, args:Array<Dynamic>):Dynamic
@@ -63,7 +70,7 @@ class PolymodInterpEx extends Interp
 				{
 					return Type.createInstance(c, args);
 				} else {
-					error(ECustom('Could not resolve imported module: ${importedClass}'));
+					errorEx(EInvalidModule(importedClass));
 				}
 			}
 		}
@@ -87,12 +94,20 @@ class PolymodInterpEx extends Interp
 			_nextCallObject = null;
 			var proxy:PolymodScriptClass = cast(o, PolymodScriptClass);
 			return proxy.callFunction(f, args);
-		} else if (Std.isOfType(o, HScriptedClass)) {
 		}
 
 		var func = get(o, f);
-		if (func == null)
-			error(EInvalidAccess(f));
+		if (func == null) {
+			if (Std.isOfType(o, HScriptedClass)) {
+				// Could not call the function.
+				// It might be a custom function on the scripted class,
+				// in which case you need to use `scriptCall()` instead.
+				errorEx(EInvalidScriptedFnAccess(f));
+			} else {
+				// Throw an error for a missing function.
+				errorEx(EInvalidAccess(f));
+			}
+		}
 		return call(o, func, args);
 	}
 
@@ -119,15 +134,9 @@ class PolymodInterpEx extends Interp
 	{
 		if (_proxy != null && _proxy.superClass != null)
 		{
-			if (Reflect.hasField(_proxy.superClass, id))
+			if (_proxy.superHasField(id))
 			{
 				// Set in super class.
-				Reflect.setProperty(_proxy.superClass, id, v);
-				return;
-			}
-			else if (Type.getInstanceFields(Type.getClass(_proxy.superClass)).contains(id))
-			{
-				// Set in super class (alternate).
 				Reflect.setProperty(_proxy.superClass, id, v);
 				return;
 			}
@@ -146,14 +155,7 @@ class PolymodInterpEx extends Interp
 				// Also ensures property functions are accounted for.
 				if (_proxy != null && _proxy.superClass != null)
 				{
-					if (Reflect.hasField(_proxy.superClass, id))
-					{
-						var v = expr(e2);
-						Reflect.setProperty(_proxy.superClass, id, v);
-						return v;
-					}
-					else if (Type.getInstanceFields(Type.getClass(_proxy.superClass)).contains(id))
-					{
+					if (_proxy.superHasField(id)) {
 						var v = expr(e2);
 						Reflect.setProperty(_proxy.superClass, id, v);
 						return v;
@@ -169,14 +171,7 @@ class PolymodInterpEx extends Interp
 						{
 							if (_proxy != null && _proxy.superClass != null)
 							{
-								if (Reflect.hasField(_proxy.superClass, id))
-								{
-									var v = expr(e2);
-									Reflect.setProperty(_proxy.superClass, id, v);
-									return v;
-								}
-								else if (Type.getInstanceFields(Type.getClass(_proxy.superClass)).contains(id))
-								{
+								if (_proxy.superHasField(id)) {
 									var v = expr(e2);
 									Reflect.setProperty(_proxy.superClass, id, v);
 									return v;
@@ -225,7 +220,7 @@ class PolymodInterpEx extends Interp
 						if(args.length < minParams) {
 							var str = "Invalid number of parameters. Got " + args.length + ", required " + minParams;
 							if (name != null) str += " for function '" + name + "'";
-							error(ECustom(str));
+							errorEx(ECustom(str));
 						}
 						// make sure mandatory args are forced
 						var args2 = [];
@@ -271,6 +266,9 @@ class PolymodInterpEx extends Interp
 						// There is no try/catch block. We can add some custom error handling.
 						try {
 							r = me.exprReturn(fexpr);
+						} catch (err:PolymodExprEx.ErrorEx) {
+							_proxy.reportErrorEx(err, 'anonymous');
+							r = null;
 						} catch (err:hscript.Expr.Error) {
 							_proxy.reportError(err, 'anonymous');
 							r = null;
@@ -323,7 +321,7 @@ class PolymodInterpEx extends Interp
 		}
 		if (v.hasNext == null || v.next == null)
 		{
-			error(EInvalidIterator(v));
+			errorEx(EInvalidIterator(v));
 		}
 		return v;
 	}
@@ -346,7 +344,7 @@ class PolymodInterpEx extends Interp
 
 		if (fun == null)
 		{
-			error(EInvalidAccess(fun));
+			errorEx(EInvalidAccess(fun));
 		}
 
 		if (target == _proxy) {
@@ -396,6 +394,9 @@ class PolymodInterpEx extends Interp
 		// That means we have to do it here.
 		try {
 			return super.execute(expr);
+		} catch (err:PolymodExprEx.ErrorEx) {
+			_proxy.reportErrorEx(err, 'anonymous');
+			return null;
 		} catch (err:hscript.Expr.Error) {
 			_proxy.reportError(err, 'anonymous');
 			return null;
@@ -405,39 +406,48 @@ class PolymodInterpEx extends Interp
 	}
 
 	public function executeEx( expr : Expr ) : Dynamic {
-		// Directly call execute (error handling happens higher).
+		// Directly call execute (assume error handling happens higher).
 		return super.execute(expr);
 	}
 
 	override function get(o:Dynamic, f:String):Dynamic
 	{
 		if (o == null)
-			error(EInvalidAccess(f));
-		if (Std.isOfType(o, PolymodScriptClass))
-		{
+			errorEx(EInvalidAccess(f));
+		if (Std.isOfType(o, PolymodScriptClass)) {
 			var proxy:PolymodAbstractScriptClass = cast(o, PolymodScriptClass);
-			if (proxy._interp.variables.exists(f))
-			{
+			if (proxy._interp.variables.exists(f)) {
 				return proxy._interp.variables.get(f);
-			}
-			else if (proxy.superClass != null && Reflect.hasField(proxy.superClass, f))
-			{
+			} else if (proxy.superClass != null && proxy.superHasField(f)) {
 				return Reflect.getProperty(proxy.superClass, f);
-			}
-			else if (proxy.superClass != null && Type.getInstanceFields(Type.getClass(_proxy.superClass)).contains(f))
-			{
-				return Reflect.getProperty(proxy.superClass, f);
-			}
-			else
-			{
-				try
-				{
+			} else {
+				try {
 					return proxy.resolveField(f);
+				} catch (e:Dynamic) { }
+				errorEx(EUnknownVariable(f));
+			}
+		} else if (Std.isOfType(o, HScriptedClass)) {
+			try {
+				var result = Reflect.getProperty(o, f);
+				// I guess there's no way to distinguish between properties that don't exist,
+				// and properties that are equal to null?
+				if (result == null) {
+					// To save a bit of performance, we only query for the existence of the property
+					// if the value is reported as null, AND only in debug builds.
+
+					#if debug
+					if (!Reflect.hasField(o, f)) {
+						var propertyList = Type.getInstanceFields(Type.getClass(o));
+						if (propertyList.indexOf(f) == -1) {
+							errorEx(EInvalidScriptedVarGet(f));
+						}
+					}
+					#end
+					return result;
 				}
-				catch (e:Dynamic)
-				{
-				}
-				error(EUnknownVariable(f));
+				return result;
+			} catch (e:Dynamic) {
+				errorEx(EInvalidScriptedVarGet(f));
 			}
 		}
 		return super.get(o, f);
@@ -446,9 +456,8 @@ class PolymodInterpEx extends Interp
 	override function set(o:Dynamic, f:String, v:Dynamic):Dynamic
 	{
 		if (o == null)
-			error(EInvalidAccess(f));
-		if (Std.isOfType(o, PolymodScriptClass))
-		{
+			errorEx(EInvalidAccess(f));
+		if (Std.isOfType(o, PolymodScriptClass)) {
 			var proxy:PolymodScriptClass = cast(o, PolymodScriptClass);
 			if (proxy._interp.variables.exists(f))
 			{
@@ -464,11 +473,24 @@ class PolymodInterpEx extends Interp
 			}
 			else
 			{
-				error(EUnknownVariable(f));
+				errorEx(EUnknownVariable(f));
+			}
+			return v;
+		} else if (Std.isOfType(o, HScriptedClass)) {
+			try {
+				Reflect.setProperty(o,f,v);
+			} catch (e) {
+				errorEx(EInvalidScriptedVarSet(f));
 			}
 			return v;
 		}
-		return super.set(o, f, v);
+		
+		try {
+			Reflect.setProperty(o,f,v);
+		} catch (e) {
+			errorEx(EInvalidAccess(f));
+		}
+		return v;
 	}
 
 	private var _nextCallObject:Dynamic = null;
@@ -535,15 +557,14 @@ class PolymodInterpEx extends Interp
 				return result;
 		}
 
+		var prop:Dynamic;
 		// We are calling a LOCAL function from the same module.
 		if (_proxy != null && _proxy.findFunction(id) != null)
 		{
 			_nextCallObject = _proxy;
 			return _proxy.resolveField(id);
 		}
-		else if (_proxy != null
-			&& _proxy.superClass != null
-			&& (Reflect.hasField(_proxy.superClass, id) || Reflect.getProperty(_proxy.superClass, id) != null))
+		else if (_proxy != null && _proxy.superHasField(id))
 		{
 			_nextCallObject = _proxy.superClass;
 			return Reflect.getProperty(_proxy.superClass, id);
@@ -559,11 +580,11 @@ class PolymodInterpEx extends Interp
 			catch (e:Dynamic)
 			{
 			}
-			error(EUnknownVariable(id));
+			errorEx(EUnknownVariable(id));
 		}
 		else
 		{
-			error(EUnknownVariable(id));
+			errorEx(EUnknownVariable(id));
 		}
 		return null;
 	}

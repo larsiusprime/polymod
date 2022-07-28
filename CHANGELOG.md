@@ -3,14 +3,23 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.5.5] - 2022-??-??
+## [1.6.0] - 2022-07-28
+Not much in the way of new features for end users here, but some refactors resulted in breaking changes so this is labelled as a minor version rather than a bugfix version.
 ## Added
 - Scripted classes now allow functions with up to 8 arguments, up from 4.
+- Added the new `ErrorEx` and `PolymodPrinterEx` classes for more detailed and extensible error handling.
+  - Added new error message when attempting to call a custom function on a scripted class improperly.
+  - Added new error message when attempting to retrieve a custom variable on a scripted class improperly.
+  - Added new error message when attempting to assign a custom variable on a scripted class improperly.
 - New static function `Polymod.clearScripts()` clears all scripted classes and scripted functions. Useful for cleaning up before a script reload.
 ## Changed
 - HScriptable has been split into two interfaces: HScriptable and HScriptedClass.
-  - The former is used for when you want to script individual functions with the `@:hscript` annotation, and the latter is when you want to allow scripting of entire classes.
+  - HScriptable is now used only for `@:hscript` annotations on scripted functions, and HScriptedClass is used for `@:hscriptClass` annotations to generate scripted classes.
+  - These two interfaces are considered mutually exclusive, and only one should be used on a given class.
+- Moved internal HScript classes to an `_internal` package.
 ## Fixed
+- Refactored HScript-related macros for improved maintainability.
+- Cached `Reflect.fields()` queries on PolymodScriptedClass proxies to improve performance.
 - Fixed an issue where attempting to annotate `@:hscriptClass` on a class which utilized variables whose type is a function.
   - This now allows for FlxUIState to be scripted.
 - Fixed an issue where the right-hand side of a variable assignment was being executed twice.
