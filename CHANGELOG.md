@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ## [1.5.5] - 2022-??-??
 ## Added
 - Scripted classes now allow functions with up to 8 arguments, up from 4.
+- New static function `Polymod.clearScripts()` clears all scripted classes and scripted functions. Useful for cleaning up before a script reload.
+## Changed
+- HScriptable has been split into two interfaces: HScriptable and HScriptedClass.
+  - The former is used for when you want to script individual functions with the `@:hscript` annotation, and the latter is when you want to allow scripting of entire classes.
 ## Fixed
 - Fixed an issue where attempting to annotate `@:hscriptClass` on a class which utilized variables whose type is a function.
   - This now allows for FlxUIState to be scripted.
