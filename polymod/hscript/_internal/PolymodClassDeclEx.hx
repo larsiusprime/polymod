@@ -1,4 +1,4 @@
-package polymod.hscript;
+package polymod.hscript._internal;
 
 import hscript.Expr.ClassDecl;
 

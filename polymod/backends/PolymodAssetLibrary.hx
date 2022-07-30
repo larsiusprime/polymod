@@ -1,6 +1,5 @@
 package polymod.backends;
 
-import polymod.hscript.PolymodScriptClass;
 import haxe.io.Bytes;
 import polymod.backends.IBackend;
 import polymod.backends.PolymodAssets.PolymodAssetType;
@@ -136,8 +135,7 @@ class PolymodAssetLibrary
 		{
 			backend.destroy();
 		}
-		PolymodScriptClass.clearScriptClasses();
-		polymod.hscript.HScriptable.ScriptRunner.clearScripts();
+		Polymod.clearScripts();
 	}
 
 	public function mergeAndAppendText(id:String, modText:String):String

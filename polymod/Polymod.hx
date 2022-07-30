@@ -3,7 +3,6 @@ package polymod;
 import haxe.Json;
 import haxe.io.Bytes;
 import polymod.backends.IBackend;
-import polymod.hscript.PolymodScriptClass;
 import polymod.backends.PolymodAssetLibrary;
 import polymod.backends.PolymodAssets;
 import polymod.format.JsonHelp;
@@ -11,9 +10,11 @@ import polymod.format.ParseRules;
 import polymod.fs.PolymodFileSystem;
 import polymod.util.SemanticVersion;
 import polymod.util.Util;
+using StringTools;
 #if firetongue
 import firetongue.FireTongue;
 #end
+
 
 /**
  * The set of parameters which can be provided when intializing Polymod
@@ -285,9 +286,9 @@ class Polymod
 		if (params.useScriptedClasses)
 		{
 			Polymod.notice(PolymodErrorCode.SCRIPT_CLASS_PARSING, 'Parsing script classes...');
-			PolymodScriptClass.registerAllScriptClasses();
+			Polymod.registerAllScriptClasses();
 
-			var classList = PolymodScriptClass.listScriptClasses();
+			var classList = polymod.hscript._internal.PolymodScriptClass.listScriptClasses();
 			Polymod.notice(PolymodErrorCode.SCRIPT_CLASS_PARSED, 'Parsed and registered ${classList.length} scripted classes.');
 		}
 
@@ -557,6 +558,31 @@ class Polymod
 
 		Polymod.debug('Clearing backend asset cache...');
 		assetLibrary.clearCache();
+	}
+
+	/**
+	 * Clears all scripted functions and scripted class descriptors from the cache.
+	 */
+	public static function clearScripts() {
+		@:privateAccess
+		polymod.hscript._internal.PolymodInterpEx._scriptClassDescriptors.clear();
+		polymod.hscript.HScriptable.ScriptRunner.clearScripts();
+	}
+
+	/**
+	 * Get a list of all the available scripted classes (`.hxc` files), interpret them, and register any classes.
+	 */
+	public static function registerAllScriptClasses() {
+		@:privateAccess {
+			// Go through each script and parse any classes in them.
+			for (textPath in Polymod.assetLibrary.list(TEXT))
+			{
+				if (textPath.endsWith(PolymodConfig.scriptClassExt))
+				{
+					polymod.hscript._internal.PolymodScriptClass.registerScriptClassByPath(textPath);
+				}
+			}
+		}
 	}
 
 	public static function error(code:PolymodErrorCode, message:String, origin:PolymodErrorOrigin = UNKNOWN)
