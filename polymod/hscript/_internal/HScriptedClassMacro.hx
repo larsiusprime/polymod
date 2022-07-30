@@ -1,448 +1,54 @@
-package polymod.hscript;
+package polymod.hscript._internal;
 
-import haxe.macro.Compiler;
 import haxe.macro.Context;
 import haxe.macro.Expr;
-import haxe.macro.ExprTools;
-import polymod.hscript.HScriptable.HScriptParams;
-import polymod.hscript.HScriptable.ScriptOutput;
-
 using Lambda;
 using haxe.macro.ComplexTypeTools;
 using haxe.macro.ExprTools;
 using haxe.macro.TypeTools;
 
-class HScriptMacro
+class HScriptedClassMacro
 {
-	static function legacyParseParams(classToEvaluate:haxe.macro.Type.ClassType):Array<String>
-	{
-		if (classToEvaluate == null)
-			return [];
-
-		var result = [];
-
-		// Find any classes with the @:hscript annotation on the class itself.
-		var scriptable_meta = classToEvaluate.meta.get().find(function(m) return m.name == ':hscript');
-		if (scriptable_meta != null)
-		{
-			for (p in scriptable_meta.params)
-			{
-				switch p.expr
-				{
-					case EConst(CIdent(name)):
-						result.push(name);
-					default:
-						throw 'LEGACY Error: Only identifiers (like Std, Math, myVariable, etc) are allowed in @:hscript(), got "${p.toString()}"';
-				}
-			}
-		}
-
-		return result;
-	}
-
-	static function parseParamObjectFields(paramFields:Array<ObjectField>, result:HScriptParams)
-	{
-		for (paramField in paramFields)
-		{
-			switch (paramField.field)
-			{
-				case 'context':
-					// Parse the list of context items.
-					switch (paramField.expr.expr)
-					{
-						case EArrayDecl(contextItems):
-							for (contextItem in contextItems)
-							{
-								switch contextItem.expr
-								{
-									case EConst(CIdent(name)):
-										result.mergeContext([name]);
-									case EField(e, field):
-										throw 'Error: Only constant identifiers (like Std, Math, myVariable, etc) are allowed in @:hscript({context}). Got "${contextItem.toString()}", which is a field access.';
-									case EArray(e1, e2):
-										throw 'Error: Only constant identifiers (like Std, Math, myVariable, etc) are allowed in @:hscript({context}). Got "${contextItem.toString()}", which is an array access.';
-									case EBinop(op, e1, e2):
-										throw 'Error: Only constant identifiers (like Std, Math, myVariable, etc) are allowed in @:hscript({context}). Got "${contextItem.toString()}", which is a binary operator.';
-									case EParenthesis(e):
-										throw 'Error: Only constant identifiers (like Std, Math, myVariable, etc) are allowed in @:hscript({context}). Got "${contextItem.toString()}", which is an expression wrapped in parens.';
-									case EObjectDecl(fields):
-										throw 'Error: Only constant identifiers (like Std, Math, myVariable, etc) are allowed in @:hscript({context}). Got "${contextItem.toString()}", which is an object declaration.';
-									case EArrayDecl(values):
-										throw 'Error: Only constant identifiers (like Std, Math, myVariable, etc) are allowed in @:hscript({context}). Got "${contextItem.toString()}", which is an array declaration.';
-									default:
-										throw 'Error: Only constant identifiers (like Std, Math, myVariable, etc) are allowed in @:hscript({context}). Got "${contextItem.toString()}"';
-								}
-							}
-						default:
-							throw '@:hscript({context}) must be an array of identifiers.';
-					}
-				case 'cancellable':
-					switch (paramField.expr.expr)
-					{
-						case EConst(CIdent('true')):
-							result.cancellable = true;
-						case EConst(CIdent('false')):
-							result.cancellable = false;
-						default:
-							throw '@:hscript({cancellable}) must be a Boolean value.';
-					}
-				case 'optional':
-					switch (paramField.expr.expr)
-					{
-						case EConst(CIdent('true')):
-							result.optional = true;
-						case EConst(CIdent('false')):
-							result.optional = false;
-						default:
-							throw '@:hscript({optional}) must be a Boolean value.';
-					}
-				case 'runBefore':
-					switch (paramField.expr.expr)
-					{
-						case EConst(CIdent('true')):
-							result.runBefore = true;
-						case EConst(CIdent('false')):
-							result.runBefore = false;
-						default:
-							throw '@:hscript({runBefore}) must be a Boolean value.';
-					}
-				case 'pathName':
-					switch (paramField.expr.expr)
-					{
-						case EConst(CString(value)):
-							// Passed a string, this means pathName is constant.
-							result.pathName = value;
-						case EConst(CIdent(value)):
-							// Passed an identifier, this means pathName is dynamic.
-							result.pathNameDynId = value;
-						default:
-							throw '@:hscript({pathName}) must be a String value.';
-					}
-				default:
-					throw '@:hscript({${paramField.field}}) is an unknown parameter.';
-			}
-		}
-	}
+	static var secondaryPassInitialized:Bool = false;
 
 	/**
-	 * Parse `@:hscript({})` on a class.
+	 * The first step creates the interface functions.
+	 * The second build step (called in an onAfterTyping callback) creates the rest of the functions,
+	 *   which require initial typing to be completed before they can be created.
 	 */
-	static function getClassHScriptParams(classToEvaluate:haxe.macro.Type.ClassType):HScriptParams
-	{
-		var result = new HScriptParams();
-
-		if (classToEvaluate == null)
-			return result;
-
-		// Find any classes with the @:hscript annotation on the class itself.
-		var scriptable_meta = classToEvaluate.meta.get().find(function(m) return m.name == ':hscript');
-		if (scriptable_meta != null)
-		{
-			// Get variables names from inside @:hscript(...) and add them to the list to pass to scripts.
-			var hscriptObjectRaw = scriptable_meta.params[0];
-			switch (hscriptObjectRaw.expr)
-			{
-				case EObjectDecl(paramFields):
-					parseParamObjectFields(paramFields, result);
-				case EConst(CIdent(name)):
-					result.mergeContext(legacyParseParams(classToEvaluate));
-				default:
-					throw 'The parameters for your @:hscript annotation are incorrect.';
-			}
-		}
-		// Resolve any parent classes.
-		if (classToEvaluate.superClass != null && classToEvaluate.superClass.t != null)
-		{
-			// Recursion!
-			var parentParams = getClassHScriptParams(classToEvaluate.superClass.t.get());
-			result = parentParams.merge(result);
-		}
-		// Resolve any interfaces.
-		if (classToEvaluate.interfaces != null && classToEvaluate.interfaces.length > 0)
-		{
-			for (iface in classToEvaluate.interfaces)
-			{
-				// Recursion!
-				var parentParams = getClassHScriptParams(iface.t.get());
-				result = parentParams.merge(result);
-			}
-		}
-
-		return result;
-	}
-
-	static function getFunctionHScriptParams(params:Null<Array<Expr>>, parentParams:HScriptParams):HScriptParams
-	{
-		var result = new HScriptParams();
-
-		var hscriptObjectRaw = params[0];
-
-		if (hscriptObjectRaw != null)
-		{
-			switch hscriptObjectRaw.expr
-			{
-				case EObjectDecl(paramFields):
-					// New and preferred syntax. Pass in a parameter object.
-					parseParamObjectFields(paramFields, result);
-				case EConst(CIdent(name)):
-					// Legacy support. Allow passing context as a set of parameters.
-					result.mergeContext(params.map(function(p)
-					{
-						switch (p.expr)
-						{
-							case EConst(CIdent(name)):
-								return name;
-							default:
-								Context.error('@:hscript only accepts a single parameter object or a set of context objects.', Context.currentPos());
-								return null;
-						}
-					}).filter(function(p) return p != null));
-				default:
-					Context.error('The parameters for your @:hscript annotation are incorrect.', Context.currentPos());
-			}
-		}
-
-		return parentParams.copy().merge(result);
-	}
-
 	public static macro function build():Array<Field>
 	{
 		var cls:haxe.macro.Type.ClassType = Context.getLocalClass().get();
-		var fields:Array<Field> = Context.getBuildFields();
+		var initialFields:Array<Field> = Context.getBuildFields();
+		var fields:Array<Field> = [].concat(initialFields);
 
-		// If the class already has `@:hscriptProcessed` on it, we don't need to do anything.
-		var alreadyProcessed_metadata = cls.meta.get().find(function(m) return m.name == ':hscriptProcessed');
+		// If the class already has `@:hscriptClassPreProcessed` on it, we don't need to do anything.
+		var alreadyProcessed_metadata = cls.meta.get().find(function(m) return m.name == ':hscriptClassPreProcessed');
 
-		if (alreadyProcessed_metadata == null)
-		{
-			Context.info('HScriptable: Class ' + cls.name + ' ready to process...', Context.currentPos());
+		if (alreadyProcessed_metadata == null) {
+			Context.info('HScriptedClass: Class ' + cls.name + ' ready to pre-process...', Context.currentPos());
 
-			// Process @:hscriptClass({}) annotations.
+			var superCls:haxe.macro.Type.ClassType = cls.superClass.t.get();
+
+			var newFields:Array<Field> = buildScriptedClassUtils(cls, superCls);
+			fields = fields.concat(newFields);
+
 			fields = buildHScriptClass(cls, fields);
-			// Process @:hscript({}) annotations.
-			fields = buildHScriptFields(cls, fields);
-
+			
 			// Ensure unused scripted classes are still available to initialize in scripts.
 			// SORRY, DCE gets run before this, so we can't use the @:keep metadata.
-			cls.meta.add(":hscriptProcessed", [], cls.pos);
+			cls.meta.add(":hscriptClassPreProcessed", [], cls.pos);
 			return fields;
+		} else {
+			// Already processed.
 		}
-		else
-		{
-			// Returning null is equal to "don't do anything".
-			return null;
-		}
-	}
-
-	public static function buildHScriptFields(cls:haxe.macro.Type.ClassType, fields:Array<Field>):Array<Field>
-	{
-		var constructor_setup:Array<Expr> = null;
-		var classParams = getClassHScriptParams(cls);
-
-		// Find all fields with @:hscript metadata
-		for (field in fields)
-		{
-			if (field.meta == null)
-				continue;
-			var scriptable_meta = field.meta.find(function(m) return m.name == ':hscript');
-			if (scriptable_meta != null)
-			{
-				switch field.kind
-				{
-					case FFun(func):
-						// The variables we'll set on the hscript scope:
-						var variable_names:Array<String> = [];
-
-						// Get the full @:hscript parameters.
-						var hscriptParams:HScriptParams = getFunctionHScriptParams(scriptable_meta.params, classParams);
-
-						// Also the direct function arguments
-						for (arg in func.args)
-							variable_names.push(arg.name);
-
-						// Also the variables specified by the class and its parents
-						for (v in hscriptParams.context)
-							variable_names.push(v);
-
-						// Now prepend the code to execute the hscript to the
-						// function body. Store it in a variable called script_result.
-						// If the return type is specified Void, don't return
-						// anything. Otherwise, return the script_result.
-						var setters:Array<Expr> = variable_names.map(function(name)
-						{
-							return macro script.set($v{name}, $i{name});
-						});
-
-						// Get the original script's return expression.
-						// Defaults to `return script_result` unless you return in your function body.
-						var return_expr = switch func.ret
-						{
-							case TPath({name: 'Void', pack: [], params: []}):
-								// Function sigture says Void, don't return anything
-								macro null;
-							default:
-								macro return script_result;
-						}
-
-						var pathName = field.name;
-						if (polymod.util.DefineUtil.getDefineBoolRaw('POLYMOD_USE_NAMESPACE'))
-						{
-							var module:String = Context.getLocalModule();
-							module = StringTools.replace(module, '.', '/');
-							pathName = $v{'$module/$pathName'};
-						}
-
-						// If pathName is a string, set it.
-						if (hscriptParams.pathName != null)
-						{
-							pathName = hscriptParams.pathName;
-						}
-
-						// If pathName is an identifier, call the function or access the variable.
-						var scriptFetchExpr = macro _polymod_scripts.get($v{pathName}, Assets);
-
-						if (hscriptParams.pathNameDynId != null)
-						{
-							scriptFetchExpr = macro
-								{
-									if (Reflect.isFunction($i{hscriptParams.pathNameDynId}))
-									{
-										var pathName = Reflect.callMethod(this, cast $i{hscriptParams.pathNameDynId}, []);
-										_polymod_scripts.get(pathName, Assets);
-									}
-									else
-									{
-										_polymod_scripts.get(cast $i{hscriptParams.pathNameDynId}, Assets);
-									}
-								}
-						}
-
-						// Alter the function body:
-						var hscriptCancellable:Bool = hscriptParams.cancellable == null ? HScriptParams.CANCELLABLE_DEFAULT : hscriptParams.cancellable;
-						var hscriptOptional:Bool = hscriptParams.optional == null ? HScriptParams.OPTIONAL_DEFAULT : hscriptParams.optional;
-						var hscriptRunBefore:Bool = hscriptParams.runBefore == null ? HScriptParams.RUN_BEFORE_DEFAULT : hscriptParams.runBefore;
-						var hscriptDynamicPath:Bool = hscriptParams.pathNameDynId != null;
-						func.expr = macro
-							{
-								$b{hscriptRunBefore ? [func.expr] : []};
-
-								var script_error:Dynamic = null;
-								var script_result:Dynamic = null;
-								// Initialize as empty rather than null.
-								var script_variables:Map<String, Dynamic> = new Map<String, Dynamic>();
-								var wasCancelled:Bool = false;
-								try
-								{
-									var script = $e{scriptFetchExpr};
-
-									if (script == null)
-									{
-										if ($v{!hscriptOptional})
-										{
-											// We failed to find the script!
-											// But we only care about that if the script is not optional.
-											polymod.Polymod.error(polymod.Polymod.PolymodErrorCode.SCRIPT_NOT_FOUND,
-												'The script ' + $v{pathName} + ' could not be found.');
-
-											// Prevent the script and the function body from executing.
-											wasCancelled = true;
-										}
-										else
-										{
-											polymod.Polymod.debug('The script '
-												+ $v{pathName} + ' could not be found, but that is fine because it is optional.');
-
-											// Prevent the script from running but do not prevent the function body from executing.
-											// wasCancelled = true;
-										}
-									}
-
-									if (script != null && !wasCancelled)
-									{
-										if (script != null)
-										{
-											$b{setters};
-										}
-
-										if ($v{hscriptCancellable})
-										{
-											script.set('cancel', function()
-											{
-												polymod.Polymod.debug('Script called cancel()');
-												wasCancelled = true;
-											});
-										}
-
-										var output = script.execute();
-										script_result = output.script_result;
-										script_variables = output.script_variables;
-									}
-								}
-								catch (e:Dynamic)
-								{
-									polymod.Polymod.error(polymod.Polymod.PolymodErrorCode.SCRIPT_EXCEPTION, 'Error: script ' + $v{pathName} + ' threw:\n$e');
-									script_error = e;
-								}
-
-								if (!$v{hscriptRunBefore} && !wasCancelled)
-								{
-									${func.expr};
-								}
-
-								$return_expr;
-							}
-
-						// Generate the expression that will get inserted into the constructor
-						// to load this script:
-						if (constructor_setup == null)
-						{
-							constructor_setup = [macro _polymod_scripts = new polymod.hscript.HScriptable.ScriptRunner()];
-						}
-						if (!hscriptDynamicPath)
-						{
-							constructor_setup.push(macro
-								{
-									// polymod.Polymod.debug('Loading hscript ' + $v{pathName});
-									_polymod_scripts.load($v{pathName}, Assets);
-								});
-						}
-
-					default:
-						Context.error("Error: The @:hscript meta is only allowed on functions", Context.currentPos());
-				}
-			}
-		}
-
-		// No @:hscript fields found? Just return now...
-		if (constructor_setup == null)
-			return fields;
-		// Inject _polymod_scripts var
-		for (new_field in (macro class Ignore
-			{
-				public var _polymod_scripts:polymod.hscript.HScriptable.ScriptRunner;
-			}).fields)
-			fields.push(new_field);
-		// Find constructor, and inject script setup...
-		var constructor = fields.find(function(field) return field.name == 'new');
-		if (constructor == null)
-			Context.error("Error: @:hscript requires a constructor", Context.currentPos());
-		switch (constructor.kind)
-		{
-			case FFun(func):
-				func.expr = macro
-					{
-						$b{constructor_setup};
-						${func.expr};
-					}
-			default:
-				Context.error("Error: constructor is not a function?!", Context.currentPos());
-		}
-
-		return fields;
+		
+		// Returning null is equal to "don't do anything".
+		return null;
 	}
 
 	/**
-	 * Parse `@:hscriptClass({})`. Don't get this confused!
+	 * Parse `@:hscriptClass`.
 	 */
 	static function parseHScriptClassParams(metaEntry:MetadataEntry):HScriptClassParams
 	{
@@ -474,6 +80,10 @@ class HScriptMacro
 		return result;
 	}
 
+	/**
+	 * Create the complicated parts of the generated class,
+	 * specifically the `init()` function and the override methods.
+	 */
 	public static function buildHScriptClass(cls:haxe.macro.Type.ClassType, fields:Array<Field>):Array<Field>
 	{
 		// var cls:haxe.macro.Type.ClassType = Context.getLocalClass().get();
@@ -492,22 +102,22 @@ class HScriptMacro
 			}
 			else
 			{
-				if (superCls.constructor != null)
-				{
-					switch (superCls.constructor.get().type)
-					{
+				if (superCls.constructor != null) {
+					var superClsConstType:haxe.macro.Type = superCls.constructor.get().type;
+					//Context.follow(superCls.constructor.get().type);
+					switch (superClsConstType) {
 						case TFun(args, ret):
 							// Build a new constructor, which has the same signature as the superclass constructor.
 							var constArgs = [
 								for (arg in args)
 									{name: arg.name, opt: arg.opt, type: Context.toComplexType(arg.t)}
 							];
-							// Create scripted class utility functions.
-							var utilFields:Array<Field> = buildScriptedClassUtils(cls, superCls, constArgs);
-							fields = fields.concat(utilFields);
+							var initField:Field = buildScriptedClassInit(cls, superCls, constArgs);
+							fields.push(initField);
 							constructor = buildScriptedClassConstructor(constArgs);
 						case TLazy(builder):
-							switch (builder())
+							var builtValue = builder();
+							switch (builtValue)
 							{
 								case TFun(args, ret):
 									// Build a new constructor, which has the same signature as the superclass constructor.
@@ -515,26 +125,24 @@ class HScriptMacro
 										for (arg in args)
 											{name: arg.name, opt: arg.opt, type: Context.toComplexType(arg.t)}
 									];
-									// Create scripted class utility functions.
-									var utilFields:Array<Field> = buildScriptedClassUtils(cls, superCls, constArgs);
-									fields = fields.concat(utilFields);
+									var initField:Field = buildScriptedClassInit(cls, superCls, constArgs);
+									fields.push(initField);
 									constructor = buildScriptedClassConstructor(constArgs);
 								default:
-									Context.error('Error: Lazy superclass constructor is not a function (got ${superCls.constructor.get().type})',
+									Context.error('Error: Lazy superclass constructor is not a function (got ${builtValue})',
 										Context.currentPos());
 							}
 						default:
-							Context.error('Error: super constructor is not a function (got ${superCls.constructor.get().type})', Context.currentPos());
+							Context.error('Error: super constructor is not a function (got ${superClsConstType})', Context.currentPos());
 					}
-				}
-				else
-				{
+				} else {
 					constructor = buildEmptyScriptedClassConstructor();
 					// Create scripted class utility functions.
-					var utilFields:Array<Field> = buildScriptedClassUtils(cls, superCls, []);
-					fields = fields.concat(utilFields);
+					Context.info('  Creating scripted class utils...', Context.currentPos());
+					var initField:Field = buildScriptedClassInit(cls, superCls, []);
+					fields.push(initField);
+					fields.push(constructor);
 				}
-				fields.push(constructor);
 			}
 
 			// Create scripted class overrides for all fields (except constructor).
@@ -546,41 +154,12 @@ class HScriptMacro
 		return fields;
 	}
 
-	static function buildScriptedClassUtils(cls:haxe.macro.Type.ClassType, superCls:haxe.macro.Type.ClassType, superConstArgs:Array<FunctionArg>):Array<Field>
+	static function buildScriptedClassInit(cls:haxe.macro.Type.ClassType, superCls:haxe.macro.Type.ClassType, superConstArgs:Array<FunctionArg>):Field
 	{
-		Context.info('Building scripted class utils', Context.currentPos());
+		// Context.info('  Building scripted class init() function', Context.currentPos());
 		var clsTypeName:String = cls.pack.join('.') != '' ? '${cls.pack.join('.')}.${cls.name}' : cls.name;
 		var superClsTypeName:String = superCls.pack.join('.') != '' ? '${superCls.pack.join('.')}.${superCls.name}' : superCls.name;
 
-		// var _asc:AbstractScriptClass = null;
-		var var__asc:Field = {
-			name: '_asc',
-			doc: "The AbstractScriptClass instance which any variable or function calls are redirected to internally.",
-			access: [APrivate], // Private instance variable
-			kind: FVar(Context.toComplexType(Context.getType('polymod.hscript.PolymodAbstractScriptClass'))),
-			pos: cls.pos,
-		};
-
-		// public static function listScriptClasses():Array<String>;
-		var function_listScriptClasses:Field = {
-			name: 'listScriptClasses',
-			doc: "Returns a list of all the scripted classes which extend this class.",
-			access: [APublic, AStatic],
-			meta: null,
-			pos: cls.pos,
-			kind: FFun({
-				args: [],
-				params: null,
-				ret: Context.toComplexType(Context.typeof(macro
-					{var x:Array<String>; x;})),
-				expr: macro
-				{
-					return polymod.hscript.PolymodScriptClass.listScriptClassesExtending($v{superClsTypeName});
-				},
-			}),
-		};
-
-		// public static function init(clsName:String, ...args):T;
 		var constArgs = [for (arg in superConstArgs) macro $i{arg.name}];
 		var typePath:haxe.macro.TypePath = {
 			pack: cls.pack,
@@ -598,12 +177,14 @@ class HScriptMacro
 				ret: Context.toComplexType(Context.getType(clsTypeName)),
 				expr: macro
 				{
-					trace("Setting scripted class overrides: ");
-					trace($v{superClsTypeName});
-					trace($v{clsTypeName});
-					polymod.hscript.PolymodScriptClass.scriptClassOverrides.set($v{superClsTypeName}, Type.resolveClass($v{clsTypeName}));
+					polymod.hscript._internal.PolymodScriptClass.scriptClassOverrides.set($v{superClsTypeName}, Type.resolveClass($v{clsTypeName}));
 
-					var asc:polymod.hscript.PolymodAbstractScriptClass = polymod.hscript.PolymodScriptClass.createScriptClassInstance(clsName, $a{constArgs});
+					var asc:polymod.hscript._internal.PolymodAbstractScriptClass = polymod.hscript._internal.PolymodScriptClass.createScriptClassInstance(clsName, $a{constArgs});
+					if (asc == null)
+					{
+						polymod.Polymod.error(SCRIPT_EXCEPTION, 'Could not construct instance of scripted class (${clsName} extends ' + $v{clsTypeName} + ')');
+						return null;
+					}
 					var scriptedObj = asc.superClass;
 
 					Reflect.setField(scriptedObj, '_asc', asc);
@@ -613,31 +194,12 @@ class HScriptMacro
 			}),
 		};
 
-		var function_scriptCall:Field = {
-			name: 'scriptCall',
-			doc: 'Calls a function of the scripted class with the given name and arguments.',
-			access: [APublic],
-			meta: null,
-			pos: cls.pos,
-			kind: FFun({
-				args: [
-					// {name: 'funcName', type: Context.toComplexType(Context.getType('Dynamic'))},
-					{name: 'funcName', type: Context.toComplexType(Context.getType('String'))},
-					{
-						name: 'funcArgs',
-						type: Context.toComplexType(Context.typeof(macro
-							{var x:Array<Dynamic>; x;})),
-						value: macro null,
-					}
-				],
-				params: null,
-				ret: Context.toComplexType(Context.getType('Dynamic')),
-				expr: macro
-				{
-					return _asc.callFunction(funcName, funcArgs == null ? [] : funcArgs);
-				},
-			}),
-		};
+		return function_init;
+	}
+
+	static function buildScriptedClassUtils(cls:haxe.macro.Type.ClassType, superCls:haxe.macro.Type.ClassType):Array<Field> {
+		var clsTypeName:String = cls.pack.join('.') != '' ? '${cls.pack.join('.')}.${cls.name}' : cls.name;
+		var superClsTypeName:String = superCls.pack.join('.') != '' ? '${superCls.pack.join('.')}.${superCls.name}' : superCls.name;
 
 		var function_scriptGet:Field = {
 			name: 'scriptGet',
@@ -680,10 +242,58 @@ class HScriptMacro
 			}),
 		}
 
+		var function_scriptCall:Field = {
+			name: 'scriptCall',
+			doc: 'Calls a function of the scripted class with the given name and arguments.',
+			access: [APublic],
+			meta: null,
+			pos: cls.pos,
+			kind: FFun({
+				args: [
+					{name: 'funcName', type: Context.toComplexType(Context.getType('String'))},
+					{
+						name: 'funcArgs',
+						type: toComplexTypeArray(Context.toComplexType(Context.getType('Dynamic'))),
+						value: macro null,
+					}
+				],
+				params: null,
+				ret: Context.toComplexType(Context.getType('Dynamic')),
+				expr: macro
+				{
+					return _asc.callFunction(funcName, funcArgs == null ? [] : funcArgs);
+				},
+			}),
+		};
+		
+		var var__asc:Field = {
+			name: '_asc',
+			doc: "The AbstractScriptClass instance which any variable or function calls are redirected to internally.",
+			access: [APrivate], // Private instance variable
+			kind: FVar(Context.toComplexType(Context.getType('polymod.hscript._internal.PolymodAbstractScriptClass'))),
+			pos: cls.pos,
+		};
+
+		var function_listScriptClasses:Field = {
+			name: 'listScriptClasses',
+			doc: "Returns a list of all the scripted classes which extend this class.",
+			access: [APublic, AStatic],
+			meta: null,
+			pos: cls.pos,
+			kind: FFun({
+				args: [],
+				params: null,
+				ret: toComplexTypeArray(Context.toComplexType(Context.getType('String'))),
+				expr: macro
+				{
+					return polymod.hscript._internal.PolymodScriptClass.listScriptClassesExtending($v{superClsTypeName});
+				},
+			}),
+		};
+
 		return [
 			var__asc,
 			function_listScriptClasses,
-			function_init,
 			function_scriptCall,
 			function_scriptGet,
 			function_scriptSet
@@ -817,7 +427,6 @@ class HScriptMacro
 		{
 			// Context.info('  Skipping: ${field.name} is static', Context.currentPos());
 		}
-
 		return fields;
 	}
 
@@ -1135,6 +744,18 @@ class HScriptMacro
 					return [];
 				}
 
+				var func_access = [field.isPublic ? APublic : APrivate];
+				if (field.isFinal)
+					func_access.push(AFinal);
+				if (isStatic)
+				{
+					func_access.push(AStatic);
+				}
+				else
+				{
+					func_access.push(AOverride);
+				}
+
 				switch (field.expr().expr)
 				{
 					case TFunction(tfunc):
@@ -1160,26 +781,21 @@ class HScriptMacro
 							};
 							func_inputArgs.push(tfuncArg);
 						}
+					case TConst(tcon):
+						// Okay, so uh, this is actually a VARIABLE storing a function.
+						// Don't attempt to re-define it.
+
+						return [];
 					default:
-						Context.error('Expected a function and got ${field.expr().expr}', Context.currentPos());
+						Context.warning('Expected a function and got ${field.expr().expr}', Context.currentPos());
 				}
 
 				// Is there a better way to do this?
 				var doesReturnVoid:Bool = ret.toString() == "Void";
 
 				// Generate the list of call arguments for the function.
+				// Context.info('${args}', Context.currentPos());
 				var func_callArgs:Array<Expr> = [for (arg in args) macro $i{arg.name}];
-				var func_access = [field.isPublic ? APublic : APrivate];
-				if (field.isFinal)
-					func_access.push(AFinal);
-				if (isStatic)
-				{
-					func_access.push(AStatic);
-				}
-				else
-				{
-					func_access.push(AOverride);
-				}
 
 				var func_params = [for (param in field.params) {name: param.name}];
 
@@ -1189,7 +805,7 @@ class HScriptMacro
 				var funcName:String = field.name;
 				var func_over:Field = {
 					name: funcName,
-					doc: field.doc == null ? 'Polymod ScriptedClass override of ${field.name}.' : 'Polymod ScriptedClass override of ${field.name}.\n${field.doc}',
+					doc: field.doc == null ? 'Polymod HScriptedClass override of ${field.name}.' : 'Polymod HScriptedClass override of ${field.name}.\n${field.doc}',
 					access: func_access,
 					meta: field.meta.get(),
 					pos: field.pos,
@@ -1300,6 +916,25 @@ class HScriptMacro
 				},
 			}),
 		};
+	}
+
+	/**
+	 * Create the type corresponding to an array of the given type.
+	 * For example, toComplexTypeArray(String) will return Array<String>.
+	 */
+	static function toComplexTypeArray(inputType:ComplexType):haxe.macro.ComplexType {
+		var typeParams = (inputType != null)
+			? [TPType(inputType)]
+			: [TPType(TPath({pack: [], name: 'Dynamic', sub: null, params: []}))];
+
+		var result:ComplexType = TPath({
+			pack: [],
+			name: 'Array',
+			sub: null,
+			params: typeParams,
+		});
+
+		return result;
 	}
 
 	static function buildEmptyScriptedClassConstructor():Field

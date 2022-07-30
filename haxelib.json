@@ -4,7 +4,7 @@
   "license": "MIT",
   "tags": ["mod","game","data","asset"],
   "description": "An atomic modding framework for Haxe games",
-  "version": "1.5.4",
-  "releasenote": "Fixes for issues with scripted classes",
+  "version": "1.6.0",
+  "releasenote": "Error handling improvements and performance fixes",
   "contributors": ["MasterEric", "larsiusprime"]
 }

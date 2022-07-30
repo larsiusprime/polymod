@@ -3,6 +3,29 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.0] - 2022-07-28
+Not much in the way of new features for end users here, but some refactors resulted in breaking changes so this is labelled as a minor version rather than a bugfix version.
+## Added
+- Scripted classes now allow functions with up to 8 arguments, up from 4.
+- Added the new `ErrorEx` and `PolymodPrinterEx` classes for more detailed and extensible error handling.
+  - Added new error message when attempting to call a custom function on a scripted class improperly.
+  - Added new error message when attempting to retrieve a custom variable on a scripted class improperly.
+  - Added new error message when attempting to assign a custom variable on a scripted class improperly.
+- New static function `Polymod.clearScripts()` clears all scripted classes and scripted functions. Useful for cleaning up before a script reload.
+## Changed
+- HScriptable has been split into two interfaces: HScriptable and HScriptedClass.
+  - HScriptable is now used only for `@:hscript` annotations on scripted functions, and HScriptedClass is used for `@:hscriptClass` annotations to generate scripted classes.
+  - These two interfaces are considered mutually exclusive, and only one should be used on a given class.
+- Moved internal HScript classes to an `_internal` package.
+## Fixed
+- Refactored HScript-related macros for improved maintainability.
+- Cached `Reflect.fields()` queries on PolymodScriptedClass proxies to improve performance.
+- Fixed an issue where attempting to annotate `@:hscriptClass` on a class which utilized variables whose type is a function.
+  - This now allows for FlxUIState to be scripted.
+- Fixed an issue where the right-hand side of a variable assignment was being executed twice.
+- Cleanup extraneous compile-time logging.
+
+
 ## [1.5.4] - 2022-07-16
 This patch includes several major bug fixes and convenience improvements.
 ## Added
@@ -16,6 +39,7 @@ This patch includes several major bug fixes and convenience improvements.
   - Line numbers will now display as `#???` by default. To enable line numbers on script errors (highly recommended), add `<haxedef name="hscriptPos" value="true" />` to your `project.xml` file.
 ## Known Issues
 - A build error `hscript.Interp has no field setVar` may occur. If this happens, make sure you are using the latest version of HScript, version 2.5.0.
+
 
 ## [1.5.3] - 2022-05-18
 Lots of tiny bug fixes and several new utilities. Overall a better experience if you're debugging a tricky script.
@@ -49,6 +73,7 @@ A small bug fix update.
 - Fixed a bug where scripted classes would fail while attempting to import and use an enum.
 - Standardized code style across several files.
 
+
 ## [1.5.1] - 2022-02-25
 A large number of bug fixes for scripted classes.
 ### Changed
@@ -75,9 +100,11 @@ A large number of bug fixes for scripted classes.
 ### Removed
 - The `POLYMOD_USE_HSCRIPTEX` flag has been made redundant. A fork of `hscript-ex` is now bundled into Polymod.
 
+
 ## [1.4.3] - 2022-02-18
 ### Fixed
 - OpenFLBackend no longer breaks when you are using the main version of OpenFL.
+
 
 ## [1.4.2] - 2022-02-06
 Version 1.4.2 includes a large number of bug fixes and tweaks to improve reliability.
@@ -123,6 +150,7 @@ Version 1.4.2 includes a large number of bug fixes and tweaks to improve reliabi
 - Fixed a compile bug for Flixel backends.
 - Fixed a bug where embedded default assets would not load properly.
 
+
 ## [1.4.0] - 2022-01-17
 This release marks the migration of the project documentation to [polymod.io](https://polymod.io), a new website for the project hosted by Github Pages.
 ### Added
@@ -163,6 +191,7 @@ This release marks the migration of the project documentation to [polymod.io](ht
 ### Fixed
 - Fixed a crash bug which occured when LimeBackend was used without a `frameworkParams` argument.
 - Fixed a bug where `MOD_LOAD_PREPARE` and `MOD_LOAD_DONE` were showing as errors rather than notices.
+
 
 ## [1.3.1] - 2021-12-05
 ### New Contributors

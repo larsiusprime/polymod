@@ -1,16 +1,14 @@
 package polymod.hscript;
 
-import polymod.Polymod.PolymodErrorCode;
-import polymod.Polymod;
-import polymod.Polymod.PolymodErrorCode;
 import haxe.Json;
+import polymod.Polymod;
 
 /**
  * This interface triggers the execution of a macro on any elements which use the `@:hscript` annotation.
  * Adding the annotation to the function will cause the associate script to be executed.
  * Adding the annotation to the class will allow specification of additional parameters which apply to all annotated functions.
  */
-@:autoBuild(polymod.hscript.HScriptMacro.build())
+@:autoBuild(polymod.hscript._internal.HScriptableMacro.build())
 interface HScriptable
 {
 }
@@ -274,30 +272,30 @@ class ScriptRunner
 
 class Script
 {
-	private static var parser:polymod.hscript.PolymodParserEx;
+	private static var parser:polymod.hscript._internal.PolymodParserEx;
 
 	public var program:hscript.Expr;
-	public var interp:polymod.hscript.PolymodInterpEx;
+	public var interp:polymod.hscript._internal.PolymodInterpEx;
 
-	public static function buildParser():polymod.hscript.PolymodParserEx
+	public static function buildParser():polymod.hscript._internal.PolymodParserEx
 	{
-		return new polymod.hscript.PolymodParserEx();
+		return new polymod.hscript._internal.PolymodParserEx();
 	}
 
-	public static function buildInterp():polymod.hscript.PolymodInterpEx
+	public static function buildInterp():polymod.hscript._internal.PolymodInterpEx
 	{
     // Arguments are only needed in a scripted class context.
-		return new polymod.hscript.PolymodInterpEx(null, null);
+		return new polymod.hscript._internal.PolymodInterpEx(null, null);
 	}
 
-	public function new(script:String)
+	public function new(script:String, ?origin:String = null)
 	{
 		if (parser == null)
 		{
 			parser = buildParser();
 			parser.allowTypes = true;
 		}
-		program = parser.parseString(script);
+		program = parser.parseString(script, origin);
 		interp = buildInterp();
 	}
 
