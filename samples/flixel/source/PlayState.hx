@@ -5,6 +5,7 @@ import flixel.addons.ui.FlxInputText;
 import flixel.graphics.frames.FlxAtlasFrames;
 import flixel.text.FlxText;
 import flixel.ui.FlxButton;
+import flixel.util.FlxColor;
 import haxe.io.Bytes;
 import openfl.events.Event;
 import openfl.net.FileFilter;
@@ -32,6 +33,12 @@ class PlayState extends FlxState
 	 */
 	private var stuff:Array<FlxSprite> = [];
 
+	#if html5
+	private var loadZipButton:FlxButton;
+	private var ziploader:ZipLoader;
+	private var helpText:FlxText;
+	#end
+
 	public override function create()
 	{
 		super.create();
@@ -42,29 +49,40 @@ class PlayState extends FlxState
 		this.bgColor = 0xFFFFFFFF;
 
 		makeButtons();
-		makeZipLoadingButton();
-		drawImages();
-		drawText();
+		makeHelpText();
+		// makeZipLoadingButton();
+		// drawImages();
+		// drawText();
 	}
 
-	var ziploader:ZipLoader;
+	private function makeHelpText()
+	{
+		helpText = new FlxText(0, FlxG.height - 150, 0, "Press SPACE to load a zipped mod");
+		helpText.setFormat(null, 12, FlxColor.BLACK);
+		helpText.screenCenter(X);
+		add(helpText);
+	}
 
+	// cannot use yet, crashes on html for some reason
 	private function makeZipLoadingButton()
 	{
-		var loadZipButton = new FlxButton(0, FlxG.height - 50, "Load a zipped mod", () ->
+		loadZipButton = new FlxButton(0, FlxG.height - 50, "Load a zipped mod", () ->
 		{
 			ziploader = new ZipLoader(() ->
 			{
 				trace('zip name: ${ziploader.zipname}');
 				var rootfolder = ziploader.zipname.substring(0, ziploader.zipname.length - 4);
 				trace('rootfolder: $rootfolder');
-				var loadedmods = Polymod.scan(rootfolder, "*.*.*", (e) ->
-				{
-					trace('[polymod]: $e');
-				}, ziploader.zfs);
-				trace('mods: ${loadedmods}');
-				// makeButtons([for (m in loadedmods) m.id]);
-				refresh();
+				trace('----------------ZFS Things------------------');
+				var mods = Polymod.init({
+					customFilesystem: ziploader.zfs,
+					dirs: [rootfolder],
+					fileSystemParams: {modRoot: 'mods'},
+					errorCallback: onError
+				});
+				trace('mods: $mods');
+				trace('----------------</ZFS Things>------------------');
+				// loadSprites();
 			});
 			ziploader.loadZip();
 		});
@@ -74,7 +92,7 @@ class PlayState extends FlxState
 		add(loadZipButton);
 	}
 
-	private function makeButtons()
+	private function makeButtons(?loadedmods:Array<String>)
 	{
 		var modDir:String = '../../../mods';
 		#if mac
@@ -84,7 +102,7 @@ class PlayState extends FlxState
 		#if sys
 		var mods = sys.FileSystem.readDirectory(modDir);
 		#else
-		var mods = [];
+		var mods = (loadedmods == null) ? [] : loadedmods;
 		#end
 		var xx = 10;
 		var yy = 200;
@@ -117,6 +135,8 @@ class PlayState extends FlxState
 
 		drawImages();
 		drawText();
+		// remove(loadZipButton, true);
+		// makeZipLoadingButton();
 	}
 
 	private function onWidgetMove(w:ModWidget, i:Int)
@@ -164,9 +184,46 @@ class PlayState extends FlxState
 		}
 	}
 
+	#if html5
+	private function removeButtons()
+	{
+		for (btngrp in widgets)
+		{
+			remove(btngrp, true);
+		}
+		widgets.splice(0, widgets.length);
+	}
+	#end
+
 	public override function update(elapsed:Float)
 	{
 		super.update(elapsed);
+		#if html5
+		if (FlxG.keys.justPressed.SPACE)
+		{
+			ziploader = new ZipLoader(() ->
+			{
+				removeButtons();
+				trace('zip name: ${ziploader.zipname}');
+				var rootfolder = ziploader.zipname.substring(0, ziploader.zipname.length - 4);
+				trace('rootfolder: $rootfolder');
+				trace('----------------ZFS Things------------------');
+				// var mods = Polymod.init({
+				// 	customFilesystem: ziploader.zfs,
+				// 	dirs: [],
+				// 	fileSystemParams: {modRoot: 'mods'},
+				// 	errorCallback: onError
+				// });
+				var mods = ziploader.zfs.readDirectory('mods');
+				trace('mods: $mods');
+				trace('----------------</ZFS Things>------------------');
+				// loadSprites();
+				makeButtons(mods);
+				refresh();
+			});
+			ziploader.loadZip();
+		}
+		#end
 	}
 
 	private function drawImages()
@@ -191,6 +248,40 @@ class PlayState extends FlxState
 		trace('Drawing ${images.length} images...');
 		for (image in images)
 		{
+			#if html5
+			trace('Drawing image $image');
+			var img_f = Assets.loadBitmapData(image, false);
+			img_f.onComplete((bmpd) ->
+			{
+				trace('Got bitmapdata? ${bmpd != null}');
+				var sprite = new FlxSprite(xx, yy);
+				var atlasPath = image.replace('.png', '.xml');
+				if (Assets.exists(atlasPath))
+				{
+					trace('Building animated image $image');
+					sprite.frames = FlxAtlasFrames.fromSparrow(bmpd, Assets.getText(atlasPath));
+					sprite.animation.addByPrefix('idle', 'idle', 24, true);
+					sprite.animation.play('idle');
+				}
+				else
+				{
+					trace('Building static image $image');
+					sprite.loadGraphic(bmpd);
+				}
+				sprite.setGraphicSize(72, 72);
+				sprite.updateHitbox();
+
+				var text = new FlxText(xx, sprite.y + sprite.height, sprite.width, image);
+				text.setFormat("Arial", 12, 0xFF000000, FlxTextAlign.CENTER);
+
+				add(sprite);
+				add(text);
+				stuff.push(text);
+				stuff.push(sprite);
+
+				xx += Std.int(sprite.width + 10);
+			});
+			#else
 			trace('Drawing image $image');
 			var sprite = new FlxSprite(xx, yy);
 
@@ -220,6 +311,7 @@ class PlayState extends FlxState
 			stuff.push(sprite);
 
 			xx += Std.int(sprite.width + 10);
+			#end
 		}
 	}
 
@@ -261,6 +353,7 @@ class PlayState extends FlxState
 			text.lines = 10;
 
 			var str = Assets.getText(t);
+			trace('text content of $t : $str');
 			text.text = (str != null ? str : 'null');
 
 			var caption = new FlxText(xx, text.y + text.height, text.width, "UNKNOWN");
@@ -287,7 +380,58 @@ class PlayState extends FlxState
 				theMods.push(w.modId);
 			}
 		}
+		#if !html5
 		loadMods(theMods);
+		#else
+		loadModsHTML5(theMods);
+		#end
+	}
+
+	private function loadModsHTML5(dirs:Array<String>)
+	{
+		trace('Loading mods: ${dirs}');
+		var modRoot = 'mods';
+		var results = Polymod.init({
+			dirs: dirs,
+			errorCallback: onError,
+			ignoredFiles: Polymod.getDefaultIgnoreList(),
+			framework: Framework.FLIXEL,
+			customFilesystem: ziploader.zfs,
+			fileSystemParams: {
+				modRoot: modRoot
+			}
+		});
+		// Reload graphics before rendering again.
+		var loadedMods = results.map(function(item:ModMetadata)
+		{
+			return item.id;
+		});
+		trace('Loaded mods: ${loadedMods}');
+		refresh();
+		// Polymod.loadMods(dirs);
+		// refresh();
+	}
+
+	private function initModsHTML5()
+	{
+		if (ziploader == null)
+		{
+			return;
+		}
+		var results = Polymod.init({
+			dirs: [],
+			errorCallback: onError,
+			ignoredFiles: Polymod.getDefaultIgnoreList(),
+			customFilesystem: ziploader.zfs,
+			fileSystemParams: {modRoot: 'mods'}
+		});
+		// Reload graphics before rendering again.
+		// var loadedMods = results.map(function(item:ModMetadata)
+		// {
+		// 	return item.id;
+		// });
+		// trace('Loaded mods: ${loadedMods}');
+		// refresh();
 	}
 
 	private function loadMods(dirs:Array<String>)
@@ -369,7 +513,7 @@ class ZipLoader
 
 		zfs = new ZipFileSystem({
 			zipBytes: zipBytes,
-			zipName: zipname
+			zipName: zipname,
 		});
 		if (postLoad != null)
 		{

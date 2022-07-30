@@ -12,10 +12,10 @@ using StringTools;
 import unifill.Unifill;
 #end
 #if (lime && !nme && !macro)
-import lime.text.Font;
+import lime.app.Future;
 import lime.graphics.Image;
 import lime.net.HTTPRequest;
-import lime.app.Future;
+import lime.text.Font;
 import lime.utils.Assets;
 import lime.utils.Bytes;
 #if (lime >= '4.0.0')
@@ -536,7 +536,13 @@ class LimeModLibrary extends AssetLibrary
 		var symbol = new IdAndLibrary(id, this);
 		if (p.check(symbol.modId))
 		{
+			#if html5
+			// for compatibility with the zip file system (loadFromFile doesn't seem to work on the web unless it's a url :/)
+			var dabytes = p.fileSystem.getFileBytes(p.file(symbol.modId));
+			return Image.loadFromBytes(dabytes);
+			#else
 			return Image.loadFromFile(p.file(symbol.modId));
+			#end
 		}
 		else if (hasFallback)
 		{
@@ -580,7 +586,14 @@ class LimeModLibrary extends AssetLibrary
 		if (p.check(symbol.modId))
 		{
 			var request = new HTTPRequest<String>();
-			return request.load(paths.get(p.file(symbol.modId)));
+			return request.load(paths.get(p.file(symbol.modId))).then((modText) ->
+			{
+				if (modText != null)
+				{
+					modText = p.mergeAndAppendText(id, modText);
+				}
+				return Future.withValue(modText);
+			});
 		}
 		else if (hasFallback)
 		{

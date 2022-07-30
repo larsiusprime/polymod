@@ -1,7 +1,7 @@
 package polymod.util;
 
-import haxe.io.Path;
 import haxe.Utf8;
+import haxe.io.Path;
 import polymod.Polymod.PolymodError;
 import polymod.Polymod.PolymodErrorType;
 import polymod.Polymod;
@@ -295,7 +295,7 @@ class Util
 
 	public static function pathSpecial(id:String, special:String = '', theDir:String = ''):String
 	{
-		#if (sys || nodefs)
+		#if (sys || nodefs || html5)
 		id = stripAssetsPrefix(id);
 		var thePath = uCombine([theDir, sl(), special, sl(), id]);
 		return thePath;

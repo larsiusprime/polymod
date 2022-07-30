@@ -2,13 +2,14 @@ package polymod;
 
 import haxe.Json;
 import haxe.io.Bytes;
+import haxe.io.Path;
 import polymod.backends.IBackend;
-import polymod.hscript.PolymodScriptClass;
 import polymod.backends.PolymodAssetLibrary;
 import polymod.backends.PolymodAssets;
 import polymod.format.JsonHelp;
 import polymod.format.ParseRules;
 import polymod.fs.PolymodFileSystem;
+import polymod.hscript.PolymodScriptClass;
 import polymod.util.SemanticVersion;
 import polymod.util.Util;
 #if firetongue
@@ -204,8 +205,9 @@ class Polymod
 		}
 
 		// Modify the 'dirs' array to include the modRoot, and exclude any broken mods.
-		var localDirs:Array<String> = Reflect.copy(dirs);
-		if (localDirs == null) localDirs = [];
+		var localDirs:Array<String> = (dirs != null) ? [for (i in 0...dirs.length) dirs[i]] : null; // Reflect.copy(dirs); <-- this doesn't seem to work right on the web
+		if (localDirs == null)
+			localDirs = [];
 
 		for (i in 0...localDirs.length)
 		{
@@ -490,6 +492,7 @@ class Polymod
 			return modMeta;
 		}
 		var dirs = fileSystem.readDirectory(modRoot);
+		modRoot = Path.removeTrailingSlashes(modRoot);
 		Polymod.debug('Scan found ${dirs.length} folders in $modRoot');
 
 		// Filter to only directories.
