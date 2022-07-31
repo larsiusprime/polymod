@@ -47,9 +47,12 @@ class PlayState extends FlxState
 		this.bgColor = 0xFFFFFFFF;
 
 		makeButtons();
+		#if html5
 		makeHelpText();
+		#end
 	}
 
+	#if html5
 	private function makeHelpText()
 	{
 		helpText = new FlxText(0, FlxG.height - 150, 0, "Press SPACE to load a zipped mod");
@@ -57,6 +60,7 @@ class PlayState extends FlxState
 		helpText.screenCenter(X);
 		add(helpText);
 	}
+	#end
 
 	private function makeButtons(?loadedmods:Array<String>)
 	{
@@ -66,7 +70,10 @@ class PlayState extends FlxState
 		modDir = '../../../../../../mods';
 		#end
 		#if sys
-		var mods = sys.FileSystem.readDirectory(modDir);
+		var mods = sys.FileSystem.readDirectory(modDir).filter((f) ->
+		{
+			return sys.FileSystem.isDirectory('${haxe.io.Path.join([modDir, f])}');
+		});
 		#else
 		var mods = (loadedmods == null) ? [] : loadedmods;
 		#end
@@ -340,6 +347,7 @@ class PlayState extends FlxState
 		#end
 	}
 
+	#if html5
 	private function loadModsHTML5(dirs:Array<String>)
 	{
 		trace('Loading mods: ${dirs}');
@@ -378,6 +386,7 @@ class PlayState extends FlxState
 		});
 		trace('results: $results');
 	}
+	#end
 
 	private function loadMods(dirs:Array<String>)
 	{
@@ -409,6 +418,7 @@ class PlayState extends FlxState
 	}
 }
 
+#if html5
 class ZipLoader
 {
 	var _download_fileref:FileReference;
@@ -477,3 +487,4 @@ class ZipLoader
 		return el_bytes;
 	}
 }
+#end
