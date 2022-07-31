@@ -3,6 +3,7 @@ package polymod.hscript._internal;
 import haxe.macro.Context;
 import haxe.macro.Expr;
 import polymod.hscript.HScriptable.HScriptParams;
+
 using Lambda;
 using haxe.macro.ComplexTypeTools;
 using haxe.macro.ExprTools;
@@ -10,7 +11,6 @@ using haxe.macro.TypeTools;
 
 class HScriptableMacro
 {
-
 	public static macro function build():Array<Field>
 	{
 		var cls:haxe.macro.Type.ClassType = Context.getLocalClass().get();
@@ -26,7 +26,7 @@ class HScriptableMacro
 			Context.info('HScriptable: Class ' + cls.name + ' ready to process...', Context.currentPos());
 
 			// Process @:hscript({}) annotations.
-			fields = buildHScriptFields(cls, fields);
+			// fields = buildHScriptFields(cls, fields); // <--- cant find this function anywhere
 
 			// Ensure unused scripted classes are still available to initialize in scripts.
 			// SORRY, DCE gets run before this, so we can't use the @:keep metadata.

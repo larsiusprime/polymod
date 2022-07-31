@@ -14,9 +14,8 @@ import openfl.utils.AssetManifest;
 import openfl.utils.AssetType;
 import openfl.utils.Assets;
 import openfl.utils.ByteArray;
-import polymod.Polymod.Framework;
 import polymod.Polymod;
-import polymod.fs.ZipFileSystem;
+import polymod.fs.MemoryZipFileSystem;
 
 using StringTools;
 
@@ -34,7 +33,6 @@ class PlayState extends FlxState
 	private var stuff:Array<FlxSprite> = [];
 
 	#if html5
-	private var loadZipButton:FlxButton;
 	private var ziploader:ZipLoader;
 	private var helpText:FlxText;
 	#end
@@ -50,9 +48,6 @@ class PlayState extends FlxState
 
 		makeButtons();
 		makeHelpText();
-		// makeZipLoadingButton();
-		// drawImages();
-		// drawText();
 	}
 
 	private function makeHelpText()
@@ -61,35 +56,6 @@ class PlayState extends FlxState
 		helpText.setFormat(null, 12, FlxColor.BLACK);
 		helpText.screenCenter(X);
 		add(helpText);
-	}
-
-	// cannot use yet, crashes on html for some reason
-	private function makeZipLoadingButton()
-	{
-		loadZipButton = new FlxButton(0, FlxG.height - 50, "Load a zipped mod", () ->
-		{
-			ziploader = new ZipLoader(() ->
-			{
-				trace('zip name: ${ziploader.zipname}');
-				var rootfolder = ziploader.zipname.substring(0, ziploader.zipname.length - 4);
-				trace('rootfolder: $rootfolder');
-				trace('----------------ZFS Things------------------');
-				var mods = Polymod.init({
-					customFilesystem: ziploader.zfs,
-					dirs: [rootfolder],
-					fileSystemParams: {modRoot: 'mods'},
-					errorCallback: onError
-				});
-				trace('mods: $mods');
-				trace('----------------</ZFS Things>------------------');
-				// loadSprites();
-			});
-			ziploader.loadZip();
-		});
-		loadZipButton.scale.set(loadZipButton.scale.x * 2.5, loadZipButton.scale.y * 2.5);
-		loadZipButton.updateHitbox();
-		loadZipButton.screenCenter(X);
-		add(loadZipButton);
 	}
 
 	private function makeButtons(?loadedmods:Array<String>)
@@ -135,8 +101,6 @@ class PlayState extends FlxState
 
 		drawImages();
 		drawText();
-		// remove(loadZipButton, true);
-		// makeZipLoadingButton();
 	}
 
 	private function onWidgetMove(w:ModWidget, i:Int)
@@ -205,18 +169,8 @@ class PlayState extends FlxState
 			{
 				removeButtons();
 				trace('zip name: ${ziploader.zipname}');
-				var rootfolder = ziploader.zipname.substring(0, ziploader.zipname.length - 4);
-				trace('rootfolder: $rootfolder');
-				trace('----------------ZFS Things------------------');
-				// var mods = Polymod.init({
-				// 	customFilesystem: ziploader.zfs,
-				// 	dirs: [],
-				// 	fileSystemParams: {modRoot: 'mods'},
-				// 	errorCallback: onError
-				// });
 				var mods = ziploader.zfs.readDirectory('mods');
 				trace('mods: $mods');
-				trace('----------------</ZFS Things>------------------');
 				// loadSprites();
 				makeButtons(mods);
 				refresh();
@@ -250,7 +204,7 @@ class PlayState extends FlxState
 		{
 			#if html5
 			trace('Drawing image $image');
-			var img_f = Assets.loadBitmapData(image, false);
+			var img_f = Assets.loadBitmapData(image, false); // getting bitmapdata had to be done asynchronously on html5
 			img_f.onComplete((bmpd) ->
 			{
 				trace('Got bitmapdata? ${bmpd != null}');
@@ -353,7 +307,6 @@ class PlayState extends FlxState
 			text.lines = 10;
 
 			var str = Assets.getText(t);
-			trace('text content of $t : $str');
 			text.text = (str != null ? str : 'null');
 
 			var caption = new FlxText(xx, text.y + text.height, text.width, "UNKNOWN");
@@ -408,8 +361,6 @@ class PlayState extends FlxState
 		});
 		trace('Loaded mods: ${loadedMods}');
 		refresh();
-		// Polymod.loadMods(dirs);
-		// refresh();
 	}
 
 	private function initModsHTML5()
@@ -425,13 +376,7 @@ class PlayState extends FlxState
 			customFilesystem: ziploader.zfs,
 			fileSystemParams: {modRoot: 'mods'}
 		});
-		// Reload graphics before rendering again.
-		// var loadedMods = results.map(function(item:ModMetadata)
-		// {
-		// 	return item.id;
-		// });
-		// trace('Loaded mods: ${loadedMods}');
-		// refresh();
+		trace('results: $results');
 	}
 
 	private function loadMods(dirs:Array<String>)
@@ -470,7 +415,7 @@ class ZipLoader
 	var zipBytes:Bytes;
 
 	public var zipname:String;
-	public var zfs:ZipFileSystem;
+	public var zfs:MemoryZipFileSystem;
 
 	var postLoad:Void->Void;
 
@@ -511,7 +456,7 @@ class ZipLoader
 		_download_fileref.removeEventListener(Event.COMPLETE, onLoadComplete);
 		_download_fileref = null;
 
-		zfs = new ZipFileSystem({
+		zfs = new MemoryZipFileSystem({
 			zipBytes: zipBytes,
 			zipName: zipname,
 		});

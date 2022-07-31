@@ -9,14 +9,15 @@ import polymod.backends.PolymodAssets;
 import polymod.format.JsonHelp;
 import polymod.format.ParseRules;
 import polymod.fs.PolymodFileSystem;
-import polymod.hscript.PolymodScriptClass;
 import polymod.util.SemanticVersion;
 import polymod.util.Util;
+
 using StringTools;
+
+// import polymod.hscript.PolymodScriptClass;
 #if firetongue
 import firetongue.FireTongue;
 #end
-
 
 /**
  * The set of parameters which can be provided when intializing Polymod
@@ -567,7 +568,8 @@ class Polymod
 	/**
 	 * Clears all scripted functions and scripted class descriptors from the cache.
 	 */
-	public static function clearScripts() {
+	public static function clearScripts()
+	{
 		@:privateAccess
 		polymod.hscript._internal.PolymodInterpEx._scriptClassDescriptors.clear();
 		polymod.hscript.HScriptable.ScriptRunner.clearScripts();
@@ -576,7 +578,8 @@ class Polymod
 	/**
 	 * Get a list of all the available scripted classes (`.hxc` files), interpret them, and register any classes.
 	 */
-	public static function registerAllScriptClasses() {
+	public static function registerAllScriptClasses()
+	{
 		@:privateAccess {
 			// Go through each script and parse any classes in them.
 			for (textPath in Polymod.assetLibrary.list(TEXT))
