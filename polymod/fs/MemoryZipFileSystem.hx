@@ -29,15 +29,24 @@ typedef ZipFileSystemParams =
 	?zipPath:String
 };
 
+#if !html5
+class MemoryZipFileSystem extends StubFileSystem
+{
+	public function new(params:PolymodFileSystemParams)
+	{
+		super(params);
+		Polymod.warning(FUNCTIONALITY_NOT_IMPLEMENTED, "This file system not supported for this platform, and is only intended for use in html5");
+	}
+}
+#else
 /**
  * An implementation of an IFileSystem that can access files from an un-compressed zip archive.
  * Useful for loading mods from zip files.
+ * Recommended for use in html5 only.
  * Currently does not support compressed zip files.
  */
-class ZipFileSystem extends MemoryFileSystem
+class MemoryZipFileSystem extends MemoryFileSystem
 {
-	// var fileMap:StringMap<Entry>;
-	// public function new(params:PolymodFileSystemParams, #if sys ?zipPath:String #else ?zipBytes:Bytes #end)
 	public function new(params:ZipFileSystemParams)
 	{
 		super(params);
@@ -47,7 +56,7 @@ class ZipFileSystem extends MemoryFileSystem
 			initFileSystem(params.zipBytes, params.zipName);
 		}
 		#end
-		// For the sys-zipfilesystem
+		// TODO: Move below stuff into a sys-specific zip file system
 		// #elseif sys
 		// if (params.zipPath != null)
 		// {
@@ -111,8 +120,6 @@ class ZipFileSystem extends MemoryFileSystem
 
 	public function initFileSystem(zipBytes:Bytes, zipName:String)
 	{
-		var trueZipname = zipName.split('.')[0];
-
 		// slightly modified version of https://github.com/HaxeFoundation/haxe.org-comments/issues/41#issuecomment-845576836
 		var bytesInput = new haxe.io.BytesInput(zipBytes);
 		var reader = new haxe.zip.Reader(bytesInput);
@@ -129,14 +136,9 @@ class ZipFileSystem extends MemoryFileSystem
 			}
 			else
 			{
-				// addFileBytes('$trueZipname/${_entry.fileName}', #if (html5 && js) data #elseif sys null #end);
-				addFileBytes('mods/${_entry.fileName}', #if (html5 && js) data #elseif sys null #end); // TODO: Maybe store file offset to data on sys?
+				addFileBytes('mods/${_entry.fileName}', data);
 			}
 		}
 	}
-
-	override public function exists(path:String):Bool
-	{
-		return super.exists(path);
-	}
 }
+#end
