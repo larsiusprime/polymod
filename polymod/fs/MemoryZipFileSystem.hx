@@ -50,12 +50,10 @@ class MemoryZipFileSystem extends MemoryFileSystem
 	public function new(params:ZipFileSystemParams)
 	{
 		super(params);
-		#if (html5 && js)
 		if (params.zipBytes != null && params.zipName != null)
 		{
 			initFileSystem(params.zipBytes, params.zipName);
 		}
-		#end
 		// TODO: Move below stuff into a sys-specific zip file system
 		// #elseif sys
 		// if (params.zipPath != null)
@@ -126,9 +124,7 @@ class MemoryZipFileSystem extends MemoryFileSystem
 		var entries:List<haxe.zip.Entry> = reader.read();
 		for (_entry in entries)
 		{
-			#if (html5 && js)
 			var data = haxe.zip.Reader.unzip(_entry);
-			#end
 			if (_entry.fileName.substring(_entry.fileName.lastIndexOf('/') + 1) == '' && _entry.data.toString() == '')
 			{
 				// if(!directories.contains(_entry.fileName))
