@@ -1,5 +1,6 @@
 package polymod.fs;
 
+import thx.semver.VersionRule;
 import haxe.io.Bytes;
 import polymod.Polymod.ModMetadata;
 
@@ -112,9 +113,11 @@ interface IFileSystem
 
 	/**
 	 * Provide a list of valid mods for this file system to load.
-	 * @return An array of mod IDs.
+	 * 
+	 * @param apiVersionRule (optional) A version query to match against the mod's API version.
+	 * @return An array of matching mods.
 	 */
-	public function scanMods():Array<String>;
+	public function scanMods(?apiVersionRule:VersionRule):Array<ModMetadata>;
 
 	/**
 	 * Provides the metadata for a given mod. Returns null if the mod does not exist.

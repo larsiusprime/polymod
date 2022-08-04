@@ -1,3 +1,4 @@
+import polymod.Polymod;
 import lime.utils.Assets;
 import openfl.Assets;
 import openfl.display.DisplayObject;
@@ -15,8 +16,11 @@ class Demo extends Sprite
 	private var callback:Array<String>->Void;
 	private var stuff:Array<Dynamic> = [];
 	private var limeToggle:CheapButton;
+	private var depToggle:CheapButton;
 
 	public static var usingOpenFL(default, null):Bool = true;
+
+	public static var skipDependencyErrors(default, null):Bool = false;
 
 	public function new(callback:Array<String>->Void)
 	{
@@ -52,21 +56,19 @@ class Demo extends Sprite
 
 	private function makeButtons()
 	{
-		var modDir:String = '../../../mods';
-		#if mac
-		// account for <APPLICATION>.app/Contents/Resources
-		modDir = '../../../../../../mods';
-		#end
-		#if sys
-		var mods = sys.FileSystem.readDirectory(modDir);
-		#else
-		var mods = [];
-		#end
+		// Using configuration provided by Polymod.init.
+		var modList:Array<ModMetadata> = Polymod.scan();
+		// Sort the list by id.
+		modList.sort(function(a, b):Int
+		{
+			return a.id < b.id ? -1 : 1;
+		});
+
 		var xx = 10;
 		var yy = 200;
-		for (mod in mods)
+		for (mod in modList)
 		{
-			var w = new ModWidget(mod, onWidgetMove);
+			var w = new ModWidget(mod.id, onWidgetMove);
 			w.x = xx;
 			w.y = yy;
 
@@ -99,6 +101,18 @@ class Demo extends Sprite
 
 		addChild(limeLabel);
 		addChild(limeToggle);
+
+		var depLabel = getText(LEFT);
+		depLabel.x = 210;
+		depLabel.y = 400;
+		depLabel.text = 'Dep. Errors:';
+
+		depToggle = new CheapButton(skipDependencyErrors ? 'skip' : 'error', onToggleSkipDependencyErrors);
+		depToggle.x = 210;
+		depToggle.y = 420;
+
+		addChild(depLabel);
+		addChild(depToggle);
 	}
 
 	private function onToggleOpenFL()
@@ -112,6 +126,27 @@ class Demo extends Sprite
 		else
 		{
 			limeToggle.setText('lime');
+		}
+
+		reloadMods();
+		visible = false;
+		haxe.Timer.delay(function()
+		{
+			visible = true;
+		}, 10);
+	}
+
+	private function onToggleSkipDependencyErrors()
+	{
+		skipDependencyErrors = !skipDependencyErrors;
+
+		if (skipDependencyErrors)
+		{
+			depToggle.setText('skip');
+		}
+		else
+		{
+			depToggle.setText('error');
 		}
 
 		reloadMods();

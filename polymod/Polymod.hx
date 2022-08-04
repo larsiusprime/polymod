@@ -1,20 +1,25 @@
 package polymod;
 
-import haxe.Json;
 import haxe.io.Bytes;
+import haxe.Json;
+import lime.tools.Dependency;
 import polymod.backends.IBackend;
 import polymod.backends.PolymodAssetLibrary;
 import polymod.backends.PolymodAssets;
 import polymod.format.JsonHelp;
 import polymod.format.ParseRules;
 import polymod.fs.PolymodFileSystem;
-import polymod.util.SemanticVersion;
+import polymod.util.DependencyUtil;
 import polymod.util.Util;
+import polymod.util.VersionUtil;
+import thx.semver.Version;
+import thx.semver.VersionRule;
+
 using StringTools;
+
 #if firetongue
 import firetongue.FireTongue;
 #end
-
 
 /**
  * The set of parameters which can be provided when intializing Polymod
@@ -40,18 +45,14 @@ typedef PolymodParams =
 	 */
 	?frameworkParams:FrameworkParams,
 	/**
-	 * (optional) semantic version of your game's Modding API (will generate errors & warnings)
+	 * (optional) Semantic version rule of your game's Modding API (will generate errors & warnings)
+	 * Provide a value as a string, like `"3.0.0"` or `"2.x"`.
 	 */
-	?apiVersion:String,
+	?apiVersionRule:VersionRule,
 	/**
 	 * (optional) callback for any errors generated during mod initialization
 	 */
 	?errorCallback:PolymodError->Void,
-	/**
-	 * (optional) for each mod you're loading, a corresponding semantic version pattern to enforce (will generate errors & warnings)
-	 * if not provided, no version checks will be made
-	 */
-	?modVersions:Array<String>,
 	/**
 	 * (optional) parsing rules for various data formats
 	 */
@@ -83,6 +84,21 @@ typedef PolymodParams =
 	 * This prevents some bugs when calling `Assets.list()`, among other things.
 	 */
 	?assetPrefix:String,
+	/**
+	 * (optional) Set to true to skip dependency checks.
+	 * This is NOT recommended as issues may result from loading mods in the wrong order,
+	 * or while loading a mod with a missing dependency.
+	 *
+	 * Defaults to false.
+	 */
+	?skipDependencyChecks:Bool,
+	/**
+	 * (optional) Set to true to skip loading mods that cause dependency issues.
+	 * Set to false to stop loading ANY mods if any dependency issues are found.
+	 * 
+	 * Defaults to false.
+	 */
+	?skipDependencyErrors:Bool,
 
 	/**
 	 * (optional) a FireTongue instance for Polymod to hook into for localization support
@@ -92,6 +108,7 @@ typedef PolymodParams =
 	#end
 	/**
 	 * (optional) whether to parse and allow for initialization of classes in script files
+	 * Defaults to false.
 	 */
 	?useScriptedClasses:Bool,
 }
@@ -106,6 +123,14 @@ typedef FrameworkParams =
 	 * (optional) if you're using Lime/OpenFL AND you're using custom or non-default asset libraries, then you must provide a key=>value store mapping the name of each asset library to a path prefix in your mod structure
 	 */
 	?assetLibraryPaths:Map<String, String>,
+}
+
+typedef ScanParams =
+{
+	?modRoot:String,
+	?apiVersionRule:VersionRule,
+	?errorCallback:PolymodError->Void,
+	?fileSystem:IFileSystem
 }
 
 /**
@@ -150,6 +175,8 @@ class Polymod
 	 */
 	private static var prevParams:PolymodParams = null;
 
+	static final DEFAULT_MOD_ROOT = "./mods/";
+
 	/**
 	 * Initializes the chosen mod or mods.
 	 * @param	params initialization parameters
@@ -159,106 +186,73 @@ class Polymod
 	{
 		onError = params.errorCallback;
 
-		var modRoot = params.modRoot == null ? params.fileSystemParams.modRoot : params.modRoot;
-		var dirs = params.dirs == null ? [] : params.dirs;
-		var apiVersion:SemanticVersion = null;
-		try
+		var modRoot = params.modRoot;
+		if (modRoot == null)
 		{
-			var apiStr = params.apiVersion;
-			if (apiStr == null || apiStr == '')
+			if (params.fileSystemParams.modRoot != null)
 			{
-				apiStr = '*.*.*';
+				modRoot = params.fileSystemParams.modRoot;
 			}
-			apiVersion = SemanticVersion.fromString(apiStr);
+			else
+			{
+				modRoot = DEFAULT_MOD_ROOT;
+			}
 		}
-		catch (msg:Dynamic)
-		{
-			error(PARSE_API_VERSION, 'Error parsing API version: (${msg})', INIT);
-			return [];
-		}
-
-		var modMeta = [];
-		var modVers = [];
+		var dirs = params.dirs == null ? [] : params.dirs;
 
 		if (params.fileSystemParams == null)
 			params.fileSystemParams = {modRoot: modRoot};
 		if (params.fileSystemParams.modRoot == null)
 			params.fileSystemParams.modRoot = modRoot;
+		if (params.apiVersionRule == null)
+			params.apiVersionRule = VersionUtil.DEFAULT_VERSION_RULE;
 		var fileSystem = PolymodFileSystem.makeFileSystem(params.customFilesystem, params.fileSystemParams);
 
-		if (params.modVersions != null)
-		{
-			for (str in params.modVersions)
-			{
-				var semVer = null;
-				try
-				{
-					semVer = SemanticVersion.fromString(str);
-				}
-				catch (msg:Dynamic)
-				{
-					error(PARAM_MOD_VERSION, 'There was an error with one of the mod version patterns you provided: (${msg})', INIT);
-					semVer = SemanticVersion.fromString('*.*.*');
-				}
-				modVers.push(semVer);
-			}
-		}
+		// Fetch mod metadata and exclude broken mods.
+		var modsToLoad:Array<ModMetadata> = [];
 
-		// Modify the 'dirs' array to include the modRoot, and exclude any broken mods.
-		var localDirs:Array<String> = Reflect.copy(dirs);
-		if (localDirs == null) localDirs = [];
-
-		for (i in 0...localDirs.length)
+		for (i in 0...dirs.length)
 		{
-			if (localDirs[i] != null)
+			if (dirs[i] != null)
 			{
-				var origDir = localDirs[i];
-				localDirs[i] = Util.pathJoin(modRoot, localDirs[i]);
-				var meta:ModMetadata = fileSystem.getMetadata(localDirs[i]);
+				var modId = dirs[i];
+				var meta:ModMetadata = fileSystem.getMetadata(modId);
 
 				if (meta != null)
 				{
-					meta.id = origDir;
-					var apiScore = meta.apiVersion.checkCompatibility(apiVersion);
-					if (apiScore < PolymodConfig.apiVersionMatch)
+					if (!VersionUtil.match(meta.apiVersion, params.apiVersionRule))
 					{
 						error(VERSION_CONFLICT_API,
-							'Mod "$origDir" was built for incompatible API version ${meta.apiVersion.toString()}, current API version is "${params.apiVersion.toString()}"',
+							'Mod "${modId}" was built for incompatible API version ${meta.apiVersion.toString()}, expected "${params.apiVersionRule.toString()}"',
 							INIT);
 					}
-					else
-					{
-						if (apiVersion.major == 0)
-						{
-							// if we're in pre-release
-							if (apiVersion.minor != meta.apiVersion.minor)
-							{
-								Polymod.warning(VERSION_PRERELEASE_API,
-									'Modding API is in pre-release, some things might have changed!\n' +
-									'Mod "$origDir" was built for API version ${meta.apiVersion.toString()}, current API version is "${params.apiVersion.toString()}"',
-									INIT);
-							}
-						}
-					}
-					var modVer = modVers.length > i ? modVers[i] : null;
-					if (modVer != null)
-					{
-						var score = modVer.checkCompatibility(meta.modVersion);
-						if (score < SemanticVersionScore.MATCH_PATCH)
-						{
-							Polymod.error(VERSION_CONFLICT_MOD,
-								'Mod pack wants version "${modVer.toString()}" of mod "${meta.id}", found incompatibile version ${meta.modVersion.toString()}" instead.',
-								INIT);
-						}
-					}
-					modMeta.push(meta);
+
+					// API version matches
+					modsToLoad.push(meta);
 				}
 			}
 		}
 
+		var sortedModsToLoad:Array<ModMetadata> = modsToLoad;
+
+		if (!params.skipDependencyChecks)
+		{
+			sortedModsToLoad = DependencyUtil.sortByDependencies(modsToLoad, params.skipDependencyErrors);
+			if (sortedModsToLoad == null) {
+				sortedModsToLoad = [];
+			}
+		} else {
+			Polymod.warning(DEPENDENCY_CHECK_SKIPPED, "Dependency checks were skipped.");
+		}
+
+		var sortedModPaths:Array<String> = sortedModsToLoad.map(function(meta:ModMetadata):String
+		{
+			return meta.modPath;
+		});
+
 		assetLibrary = PolymodAssets.init({
 			framework: params.framework,
-			dirs: localDirs,
+			dirs: sortedModPaths,
 			parseRules: params.parseRules,
 			ignoredFiles: params.ignoredFiles,
 			customBackend: params.customBackend,
@@ -292,7 +286,7 @@ class Polymod
 			Polymod.notice(PolymodErrorCode.SCRIPT_CLASS_PARSED, 'Parsed and registered ${classList.length} scripted classes.');
 		}
 
-		return modMeta;
+		return sortedModsToLoad;
 	}
 
 	/**
@@ -461,88 +455,41 @@ class Polymod
 	}
 
 	/**
-	 * Scan the given directory for available mods and returns their metadata entries
-	 * @param modRoot root directory of all mods
-	 * @param apiVersionStr (optional) enforce a modding API version -- incompatible mods will not be returned
+	 * Scan the given directory for available mods and returns their metadata entries.
+	 * Note that if Polymod is already initialized, all parameters are ignored and optional.
+	 *
+	 * @param modRoot (optional) root directory of all mods. Optional if Polymod is initialized.
+	 * @param apiVersionRule (optional) enforce a modding API version rule -- incompatible mods will not be returned
 	 * @param errorCallback (optional) callback for any errors generated during scanning
 	 * @return Array<ModMetadata>
 	 */
-	public static function scan(modRoot:String, ?apiVersionStr:String = '*.*.*', ?errorCallback:PolymodError->Void, ?fileSystem:IFileSystem):Array<ModMetadata>
+	public static function scan(?scanParams:ScanParams):Array<ModMetadata>
 	{
-		onError = errorCallback;
-		var apiVersion:SemanticVersion = null;
-		try
+		if (scanParams == null)
 		{
-			apiVersion = SemanticVersion.fromString(apiVersionStr);
-		}
-		catch (msg:Dynamic)
-		{
-			Polymod.error('Error parsing provided API version (${msg})', SCAN);
-			return [];
-		}
-
-		if (fileSystem == null)
-			fileSystem = PolymodFileSystem.makeFileSystem(null, {modRoot: modRoot});
-
-		var modMeta = [];
-
-		if (!fileSystem.exists(modRoot) || !fileSystem.isDirectory(modRoot))
-		{
-			return modMeta;
-		}
-		var dirs = fileSystem.readDirectory(modRoot);
-		Polymod.debug('Scan found ${dirs.length} folders in $modRoot');
-
-		// Filter to only directories.
-		var l = dirs.length;
-		for (i in 0...l)
-		{
-			var j = l - i - 1;
-			var dir = dirs[j];
-			var testDir = '$modRoot/$dir';
-			if (!fileSystem.isDirectory(testDir) || !fileSystem.exists(testDir))
+			// Scan using assetLibrary's file system.
+			if (assetLibrary == null)
 			{
-				dirs.splice(j, 1);
+				Polymod.warning(POLYMOD_NOT_LOADED, 'Polymod is not loaded yet, cannot scan for mods.', INIT);
+				return [];
 			}
-		}
 
-		for (i in 0...dirs.length)
+			return assetLibrary.fileSystem.scanMods(prevParams.apiVersionRule);
+		}
+		else
 		{
-			if (dirs[i] != null)
-			{
-				var origDir = dirs[i];
-				dirs[i] = '$modRoot/${dirs[i]}';
-				var meta:ModMetadata = fileSystem.getMetadata(dirs[i]);
+			// Scan using the provided parameters.
+			if (scanParams.modRoot == null)
+				scanParams.modRoot = DEFAULT_MOD_ROOT;
 
-				if (meta != null)
-				{
-					meta.id = origDir;
-					var apiScore = meta.apiVersion.checkCompatibility(apiVersion);
-					if (apiScore < PolymodConfig.apiVersionMatch)
-					{
-						Polymod.error(VERSION_CONFLICT_API,
-							'Mod "$origDir" was built for incompatible API version ${meta.apiVersion}, current version is "${apiVersion}"', SCAN);
-					}
-					else
-					{
-						if (apiVersion.major == 0)
-						{
-							// if we're in pre-release
-							if (apiVersion.minor != meta.apiVersion.minor)
-							{
-								Polymod.warning(VERSION_PRERELEASE_API,
-									"Modding API is in pre-release, some things might have changed!\n" +
-									'Mod "$origDir" was built for incompatible API version ${meta.apiVersion}, current version is "${apiVersion}"',
-									SCAN);
-							}
-						}
-					}
-					modMeta.push(meta);
-				}
-			}
+			if (scanParams.apiVersionRule == null)
+				scanParams.apiVersionRule = VersionUtil.DEFAULT_VERSION_RULE;
+
+			if (scanParams.fileSystem == null)
+				scanParams.fileSystem = PolymodFileSystem.makeFileSystem(null, {modRoot: scanParams.modRoot});
+
+			return scanParams.fileSystem.scanMods(scanParams.apiVersionRule);
 		}
-
-		return modMeta;
 	}
 
 	/**
@@ -563,7 +510,8 @@ class Polymod
 	/**
 	 * Clears all scripted functions and scripted class descriptors from the cache.
 	 */
-	public static function clearScripts() {
+	public static function clearScripts()
+	{
 		@:privateAccess
 		polymod.hscript._internal.PolymodInterpEx._scriptClassDescriptors.clear();
 		polymod.hscript.HScriptable.ScriptRunner.clearScripts();
@@ -572,7 +520,8 @@ class Polymod
 	/**
 	 * Get a list of all the available scripted classes (`.hxc` files), interpret them, and register any classes.
 	 */
-	public static function registerAllScriptClasses() {
+	public static function registerAllScriptClasses()
+	{
 		@:privateAccess {
 			// Go through each script and parse any classes in them.
 			for (textPath in Polymod.assetLibrary.list(TEXT))
@@ -647,19 +596,87 @@ typedef ModContributor =
 	url:String
 };
 
+/**
+ * A type representing a mod's dependencies.
+ * The key is the mod's ID.
+ * The value is the required version for the mod. `*.*.*` means any version.
+ */
+typedef ModDependencies = Map<String, VersionRule>;
+
 class ModMetadata
 {
+	/**
+	 * The internal ID of the mod.
+	 */
 	public var id:String;
+
+	/**
+	 * The human-readable name of the mod.
+	 */
 	public var title:String;
+
+	/**
+	 * A short description of the mod.
+	 */
 	public var description:String;
+
+	/**
+	 * A link to the homepage for a mod.
+	 * Should provide a URL where the mod can be downloaded from.
+	 */
 	public var homepage:String;
-	public var apiVersion:SemanticVersion;
-	public var modVersion:SemanticVersion;
+
+	/**
+	 * A version number for the API used by the mod.
+	 * Used to prevent compatibility issues with mods when the application changes.
+	 */
+	public var apiVersion:Version;
+
+	/**
+	 * A version number for the mod itself.
+	**/
+	public var modVersion:Version;
+
+	/**
+	 * The name of a license determining the terms of use for the mod.
+	 */
 	public var license:String;
-	public var licenseRef:String;
+
+	/**
+	 * The byte data for the mod's icon file.
+	 * USe this to render the icon in a UI.
+	 */
 	public var icon:Bytes;
+
+	/**
+	 * The path on the filesystem to the mod's icon file.
+	 */
 	public var iconPath:String;
-	public var metaData:Map<String, String>;
+
+	/**
+	 * The path where this mod's files are stored, on the IFileSystem.
+	 */
+	public var modPath:String;
+
+	/**
+	 * `metadata` provides an optional list of keys.
+	 * These can provide additional information about the mod, specific to your application.
+	 */
+	public var metadata:Map<String, String>;
+
+	/**
+	 * A list of dependencies.
+	 * These other mods must be also be loaded in order for this mod to load,
+	 * and this mod must be loaded after the dependencies. 
+	 */
+	public var dependencies:ModDependencies;
+
+	/**
+	 * A list of dependencies.
+	 * This mod must be loaded after the optional dependencies, 
+	 * but those mods do not necessarily need to be loaded.
+	 */
+	public var optionalDependencies:ModDependencies;
 
 	/**
 	 * Please use the `contributors` field instead.
@@ -703,11 +720,10 @@ class ModMetadata
 		Reflect.setField(json, 'api_version', apiVersion.toString());
 		Reflect.setField(json, 'mod_version', modVersion.toString());
 		Reflect.setField(json, 'license', license);
-		Reflect.setField(json, 'license_ref', licenseRef);
 		var meta = {};
-		for (key in metaData.keys())
+		for (key in metadata.keys())
 		{
-			Reflect.setField(meta, key, metaData.get(key));
+			Reflect.setField(meta, key, metadata.get(key));
 		}
 		Reflect.setField(json, 'metadata', meta);
 		return Json.stringify(json, null, '    ');
@@ -742,7 +758,7 @@ class ModMetadata
 		var modVersionStr = JsonHelp.str(json, 'mod_version');
 		try
 		{
-			m.apiVersion = SemanticVersion.fromString(apiVersionStr);
+			m.apiVersion = apiVersionStr;
 		}
 		catch (msg:Dynamic)
 		{
@@ -751,7 +767,7 @@ class ModMetadata
 		}
 		try
 		{
-			m.modVersion = SemanticVersion.fromString(modVersionStr);
+			m.modVersion = modVersionStr;
 		}
 		catch (msg:Dynamic)
 		{
@@ -759,8 +775,11 @@ class ModMetadata
 			return null;
 		}
 		m.license = JsonHelp.str(json, 'license');
-		m.licenseRef = JsonHelp.str(json, 'license_ref');
-		m.metaData = JsonHelp.mapStr(json, 'metadata');
+		m.metadata = JsonHelp.mapStr(json, 'metadata');
+
+		m.dependencies = JsonHelp.mapVersionRule(json, 'dependencies');
+		m.optionalDependencies = JsonHelp.mapVersionRule(json, 'optionalDependencies');
+
 		return m;
 	}
 }
@@ -855,6 +874,49 @@ enum PolymodErrorType
 	 * - Make sure the string is a valid Semantic Version string.
 	 */
 	var PARSE_API_VERSION:String = 'parse_api_version';
+
+	/**
+	 * Polymod attempted to load a mod, but one or more of its dependencies were missing.
+	 * - This is a warning if `skipDependencyErrors` is true, the problematic mod will be skipped.
+	 * - This is an error if `skipDependencyErrors` is false, no mods will be loaded.
+	 * - Make sure to inform the user that the required mods are missing.
+	 */
+	var DEPENDENCY_UNMET:String = 'dependency_unmet';
+
+	/**
+	 * Polymod attempted to load a mod, and its dependency was found,
+	 * but the version number of the dependency did not match that required by the mod.
+	 * - This is a warning if `skipDependencyErrors` is true, the problematic mod will be skipped.
+	 * - This is an error if `skipDependencyErrors` is false, no mods will be loaded.
+	 * - Make sure to inform the user that the required mods have a mismatched version.
+	 */
+	var DEPENDENCY_VERSION_MISMATCH:String = 'dependency_version_mismatch';
+
+	/**
+	 * Polymod attempted to load a mod, but one of its dependencies created a loop.
+	 * For example, Mod A requires Mod B, which requires Mod C, which requires Mod A.
+	 * - This is a warning if `skipDependencyErrors` is true, the problematic mods will be skipped.
+	 * - This is an error if `skipDependencyErrors` is false, no mods will be loaded.
+	 * - Inform the mod authors that the dependency issue exists and must be resolved.
+	 */
+	var DEPENDENCY_CYCLICAL:String = 'dependency_cyclical';
+
+	/**
+	 * Polymod was configured to skip dependency checks when loading mods, and that mod order should not be checked.
+	 * - Make sure you are certain this behavior is correct and that you have properly configured Polymod.
+	 * - This is a warning and can be ignored.
+	 */
+	var DEPENDENCY_CHECK_SKIPPED:String = 'dependency_check_skipped';
+
+	/**
+     * Polymod tried to access a file that was not found.
+	 */
+	var FILE_MISSING:String = "file_missing";
+
+	/**
+     * Polymod tried to access a directory that was not found.
+	 */
+	var DIRECTORY_MISSING:String = "directory_missing";
 
 	/**
 	 * You requested a mod to be loaded but that mod was not installed.
@@ -973,13 +1035,6 @@ enum PolymodErrorType
 	 * - If you're getting this error even for patch versions, be sure to tweak the `POLYMOD_API_VERSION_MATCH` config option.
 	 */
 	var VERSION_CONFLICT_API:String = 'version_conflict_api';
-
-	/**
-	 * A log warning thrown when the minor version of the mod differs from the minor version of the app, when the app version is 0.X.
-	 * - This warning is provided to remind mod developers that early mod APIs can change drastically. This can be ignored if desired,
-	 *   but should most likely be logged.
-	 */
-	var VERSION_PRERELEASE_API:String = 'version_prerelease_api';
 
 	/**
 	 * One of the version strings you provided to Polymod.init is invalid.

@@ -1,6 +1,5 @@
 package polymod;
 
-import polymod.util.SemanticVersion;
 import polymod.util.DefineUtil;
 
 /**
@@ -138,31 +137,7 @@ class PolymodConfig
 			appendFolder = DefineUtil.getDefineString('POLYMOD_APPEND_FOLDER', '_append');
 		return appendFolder;
 	}
-
-	/**
-	 * Determines how sensitive Semantic Versioning is to version differences.
-	 * 
-	 * The possible values are:
-	 * - `NONE`: Any version difference will be ignored. All mods will be loaded.
-	 * - `MATCH_MAJOR`: The major version must match for the mod to be loaded.
-	 * - `MATCH_MINOR`: The major and minor versions must match for the mod to be loaded.
-	 * - `MATCH_PATCH`: The major, minor and patch versions must match for the mod to be loaded.
-	 * 
-	 * Set this option by setting the `POLYMOD_API_VERSION_MATCH` Haxe define at compile time,
-	 * or by setting this value in your code.
-	 * 
-	 * @default `MATCH_PATCH`
-	 */
-	public static var apiVersionMatch(get, default):Null<SemanticVersionScore> = null;
-
-	static function get_apiVersionMatch():Null<SemanticVersionScore>
-	{
-		// If the value is null, retrieve the value as a Haxe define.
-		if (apiVersionMatch == null)
-			apiVersionMatch = SemanticVersionScore.fromString(DefineUtil.getDefineString('POLYMOD_API_VERSION_MATCH', 'MATCH_PATCH'));
-		return apiVersionMatch;
-	}
-
+	
 	/**
 	 * The directory from which to read data merge files.
 	 * 
