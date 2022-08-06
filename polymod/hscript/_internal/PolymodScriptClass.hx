@@ -49,6 +49,7 @@ class PolymodScriptClass
 			}
 			catch (err:PolymodExprEx.ErrorEx)
 			{
+				var errLine:String = #if hscriptPos '${err.line}' #else "#???" #end;
 				#if hscriptPos
 				switch (err.e)
 				#else
@@ -57,10 +58,10 @@ class PolymodScriptClass
 				{
 					case EUnexpected(s):
 						Polymod.error(SCRIPT_PARSE_ERROR,
-							'Error while parsing function ${path}#${err.line}: EUnexpected' + '\n' +
+							'Error while parsing function ${path}#${errLine}: EUnexpected' + '\n' +
 							'Unexpected error: Unexpected token "${s}", is there invalid syntax on this line?');
 					default:
-						Polymod.error(SCRIPT_PARSE_ERROR, 'Error while executing function ${path}#${err.line}: ' + '\n' + 'An unknown error occurred: ${err}');
+						Polymod.error(SCRIPT_PARSE_ERROR, 'Error while executing function ${path}#${errLine}: ' + '\n' + 'An unknown error occurred: ${err}');
 				}
 			}
 		}
@@ -363,7 +364,7 @@ class PolymodScriptClass
 					'InvalidAccess error: Tried to access "${f}", but it is not a valid field or method. Is the target object null?');
 			default:
 				Polymod.error(SCRIPT_EXCEPTION,
-					'Error while executing function ${className}.${fnName}()#${err.line}: ' + '\n' + 'An unknown error occurred: ${err}');
+					'Error while executing function ${className}.${fnName}()#${errLine}: ' + '\n' + 'An unknown error occurred: ${err}');
 		}
 	}
 

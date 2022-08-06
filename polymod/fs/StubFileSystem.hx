@@ -1,6 +1,8 @@
 package polymod.fs;
 
 import polymod.fs.PolymodFileSystem;
+import thx.semver.VersionRule;
+import polymod.Polymod.ModMetadata;
 
 /**
  * This stub file system returns false for all requests.
@@ -32,7 +34,7 @@ class StubFileSystem implements PolymodFileSystem.IFileSystem
 	public inline function readDirectoryRecursive(path:String)
 		return [];
 
-	public inline function scanMods()
+	public inline function scanMods(?apiVersionRule:VersionRule):Array<ModMetadata>
 		return [];
 
 	public inline function getMetadata(modId:String)

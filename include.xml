@@ -2,4 +2,5 @@
 <project>
   <!-- These values are added to the project XML when you include this library. -->
   <haxelib name="hscript" />
+  <haxelib name="thx.semver" />
 </project>

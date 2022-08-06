@@ -202,20 +202,34 @@ class NodeFileSystem implements IFileSystem
 	}
 
 	// -----------------------------------------------------------------------------------------------
-	public function scanMods()
+	public function scanMods(?apiVersionRule:VersionRule):Array<ModMetadata>
 	{
+		if (apiVersionRule == null)
+			apiVersionRule = VersionUtil.DEFAULT_VERSION_RULE;
+
 		var dirs = readDirectory(modRoot);
-		var l = dirs.length;
-		for (i in 0...l)
+		var result:Array<ModMetadata> = [];
+		for (dir in dirs)
 		{
-			var j = l - i - 1;
-			var dir = dirs[j];
-			var testDir = '$modRoot/$dir';
-			if (!isDirectory(testDir) || !exists(testDir))
-			{
-				dirs.splice(j, 1);
-			}
+			var testDir = Util.pathJoin(modRoot, dir);
+
+			if (!exists(testDir))
+				continue;
+
+			if (!isDirectory(testDir))
+				continue;
+
+			var meta:ModMetadata = fileSystem.getMetadata(localDirs[i]);
+
+			if (meta == null)
+				continue;
+
+			if (!VersionUtil.match(meta.apiVersion, apiVersionRule))
+				continue;
+
+			result.push(meta);
 		}
-		return dirs;
+
+		return result;
 	}
 }

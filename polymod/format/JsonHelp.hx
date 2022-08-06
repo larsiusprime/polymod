@@ -1,5 +1,7 @@
 package polymod.format;
 
+import thx.semver.VersionRule;
+
 class JsonHelp
 {
 	public static function bool(json:Dynamic, field:String, defaultValue:Bool = false):Bool
@@ -63,6 +65,25 @@ class JsonHelp
 			{
 				var fieldVal = Reflect.field(val, field);
 				map.set(field, Std.string(fieldVal));
+			}
+		}
+		return map;
+	}
+
+	public static function mapVersionRule(json:Dynamic, field:String):Map<String, VersionRule>
+	{
+		var map:Map<String, VersionRule> = new Map<String, VersionRule>();
+		if (json == null || field == '' || field == null)
+			return map;
+		var val = null;
+		if (Reflect.hasField(json, field))
+			val = Reflect.field(json, field);
+		if (val != null)
+		{
+			for (field in Reflect.fields(val))
+			{
+				var fieldVal = Reflect.field(val, field);
+				map.set(field, VersionRule.stringToVersionRule(fieldVal));
 			}
 		}
 		return map;

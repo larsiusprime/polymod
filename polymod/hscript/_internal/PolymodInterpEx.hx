@@ -25,7 +25,7 @@ class PolymodInterpEx extends Interp
 		this.targetCls = targetCls;
 	}
 
-	inline function errorEx(e : #if hscriptPos ErrorDefEx #else Error #end, rethrow=false ) : Dynamic {
+	inline function errorEx(e : #if hscriptPos ErrorDefEx #else ErrorEx #end, rethrow=false ) : Dynamic {
 		#if hscriptPos var e = new ErrorEx(e, curExpr.pmin, curExpr.pmax, curExpr.origin, curExpr.line); #end
 		if( rethrow ) this.rethrow(e) else throw e;
 		return null;
