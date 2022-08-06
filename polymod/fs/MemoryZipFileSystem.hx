@@ -11,6 +11,9 @@ import polymod.fs.PolymodFileSystem.IFileSystem;
 import polymod.fs.PolymodFileSystem.PolymodFileSystemParams;
 import polymod.util.Util;
 
+/**
+* Same as PolymodFileSystemParams but with some parameters specific to the ZipFileSystem
+*/
 typedef ZipFileSystemParams =
 {
 	> PolymodFileSystemParams,

@@ -5,6 +5,8 @@ import haxe.io.Path;
 import polymod.Polymod.ModMetadata;
 import polymod.fs.PolymodFileSystem;
 import polymod.util.Util;
+import polymod.util.VersionUtil;
+import thx.semver.VersionRule;
 
 /**
  * This simple virtual file system demonstrates that anything can be used
@@ -19,6 +21,7 @@ class MemoryFileSystem implements PolymodFileSystem.IFileSystem
 {
 	var files = new Map<String, Bytes>();
 	var directories:Array<String> = [];
+	var modRoot:String = "";
 
 	/**
 	 * Receive parameters to instantiate the MemoryFileSystem.
@@ -26,6 +29,7 @@ class MemoryFileSystem implements PolymodFileSystem.IFileSystem
 	public function new(params:PolymodFileSystemParams)
 	{
 		// No-op constructor.
+		modRoot = (params.modRoot == null) ? "" : params.modRoot;
 	}
 
 	/**
@@ -157,7 +161,7 @@ class MemoryFileSystem implements PolymodFileSystem.IFileSystem
 			if (!isDirectory(testDir))
 				continue;
 
-			var meta:ModMetadata = fileSystem.getMetadata(localDirs[i]);
+			var meta:ModMetadata = getMetadata(dir);
 
 			if (meta == null)
 				continue;

@@ -1,8 +1,8 @@
 package polymod;
 
+import haxe.Json;
 import haxe.io.Bytes;
 import haxe.io.Path;
-import haxe.Json;
 import lime.tools.Dependency;
 import polymod.backends.IBackend;
 import polymod.backends.PolymodAssetLibrary;
@@ -12,7 +12,6 @@ import polymod.format.ParseRules;
 import polymod.fs.PolymodFileSystem;
 import polymod.util.DependencyUtil;
 import polymod.util.Util;
-
 import polymod.util.VersionUtil;
 import thx.semver.Version;
 import thx.semver.VersionRule;
