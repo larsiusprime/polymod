@@ -103,7 +103,8 @@ class MemoryFileSystem implements PolymodFileSystem.IFileSystem
 			{
 				var d = Path.directory(dir);
 				var actualdir = dir.substring(d.length);
-				if(actualdir.charAt(0) == '/') actualdir = actualdir.substring(1);
+				if (actualdir.charAt(0) == '/')
+					actualdir = actualdir.substring(1);
 				result.push(actualdir);
 			}
 		}
@@ -143,7 +144,6 @@ class MemoryFileSystem implements PolymodFileSystem.IFileSystem
 		return result;
 	}
 
-
 	public function scanMods(?apiVersionRule:VersionRule):Array<ModMetadata>
 	{
 		if (apiVersionRule == null)
@@ -177,12 +177,13 @@ class MemoryFileSystem implements PolymodFileSystem.IFileSystem
 
 	public function getMetadata(modId:String)
 	{
-		if (exists(modId))
+		var modpath = Util.pathJoin(modRoot, modId);
+		if (exists(modpath))
 		{
 			var meta:ModMetadata = null;
 
-			var metaFile = Util.pathJoin(modId, PolymodConfig.modMetadataFile);
-			var iconFile = Util.pathJoin(modId, PolymodConfig.modIconFile);
+			var metaFile = Util.pathJoin(modpath, PolymodConfig.modMetadataFile);
+			var iconFile = Util.pathJoin(modpath, PolymodConfig.modIconFile);
 
 			if (!exists(metaFile))
 			{
@@ -195,6 +196,9 @@ class MemoryFileSystem implements PolymodFileSystem.IFileSystem
 				meta = ModMetadata.fromJsonStr(metaText);
 				if (meta == null)
 					return null;
+				
+				meta.id = modId;
+				meta.modPath = modpath;
 			}
 
 			if (!exists(iconFile))
@@ -211,7 +215,7 @@ class MemoryFileSystem implements PolymodFileSystem.IFileSystem
 		}
 		else
 		{
-			Polymod.error(MISSING_MOD, 'Could not find mod directory: $modId');
+			Polymod.error(MISSING_MOD, 'Could not find mod directory: $modpath');
 		}
 		return null;
 	}

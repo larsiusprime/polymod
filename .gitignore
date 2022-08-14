@@ -27,4 +27,6 @@ docs/Gemfile.lock
 
 samples/flixel/export/
 
+samples/flixel_zip_sys/export/
+
 samples/openfl_hscript_class/bin/

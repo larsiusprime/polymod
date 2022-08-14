@@ -57,50 +57,6 @@ class MemoryZipFileSystem extends MemoryFileSystem
 		{
 			initFileSystem(params.zipBytes, params.zipName);
 		}
-		// TODO: Move below stuff into a sys-specific zip file system
-		// #elseif sys
-		// if (params.zipPath != null)
-		// {
-		// 	var i = new BytesInput(sys.io.File.getBytes(params.zipPath));
-		// 	var reader = new format.zip.Reader(i);
-		// 	var tmp = null;
-		// 	while (true)
-		// 	{
-		// 		var e = reader.readEntryHeader();
-
-		// 		if (e == null)
-		// 			break;
-		// 		if (e.dataSize < 0)
-		// 		{
-		// 			var bufSize = 65536;
-		// 			if (tmp == null)
-		// 				tmp = haxe.io.Bytes.alloc(bufSize);
-		// 			var out = new haxe.io.BytesBuffer();
-		// 			var z = new InflateImpl(i, false, false);
-		// 			while (true)
-		// 			{
-		// 				var n = z.readBytes(tmp, 0, bufSize);
-		// 				out.addBytes(tmp, 0, n);
-		// 				if (n < bufSize)
-		// 					break;
-		// 			}
-		// 			e.data = out.getBytes();
-
-		// 			e.crc32 = i.readInt32();
-		// 			if (e.crc32 == 0x08074b50)
-		// 				e.crc32 = i.readInt32();
-		// 			e.dataSize = i.readInt32();
-		// 			e.fileSize = i.readInt32();
-		// 			// set data to uncompressed
-		// 			e.dataSize = e.fileSize;
-		// 			e.compressed = false;
-		// 		}
-		// 		else
-		// 			e.data = i.read(e.dataSize);
-		// 		// fileMap.set(e.fileName, e);
-		// 	}
-		// }
-		// #end
 	}
 
 	#if debug

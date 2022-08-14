@@ -360,7 +360,8 @@ class PlayState extends FlxState
 			customFilesystem: ziploader.zfs,
 			fileSystemParams: {
 				modRoot: modRoot
-			}
+			},
+			skipDependencyChecks: true
 		});
 		// Reload graphics before rendering again.
 		var loadedMods = results.map(function(item:ModMetadata)
@@ -382,7 +383,8 @@ class PlayState extends FlxState
 			errorCallback: onError,
 			ignoredFiles: Polymod.getDefaultIgnoreList(),
 			customFilesystem: ziploader.zfs,
-			fileSystemParams: {modRoot: 'mods'}
+			fileSystemParams: {modRoot: 'mods'},
+			skipDependencyChecks: true
 		});
 		trace('results: $results');
 	}
@@ -469,6 +471,7 @@ class ZipLoader
 		zfs = new MemoryZipFileSystem({
 			zipBytes: zipBytes,
 			zipName: zipname,
+			modRoot: 'mods/'
 		});
 		if (postLoad != null)
 		{
