@@ -6,6 +6,7 @@ import polymod.backends.PolymodAssets.PolymodAssetType;
 import polymod.format.ParseRules;
 import polymod.fs.PolymodFileSystem.IFileSystem;
 import polymod.util.Util;
+// import polymod.hscript.PolymodScriptClass;
 #if firetongue
 import firetongue.FireTongue;
 #end

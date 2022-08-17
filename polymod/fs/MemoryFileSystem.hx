@@ -1,10 +1,12 @@
 package polymod.fs;
 
-import polymod.Polymod.ModMetadata;
-import haxe.io.Path;
 import haxe.io.Bytes;
-import polymod.util.Util;
+import haxe.io.Path;
+import polymod.Polymod.ModMetadata;
 import polymod.fs.PolymodFileSystem;
+import polymod.util.Util;
+import polymod.util.VersionUtil;
+import thx.semver.VersionRule;
 
 /**
  * This simple virtual file system demonstrates that anything can be used
@@ -18,7 +20,8 @@ import polymod.fs.PolymodFileSystem;
 class MemoryFileSystem implements PolymodFileSystem.IFileSystem
 {
 	var files = new Map<String, Bytes>();
-	var directories = [];
+	var directories:Array<String> = [];
+	var modRoot:String = "";
 
 	/**
 	 * Receive parameters to instantiate the MemoryFileSystem.
@@ -26,6 +29,7 @@ class MemoryFileSystem implements PolymodFileSystem.IFileSystem
 	public function new(params:PolymodFileSystemParams)
 	{
 		// No-op constructor.
+		modRoot = (params.modRoot == null) ? "" : params.modRoot;
 	}
 
 	/**
@@ -38,8 +42,13 @@ class MemoryFileSystem implements PolymodFileSystem.IFileSystem
 	 */
 	public function addFileBytes(path:String, data:Bytes):Void
 	{
+		path = Path.removeTrailingSlashes(path);
 		files.set(path, data);
-		directories = directories.concat(Util.listAllParentDirs(path));
+		var parentDirs = Util.listAllParentDirs(path);
+		// remove the actual path to the file from the directories array
+		parentDirs.remove(path);
+		directories = directories.concat(parentDirs);
+		directories = Util.filterUnique(directories);
 	}
 
 	/**
@@ -59,46 +68,55 @@ class MemoryFileSystem implements PolymodFileSystem.IFileSystem
 		directories = [];
 	}
 
-	public inline function exists(path:String)
+	public function exists(path:String)
 	{
-		return files.exists(path);
+		path = Path.removeTrailingSlashes(path);
+		return files.exists(path) || directories.contains(path); // checks both files and folders
 	}
 
-	public inline function isDirectory(path:String)
+	public function isDirectory(path:String)
 	{
+		path = Path.removeTrailingSlashes(path);
 		return directories.indexOf(path) != -1;
 	}
 
 	/**
 	 * List all files AND directories at the given path.
 	 */
-	public inline function readDirectory(path:String):Array<String>
+	public function readDirectory(path:String):Array<String>
 	{
+		path = Path.removeTrailingSlashes(path);
 		var result = [];
 		for (key => _v in files)
 		{
 			// Directory must exactly match.
 			if (Path.directory(key) == path)
 			{
-				result.push(key);
+				var parts = key.split('/');
+				result.push(parts[parts.length - 1]);
 			}
 		}
 		for (dir in directories)
 		{
-			if (Path.directory(dir) == path)
+			// avoiding pushing duplicates
+			if (Path.directory(dir) == path && !result.contains(dir))
 			{
-				result.push(dir);
+				var d = Path.directory(dir);
+				var actualdir = dir.substring(d.length);
+				if (actualdir.charAt(0) == '/')
+					actualdir = actualdir.substring(1);
+				result.push(actualdir);
 			}
 		}
 		return result;
 	}
 
-	public inline function getFileContent(path:String):String
+	public function getFileContent(path:String):String
 	{
 		return files.get(path).toString();
 	}
 
-	public inline function getFileBytes(path:String):Bytes
+	public function getFileBytes(path:String):Bytes
 	{
 		return files.get(path);
 	}
@@ -106,21 +124,23 @@ class MemoryFileSystem implements PolymodFileSystem.IFileSystem
 	/**
 	 * List all files at or below the given path.
 	 */
-	public inline function readDirectoryRecursive(path:String)
+	public function readDirectoryRecursive(path:String)
 	{
+		path = Path.removeTrailingSlashes(path);
 		var result = [];
 		for (key => _v in files)
 		{
 			// Directory OR PARENT must exactly match.
 			if (key.indexOf(path) == 0)
 			{
-				result.push(key);
+				result.push(key.substring(path.length + 1));
 			}
 		}
-		result.concat(directories.filter(function(dir)
-		{
-			return dir.indexOf(path) == 0;
-		}));
+		// Nooo, only files needed
+		// result.concat(directories.filter(function(dir)
+		// {
+		// 	return dir.indexOf(path) == 0;
+		// }));
 		return result;
 	}
 
@@ -141,7 +161,7 @@ class MemoryFileSystem implements PolymodFileSystem.IFileSystem
 			if (!isDirectory(testDir))
 				continue;
 
-			var meta:ModMetadata = fileSystem.getMetadata(localDirs[i]);
+			var meta:ModMetadata = getMetadata(dir);
 
 			if (meta == null)
 				continue;
@@ -155,14 +175,15 @@ class MemoryFileSystem implements PolymodFileSystem.IFileSystem
 		return result;
 	}
 
-	public inline function getMetadata(modId:String)
+	public function getMetadata(modId:String)
 	{
-		if (exists(modId))
+		var modpath = Util.pathJoin(modRoot, modId);
+		if (exists(modpath))
 		{
 			var meta:ModMetadata = null;
 
-			var metaFile = Util.pathJoin(modId, PolymodConfig.modMetadataFile);
-			var iconFile = Util.pathJoin(modId, PolymodConfig.modIconFile);
+			var metaFile = Util.pathJoin(modpath, PolymodConfig.modMetadataFile);
+			var iconFile = Util.pathJoin(modpath, PolymodConfig.modIconFile);
 
 			if (!exists(metaFile))
 			{
@@ -175,6 +196,9 @@ class MemoryFileSystem implements PolymodFileSystem.IFileSystem
 				meta = ModMetadata.fromJsonStr(metaText);
 				if (meta == null)
 					return null;
+				
+				meta.id = modId;
+				meta.modPath = modpath;
 			}
 
 			if (!exists(iconFile))
@@ -191,7 +215,7 @@ class MemoryFileSystem implements PolymodFileSystem.IFileSystem
 		}
 		else
 		{
-			Polymod.error(MISSING_MOD, 'Could not find mod directory: $modId');
+			Polymod.error(MISSING_MOD, 'Could not find mod directory: $modpath');
 		}
 		return null;
 	}

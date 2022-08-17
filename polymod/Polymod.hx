@@ -1,7 +1,8 @@
 package polymod;
 
-import haxe.io.Bytes;
 import haxe.Json;
+import haxe.io.Bytes;
+import haxe.io.Path;
 import lime.tools.Dependency;
 import polymod.backends.IBackend;
 import polymod.backends.PolymodAssetLibrary;
@@ -16,7 +17,6 @@ import thx.semver.Version;
 import thx.semver.VersionRule;
 
 using StringTools;
-
 #if firetongue
 import firetongue.FireTongue;
 #end
@@ -207,6 +207,7 @@ class Polymod
 		if (params.apiVersionRule == null)
 			params.apiVersionRule = VersionUtil.DEFAULT_VERSION_RULE;
 		var fileSystem = PolymodFileSystem.makeFileSystem(params.customFilesystem, params.fileSystemParams);
+
 
 		// Fetch mod metadata and exclude broken mods.
 		var modsToLoad:Array<ModMetadata> = [];
