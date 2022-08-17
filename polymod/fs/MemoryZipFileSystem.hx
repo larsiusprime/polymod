@@ -26,6 +26,7 @@ typedef ZipFileSystemParams =
 	 * Bytes of the zip file (only needed for html5)
 	**/
 	?zipBytes:Bytes,
+  
 	/**
 	 * Path to the zip file (needed if you're using ZipFileSystem on a sys target)
 	 */
@@ -45,8 +46,7 @@ class MemoryZipFileSystem extends StubFileSystem
 /**
  * An implementation of an IFileSystem that can access files from an un-compressed zip archive.
  * Useful for loading mods from zip files.
- * Recommended for use in html5 only.
- * Currently does not support compressed zip files.
+ * Currently does not support compressed zip files. Recommended for use in html5 only.
  */
 class MemoryZipFileSystem extends MemoryFileSystem
 {

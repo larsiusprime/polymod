@@ -4,18 +4,11 @@ import flixel.FlxState;
 import flixel.addons.ui.FlxInputText;
 import flixel.graphics.frames.FlxAtlasFrames;
 import flixel.text.FlxText;
-import flixel.ui.FlxButton;
-import flixel.util.FlxColor;
-import haxe.io.Bytes;
-import openfl.events.Event;
-import openfl.net.FileFilter;
-import openfl.net.FileReference;
 import openfl.utils.AssetManifest;
 import openfl.utils.AssetType;
 import openfl.utils.Assets;
-import openfl.utils.ByteArray;
+import polymod.Polymod.Framework;
 import polymod.Polymod;
-import polymod.fs.MemoryZipFileSystem;
 
 using StringTools;
 
@@ -32,11 +25,6 @@ class PlayState extends FlxState
 	 */
 	private var stuff:Array<FlxSprite> = [];
 
-	#if html5
-	private var ziploader:ZipLoader;
-	private var helpText:FlxText;
-	#end
-
 	public override function create()
 	{
 		super.create();
@@ -47,22 +35,11 @@ class PlayState extends FlxState
 		this.bgColor = 0xFFFFFFFF;
 
 		makeButtons();
-		#if html5
-		makeHelpText();
-		#end
+		drawImages();
+		drawText();
 	}
 
-	#if html5
-	private function makeHelpText()
-	{
-		helpText = new FlxText(0, FlxG.height - 150, 0, "Press SPACE to load a zipped mod");
-		helpText.setFormat(null, 12, FlxColor.BLACK);
-		helpText.screenCenter(X);
-		add(helpText);
-	}
-	#end
-
-	private function makeButtons(?loadedmods:Array<String>)
+	private function makeButtons()
 	{
 		var modDir:String = '../../../mods';
 		#if mac
@@ -70,12 +47,9 @@ class PlayState extends FlxState
 		modDir = '../../../../../../mods';
 		#end
 		#if sys
-		var mods = sys.FileSystem.readDirectory(modDir).filter((f) ->
-		{
-			return sys.FileSystem.isDirectory('${haxe.io.Path.join([modDir, f])}');
-		});
+		var mods = sys.FileSystem.readDirectory(modDir);
 		#else
-		var mods = (loadedmods == null) ? [] : loadedmods;
+		var mods = [];
 		#end
 		var xx = 10;
 		var yy = 200;
@@ -155,36 +129,9 @@ class PlayState extends FlxState
 		}
 	}
 
-	#if html5
-	private function removeButtons()
-	{
-		for (btngrp in widgets)
-		{
-			remove(btngrp, true);
-		}
-		widgets.splice(0, widgets.length);
-	}
-	#end
-
 	public override function update(elapsed:Float)
 	{
 		super.update(elapsed);
-		#if html5
-		if (FlxG.keys.justPressed.SPACE)
-		{
-			ziploader = new ZipLoader(() ->
-			{
-				removeButtons();
-				trace('zip name: ${ziploader.zipname}');
-				var mods = ziploader.zfs.readDirectory('mods');
-				trace('mods: $mods');
-				// loadSprites();
-				makeButtons(mods);
-				refresh();
-			});
-			ziploader.loadZip();
-		}
-		#end
 	}
 
 	private function drawImages()
@@ -209,40 +156,6 @@ class PlayState extends FlxState
 		trace('Drawing ${images.length} images...');
 		for (image in images)
 		{
-			#if html5
-			trace('Drawing image $image');
-			var img_f = Assets.loadBitmapData(image, false); // getting bitmapdata had to be done asynchronously on html5
-			img_f.onComplete((bmpd) ->
-			{
-				trace('Got bitmapdata? ${bmpd != null}');
-				var sprite = new FlxSprite(xx, yy);
-				var atlasPath = image.replace('.png', '.xml');
-				if (Assets.exists(atlasPath))
-				{
-					trace('Building animated image $image');
-					sprite.frames = FlxAtlasFrames.fromSparrow(bmpd, Assets.getText(atlasPath));
-					sprite.animation.addByPrefix('idle', 'idle', 24, true);
-					sprite.animation.play('idle');
-				}
-				else
-				{
-					trace('Building static image $image');
-					sprite.loadGraphic(bmpd);
-				}
-				sprite.setGraphicSize(72, 72);
-				sprite.updateHitbox();
-
-				var text = new FlxText(xx, sprite.y + sprite.height, sprite.width, image);
-				text.setFormat("Arial", 12, 0xFF000000, FlxTextAlign.CENTER);
-
-				add(sprite);
-				add(text);
-				stuff.push(text);
-				stuff.push(sprite);
-
-				xx += Std.int(sprite.width + 10);
-			});
-			#else
 			trace('Drawing image $image');
 			var sprite = new FlxSprite(xx, yy);
 
@@ -272,7 +185,6 @@ class PlayState extends FlxState
 			stuff.push(sprite);
 
 			xx += Std.int(sprite.width + 10);
-			#end
 		}
 	}
 
@@ -307,9 +219,8 @@ class PlayState extends FlxState
 			}
 
 			var text = new FlxInputText(xx, yy, 250);
-			// these 2 lines break on html5 for some reason
-			// text.setFormat("Arial", 12, 0xFF000000, FlxTextAlign.CENTER);
-			// text.height = 150;
+			text.setFormat("Arial", 12, 0xFF000000, FlxTextAlign.CENTER);
+			text.height = 150;
 			text.wordWrap = true;
 			text.lines = 10;
 
@@ -340,55 +251,8 @@ class PlayState extends FlxState
 				theMods.push(w.modId);
 			}
 		}
-		#if !html5
 		loadMods(theMods);
-		#else
-		loadModsHTML5(theMods);
-		#end
 	}
-
-	#if html5
-	private function loadModsHTML5(dirs:Array<String>)
-	{
-		trace('Loading mods: ${dirs}');
-		var modRoot = 'mods';
-		var results = Polymod.init({
-			dirs: dirs,
-			errorCallback: onError,
-			ignoredFiles: Polymod.getDefaultIgnoreList(),
-			framework: Framework.FLIXEL,
-			customFilesystem: ziploader.zfs,
-			fileSystemParams: {
-				modRoot: modRoot
-			},
-			skipDependencyChecks: true
-		});
-		// Reload graphics before rendering again.
-		var loadedMods = results.map(function(item:ModMetadata)
-		{
-			return item.id;
-		});
-		trace('Loaded mods: ${loadedMods}');
-		refresh();
-	}
-
-	private function initModsHTML5()
-	{
-		if (ziploader == null)
-		{
-			return;
-		}
-		var results = Polymod.init({
-			dirs: [],
-			errorCallback: onError,
-			ignoredFiles: Polymod.getDefaultIgnoreList(),
-			customFilesystem: ziploader.zfs,
-			fileSystemParams: {modRoot: 'mods'},
-			skipDependencyChecks: true
-		});
-		trace('results: $results');
-	}
-	#end
 
 	private function loadMods(dirs:Array<String>)
 	{
@@ -419,75 +283,3 @@ class PlayState extends FlxState
 		trace('[${error.severity}] (${error.code.toUpperCase()}): ${error.message}');
 	}
 }
-
-#if html5
-class ZipLoader
-{
-	var _download_fileref:FileReference;
-	var zipBytes:Bytes;
-
-	public var zipname:String;
-	public var zfs:MemoryZipFileSystem;
-
-	var postLoad:Void->Void;
-
-	public function new(?postLoad:Void->Void)
-	{
-		init();
-		this.postLoad = postLoad;
-	}
-
-	function init()
-	{
-		_download_fileref = new FileReference();
-		_download_fileref.addEventListener(Event.SELECT, (e) ->
-		{
-			_download_fileref.load();
-		});
-		_download_fileref.addEventListener(Event.COMPLETE, onLoadComplete);
-	}
-
-	public function loadZip()
-	{
-		if (_download_fileref == null)
-		{
-			init();
-		}
-		_download_fileref.browse([new FileFilter("Zip files", "*.zip")]);
-	}
-
-	function onLoadComplete(e:Event)
-	{
-		zipBytes = getHaxeBytes(_download_fileref.data);
-		zipname = _download_fileref.name;
-
-		_download_fileref.removeEventListener(Event.SELECT, (e) ->
-		{
-			_download_fileref.load();
-		});
-		_download_fileref.removeEventListener(Event.COMPLETE, onLoadComplete);
-		_download_fileref = null;
-
-		zfs = new MemoryZipFileSystem({
-			zipBytes: zipBytes,
-			zipName: zipname,
-			modRoot: 'mods/'
-		});
-		if (postLoad != null)
-		{
-			postLoad();
-		}
-	}
-
-	function getHaxeBytes(b:ByteArray)
-	{
-		// not sure how else to convert a ByteArray into haxe.io.Bytes :/
-		var el_bytes = Bytes.alloc(b.length);
-		for (i in 0...b.length)
-		{
-			el_bytes.fill(i, 1, b.readByte());
-		}
-		return el_bytes;
-	}
-}
-#end

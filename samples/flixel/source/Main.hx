@@ -13,6 +13,3 @@ class Main extends Sprite
 		addChild(new FlxGame(0, 0, PlayState));
 	}
 }
-
-@:hscriptClass
-class ScriptedState extends FlxTypedGroup<FlxBasic> implements HScriptable {}

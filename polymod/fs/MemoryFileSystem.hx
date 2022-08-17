@@ -16,6 +16,9 @@ import thx.semver.VersionRule;
  * Instantiate the MemoryFileSystem, call `addFileBytes` to add mod files to it,
  * then pass it to Polymod. Any mod files you add will be available to Polymod
  * as though they were accessed from the file system.
+ * 
+ * Using this file system directly is not recommended, as it is not optimized for native platforms.
+ * If you can use a native file system, use `SysFileSystem` or `ZipFileSystem` instead.
  */
 class MemoryFileSystem implements PolymodFileSystem.IFileSystem
 {
@@ -111,11 +114,26 @@ class MemoryFileSystem implements PolymodFileSystem.IFileSystem
 		return result;
 	}
 
+  /**
+   * Directly retrieve the text contents of a file.
+   * 
+   * @param path The path name of the file to read.
+   * @return The text contents of the file.
+   */
 	public function getFileContent(path:String):String
 	{
-		return files.get(path).toString();
+    var fileBytes = getFileBytes(path);
+    if (fileBytes == null)
+      return null;
+		return fileBytes.toString();
 	}
 
+  /**
+   * Directly retrieve the binary contents of a file.
+   *
+   * @param path The path name of the file to read.
+   * @return The contents of the file as Bytes.
+   */
 	public function getFileBytes(path:String):Bytes
 	{
 		return files.get(path);
@@ -123,6 +141,8 @@ class MemoryFileSystem implements PolymodFileSystem.IFileSystem
 
 	/**
 	 * List all files at or below the given path.
+   *
+   * @param path The path name of the directory to read.
 	 */
 	public function readDirectoryRecursive(path:String)
 	{

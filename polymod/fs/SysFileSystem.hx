@@ -8,8 +8,8 @@ import polymod.fs.PolymodFileSystem;
 import polymod.util.Util;
 
 /**
- * An implementation of IFileSystem which accesses files from the local directory.
- * This is the default file system for desktop platforms.
+ * An implementation of IFileSystem which accesses files from folders in the local directory.
+ * This is currently the default file system for native/Desktop platforms.
  */
 class SysFileSystem implements IFileSystem
 {

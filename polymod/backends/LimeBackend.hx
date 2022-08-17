@@ -537,12 +537,13 @@ class LimeModLibrary extends AssetLibrary
 		if (p.check(symbol.modId))
 		{
 			// for compatibility with the zip file systems (loadFromFile doesn't seem to work unless it's a url :/)
-			if(Std.isOfType(p.fileSystem, #if html5 polymod.fs.MemoryZipFileSystem #else polymod.fs.SysZipFileSystem #end))
+			if(Std.isOfType(p.fileSystem, polymod.fs.ZipFileSystem))
 			{
 				var dabytes = p.fileSystem.getFileBytes(p.file(symbol.modId));
 				return Image.loadFromBytes(dabytes);
-			}
-			return Image.loadFromFile(p.file(symbol.modId));
+			} else {
+        return Image.loadFromFile(p.file(symbol.modId));
+      }
 		}
 		else if (hasFallback)
 		{
