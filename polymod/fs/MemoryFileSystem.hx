@@ -114,26 +114,26 @@ class MemoryFileSystem implements PolymodFileSystem.IFileSystem
 		return result;
 	}
 
-  /**
-   * Directly retrieve the text contents of a file.
-   * 
-   * @param path The path name of the file to read.
-   * @return The text contents of the file.
-   */
+	/**
+	 * Directly retrieve the text contents of a file.
+	 * 
+	 * @param path The path name of the file to read.
+	 * @return The text contents of the file.
+	 */
 	public function getFileContent(path:String):String
 	{
-    var fileBytes = getFileBytes(path);
-    if (fileBytes == null)
-      return null;
+		var fileBytes = getFileBytes(path);
+		if (fileBytes == null)
+			return null;
 		return fileBytes.toString();
 	}
 
-  /**
-   * Directly retrieve the binary contents of a file.
-   *
-   * @param path The path name of the file to read.
-   * @return The contents of the file as Bytes.
-   */
+	/**
+	 * Directly retrieve the binary contents of a file.
+	 *
+	 * @param path The path name of the file to read.
+	 * @return The contents of the file as Bytes.
+	 */
 	public function getFileBytes(path:String):Bytes
 	{
 		return files.get(path);
@@ -141,8 +141,8 @@ class MemoryFileSystem implements PolymodFileSystem.IFileSystem
 
 	/**
 	 * List all files at or below the given path.
-   *
-   * @param path The path name of the directory to read.
+	    *
+	    * @param path The path name of the directory to read.
 	 */
 	public function readDirectoryRecursive(path:String)
 	{
@@ -216,7 +216,7 @@ class MemoryFileSystem implements PolymodFileSystem.IFileSystem
 				meta = ModMetadata.fromJsonStr(metaText);
 				if (meta == null)
 					return null;
-				
+
 				meta.id = modId;
 				meta.modPath = modpath;
 			}

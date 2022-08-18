@@ -17,6 +17,7 @@ import thx.semver.Version;
 import thx.semver.VersionRule;
 
 using StringTools;
+
 #if firetongue
 import firetongue.FireTongue;
 #end
@@ -208,7 +209,6 @@ class Polymod
 			params.apiVersionRule = VersionUtil.DEFAULT_VERSION_RULE;
 		var fileSystem = PolymodFileSystem.makeFileSystem(params.customFilesystem, params.fileSystemParams);
 
-
 		// Fetch mod metadata and exclude broken mods.
 		var modsToLoad:Array<ModMetadata> = [];
 
@@ -239,10 +239,13 @@ class Polymod
 		if (!params.skipDependencyChecks)
 		{
 			sortedModsToLoad = DependencyUtil.sortByDependencies(modsToLoad, params.skipDependencyErrors);
-			if (sortedModsToLoad == null) {
+			if (sortedModsToLoad == null)
+			{
 				sortedModsToLoad = [];
 			}
-		} else {
+		}
+		else
+		{
 			Polymod.warning(DEPENDENCY_CHECK_SKIPPED, "Dependency checks were skipped.");
 		}
 
@@ -910,12 +913,12 @@ enum PolymodErrorType
 	var DEPENDENCY_CHECK_SKIPPED:String = 'dependency_check_skipped';
 
 	/**
-     * Polymod tried to access a file that was not found.
+	 * Polymod tried to access a file that was not found.
 	 */
 	var FILE_MISSING:String = "file_missing";
 
 	/**
-     * Polymod tried to access a directory that was not found.
+	 * Polymod tried to access a directory that was not found.
 	 */
 	var DIRECTORY_MISSING:String = "directory_missing";
 

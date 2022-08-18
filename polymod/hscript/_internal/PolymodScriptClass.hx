@@ -5,6 +5,7 @@ import hscript.Expr.FunctionDecl;
 import hscript.Expr.VarDecl;
 import hscript.Printer;
 import polymod.hscript._internal.PolymodClassDeclEx;
+
 using StringTools;
 
 enum Param
@@ -66,7 +67,7 @@ class PolymodScriptClass
 			}
 		}
 	}
-	
+
 	/**
 	 * Returns a list of all registered classes.
 	 * @return Array<String>
@@ -231,13 +232,15 @@ class PolymodScriptClass
 	}
 
 	var __superClassFieldList:Array<String> = null;
+
 	public function superHasField(name:String):Bool
 	{
-		if (superClass == null) return false;
+		if (superClass == null)
+			return false;
 		// Reflect.hasField(this, name) is REALLY expensive so we use a cache.
-		if (__superClassFieldList == null) {
-			__superClassFieldList = Reflect.fields(superClass)
-				.concat(Type.getInstanceFields(Type.getClass(superClass)));
+		if (__superClassFieldList == null)
+		{
+			__superClassFieldList = Reflect.fields(superClass).concat(Type.getInstanceFields(Type.getClass(superClass)));
 		}
 		return __superClassFieldList.indexOf(name) != -1;
 	}
@@ -296,12 +299,14 @@ class PolymodScriptClass
 		}
 	}
 
-	public function reportError(err:hscript.Expr.Error, fnName:String = null) {
+	public function reportError(err:hscript.Expr.Error, fnName:String = null)
+	{
 		var errEx = PolymodExprEx.ErrorExUtil.toErrorEx(err);
 		reportErrorEx(errEx, fnName);
 	}
 
-	public function reportErrorEx(err:PolymodExprEx.ErrorEx, fnName:String = null):Void {
+	public function reportErrorEx(err:PolymodExprEx.ErrorEx, fnName:String = null):Void
+	{
 		var errLine:String = #if hscriptPos '${err.line}' #else "#???" #end;
 
 		#if hscriptPos
@@ -324,9 +329,7 @@ class PolymodScriptClass
 				{
 					var superCls:String = msg.substring(SUPER_CLASS_PREFIX.length);
 					Polymod.error(SCRIPT_EXCEPTION,
-						'Error while executing function ${className}.${fnName}()#${errLine}: ' + '\n' +
-						'Could not resolve super class type "${superCls}".'
-					);
+						'Error while executing function ${className}.${fnName}()#${errLine}: ' + '\n' + 'Could not resolve super class type "${superCls}".');
 				}
 				else if (msg.startsWith(SUPER_NOT_CALLED_PREFIX))
 				{
@@ -351,9 +354,8 @@ class PolymodScriptClass
 					'Error while executing function ${className}.${fnName}()#${errLine}: ' + '\n' +
 					'Could not assign variable "${v}" on scripted class. Did you try obj.scriptSet("${v}", value)?');
 			case EInvalidModule(m):
-					Polymod.error(SCRIPT_EXCEPTION,
-						'Error while executing function ${className}.${fnName}()#${errLine}: ' + '\n' +
-						'Could not resolve imported module type "${m}".');
+				Polymod.error(SCRIPT_EXCEPTION,
+					'Error while executing function ${className}.${fnName}()#${errLine}: ' + '\n' + 'Could not resolve imported module type "${m}".');
 			case EUnknownVariable(v):
 				Polymod.error(SCRIPT_EXCEPTION,
 					'Error while executing function ${className}.${fnName}()#${errLine}: EUnknownVariable' + '\n' +
@@ -400,16 +402,23 @@ class PolymodScriptClass
 				_interp.variables.set(a.name, value);
 				i++;
 			}
-			
-			try {
+
+			try
+			{
 				r = _interp.executeEx(fn.expr);
-			} catch (err:PolymodExprEx.ErrorEx) {
+			}
+			catch (err:PolymodExprEx.ErrorEx)
+			{
 				reportErrorEx(err, fnName);
 				return null;
-			} catch (err:hscript.Expr.Error) {
+			}
+			catch (err:hscript.Expr.Error)
+			{
 				reportError(err, fnName);
 				return null;
-			} catch (err:Dynamic) {
+			}
+			catch (err:Dynamic)
+			{
 				throw err;
 			}
 

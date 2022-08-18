@@ -1,11 +1,11 @@
 package polymod.fs;
 
 #if sys
-import polymod.util.VersionUtil;
-import thx.semver.VersionRule;
 import polymod.Polymod.ModMetadata;
 import polymod.fs.PolymodFileSystem;
 import polymod.util.Util;
+import polymod.util.VersionUtil;
+import thx.semver.VersionRule;
 
 /**
  * An implementation of IFileSystem which accesses files from folders in the local directory.
@@ -20,32 +20,35 @@ class SysFileSystem implements IFileSystem
 		this.modRoot = params.modRoot;
 	}
 
-	public inline function exists(path:String)
+	public function exists(path:String)
 	{
 		return sys.FileSystem.exists(path);
 	}
 
-	public inline function isDirectory(path:String){
+	public function isDirectory(path:String)
+	{
 		return sys.FileSystem.isDirectory(path);
 	}
 
-	public inline function readDirectory(path:String) {
-		try {
+	public function readDirectory(path:String)
+	{
+		try
+		{
 			return sys.FileSystem.readDirectory(path);
-		} catch (e) {
+		}
+		catch (e)
+		{
 			Polymod.warning(DIRECTORY_MISSING, 'Could not find directory "${path}"');
 			return [];
 		}
 	}
 
-	public inline function getFileContent(path:String)
+	public function getFileContent(path:String)
 	{
-		if (!exists(path))
-			return null;
-		return sys.io.File.getContent(path);
+		return getFileBytes(path).toString();
 	}
 
-	public inline function getFileBytes(path:String)
+	public function getFileBytes(path:String)
 	{
 		if (!exists(path))
 			return null;
@@ -61,6 +64,10 @@ class SysFileSystem implements IFileSystem
 		var result:Array<ModMetadata> = [];
 		for (dir in dirs)
 		{
+			var fullDir = Util.pathJoin(modRoot, dir);
+			if (!isDirectory(fullDir))
+				continue;
+
 			var meta:ModMetadata = this.getMetadata(dir);
 
 			if (meta == null)

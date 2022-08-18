@@ -22,7 +22,7 @@ class PolymodFileSystem
 		}
 		else if (Std.isOfType(cls, IFileSystem))
 		{
-      // This is an IFileSystem object, no need to instantiate.
+			// This is an IFileSystem object, no need to instantiate.
 			return cls;
 		}
 		else if (Std.isOfType(cls, Class))
@@ -43,14 +43,14 @@ class PolymodFileSystem
 	static function _detectFileSystem(params:PolymodFileSystemParams)
 	{
 		#if sys
-    // Sys/native file system.
+		// Sys/native file system.
 		return new polymod.fs.SysFileSystem(params);
 		#elseif nodefs
-    // Node file system.
+		// Node file system.
 		return new polymod.fs.NodeFileSystem(params);
 		#else
-    // No compatible file system.
-    // If you're on HTML5, you should use MemoryFileSystem or ZipFileSystem.
+		// No compatible file system.
+		// If you're on HTML5, you should use MemoryFileSystem or ZipFileSystem.
 		return new polymod.fs.StubFileSystem(params);
 		#end
 	}

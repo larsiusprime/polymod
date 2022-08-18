@@ -27,8 +27,11 @@ class DependencyUtil
 			// If skipErrors is true, a mod with unmet dependencies will call Polymod.warn() and be omitted from the list.
 			var filteredMods = filterDependencies(modList);
 
-			var test = filteredMods.map(function(mod:ModMetadata) { return mod.id; });
-            return buildTopologyForDependencies(filteredMods, true);
+			var test = filteredMods.map(function(mod:ModMetadata)
+			{
+				return mod.id;
+			});
+			return buildTopologyForDependencies(filteredMods, true);
 		}
 		else
 		{
@@ -38,7 +41,7 @@ class DependencyUtil
 				return [];
 			}
 
-            return buildTopologyForDependencies(modList, false);
+			return buildTopologyForDependencies(modList, false);
 		}
 	}
 
@@ -47,7 +50,7 @@ class DependencyUtil
 	 */
 	static function filterDependencies(modList:Array<ModMetadata>):Array<ModMetadata>
 	{
-        var result:Array<ModMetadata> = [];
+		var result:Array<ModMetadata> = [];
 
 		// Compile a map of mod dependencies.
 		var deps:ModDependencies = compileDependencies(modList);
@@ -100,7 +103,7 @@ class DependencyUtil
 			}
 		}
 
-        return result;
+		return result;
 	}
 
 	/**
@@ -159,117 +162,144 @@ class DependencyUtil
 		return true;
 	}
 
-    /**
-     * Based on the ordered modlist, create a reordered modlist based on each mod's dependencies.
-     * Mods will be sorted first in dependency order, then further sorted based on the order of the modlist.
-     * 
-     * @param modList The list of mods to reorder.
-     */
-    static function buildTopologyForDependencies(modList:Array<ModMetadata>, ?skipErrors = false):Array<ModMetadata>
-    {
-        // Build a map of dependencies.
-        var dependencies:Map<String, Array<String>> = [];
+	/**
+	 * Based on the ordered modlist, create a reordered modlist based on each mod's dependencies.
+	 * Mods will be sorted first in dependency order, then further sorted based on the order of the modlist.
+	 * 
+	 * @param modList The list of mods to reorder.
+	 */
+	static function buildTopologyForDependencies(modList:Array<ModMetadata>, ?skipErrors = false):Array<ModMetadata>
+	{
+		// Build a map of dependencies.
+		var dependencies:Map<String, Array<String>> = [];
 
-        // Add the mod ID as a key, then add the mod ID as a value to each dependency.
-        // The result is that mods with no dependencies will have an empty array as a value,
-        // and mods with dependencies will have an array of the dependency mod IDs.
-        for (mod in modList) {
-            if (!dependencies.exists(mod.id))
-                dependencies.set(mod.id, []);
+		// Add the mod ID as a key, then add the mod ID as a value to each dependency.
+		// The result is that mods with no dependencies will have an empty array as a value,
+		// and mods with dependencies will have an array of the dependency mod IDs.
+		for (mod in modList)
+		{
+			if (!dependencies.exists(mod.id))
+				dependencies.set(mod.id, []);
 
-            var deps = mod.dependencies;
-            if (deps != null) {
-                for (depKey in deps.keys()) {
-                    if (dependencies.exists(mod.id)) {
-                        dependencies.get(mod.id).push(depKey);
-                    } else {
-                        dependencies.set(mod.id, [depKey]);
-                    }
-                }
-            }
-        }
+			var deps = mod.dependencies;
+			if (deps != null)
+			{
+				for (depKey in deps.keys())
+				{
+					if (dependencies.exists(mod.id))
+					{
+						dependencies.get(mod.id).push(depKey);
+					}
+					else
+					{
+						dependencies.set(mod.id, [depKey]);
+					}
+				}
+			}
+		}
 
-        // Add the optional dependencies to the dependencies map.
-        for (mod in modList) {
-            // We consider optional dependencies when building topologies,
-            // but we don't consider them when validating dependencies.
-            var optDeps = mod.optionalDependencies;
-            if (optDeps != null) {
-                for (depKey in optDeps.keys()) {
-                    if (dependencies.exists(depKey)) {
-                        dependencies.get(mod.id).push(depKey);
-                    } else {
+		// Add the optional dependencies to the dependencies map.
+		for (mod in modList)
+		{
+			// We consider optional dependencies when building topologies,
+			// but we don't consider them when validating dependencies.
+			var optDeps = mod.optionalDependencies;
+			if (optDeps != null)
+			{
+				for (depKey in optDeps.keys())
+				{
+					if (dependencies.exists(depKey))
+					{
+						dependencies.get(mod.id).push(depKey);
+					}
+					else
+					{
 						trace('Skipping optional dependency ' + depKey + ' for mod ' + mod.id);
-                        // dependencies.set(mod.id, [mod.id]);
-                    }
-                }
-            }
-        }
+						// dependencies.set(mod.id, [mod.id]);
+					}
+				}
+			}
+		}
 
-        return buildTopology_Recursive(modList, dependencies, skipErrors);
-    }
+		return buildTopology_Recursive(modList, dependencies, skipErrors);
+	}
 
-    static function buildTopology_Recursive(modList:Array<ModMetadata>, dependencies:Map<String, Array<String>>, ?skipErrors:Bool = false):Array<ModMetadata> {
-        if (modList.length == 0)
-            return [];
-        
-        var result:Array<ModMetadata> = [];
-        
-        // Loop through the dependencies, finding the mod IDs with no dependencies.
-        var rootLevelMods:Array<String> = [];
-        for (mod in modList) {
-            if (!dependencies.exists(mod.id) || dependencies.get(mod.id).length == 0) {
-                rootLevelMods.push(mod.id);
-            }
-        }
+	static function buildTopology_Recursive(modList:Array<ModMetadata>, dependencies:Map<String, Array<String>>, ?skipErrors:Bool = false):Array<ModMetadata>
+	{
+		if (modList.length == 0)
+			return [];
 
-        // If the root level mod list is empty, then there is a circular dependency.
-        if (rootLevelMods.length == 0) {
-            var modList = modList.map(function(mod) { return mod.id; }).join(', ');
-            if (skipErrors) {
-                Polymod.warning(DEPENDENCY_CYCLICAL, 'Circular dependency detected between mods: ${modList}');
-                return [];
-            } else {
-                Polymod.error(DEPENDENCY_CYCLICAL, 'Circular dependency detected between mods: ${modList}');
-                return null;
-            }
-        }
+		var result:Array<ModMetadata> = [];
+
+		// Loop through the dependencies, finding the mod IDs with no dependencies.
+		var rootLevelMods:Array<String> = [];
+		for (mod in modList)
+		{
+			if (!dependencies.exists(mod.id) || dependencies.get(mod.id).length == 0)
+			{
+				rootLevelMods.push(mod.id);
+			}
+		}
+
+		// If the root level mod list is empty, then there is a circular dependency.
+		if (rootLevelMods.length == 0)
+		{
+			var modList = modList.map(function(mod)
+			{
+				return mod.id;
+			}).join(', ');
+			if (skipErrors)
+			{
+				Polymod.warning(DEPENDENCY_CYCLICAL, 'Circular dependency detected between mods: ${modList}');
+				return [];
+			}
+			else
+			{
+				Polymod.error(DEPENDENCY_CYCLICAL, 'Circular dependency detected between mods: ${modList}');
+				return null;
+			}
+		}
 
 		var childLevelMods:Array<ModMetadata> = [];
 
-        for (modData in modList) {
-            if (rootLevelMods.indexOf(modData.id) != -1) {
-                // Add the mod to the result list.
-                result.push(modData);
+		for (modData in modList)
+		{
+			if (rootLevelMods.indexOf(modData.id) != -1)
+			{
+				// Add the mod to the result list.
+				result.push(modData);
 
-                // Remove the mod from the dependency list.
-                dependencies.remove(modData.id);
+				// Remove the mod from the dependency list.
+				dependencies.remove(modData.id);
 
-
-                // Remove the mod from each dependency list.
-                for (depKey in dependencies.keys()) {
-                    var depList = dependencies.get(depKey);
-                    var index = depList.indexOf(modData.id);
-                    // If the mod is in the dependency list, remove it.
-                    if (index != -1) {
-                        depList.splice(index, 1);
-                    }
-                }
-            } else {
+				// Remove the mod from each dependency list.
+				for (depKey in dependencies.keys())
+				{
+					var depList = dependencies.get(depKey);
+					var index = depList.indexOf(modData.id);
+					// If the mod is in the dependency list, remove it.
+					if (index != -1)
+					{
+						depList.splice(index, 1);
+					}
+				}
+			}
+			else
+			{
 				childLevelMods.push(modData);
 			}
-        }
+		}
 
-        // result now contains the mods with no dependencies, in the order they appear in the mod list.
-        // dependencies now contains the remaining dependencies, with the root level mods removed.
-        var innerResult = buildTopology_Recursive(childLevelMods, dependencies, skipErrors);
-        
-        // Pass circular dependency issues upward.
-        if (innerResult == null)
-            return null;
+		// result now contains the mods with no dependencies, in the order they appear in the mod list.
+		// dependencies now contains the remaining dependencies, with the root level mods removed.
+		var innerResult = buildTopology_Recursive(childLevelMods, dependencies, skipErrors);
 
-        return result.concat(innerResult);
-    }
+		// Pass circular dependency issues upward.
+		if (innerResult == null)
+			return null;
+
+		return result.concat(innerResult);
+	}
 
 	/**
 	 * Given a list of mods, return a merged list of mod dependency versions.

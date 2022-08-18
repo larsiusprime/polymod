@@ -15,207 +15,205 @@ import sys.io.FileInput;
  */
 class ZipParser
 {
-  /**
-   * The file system path to the ZIP file.
-   */
-  public var fileName:String;
-  
-  /**
-   * A handle to the ZIP file for direct reading.
-   */
-  private var _fileHandle:FileInput;
+	/**
+	 * The file system path to the ZIP file.
+	 */
+	public var fileName:String;
 
-  /**
-   * The end-of-central-directory record, as parsed from the end of the ZIP file.
-   */
-  public var endOfCentralDirectoryRecord:EndOfCentralDirectoryRecord;
+	/**
+	 * A handle to the ZIP file for direct reading.
+	 */
+	private var fileHandle:FileInput;
 
-  /**
-   * The central directory records, as parsed from the central directory.
-   * These contain metadata about each file in the archive.
-   */
-  public var centralDirectoryRecords:StringMap<CentralDirectoryFileHeader>;
+	/**
+	 * The end-of-central-directory record, as parsed from the end of the ZIP file.
+	 */
+	public var endOfCentralDirectoryRecord:EndOfCentralDirectoryRecord;
 
-  public function new(fileName:String)
-  {
-    this.fileName = fileName;
-    this._fileHandle = File.read(this.fileName);
+	/**
+	 * The central directory records, as parsed from the central directory.
+	 * These contain metadata about each file in the archive.
+	 */
+	public var centralDirectoryRecords:StringMap<CentralDirectoryFileHeader>;
 
-    findEndOfCentralDirectoryRecord();
-    getAllCentralDirectoryHeaders();
-  }
+	public function new(fileName:String)
+	{
+		this.fileName = fileName;
+		this.fileHandle = File.read(this.fileName);
 
-    function findEndOfCentralDirectoryRecord():Void
-    {
-      _fileHandle.seek(-22, SeekEnd); // 22 is the smallest the eocd can be, so we start here
-        var tmpbuf = Bytes.alloc(4);
-        _fileHandle.readBytes(tmpbuf, 0, 4);
-        // keep sliding backwards until we find a signature match (dunno if this is the best way to do this but it works)
-        while (tmpbuf.getInt32(0) != EndOfCentralDirectoryRecord.SIGNATURE)
-        {
-            _fileHandle.seek(-5, SeekCur);
-            _fileHandle.readBytes(tmpbuf, 0, 4);
-        }
-        this.endOfCentralDirectoryRecord = new EndOfCentralDirectoryRecord(_fileHandle, -4);
-    }
+		findEndOfCentralDirectoryRecord();
+		getAllCentralDirectoryHeaders();
+	}
 
-    function getAllCentralDirectoryHeaders():Void
-    {
-        this.centralDirectoryRecords = new StringMap();
-        _fileHandle.seek(this.endOfCentralDirectoryRecord.centralDirOffset, SeekBegin);
-        for(_ in 0...this.endOfCentralDirectoryRecord.totalCdrs)
-        {
-            var cdh = new CentralDirectoryFileHeader(_fileHandle);
-            this.centralDirectoryRecords.set(cdh.filename, cdh);
-        }
-    }
+	function findEndOfCentralDirectoryRecord():Void
+	{
+		fileHandle.seek(-22, SeekEnd); // 22 is the smallest the eocd can be, so we start here
+		var tmpbuf = Bytes.alloc(4);
+		fileHandle.readBytes(tmpbuf, 0, 4);
+		// keep sliding backwards until we find a signature match (dunno if this is the best way to do this but it works)
+		while (tmpbuf.getInt32(0) != EndOfCentralDirectoryRecord.SIGNATURE)
+		{
+			fileHandle.seek(-5, SeekCur);
+			fileHandle.readBytes(tmpbuf, 0, 4);
+		}
+		this.endOfCentralDirectoryRecord = new EndOfCentralDirectoryRecord(fileHandle, -4);
+	}
 
-    public function getLocalFileHeaderOf(localFileName:String)
-    {
-      _fileHandle = File.read(this.fileName);
-        var cdfh = centralDirectoryRecords.get(localFileName);
-        if(cdfh == null)
-        {
-            Polymod.warning(FILE_MISSING, 'The file $localFileName was not found in the zip: $fileName');
-            return null;
-        }
-        _fileHandle.seek(cdfh.localfileheaderoffset, SeekBegin);
-        var lfh = new LocalFileHeader(_fileHandle);
-        lfh.dataoffset = _fileHandle.tell();
-        // _fi.close();
-        return lfh;
-    }
+	function getAllCentralDirectoryHeaders():Void
+	{
+		this.centralDirectoryRecords = new StringMap();
+		fileHandle.seek(this.endOfCentralDirectoryRecord.centralDirOffset, SeekBegin);
+		for (_ in 0...this.endOfCentralDirectoryRecord.totalCdrs)
+		{
+			var cdh = new CentralDirectoryFileHeader(fileHandle);
+			this.centralDirectoryRecords.set(cdh.fileName, cdh);
+		}
+	}
+
+	public function getLocalFileHeaderOf(localFileName:String)
+	{
+		fileHandle = File.read(this.fileName);
+		var cdfh = centralDirectoryRecords.get(localFileName);
+		if (cdfh == null)
+		{
+			Polymod.warning(FILE_MISSING, 'The file $localFileName was not found in the zip: $fileName');
+			return null;
+		}
+		fileHandle.seek(cdfh.localFileHeaderOffset, SeekBegin);
+		var lfh = new LocalFileHeader(fileHandle);
+		lfh.dataOffset = fileHandle.tell();
+		// _fi.close();
+		return lfh;
+	}
 }
 
 enum CompressionMethod
 {
-    NONE;
-    DEFLATE;
+	NONE;
+	DEFLATE;
 }
 
 /**
-* Just the common stuff I found on all the diffrent zip headers
-**/
+ * Common functionality for all ZIP headers.
+ */
 private class Header
 {
-    var _tmp_buf:Bytes;
-    public var signature:Bytes;
-    var fileinput:FileInput;
+	private var fileInput:FileInput;
 
-    function _getBytesFromFile(nbytes:Int)
-    {
-        if(nbytes == 0)
-            return Bytes.alloc(0);
-        _tmp_buf = Bytes.alloc(nbytes);
-        var bytesread = fileinput.readBytes(_tmp_buf, 0, nbytes);
-        if(bytesread != nbytes)
-        {
-            trace('[NOTICE] Read fewer bytes than requested');
-        }
-        return _tmp_buf;
-    }
+	public var signature:Bytes;
 
-    // Copied from haxe.zip (kinda)
-    function parseMSDOSdate(_lastModifiedTime:Bytes, _lastModifiedDate:Bytes)
-    {
-        var timenum:Int = _lastModifiedTime.getUInt16(0);
-        var bits_0to4 = timenum & 0x1F;
-        var bits_5to10 = (timenum >> 5) & 0x3F;
-        var bits_11to15 = (timenum >> 11) & 0x1F;
+	private var tmpBuffer:Bytes;
 
-        var seconds:Int = bits_0to4*2;
-        var minutes:Int = bits_5to10 % 60;
-        var hours:Int = bits_11to15 % 24;
+	private function getBytesFromFile(count:Int)
+	{
+		if (count == 0)
+			return Bytes.alloc(0);
+		tmpBuffer = Bytes.alloc(count);
+		var bytesRead = fileInput.readBytes(tmpBuffer, 0, count);
+		if (bytesRead != count)
+		{
+			trace('[NOTICE] Read fewer bytes than requested ($bytesRead < $count)');
+		}
+		return tmpBuffer;
+	}
 
-        var datenum:Int = _lastModifiedDate.getUInt16(0);
-        bits_0to4 = datenum & 0x1F;
-        var bits_5to8 = (datenum >> 5) & 0xF;
-        var bits_9to15 = (datenum >> 9);
+	// Copied from haxe.zip (kinda)
+	function parseMSDOSdate(lastModifiedTime:Bytes, lastModifiedDate:Bytes)
+	{
+		var timeNum:Int = lastModifiedTime.getUInt16(0);
+		var bits_0to4 = timeNum & 0x1F;
+		var bits_5to10 = (timeNum >> 5) & 0x3F;
+		var bits_11to15 = (timeNum >> 11) & 0x1F;
 
-        var date = bits_0to4 % 31;
-        var month = (bits_5to8-1)%12;
-        var year = 1980 + bits_9to15;
+		var hours:Int = bits_11to15 % 24;
+		var minutes:Int = bits_5to10 % 60;
+		var seconds:Int = bits_0to4 * 2;
 
-        return new Date(year, month, date, hours, minutes, seconds);
-    }
+		var dateNum:Int = lastModifiedDate.getUInt16(0);
+		bits_0to4 = dateNum & 0x1F;
+		var bits_5to8 = (dateNum >> 5) & 0xF;
+		var bits_9to15 = (dateNum >> 9);
+
+		var year = 1980 + bits_9to15;
+		var month = (bits_5to8 - 1) % 12;
+		var date = bits_0to4 % 31;
+
+		return new Date(year, month, date, hours, minutes, seconds);
+	}
 }
 
+/**
+ * The local file header for a file in a ZIP file.
+ */
 class LocalFileHeader extends Header
 {
-    public var minVersionForExtraction:Int;
-    public var generalPurposeBitFlag:Bytes;
-    public var compressionMethod:CompressionMethod;
-    public var lastModifiedDateTime:Date;
-    public var crc32code:Bytes;
-    public var compressedSize:Int;
-    public var uncompressedSize:Int;
-    public var filename:String;
-    public var extrafield:Bytes;
-    public var bytesConsumed:Int;
-    public var dataoffset:Int = -1; // offset in the file from where to read the data
+	public var bytesConsumed:Int;
+	public var compressedSize:Int;
+	public var compressionMethod:CompressionMethod;
+	public var crc32code:Bytes;
+	public var dataOffset:Int = -1; // offset in the file from where to read the data
+	public var extraField:Bytes;
+	public var fileName:String;
+	public var generalPurposeBitFlag:Bytes;
+	public var lastModifiedDateTime:Date;
+	public var minVersionForExtraction:Int;
+	public var uncompressedSize:Int;
 
-    public static final HEADER_SIGNATURE = 0x04034B50;
+	public static final HEADER_SIGNATURE = 0x04034B50;
 
-    public function new(fi:FileInput, ?startoffset:Int = 0)
-    {
-        fileinput = fi;
-        fileinput.seek(startoffset, SeekCur);
+	public function new(fileInput:FileInput, ?startOffset:Int = 0)
+	{
+		this.fileInput = fileInput;
+		this.fileInput.seek(startOffset, SeekCur);
 
-        signature = _getBytesFromFile(4);
+		signature = getBytesFromFile(4);
 
-        var _minVersion = _getBytesFromFile(2);
-        minVersionForExtraction = _minVersion.getUInt16(0);
+		minVersionForExtraction = getBytesFromFile(2).getUInt16(0);
+		generalPurposeBitFlag = getBytesFromFile(2);
+		compressionMethod = (getBytesFromFile(2).getUInt16(0) == 0) ? NONE : DEFLATE;
 
-        generalPurposeBitFlag = _getBytesFromFile(2);
+		var lastModifiedTime = getBytesFromFile(2);
+		var lastModifiedDate = getBytesFromFile(2);
+		lastModifiedDateTime = parseMSDOSdate(lastModifiedTime, lastModifiedDate);
 
-        var _compressionMethod = _getBytesFromFile(2);
-        compressionMethod = (_compressionMethod.getUInt16(0) == 0) ? NONE : DEFLATE;
-        
-        var _lastModifiedTime = _getBytesFromFile(2);
-        var _lastModifiedDate = _getBytesFromFile(2);
-        lastModifiedDateTime = parseMSDOSdate(_lastModifiedTime, _lastModifiedDate);
-        
-        crc32code = _getBytesFromFile(4);
+		crc32code = getBytesFromFile(4);
 
-        var _compressedSize = _getBytesFromFile(4);
-        compressedSize = _compressedSize.getInt32(0);
+		compressedSize = getBytesFromFile(4).getInt32(0);
+		uncompressedSize = getBytesFromFile(4).getInt32(0);
 
-        var _uncompressedSize = _getBytesFromFile(4);
-        uncompressedSize = _uncompressedSize.getInt32(0);
+		var fileNameLength = getBytesFromFile(2);
+		var extraFieldLength = getBytesFromFile(2);
 
-        var _filenamelen = _getBytesFromFile(2);
-        var _extrafieldlen = _getBytesFromFile(2);
-        
-        var _filename = _getBytesFromFile(_filenamelen.getUInt16(0));
-        filename = _filename.toString();
-        
-        extrafield = _getBytesFromFile(_extrafieldlen.getUInt16(0));
-        
-        bytesConsumed = 30 + _filenamelen.getUInt16(0) + _extrafieldlen.getUInt16(0) - 1;
-    }
+		fileName = getBytesFromFile(fileNameLength.getUInt16(0)).toString();
 
-    public function readData()
-    {
-        // trace('fileinput is $fileinput');
-        fileinput.seek(dataoffset, SeekBegin);
-        var buf = Bytes.alloc(compressedSize);
-        var bytesread = fileinput.readBytes(buf, 0, compressedSize);
-        if(bytesread != compressedSize)
-        {
-            trace('[WARNING] Bytes read was fewer than requested (Requested: $compressedSize, Read: $bytesread)');
-        }
-        // fileinput.close();
-        return buf;
-    }
+		extraField = getBytesFromFile(extraFieldLength.getUInt16(0));
 
-    public function isValid()
-    {
-        return signature.getInt32(0) == HEADER_SIGNATURE; // Std.parseInt(HEADER_SIGNATURE);
-    }
+		bytesConsumed = 30 + fileNameLength.getUInt16(0) + extraFieldLength.getUInt16(0) - 1;
+	}
 
-    public function toString()
-    {
-        return '
+	/**
+	 * Reads the bytes of the local file from the input ZIP it is associated with.
+	 */
+	public function readData():Bytes
+	{
+		fileInput.seek(dataOffset, SeekBegin);
+		var buf = Bytes.alloc(compressedSize);
+		var bytesRead = fileInput.readBytes(buf, 0, compressedSize);
+		if (bytesRead != compressedSize)
+		{
+			trace('[WARNING] Bytes read was fewer than requested (Requested: $compressedSize, Read: $bytesRead)');
+		}
+		return buf;
+	}
+
+	public function isValid()
+	{
+		return signature.getInt32(0) == HEADER_SIGNATURE; // Std.parseInt(HEADER_SIGNATURE);
+	}
+
+	public function toString()
+	{
+		return '
         signature: ${signature.toHex()}
         minimum version to extract: $minVersionForExtraction
         general purpose bit flags: ${generalPurposeBitFlag.toHex()}
@@ -224,111 +222,98 @@ class LocalFileHeader extends Header
         crc32: $crc32code
         compressed size: $compressedSize
         uncompressed size: $uncompressedSize
-        file name: $filename
-        extra field bits: ${extrafield.toHex()}
+        file name: $fileName
+        extra field bits: ${extraField.toHex()}
         bytes consumed: $bytesConsumed
         ';
-    }
+	}
 }
 
+/**
+ * The central directory file header for a file in a ZIP file.
+ */
 class CentralDirectoryFileHeader extends Header
 {
-    public var versionMadeBy:Int;
-    public var versionToExtract:Int;
-    
-    var generalPurposeBitFlag:Bytes;
-    
-    public var compressionMethod:CompressionMethod;
-    public var lastModifiedDateTime:Date;
+	public var versionMadeBy:Int;
+	public var versionToExtract:Int;
 
-    var crc32code:Bytes;
+	private var generalPurposeBitFlag:Bytes;
 
-    public var compressedSize:Int;
-    public var uncompressedSize:Int;
+	public var compressionMethod:CompressionMethod;
+	public var lastModifiedDateTime:Date;
 
-    var filenamelength:Int;
-    var extrafieldlength:Int;
-    var filecommentLength:Int;
-    
-    public var disknum:Int;
+	private var crc32code:Bytes;
 
-    // not sure what to do with these yet
-    var _internalfileattrib:Bytes;
-    var _externalfileattib:Bytes;
+	public var compressedSize:Int;
+	public var uncompressedSize:Int;
 
-    public var localfileheaderoffset:Int;
-    public var filename:String;
-    public var extrafield:Bytes;
-    public var filecomment:String;
-    public var bytesConsumed:Int;
+	private var fileNameLength:Int;
+	private var extraFieldLength:Int;
+	private var fileCommentLength:Int;
 
-    public static final HEADER_SIGNATURE = 0x02014B50;
+	public var diskNum:Int;
 
-    public function new(fi:FileInput, ?startoffset:Int = 0)
-    {
-        fileinput = fi;
-        fileinput.seek(startoffset, SeekCur);
-        signature = _getBytesFromFile(4);
-        var _verMadeBy = _getBytesFromFile(2);
-        versionMadeBy = _verMadeBy.getUInt16(0);
-        
-        var _verToExtract = _getBytesFromFile(2);
-        versionToExtract = _verToExtract.getUInt16(0);
-        
-        generalPurposeBitFlag = _getBytesFromFile(2);
-        
-        var _compressionMethod = _getBytesFromFile(2);
-        compressionMethod = (_compressionMethod.getUInt16(0) == 0) ? NONE : DEFLATE;
-        
-        var _lastModifiedTime = _getBytesFromFile(2);
-        var _lastModifiedDate = _getBytesFromFile(2);
-        lastModifiedDateTime = parseMSDOSdate(_lastModifiedTime, _lastModifiedDate);
-        
-        crc32code = _getBytesFromFile(4);
-        
-        var _compressedSize = _getBytesFromFile(4);
-        compressedSize = _compressedSize.getInt32(0);
-        
-        var _uncompressedSize = _getBytesFromFile(4);
-        uncompressedSize = _uncompressedSize.getInt32(0);
-        
-        var _filenamelength = _getBytesFromFile(2);
-        filenamelength = _filenamelength.getUInt16(0);
-        
-        var _extrafieldlength = _getBytesFromFile(2);
-        extrafieldlength = _extrafieldlength.getUInt16(0);
-        
-        var _filecommentlength = _getBytesFromFile(2);
-        filecommentLength = _filecommentlength.getUInt16(0);
-        
-        var _disknum = _getBytesFromFile(2);
-        disknum = _disknum.getUInt16(0);
-        
-        _internalfileattrib = _getBytesFromFile(2);
-        _externalfileattib = _getBytesFromFile(4);
-        
-        var _localfileheaderoffset = _getBytesFromFile(4);
-        localfileheaderoffset = _localfileheaderoffset.getInt32(0);
-        
-        var _filename = _getBytesFromFile(filenamelength);
-        filename = _filename.toString();
-        
-        extrafield = _getBytesFromFile(extrafieldlength);
-        
-        var _filecomment = _getBytesFromFile(filecommentLength);
-        filecomment = _filecomment.toString();
-        
-        bytesConsumed = 46 + filenamelength + extrafieldlength+ filecommentLength - 1;
-    }
+	// not sure what to do with these yet
+	private var internalFileAttrib:Bytes;
+	private var externalFileAttrib:Bytes;
 
-    public function isValid()
-    {
-        return signature.getInt32(0) == HEADER_SIGNATURE;
-    }
+	public var localFileHeaderOffset:Int;
+	public var fileName:String;
+	public var extraField:Bytes;
+	public var fileComment:String;
+	public var bytesConsumed:Int;
 
-    public function toString()
-    {
-        return '
+	public static final HEADER_SIGNATURE = 0x02014B50;
+
+	public function new(fileInput:FileInput, ?startOffset:Int = 0)
+	{
+		this.fileInput = fileInput;
+		this.fileInput.seek(startOffset, SeekCur);
+
+		// These fields are being read in the order they are defined in the spec.
+		// Do not change the order.
+
+		signature = getBytesFromFile(4);
+		versionMadeBy = getBytesFromFile(2).getUInt16(0);
+		versionToExtract = getBytesFromFile(2).getUInt16(0);
+		generalPurposeBitFlag = getBytesFromFile(2);
+		compressionMethod = (getBytesFromFile(2).getUInt16(0) == 0) ? NONE : DEFLATE;
+
+		var lastModifiedTime = getBytesFromFile(2);
+		var lastModifiedDate = getBytesFromFile(2);
+		lastModifiedDateTime = parseMSDOSdate(lastModifiedTime, lastModifiedDate);
+
+		crc32code = getBytesFromFile(4);
+		compressedSize = getBytesFromFile(4).getInt32(0);
+		uncompressedSize = getBytesFromFile(4).getInt32(0);
+
+		fileNameLength = getBytesFromFile(2).getUInt16(0);
+		extraFieldLength = getBytesFromFile(2).getUInt16(0);
+		fileCommentLength = getBytesFromFile(2).getUInt16(0);
+		
+		diskNum = getBytesFromFile(2).getUInt16(0);
+		internalFileAttrib = getBytesFromFile(2);
+		externalFileAttrib = getBytesFromFile(4);
+		localFileHeaderOffset = getBytesFromFile(4).getInt32(0);
+
+		fileName = getBytesFromFile(fileNameLength).toString();
+		extraField = getBytesFromFile(extraFieldLength);
+		fileComment = getBytesFromFile(fileCommentLength).toString();
+
+		bytesConsumed = 46 + fileNameLength + extraFieldLength + fileCommentLength - 1;
+	}
+
+	/**
+	 * Validate the header signature matches the expected value.
+	 */
+	public function isValid()
+	{
+		return signature.getInt32(0) == HEADER_SIGNATURE;
+	}
+
+	public function toString()
+	{
+		return '
         version made by: $versionMadeBy
         version to extract: $versionToExtract
         general purpose bit flags: ${generalPurposeBitFlag.toHex()}
@@ -337,64 +322,68 @@ class CentralDirectoryFileHeader extends Header
         crc32: ${crc32code.toHex()}
         compressed size: $compressedSize
         uncompressed size: $uncompressedSize
-        disk number: $disknum
-        internal file attribute: ${_internalfileattrib.toHex()}
-        external file attribute: ${_externalfileattib.toHex()}
-        local file header offset: $localfileheaderoffset
-        file name: $filename
-        extra field length (in hex): 0x${StringTools.hex(extrafieldlength)}
-        extra field: 0x${extrafield.toHex()}
-        file comment: $filecomment
+        disk number: $diskNum
+        internal file attribute: ${internalFileAttrib.toHex()}
+        external file attribute: ${externalFileAttrib.toHex()}
+        local file header offset: $localFileHeaderOffset
+        file name: $fileName
+        extra field length (in hex): 0x${StringTools.hex(extraFieldLength)}
+        extra field: 0x${extraField.toHex()}
+        file comment: $fileComment
         bytes consumed: $bytesConsumed
         ';
-    }
+	}
 }
 
+/**
+ * The end of central directory record for a ZIP file.
+ * Provides information like how many central directory records are present in the file.
+ */
 class EndOfCentralDirectoryRecord extends Header
 {
-    public var disknum:Int;
-    public var diskOfCentralDirectoryStart:Int;
-    public var numCdrsInCurDisk:Int;
-    public var totalCdrs:Int;
-    public var centralDirSize:Int;
-    public var centralDirOffset:Int;
+	public var disknum:Int;
+	public var diskOfCentralDirectoryStart:Int;
+	public var numCdrsInCurDisk:Int;
+	public var totalCdrs:Int;
+	public var centralDirSize:Int;
+	public var centralDirOffset:Int;
 
-    var commentlength:Int;
-    public var comment:String;
+	private var commentLength:Int;
 
-    public static final SIGNATURE = 0x06054b50;
-    public function new(fi:FileInput, ?startoffset:Int=0)
-    {
-        fileinput = fi;
-        fileinput.seek(startoffset, SeekCur);
+	public var comment:String;
 
-        signature = _getBytesFromFile(4);
+	public static final SIGNATURE = 0x06054b50;
 
-        disknum = _getBytesFromFile(2).getUInt16(0); // 0xffff = 65535
-        diskOfCentralDirectoryStart = _getBytesFromFile(2).getUInt16(0);
+	public function new(fileInput:FileInput, ?startOffset:Int = 0)
+	{
+		this.fileInput = fileInput;
+		this.fileInput.seek(startOffset, SeekCur);
 
-        numCdrsInCurDisk = _getBytesFromFile(2).getUInt16(0);
-        totalCdrs = _getBytesFromFile(2).getUInt16(0);
+		signature = getBytesFromFile(4);
 
-        centralDirSize = _getBytesFromFile(4).getInt32(0);
-        centralDirOffset = _getBytesFromFile(4).getInt32(0);
+		disknum = getBytesFromFile(2).getUInt16(0); // 0xffff = 65535
+		diskOfCentralDirectoryStart = getBytesFromFile(2).getUInt16(0);
 
-        commentlength = _getBytesFromFile(2).getUInt16(0);
-        comment = _getBytesFromFile(commentlength).toString();
-        // bytes consumed = 22 + comment.length
-    }
+		numCdrsInCurDisk = getBytesFromFile(2).getUInt16(0);
+		totalCdrs = getBytesFromFile(2).getUInt16(0);
 
-    public function toString()
-    {
-        return '
-        signature: ${signature.toHex()} | ${signature.getInt32(0)}
-        disk no.: $disknum
-        disk no. where central directory starts: $diskOfCentralDirectoryStart
-        no. of central directory records on this disk: $numCdrsInCurDisk
-        size of central directory in bytes: $centralDirSize
-        offset of start of central directory, relative to start of archive: $centralDirOffset
-        comment: $comment
-        ';
-    }
+		centralDirSize = getBytesFromFile(4).getInt32(0);
+		centralDirOffset = getBytesFromFile(4).getInt32(0);
+
+		commentLength = getBytesFromFile(2).getUInt16(0);
+		comment = getBytesFromFile(commentLength).toString();
+	}
+
+	public function toString()
+	{
+		return '
+	        signature: ${signature.toHex()} | ${signature.getInt32(0)}
+	        disk no.: $disknum
+	        disk no. where central directory starts: $diskOfCentralDirectoryStart
+	        no. of central directory records on this disk: $numCdrsInCurDisk
+	        size of central directory in bytes: $centralDirSize
+	        offset of start of central directory, relative to start of archive: $centralDirOffset
+	        comment: $comment';
+	}
 }
 #end // #if sys
