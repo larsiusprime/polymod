@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <project>
   <!-- These values are added to the project XML when you include this library. -->
-  <haxelib name="hscript" />
+  <haxelib name="hscript" /> 
+   <!-- for getting rid of the errors -->
+  <haxedef name="hscriptPos" value="true" />
 </project>
