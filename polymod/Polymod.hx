@@ -2,8 +2,6 @@ package polymod;
 
 import haxe.Json;
 import haxe.io.Bytes;
-import haxe.io.Path;
-import lime.tools.Dependency;
 import polymod.backends.IBackend;
 import polymod.backends.PolymodAssetLibrary;
 import polymod.backends.PolymodAssets;
@@ -11,11 +9,9 @@ import polymod.format.JsonHelp;
 import polymod.format.ParseRules;
 import polymod.fs.PolymodFileSystem;
 import polymod.util.DependencyUtil;
-import polymod.util.Util;
 import polymod.util.VersionUtil;
 import thx.semver.Version;
 import thx.semver.VersionRule;
-
 using StringTools;
 
 #if firetongue
@@ -532,6 +528,7 @@ class Polymod
 			{
 				if (textPath.endsWith(PolymodConfig.scriptClassExt))
 				{
+					// Polymod.debug('Registering script class "$textPath"');
 					polymod.hscript._internal.PolymodScriptClass.registerScriptClassByPath(textPath);
 				}
 			}

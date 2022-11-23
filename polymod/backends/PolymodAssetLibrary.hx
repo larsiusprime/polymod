@@ -192,10 +192,24 @@ class PolymodAssetLibrary
 		return backend.getText(id);
 	}
 
+	#if lime
+	public function loadText(id:String):lime.app.Future<String>
+	{
+		return backend.loadText(id);
+	}
+	#end
+
 	public function getBytes(id:String):Bytes
 	{
 		return backend.getBytes(id);
 	}
+
+	#if lime
+	public function loadBytes(id:String):lime.app.Future<Bytes>
+	{
+		return backend.loadBytes(id);
+	}
+	#end
 
 	public function getPath(id:String):String
 	{
@@ -428,13 +442,9 @@ class PolymodAssetLibrary
 
 		try
 		{
-			if (fileSystem.exists(d))
+    	if (fileSystem.exists(d))
 			{
 				all = fileSystem.readDirectoryRecursive(d);
-			}
-			else
-			{
-				all = [];
 			}
 		}
 		catch (msg:Dynamic)

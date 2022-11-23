@@ -68,6 +68,42 @@ class PolymodScriptClass
 		}
 	}
 
+	static function registerScriptClassByPathAsync(path:String):Void {
+		@:privateAccess {
+						var promise = new lime.app.Promise<Bool>();
+
+			Polymod.assetLibrary.loadText(path).onComplete((text)->{
+				try {
+
+					registerScriptClassByString(text);
+					promise.complete(true);
+				} catch (err:PolymodExprEx.ErrorEx) {
+					var errLine:String = #if hscriptPos '${err.line}' #else "#???" #end;
+					#if hscriptPos
+					switch (err.e)
+					#else
+					switch (err)
+					#end
+					{
+						case EUnexpected(s):
+							Polymod.error(SCRIPT_PARSE_ERROR,
+								'Error while parsing function ${path}#${errLine}: EUnexpected' + '\n' +
+								'Unexpected error: Unexpected token "${s}", is there invalid syntax on this line?');
+						default:
+							Polymod.error(SCRIPT_PARSE_ERROR, 'Error while executing function ${path}#${errLine}: ' + '\n' + 'An unknown error occurred: ${err}');
+					}
+					promise.error(err);
+				}
+			}).onError((err)->{
+				Polymod.error(SCRIPT_PARSE_ERROR, 'Error while parsing function ${path}: ' + '\n' + 'An unknown error occurred: ${err}');
+				promise.error(err);
+			});
+
+			// Await the promise
+			return promise.future.result();
+		}
+	}
+
 	/**
 	 * Returns a list of all registered classes.
 	 * @return Array<String>

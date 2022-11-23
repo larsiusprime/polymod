@@ -19,7 +19,6 @@ import polymod.util.Util;
 import polymod.util.zip.ZipParser;
 import sys.io.File;
 import thx.semver.VersionRule;
-
 using StringTools;
 
 /**
@@ -59,6 +58,7 @@ class SysZipFileSystem extends SysFileSystem
 	 */
 	public override function getFileBytes(path:String):Null<Bytes>
 	{
+    path = Util.filterASCII(path);
 		if (!filesLocations.exists(path))
 		{
 			// Fallback to the inner SysFileSystem.
