@@ -68,7 +68,7 @@ class PolymodScriptClass
 		}
 	}
 
-	static function registerScriptClassByPathAsync(path:String):Void {
+	static function registerScriptClassByPathAsync(path:String):Bool {
 		@:privateAccess {
 						var promise = new lime.app.Promise<Bool>();
 
