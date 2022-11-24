@@ -137,7 +137,7 @@ class PolymodConfig
 			appendFolder = DefineUtil.getDefineString('POLYMOD_APPEND_FOLDER', '_append');
 		return appendFolder;
 	}
-	
+
 	/**
 	 * The directory from which to read data merge files.
 	 * 

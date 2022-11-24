@@ -12,7 +12,6 @@ interface HScriptedClass
 	// and those classes rely on the scripted class functions having already been defined).
 	//
 	// The alternatives are using expensive reflection or adding a verbose warning, and I chose the latter.
-
 	/**
 	 * Call a custom function on a scripted class, by the given name, with the given arguments.
 	 * 
@@ -21,15 +20,13 @@ interface HScriptedClass
 	 * @return The result of the function call.
 	 */
 	// public function scriptCall(funcName:String, funcArgs:Array<Dynamic>):Dynamic;
-
 	/**
-   * Returns the value of a custom field of the scripted class, by the given name.
+	    * Returns the value of a custom field of the scripted class, by the given name.
 	 * 
 	 * @param fieldName The name of the field to return.
 	 * @return The value of the field, if any.
 	 */
 	// public function scriptGet(fieldName:String):Dynamic;
-
 	/**
 	 * Sets the value of a custom field of the scripted class, by the given name.
 	 * 

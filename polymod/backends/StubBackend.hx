@@ -41,6 +41,18 @@ class StubBackend implements IBackend
 		return null;
 	}
 
+	#if lime
+	public function loadBytes(id:String):lime.app.Future<Bytes>
+	{
+		return null;
+	}
+
+	public function loadText(id:String):lime.app.Future<String>
+	{
+		return null;
+	}
+	#end
+
 	public function getPath(id:String):String
 	{
 		return null;

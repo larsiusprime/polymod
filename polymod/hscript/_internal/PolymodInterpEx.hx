@@ -25,9 +25,13 @@ class PolymodInterpEx extends Interp
 		this.targetCls = targetCls;
 	}
 
-	inline function errorEx(e : #if hscriptPos ErrorDefEx #else ErrorEx #end, rethrow=false ) : Dynamic {
+	inline function errorEx(e:#if hscriptPos ErrorDefEx #else ErrorEx #end, rethrow = false):Dynamic
+	{
 		#if hscriptPos var e = new ErrorEx(e, curExpr.pmin, curExpr.pmax, curExpr.origin, curExpr.line); #end
-		if( rethrow ) this.rethrow(e) else throw e;
+		if (rethrow)
+			this.rethrow(e)
+		else
+			throw e;
 		return null;
 	}
 
@@ -69,7 +73,9 @@ class PolymodInterpEx extends Interp
 				if (c != null)
 				{
 					return Type.createInstance(c, args);
-				} else {
+				}
+				else
+				{
 					errorEx(EInvalidModule(importedClass));
 				}
 			}
@@ -84,7 +90,7 @@ class PolymodInterpEx extends Interp
 	override function fcall(o:Dynamic, f:String, args:Array<Dynamic>):Dynamic
 	{
 		// OVERRIDE CHANGE: Custom logic to handle super calls to prevent infinite recursion
-		if (Std.isOfType(o, targetCls))
+		if (o == _proxy.superClass)
 		{
 			// Force call super function.
 			return super.fcall(o, '__super_${f}', args);
@@ -97,13 +103,17 @@ class PolymodInterpEx extends Interp
 		}
 
 		var func = get(o, f);
-		if (func == null) {
-			if (Std.isOfType(o, HScriptedClass)) {
+		if (func == null)
+		{
+			if (Std.isOfType(o, HScriptedClass))
+			{
 				// Could not call the function.
 				// It might be a custom function on the scripted class,
 				// in which case you need to use `scriptCall()` instead.
 				errorEx(EInvalidScriptedFnAccess(f));
-			} else {
+			}
+			else
+			{
 				// Throw an error for a missing function.
 				errorEx(EInvalidAccess(f));
 			}
@@ -155,7 +165,8 @@ class PolymodInterpEx extends Interp
 				// Also ensures property functions are accounted for.
 				if (_proxy != null && _proxy.superClass != null)
 				{
-					if (_proxy.superHasField(id)) {
+					if (_proxy.superHasField(id))
+					{
 						var v = expr(e2);
 						Reflect.setProperty(_proxy.superClass, id, v);
 						return v;
@@ -171,7 +182,8 @@ class PolymodInterpEx extends Interp
 						{
 							if (_proxy != null && _proxy.superClass != null)
 							{
-								if (_proxy.superHasField(id)) {
+								if (_proxy.superHasField(id))
+								{
 									var v = expr(e2);
 									Reflect.setProperty(_proxy.superClass, id, v);
 									return v;
@@ -187,54 +199,72 @@ class PolymodInterpEx extends Interp
 		return super.assign(e1, e2);
 	}
 
-	public override function expr( e : Expr ) : Dynamic {
+	public override function expr(e:Expr):Dynamic
+	{
 		// Override to provide some fixes, falling back to super.expr() when not needed.
 		#if hscriptPos
 		curExpr = e;
-		switch(e.e) {
+		switch (e.e)
+		{
 		#else
-		switch(e) {
+		switch (e)
+		{
 		#end
 			// These overrides are used to handle specific cases where problems occur.
-			
-			case EVar(n,_,e): // Fix to ensure local variables are committed properly.
-				declared.push({ n : n, old : locals.get(n) });
+
+			case EVar(n, _, e): // Fix to ensure local variables are committed properly.
+				declared.push({n: n, old: locals.get(n)});
 				var result = (e == null) ? null : expr(e);
-				locals.set(n,{ r: result });
+				locals.set(n, {r: result});
 				return null;
 			case EFunction(params, fexpr, name, _): // Fix to ensure callback functions catch thrown errors.
 				var capturedLocals = duplicate(locals);
 				var me = this;
 				var hasOpt = false, minParams = 0;
-				for (p in params) {
-					if (p.opt) {
+				for (p in params)
+				{
+					if (p.opt)
+					{
 						hasOpt = true;
-					} else {
+					}
+					else
+					{
 						minParams++;
 					}
 				}
 
 				// This CREATES a new function in memory, that we call later.
-				var newFun = function(args:Array<Dynamic>) {
-					if(((args == null) ? 0 : args.length) != params.length ) {
-						if(args.length < minParams) {
+				var newFun = function(args:Array<Dynamic>)
+				{
+					if (((args == null) ? 0 : args.length) != params.length)
+					{
+						if (args.length < minParams)
+						{
 							var str = "Invalid number of parameters. Got " + args.length + ", required " + minParams;
-							if (name != null) str += " for function '" + name + "'";
+							if (name != null)
+								str += " for function '" + name + "'";
 							errorEx(ECustom(str));
 						}
 						// make sure mandatory args are forced
 						var args2 = [];
 						var extraParams = args.length - minParams;
 						var pos = 0;
-						for (p in params) {
-							if (p.opt) {
-								if (extraParams > 0) {
+						for (p in params)
+						{
+							if (p.opt)
+							{
+								if (extraParams > 0)
+								{
 									args2.push(args[pos++]);
 									extraParams--;
-								} else {	
+								}
+								else
+								{
 									args2.push(null);
 								}
-							} else {
+							}
+							else
+							{
 								args2.push(args[pos++]);
 							}
 						}
@@ -244,16 +274,21 @@ class PolymodInterpEx extends Interp
 					var depth = me.depth;
 					me.depth++;
 					me.locals = me.duplicate(capturedLocals);
-					for (i in 0...params.length) {
-						me.locals.set(params[i].name, { r: args[i] });
+					for (i in 0...params.length)
+					{
+						me.locals.set(params[i].name, {r: args[i]});
 					}
 					var r = null;
 					var oldDecl = declared.length;
-					if (inTry) {
+					if (inTry)
+					{
 						// True if the SCRIPT wraps the function in a try/catch block.
-						try {
+						try
+						{
 							r = me.exprReturn(fexpr);
-						} catch( e : Dynamic ) {
+						}
+						catch (e:Dynamic)
+						{
 							me.locals = old;
 							me.depth = depth;
 							#if neko
@@ -262,17 +297,26 @@ class PolymodInterpEx extends Interp
 							throw e;
 							#end
 						}
-					} else {
+					}
+					else
+					{
 						// There is no try/catch block. We can add some custom error handling.
-						try {
+						try
+						{
 							r = me.exprReturn(fexpr);
-						} catch (err:PolymodExprEx.ErrorEx) {
+						}
+						catch (err:PolymodExprEx.ErrorEx)
+						{
 							_proxy.reportErrorEx(err, 'anonymous');
 							r = null;
-						} catch (err:hscript.Expr.Error) {
+						}
+						catch (err:hscript.Expr.Error)
+						{
 							_proxy.reportError(err, 'anonymous');
 							r = null;
-						} catch (err:Dynamic) {
+						}
+						catch (err:Dynamic)
+						{
 							throw err;
 						}
 					}
@@ -283,14 +327,18 @@ class PolymodInterpEx extends Interp
 				};
 
 				newFun = Reflect.makeVarArgs(newFun);
-				if (name != null) {
-					if (depth == 0) {
+				if (name != null)
+				{
+					if (depth == 0)
+					{
 						// Store the function as a global.
 						variables.set(name, newFun);
-					} else {
+					}
+					else
+					{
 						// function-in-function is a local function
-						declared.push( { n: name, old: locals.get(name) } );
-						var ref = { r: newFun };
+						declared.push({n: name, old: locals.get(name)});
+						var ref = {r: newFun};
 						locals.set(name, ref);
 						capturedLocals.set(name, ref); // allow self-recursion
 					}
@@ -299,6 +347,7 @@ class PolymodInterpEx extends Interp
 			default:
 				// Do nothing.
 		}
+
 		// Default case.
 		return super.expr(e);
 	}
@@ -327,13 +376,13 @@ class PolymodInterpEx extends Interp
 	}
 
 	/**
-	 * Call a given function on a given target with the given arguments.
-	 * @param target The object to call the function on.
-	 *   If null, defaults to `this`.
-	 * @param fun The function to call.
-	 * @param args The arguments to apply to that function.
-	 * @return The result of the function call.
-	 */
+ * Call a given function on a given target with the given arguments.
+ * @param target The object to call the function on.
+ *   If null, defaults to `this`.
+ * @param fun The function to call.
+ * @param args The arguments to apply to that function.
+ * @return The result of the function call.
+ */
 	override function call(target:Dynamic, fun:Dynamic, args:Array<Dynamic>):Dynamic
 	{
 		// Calling fn() in hscript won't resolve an object first. Thus, we need to change it to use this.fn() instead.
@@ -347,12 +396,15 @@ class PolymodInterpEx extends Interp
 			errorEx(EInvalidAccess(fun));
 		}
 
-		if (target == _proxy) {
+		if (target == _proxy)
+		{
 			// If we are calling this.fn(), special handling is needed to prevent the local scope from being destroyed.
 			// By checking `target == _proxy`, we handle BOTH fn() and this.fn().
 			// super.fn() is exempt since it is not scripted.
 			return callThis(fun, args);
-		} else {
+		}
+		else
+		{
 			var result = Reflect.callMethod(target, fun, args);
 			_nextCallObject = null;
 			return result;
@@ -360,19 +412,20 @@ class PolymodInterpEx extends Interp
 	}
 
 	/**
-	 * Call a given function on the current proxy with the given arguments.
-	 * Ensures that the local scope is not destroyed.
-	 * @param fun The function to call.
-	 * @param args The arguments to apply to that function.
-	 * @return The result of the function call.
-	 */
-	function callThis(fun:Dynamic, args:Array<Dynamic>):Dynamic {
+ * Call a given function on the current proxy with the given arguments.
+ * Ensures that the local scope is not destroyed.
+ * @param fun The function to call.
+ * @param args The arguments to apply to that function.
+ * @return The result of the function call.
+ */
+	function callThis(fun:Dynamic, args:Array<Dynamic>):Dynamic
+	{
 		// If we are calling this.fn(), special handling is needed to prevent the local scope from being destroyed.
 		// Store the local scope.
 		var capturedLocals = this.duplicate(locals);
 		var capturedDeclared = this.declared;
 		var capturedDepth = this.depth;
-		
+
 		this.depth++;
 
 		// Call the function.
@@ -386,26 +439,35 @@ class PolymodInterpEx extends Interp
 		return result;
 	}
 
-	override function execute(expr:Expr):Dynamic {
+	override function execute(expr:Expr):Dynamic
+	{
 		// If this function is being called (and not executeEx),
 		// PolymodScriptClass is not being used to call the expression.
 		// This happens during callbacks and in some other niche cases.
 		// In this case, we know the parent caller doesn't have error handling!
 		// That means we have to do it here.
-		try {
+		try
+		{
 			return super.execute(expr);
-		} catch (err:PolymodExprEx.ErrorEx) {
+		}
+		catch (err:PolymodExprEx.ErrorEx)
+		{
 			_proxy.reportErrorEx(err, 'anonymous');
 			return null;
-		} catch (err:hscript.Expr.Error) {
+		}
+		catch (err:hscript.Expr.Error)
+		{
 			_proxy.reportError(err, 'anonymous');
 			return null;
-		} catch (err:Dynamic) {
+		}
+		catch (err:Dynamic)
+		{
 			throw err;
 		}
 	}
 
-	public function executeEx( expr : Expr ) : Dynamic {
+	public function executeEx(expr:Expr):Dynamic
+	{
 		// Directly call execute (assume error handling happens higher).
 		return super.execute(expr);
 	}
@@ -414,31 +476,47 @@ class PolymodInterpEx extends Interp
 	{
 		if (o == null)
 			errorEx(EInvalidAccess(f));
-		if (Std.isOfType(o, PolymodScriptClass)) {
+		if (Std.isOfType(o, PolymodScriptClass))
+		{
 			var proxy:PolymodAbstractScriptClass = cast(o, PolymodScriptClass);
-			if (proxy._interp.variables.exists(f)) {
+			if (proxy._interp.variables.exists(f))
+			{
 				return proxy._interp.variables.get(f);
-			} else if (proxy.superClass != null && proxy.superHasField(f)) {
+			}
+			else if (proxy.superClass != null && proxy.superHasField(f))
+			{
 				return Reflect.getProperty(proxy.superClass, f);
-			} else {
-				try {
+			}
+			else
+			{
+				try
+				{
 					return proxy.resolveField(f);
-				} catch (e:Dynamic) { }
+				}
+				catch (e:Dynamic)
+				{
+				}
 				errorEx(EUnknownVariable(f));
 			}
-		} else if (Std.isOfType(o, HScriptedClass)) {
-			try {
+		}
+		else if (Std.isOfType(o, HScriptedClass))
+		{
+			try
+			{
 				var result = Reflect.getProperty(o, f);
 				// I guess there's no way to distinguish between properties that don't exist,
 				// and properties that are equal to null?
-				if (result == null) {
+				if (result == null)
+				{
 					// To save a bit of performance, we only query for the existence of the property
 					// if the value is reported as null, AND only in debug builds.
 
 					#if debug
-					if (!Reflect.hasField(o, f)) {
+					if (!Reflect.hasField(o, f))
+					{
 						var propertyList = Type.getInstanceFields(Type.getClass(o));
-						if (propertyList.indexOf(f) == -1) {
+						if (propertyList.indexOf(f) == -1)
+						{
 							errorEx(EInvalidScriptedVarGet(f));
 						}
 					}
@@ -446,7 +524,9 @@ class PolymodInterpEx extends Interp
 					return result;
 				}
 				return result;
-			} catch (e:Dynamic) {
+			}
+			catch (e:Dynamic)
+			{
 				errorEx(EInvalidScriptedVarGet(f));
 			}
 		}
@@ -457,7 +537,8 @@ class PolymodInterpEx extends Interp
 	{
 		if (o == null)
 			errorEx(EInvalidAccess(f));
-		if (Std.isOfType(o, PolymodScriptClass)) {
+		if (Std.isOfType(o, PolymodScriptClass))
+		{
 			var proxy:PolymodScriptClass = cast(o, PolymodScriptClass);
 			if (proxy._interp.variables.exists(f))
 			{
@@ -476,18 +557,26 @@ class PolymodInterpEx extends Interp
 				errorEx(EUnknownVariable(f));
 			}
 			return v;
-		} else if (Std.isOfType(o, HScriptedClass)) {
-			try {
-				Reflect.setProperty(o,f,v);
-			} catch (e) {
+		}
+		else if (Std.isOfType(o, HScriptedClass))
+		{
+			try
+			{
+				Reflect.setProperty(o, f, v);
+			}
+			catch (e)
+			{
 				errorEx(EInvalidScriptedVarSet(f));
 			}
 			return v;
 		}
-		
-		try {
-			Reflect.setProperty(o,f,v);
-		} catch (e) {
+
+		try
+		{
+			Reflect.setProperty(o, f, v);
+		}
+		catch (e)
+		{
 			errorEx(EInvalidAccess(f));
 		}
 		return v;
@@ -495,10 +584,14 @@ class PolymodInterpEx extends Interp
 
 	private var _nextCallObject:Dynamic = null;
 
-	override function exprReturn(expr:Expr) : Dynamic {
-		try {
+	override function exprReturn(expr:Expr):Dynamic
+	{
+		try
+		{
 			return super.exprReturn(expr);
-		} catch (err:hscript.Expr.Error) {
+		}
+		catch (err:hscript.Expr.Error)
+		{
 			#if hscriptPos
 			throw err;
 			#else
@@ -607,6 +700,8 @@ class PolymodInterpEx extends Interp
 			// OVERRIDE CHANGE: Create a PolymodScriptClass instead of a hscript.ScriptClass
 			var proxy:PolymodAbstractScriptClass = new PolymodScriptClass(_scriptClassDescriptors.get(className), args);
 			return proxy;
+		} else {
+			Polymod.error(SCRIPT_CLASS_NOT_FOUND, "Scripted class " + className + " has not been defined.");
 		}
 		return null;
 	}
@@ -656,9 +751,7 @@ class PolymodInterpEx extends Interp
 			}
 		}
 	}
-}
-
-private class ArrayIterator<T>
+} private class ArrayIterator<T>
 {
 	var a:Array<T>;
 	var pos:Int;

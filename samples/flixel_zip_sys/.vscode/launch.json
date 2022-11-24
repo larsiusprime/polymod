@@ -6,17 +6,11 @@
 			"type": "lime",
 			"request": "launch"
 		},
-		{
-			"name": "Debug",
-			"type": "lime",
-			"request": "launch",
-			"preLaunchTask": null
-		},
     {
       // Evaluate macros with debugging enabled
       "name": "Haxe Eval",
       "type": "haxe-eval",
       "request": "launch"
-    },
+    }
 	]
 }

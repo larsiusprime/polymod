@@ -25,8 +25,9 @@ class HScriptedClassMacro
 		// If the class already has `@:hscriptClassPreProcessed` on it, we don't need to do anything.
 		var alreadyProcessed_metadata = cls.meta.get().find(function(m) return m.name == ':hscriptClassPreProcessed');
 
-		if (alreadyProcessed_metadata == null) {
-			Context.info('HScriptedClass: Class ' + cls.name + ' ready to pre-process...', Context.currentPos());
+		if (alreadyProcessed_metadata == null)
+		{
+			// Context.info('HScriptedClass: Class ' + cls.name + ' ready to pre-process...', Context.currentPos());
 
 			var superCls:haxe.macro.Type.ClassType = cls.superClass.t.get();
 
@@ -34,15 +35,17 @@ class HScriptedClassMacro
 			fields = fields.concat(newFields);
 
 			fields = buildHScriptClass(cls, fields);
-			
+
 			// Ensure unused scripted classes are still available to initialize in scripts.
 			// SORRY, DCE gets run before this, so we can't use the @:keep metadata.
 			cls.meta.add(":hscriptClassPreProcessed", [], cls.pos);
 			return fields;
-		} else {
+		}
+		else
+		{
 			// Already processed.
 		}
-		
+
 		// Returning null is equal to "don't do anything".
 		return null;
 	}
@@ -102,10 +105,12 @@ class HScriptedClassMacro
 			}
 			else
 			{
-				if (superCls.constructor != null) {
+				if (superCls.constructor != null)
+				{
 					var superClsConstType:haxe.macro.Type = superCls.constructor.get().type;
-					//Context.follow(superCls.constructor.get().type);
-					switch (superClsConstType) {
+					// Context.follow(superCls.constructor.get().type);
+					switch (superClsConstType)
+					{
 						case TFun(args, ret):
 							// Build a new constructor, which has the same signature as the superclass constructor.
 							var constArgs = [
@@ -129,13 +134,14 @@ class HScriptedClassMacro
 									fields.push(initField);
 									constructor = buildScriptedClassConstructor(constArgs);
 								default:
-									Context.error('Error: Lazy superclass constructor is not a function (got ${builtValue})',
-										Context.currentPos());
+									Context.error('Error: Lazy superclass constructor is not a function (got ${builtValue})', Context.currentPos());
 							}
 						default:
 							Context.error('Error: super constructor is not a function (got ${superClsConstType})', Context.currentPos());
 					}
-				} else {
+				}
+				else
+				{
 					constructor = buildEmptyScriptedClassConstructor();
 					// Create scripted class utility functions.
 					Context.info('  Creating scripted class utils...', Context.currentPos());
@@ -179,7 +185,8 @@ class HScriptedClassMacro
 				{
 					polymod.hscript._internal.PolymodScriptClass.scriptClassOverrides.set($v{superClsTypeName}, Type.resolveClass($v{clsTypeName}));
 
-					var asc:polymod.hscript._internal.PolymodAbstractScriptClass = polymod.hscript._internal.PolymodScriptClass.createScriptClassInstance(clsName, $a{constArgs});
+					var asc:polymod.hscript._internal.PolymodAbstractScriptClass = polymod.hscript._internal.PolymodScriptClass.createScriptClassInstance(clsName,
+						$a{constArgs});
 					if (asc == null)
 					{
 						polymod.Polymod.error(SCRIPT_EXCEPTION, 'Could not construct instance of scripted class (${clsName} extends ' + $v{clsTypeName} + ')');
@@ -197,7 +204,8 @@ class HScriptedClassMacro
 		return function_init;
 	}
 
-	static function buildScriptedClassUtils(cls:haxe.macro.Type.ClassType, superCls:haxe.macro.Type.ClassType):Array<Field> {
+	static function buildScriptedClassUtils(cls:haxe.macro.Type.ClassType, superCls:haxe.macro.Type.ClassType):Array<Field>
+	{
 		var clsTypeName:String = cls.pack.join('.') != '' ? '${cls.pack.join('.')}.${cls.name}' : cls.name;
 		var superClsTypeName:String = superCls.pack.join('.') != '' ? '${superCls.pack.join('.')}.${superCls.name}' : superCls.name;
 
@@ -265,7 +273,7 @@ class HScriptedClassMacro
 				},
 			}),
 		};
-		
+
 		var var__asc:Field = {
 			name: '_asc',
 			doc: "The AbstractScriptClass instance which any variable or function calls are redirected to internally.",
@@ -321,7 +329,7 @@ class HScriptedClassMacro
 
 		while (targetClass != null)
 		{
-			Context.info('Processing overrides for class: ${targetClass.name}<${mappedParams}>', Context.currentPos());
+			// Context.info('Processing overrides for class: ${targetClass.name}<${mappedParams}>', Context.currentPos());
 			// Values will be either of type haxe.macro.Expr.Field or Bool. This is because setting a Map value to null removes the key.
 			var newFields:Map<String, Dynamic> = buildScriptedClassFieldOverrides_inner(targetClass, mappedParams);
 			for (newFieldName => newField in newFields)
@@ -922,10 +930,16 @@ class HScriptedClassMacro
 	 * Create the type corresponding to an array of the given type.
 	 * For example, toComplexTypeArray(String) will return Array<String>.
 	 */
-	static function toComplexTypeArray(inputType:ComplexType):haxe.macro.ComplexType {
-		var typeParams = (inputType != null)
-			? [TPType(inputType)]
-			: [TPType(TPath({pack: [], name: 'Dynamic', sub: null, params: []}))];
+	static function toComplexTypeArray(inputType:ComplexType):haxe.macro.ComplexType
+	{
+		var typeParams = (inputType != null) ? [TPType(inputType)] : [
+			TPType(TPath({
+				pack: [],
+				name: 'Dynamic',
+				sub: null,
+				params: []
+			}))
+		];
 
 		var result:ComplexType = TPath({
 			pack: [],

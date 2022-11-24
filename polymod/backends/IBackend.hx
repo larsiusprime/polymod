@@ -17,6 +17,10 @@ interface IBackend
 	public function exists(id:String):Bool;
 	public function getBytes(id:String):Bytes;
 	public function getText(id:String):String;
+	#if lime
+	public function loadBytes(id:String):lime.app.Future<Bytes>;
+	public function loadText(id:String):lime.app.Future<String>;
+	#end
 
 	public function getPath(id:String):String;
 	public function list(type:PolymodAssetType = null):Array<String>;

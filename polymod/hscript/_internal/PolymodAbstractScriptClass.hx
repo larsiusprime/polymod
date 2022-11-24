@@ -32,11 +32,15 @@ abstract PolymodAbstractScriptClass(PolymodScriptClass) from PolymodScriptClass
 						case 2: return this.callFunction2.bind(name, _, _);
 						case 3: return this.callFunction3.bind(name, _, _, _);
 						case 4: return this.callFunction4.bind(name, _, _, _, _);
+						#if neko
+						case _: @:privateAccess this._interp.error(ECustom("only 4 params allowed in script class functions (.bind limitation)"));
+						#else
 						case 5: return this.callFunction5.bind(name, _, _, _, _, _);
 						case 6: return this.callFunction6.bind(name, _, _, _, _, _, _);
 						case 7: return this.callFunction7.bind(name, _, _, _, _, _, _, _);
 						case 8: return this.callFunction8.bind(name, _, _, _, _, _, _, _, _);
 						case _: @:privateAccess this._interp.error(ECustom("only 8 params allowed in script class functions (.bind limitation)"));
+						#end
 					}
 				}
 				else if (this.findVar(name) != null)

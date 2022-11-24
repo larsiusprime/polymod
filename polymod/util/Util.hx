@@ -54,6 +54,23 @@ class Util
 		return text;
 	}
 
+  /**
+   * Filters a unicode string to only contain characters that are valid in a filename.
+   */
+  public static function filterASCII(str:String):String
+  {
+    var filtered:String = "";
+    for (i in 0...str.length)
+    {
+      var c = str.charCodeAt(i);
+      if (c >= 32 && c <= 126)
+      {
+        filtered += str.charAt(i);
+      }
+    }
+    return filtered;
+  }
+
 	/**
 	 * Looks for a '_merge' entry for an asset and tries to merge its contents into the original
 	 * With the following rules:
