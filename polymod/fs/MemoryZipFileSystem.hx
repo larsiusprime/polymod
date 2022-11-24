@@ -5,12 +5,14 @@ import haxe.ds.StringMap;
 import haxe.io.Bytes;
 import haxe.io.BytesInput;
 import haxe.io.Path;
+import haxe.zip.Entry;
 import haxe.zip.InflateImpl;
 import polymod.fs.PolymodFileSystem.IFileSystem;
 import polymod.fs.PolymodFileSystem.PolymodFileSystemParams;
+import polymod.fs.ZipFileSystem.ZipFileSystemParams;
 import polymod.util.Util;
 
-#if html5
+#if !html5
 class MemoryZipFileSystem extends StubFileSystem
 {
 	public function new(params:PolymodFileSystemParams)
@@ -28,9 +30,12 @@ class MemoryZipFileSystem extends StubFileSystem
  */
 class MemoryZipFileSystem extends MemoryFileSystem
 {
+	var pathIsZipped:Map<String, Bool>;
+
 	public function new(params:ZipFileSystemParams)
 	{
 		super(params);
+		pathIsZipped = new Map();
 	}
 
 	#if !debug
@@ -65,8 +70,8 @@ class MemoryZipFileSystem extends MemoryFileSystem
 		var entries:List<haxe.zip.Entry> = reader.read();
 		for (zipEntry in entries)
 		{
-			var entryData = haxe.zip.Reader.unzip(zipEntry);
-			if (zipEntry.fileName.substring(zipEntry.fileName.lastIndexOf('/') + 1) == '' && _entry.data.toString() == '')
+			var entryData = zipEntry.data; // we'll store the data in compressed form and decompress it when getFileBytes is called
+			if (zipEntry.fileName.substring(zipEntry.fileName.lastIndexOf('/') + 1) == '' && zipEntry.data.toString() == '')
 			{
 				// This is a directory entry.
 			}
@@ -74,8 +79,19 @@ class MemoryZipFileSystem extends MemoryFileSystem
 			{
 				// This is a file entry! Register it in the MemoryFileSystem.
 				addFileBytes('mods/${zipEntry.fileName}', entryData);
+				pathIsZipped.set('mods/${zipEntry.fileName}', zipEntry.compressed);
 			}
 		}
+	}
+
+	override function getFileBytes(path:String):Bytes
+	{
+		var compressedBytes = super.getFileBytes(path);
+
+		if (pathIsZipped.get(path) != null && pathIsZipped.get(path))
+			return Util.unzipBytes(compressedBytes);
+
+		return compressedBytes; // if it wasn't actually compressed
 	}
 }
 #end

@@ -2,6 +2,7 @@ package polymod.util;
 
 import haxe.Utf8;
 import haxe.io.Path;
+import haxe.io.Bytes;
 import polymod.Polymod.PolymodError;
 import polymod.Polymod.PolymodErrorType;
 import polymod.Polymod;
@@ -396,6 +397,27 @@ class Util
 		}
 		@:privateAccess c.parent = parent;
 		return c;
+	}
+
+	/**
+	 * Runs the 'Inflate' decompression algorithm on the raw compressed bytes and returns the uncompressed data
+	 * @param bytes A raw block of compressed bytes
+	 */
+	 public static function unzipBytes(bytes:Bytes)
+	{
+		var bytesinp = new haxe.io.BytesInput(bytes);
+		var inflater = new haxe.zip.InflateImpl(bytesinp, false, false);
+		
+		var returnBuf = new haxe.io.BytesBuffer();
+		var unzipBuf = Bytes.alloc(65535);
+		var bytesRead = inflater.readBytes(unzipBuf, 0, unzipBuf.length);
+		while (bytesRead == unzipBuf.length)
+		{
+			returnBuf.addBytes(unzipBuf, 0, bytesRead);
+			bytesRead = inflater.readBytes(unzipBuf, 0, unzipBuf.length);
+		}
+		returnBuf.addBytes(unzipBuf, 0, bytesRead);
+		return returnBuf.getBytes();
 	}
 
 	/*****UTF shims*****/
