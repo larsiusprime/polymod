@@ -179,7 +179,7 @@ class PlayState extends FlxState
 
 		var images = Assets.list(AssetType.IMAGE).filter(function(item:String)
 		{
-			return item.startsWith('assets/img/') && item.endsWith('.png');
+			return item.split(':')[1].startsWith('assets/img/') && item.endsWith('.png');
 		});
 		images.sort(function(a:String, b:String):Int
 		{
@@ -235,7 +235,7 @@ class PlayState extends FlxState
 
 		var texts = Assets.list(AssetType.TEXT).filter(function(item:String)
 		{
-			return item.startsWith('assets/data/');
+			return item.split(':')[1].startsWith('assets/data/');
 		});
 
 		texts.sort(function(a:String, b:String)
@@ -415,10 +415,10 @@ class ZipLoader
 		_download_fileref = null;
 
 		zfs = new MemoryZipFileSystem({
-			zipBytes: zipBytes,
-			zipName: zipname,
+			zipPath: zipname,
 			modRoot: 'mods/'
 		});
+		zfs.addZipFile(zipname, zipBytes);
 		if (postLoad != null)
 		{
 			postLoad();
