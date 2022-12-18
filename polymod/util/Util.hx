@@ -398,7 +398,6 @@ class Util
 		return c;
 	}
 
-	/*****UTF shims*****/
 	public static function uCat(a:String, b:String):String
 	{
 		var sb = new StringBuf();
