@@ -174,7 +174,8 @@ class PlayState extends FlxState
 			if (Assets.exists(atlasPath))
 			{
 				trace('Building animated image $image');
-				sprite.frames = FlxAtlasFrames.fromSparrow(image, Assets.getText(atlasPath));
+				var atlasText = Assets.getText(atlasPath);
+				sprite.frames = FlxAtlasFrames.fromSparrow(image, atlasText);
 				sprite.animation.addByPrefix('idle', 'idle', 24, true);
 				sprite.animation.play('idle');
 			}

@@ -352,8 +352,10 @@ class PolymodAssetLibrary
 			// Else, FireTongue not enabled.
 			#end
 			var filePath = Util.pathJoin(d, id);
-			if (fileSystem.exists(filePath))
-				return true;
+			if (fileSystem.exists(filePath)) {
+				trace('Exists for (${filePath}) : ${true}');
+				return true;		
+			}
 		}
 		// The loop didn't find it.
 		return false;
