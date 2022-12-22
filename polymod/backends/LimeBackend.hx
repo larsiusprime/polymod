@@ -145,7 +145,7 @@ class LimeBackend implements IBackend
 				}
 			}
 			var fallbackLibrary = defaultLibraries.get(key);
-			var modLibrary = new LimeModLibrary(this, fallbackLibrary, pathPrefix, key);
+			var modLibrary = buildModLibrary(fallbackLibrary, pathPrefix, key);
 			modLibraries.set(key, modLibrary);
 		}
 
@@ -155,6 +155,11 @@ class LimeBackend implements IBackend
 		}
 
 		return true;
+	}
+
+	function buildModLibrary(fallbackLibrary:AssetLibrary, pathPrefix:String, libraryName:String):LimeModLibrary
+	{
+		return new LimeModLibrary(this, fallbackLibrary, pathPrefix, libraryName);
 	}
 
 	/**

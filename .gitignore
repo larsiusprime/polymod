@@ -4,6 +4,5 @@ samples/*/.haxelib/
 samples/*/export/
 samples/*/bin/
 samples/*/dump/
-samples/heaps/res/
 samples/nme/Export/
 samples/openfl_hscript/pages/

@@ -363,7 +363,7 @@ class PlayState extends FlxState
 
 	private function onError(error:PolymodError)
 	{
-		trace('[${error.severity}] (${error.code.toUpperCase()}): ${error.message}');
+		trace('[${error.severity}] (${Std.string(error.code).toUpperCase()}): ${error.message}');
 	}
 }
 

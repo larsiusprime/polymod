@@ -17,7 +17,7 @@ This is an incredibly powerful feature for quickly prototyping and testing new f
 
 ```haxe
 @:hscriptClass
-class ScriptedStage extends Stage implements HScriptable {}
+class ScriptedStage extends Stage implements HScriptedClass {}
 ```
 
 Note that the body of the class is COMPLETELY EMPTY. This is because the contents are populated at compile time using a macro.

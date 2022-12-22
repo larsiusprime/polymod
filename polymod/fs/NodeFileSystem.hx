@@ -9,6 +9,9 @@ import polymod.Polymod.ModMetadata;
 import polymod.PolymodConfig;
 import polymod.fs.PolymodFileSystem.IFileSystem;
 import polymod.util.Util;
+import polymod.util.VersionUtil;
+import thx.semver.Version;
+import thx.semver.VersionRule;
 
 /**
  * An implementation of IFileSystem which accesses files from the local directory,
@@ -219,7 +222,7 @@ class NodeFileSystem implements IFileSystem
 			if (!isDirectory(testDir))
 				continue;
 
-			var meta:ModMetadata = fileSystem.getMetadata(localDirs[i]);
+			var meta:ModMetadata = this.getMetadata(dir);
 
 			if (meta == null)
 				continue;

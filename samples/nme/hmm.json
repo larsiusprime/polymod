@@ -1,0 +1,24 @@
+{
+  "dependencies": [
+    {
+      "name": "hxcpp",
+      "type": "haxelib",
+      "version": null
+    },
+    {
+      "name": "nme",
+      "type": "haxelib",
+      "version": null
+    },
+    {
+      "name": "polymod",
+      "path": "../..",
+      "type": "dev"
+    },
+    {
+      "name": "thx.semver",
+      "type": "haxelib",
+      "version": null
+    }
+  ]
+}

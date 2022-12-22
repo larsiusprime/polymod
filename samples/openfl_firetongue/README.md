@@ -1,6 +1,6 @@
-# samples/openfl
+# samples/openfl_firetongue
 
-Note that mod8 is intentially provided an outdated API version, to test the versioning system.
+This sample is explicitly designed to showcase the asset localization features of Polymod.
 
 ## Build Instructions
 

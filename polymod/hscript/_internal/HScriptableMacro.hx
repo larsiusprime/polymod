@@ -26,7 +26,7 @@ class HScriptableMacro
 			Context.info('HScriptable: Class ' + cls.name + ' ready to process...', Context.currentPos());
 
 			// Process @:hscript({}) annotations.
-			// fields = buildHScriptFields(cls, fields); // <--- cant find this function anywhere
+			fields = buildHScriptFields(cls, fields);
 
 			// Ensure unused scripted classes are still available to initialize in scripts.
 			// SORRY, DCE gets run before this, so we can't use the @:keep metadata.

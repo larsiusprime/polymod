@@ -35,6 +35,8 @@ This version has been postposed a while, but adds several powerful features. A d
   - The second mode, used when a parameter object is not provided, utilizes the filesystem created in `Polymod.init()`.
     - If you want to scan the modlist before loading mods, you can initialize Polymod with an empty modlist before scanning, then use `loadMods()` to reinitialize with additional mods.
     - If no parameters are provided but `init()` has not been called yet, an error will be thrown.
+- Updated samples to use the `hmm` dependency management tool.
+  - Install `hmm` via Haxelib, then run `hmm install` in a sample project to install project-local copies of all necessary dependencies with the correct version.
 - `IFileSystem.scanMods()` has been refactored.
   - `scanMods` now takes an optional `apiVersionRule` parameter, and returns `Array<ModMetadata>`.
   - `scanMods` will now parse and return the mod metadata, rather than returning an array of mod IDs.

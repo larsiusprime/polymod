@@ -1,0 +1,39 @@
+{
+  "dependencies": [
+    {
+      "name": "hxcpp",
+      "type": "haxelib",
+      "version": null
+    },
+    {
+      "name": "hxcpp-debug-server",
+      "type": "haxelib",
+      "version": null
+    },
+    {
+      "name": "hxnodejs",
+      "type": "haxelib",
+      "version": null
+    },
+    {
+      "name": "lime",
+      "type": "haxelib",
+      "version": null
+    },
+    {
+      "name": "openfl",
+      "type": "haxelib",
+      "version": null
+    },
+    {
+      "name": "polymod",
+      "path": "../..",
+      "type": "dev"
+    },
+    {
+      "name": "thx.semver",
+      "type": "haxelib",
+      "version": null
+    }
+  ]
+}

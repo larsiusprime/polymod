@@ -15,14 +15,18 @@ import polymod.util.Util;
 #if !html5
 class MemoryZipFileSystem extends StubFileSystem
 {
-	public function new(params:PolymodFileSystemParams)
+	public function new(params:ZipFileSystemParams)
 	{
 		super(params);
 		Polymod.warning(FUNCTIONALITY_NOT_IMPLEMENTED, "This file system not supported for this platform, and is only intended for use in html5");
 	}
+
+	public function addZipFile(zipName:String, zipBytes:Bytes)
+	{
+		Polymod.warning(FUNCTIONALITY_NOT_IMPLEMENTED, "This file system not supported for this platform, and is only intended for use in html5");
+	}
 }
 #else
-
 /**
  * An implementation of an IFileSystem that can access files from an un-compressed zip archive.
  * Useful for loading mods from zip files.
@@ -38,7 +42,7 @@ class MemoryZipFileSystem extends MemoryFileSystem
 		pathIsZipped = new Map();
 	}
 
-	#if !debug
+	#if debug
 	/**
 	 * Prints the metadata of a ZIP file entry. Used for debugging.
 	 */
