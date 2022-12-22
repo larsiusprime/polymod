@@ -2,7 +2,6 @@ package polymod.hscript._internal;
 
 import haxe.macro.Context;
 import haxe.macro.Expr;
-
 using Lambda;
 using haxe.macro.ComplexTypeTools;
 using haxe.macro.ExprTools;
@@ -28,7 +27,7 @@ class HScriptedClassMacro
 
 		if (alreadyProcessed_metadata == null)
 		{
-			Context.info('HScriptedClass: Class ' + cls.name + ' ready to pre-process...', Context.currentPos());
+			// Context.info('HScriptedClass: Class ' + cls.name + ' ready to pre-process...', Context.currentPos());
 
 			var superCls:haxe.macro.Type.ClassType = cls.superClass.t.get();
 
@@ -330,7 +329,7 @@ class HScriptedClassMacro
 
 		while (targetClass != null)
 		{
-			Context.info('Processing overrides for class: ${targetClass.name}<${mappedParams}>', Context.currentPos());
+			// Context.info('Processing overrides for class: ${targetClass.name}<${mappedParams}>', Context.currentPos());
 			// Values will be either of type haxe.macro.Expr.Field or Bool. This is because setting a Map value to null removes the key.
 			var newFields:Map<String, Dynamic> = buildScriptedClassFieldOverrides_inner(targetClass, mappedParams);
 			for (newFieldName => newField in newFields)

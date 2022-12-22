@@ -81,7 +81,6 @@ class CSV
 		fields = null;
 	}
 
-	/********PRIVATE**********/
 	private var _rgx:EReg = null;
 
 	private var _delimeter:String = '';

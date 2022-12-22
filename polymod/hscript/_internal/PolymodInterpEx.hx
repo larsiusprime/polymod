@@ -90,7 +90,7 @@ class PolymodInterpEx extends Interp
 	override function fcall(o:Dynamic, f:String, args:Array<Dynamic>):Dynamic
 	{
 		// OVERRIDE CHANGE: Custom logic to handle super calls to prevent infinite recursion
-		if (Std.isOfType(o, targetCls))
+		if (o == _proxy.superClass)
 		{
 			// Force call super function.
 			return super.fcall(o, '__super_${f}', args);
@@ -700,6 +700,8 @@ class PolymodInterpEx extends Interp
 			// OVERRIDE CHANGE: Create a PolymodScriptClass instead of a hscript.ScriptClass
 			var proxy:PolymodAbstractScriptClass = new PolymodScriptClass(_scriptClassDescriptors.get(className), args);
 			return proxy;
+		} else {
+			Polymod.error(SCRIPT_CLASS_NOT_FOUND, "Scripted class " + className + " has not been defined.");
 		}
 		return null;
 	}
