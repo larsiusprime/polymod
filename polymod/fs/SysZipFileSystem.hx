@@ -22,12 +22,11 @@ import thx.semver.VersionRule;
 using StringTools;
 
 /**
- * An implementation of an IFileSystem that can access files from a ZIP archive.
- * This file system pretends as though the files in the ZIPs are in the mod root;
- * this allows both ZIPs and folders to be enabled as mods.
- * Useful for loading mods from ZIP files.
- * Compatible only with native targets.
+ * An implementation of an IFileSystem that can access mod files
+ * from both directories AND ZIP archives.
+ *
  * Supports compressed and uncompressed ZIP files.
+ * Compatible only with native targets.
  */
 class SysZipFileSystem extends SysFileSystem
 {
