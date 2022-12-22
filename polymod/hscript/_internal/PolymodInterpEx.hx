@@ -1,5 +1,6 @@
 package polymod.hscript._internal;
 
+#if hscript
 import hscript.Expr;
 import hscript.Interp;
 import hscript.Tools;
@@ -700,7 +701,9 @@ class PolymodInterpEx extends Interp
 			// OVERRIDE CHANGE: Create a PolymodScriptClass instead of a hscript.ScriptClass
 			var proxy:PolymodAbstractScriptClass = new PolymodScriptClass(_scriptClassDescriptors.get(className), args);
 			return proxy;
-		} else {
+		}
+		else
+		{
 			Polymod.error(SCRIPT_CLASS_NOT_FOUND, "Scripted class " + className + " has not been defined.");
 		}
 		return null;
@@ -751,24 +754,25 @@ class PolymodInterpEx extends Interp
 			}
 		}
 	}
-} private class ArrayIterator<T>
-{
-	var a:Array<T>;
-	var pos:Int;
-
-	public inline function new(a)
+	} private class ArrayIterator<T>
 	{
-		this.a = a;
-		this.pos = 0;
-	}
+		var a:Array<T>;
+		var pos:Int;
 
-	public inline function hasNext()
-	{
-		return pos < a.length;
-	}
+		public inline function new(a)
+		{
+			this.a = a;
+			this.pos = 0;
+		}
 
-	public inline function next()
-	{
-		return a[pos++];
+		public inline function hasNext()
+		{
+			return pos < a.length;
+		}
+
+		public inline function next()
+		{
+			return a[pos++];
+		}
 	}
-}
+#end

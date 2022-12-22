@@ -249,7 +249,7 @@ class HScriptableMacro
 		if (constructor_setup == null)
 			return fields;
 		// Inject _polymod_scripts var
-		for (new_field in (macro class Ignore
+		for (new_field in(macro class Ignore
 			{
 				public var _polymod_scripts:polymod.hscript.HScriptable.ScriptRunner;
 			}).fields)

@@ -198,7 +198,7 @@ class LocalFileHeader extends Header
 	{
 		fileInput.seek(dataOffset, SeekBegin);
 		var bytesBuf = new haxe.io.BytesBuffer();
-		
+
 		var bytesToReturn = Bytes.alloc(compressedSize);
 		var bytesRead = fileInput.readBytes(bytesToReturn, 0, compressedSize);
 
@@ -301,7 +301,7 @@ class CentralDirectoryFileHeader extends Header
 		fileNameLength = getBytesFromFile(2).getUInt16(0);
 		extraFieldLength = getBytesFromFile(2).getUInt16(0);
 		fileCommentLength = getBytesFromFile(2).getUInt16(0);
-		
+
 		diskNum = getBytesFromFile(2).getUInt16(0);
 		internalFileAttrib = getBytesFromFile(2);
 		externalFileAttrib = getBytesFromFile(4);

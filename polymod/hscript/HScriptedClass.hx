@@ -21,10 +21,10 @@ interface HScriptedClass
 	 */
 	// public function scriptCall(funcName:String, funcArgs:Array<Dynamic>):Dynamic;
 	/**
-	    * Returns the value of a custom field of the scripted class, by the given name.
-	 * 
-	 * @param fieldName The name of the field to return.
-	 * @return The value of the field, if any.
+	 * Returns the value of a custom field of the scripted class, by the given name.
+	 	 * 
+	 	 * @param fieldName The name of the field to return.
+	 	 * @return The value of the field, if any.
 	 */
 	// public function scriptGet(fieldName:String):Dynamic;
 	/**

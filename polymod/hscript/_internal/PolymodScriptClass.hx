@@ -1,5 +1,6 @@
 package polymod.hscript._internal;
 
+#if hscript
 import hscript.Expr.FieldDecl;
 import hscript.Expr.FunctionDecl;
 import hscript.Expr.VarDecl;
@@ -68,16 +69,20 @@ class PolymodScriptClass
 		}
 	}
 
-	static function registerScriptClassByPathAsync(path:String):Bool {
+	static function registerScriptClassByPathAsync(path:String):Bool
+	{
 		@:privateAccess {
-						var promise = new lime.app.Promise<Bool>();
+			var promise = new lime.app.Promise<Bool>();
 
-			Polymod.assetLibrary.loadText(path).onComplete((text)->{
-				try {
-
+			Polymod.assetLibrary.loadText(path).onComplete((text) ->
+			{
+				try
+				{
 					registerScriptClassByString(text);
 					promise.complete(true);
-				} catch (err:PolymodExprEx.ErrorEx) {
+				}
+				catch (err:PolymodExprEx.ErrorEx)
+				{
 					var errLine:String = #if hscriptPos '${err.line}' #else "#???" #end;
 					#if hscriptPos
 					switch (err.e)
@@ -90,14 +95,16 @@ class PolymodScriptClass
 								'Error while parsing function ${path}#${errLine}: EUnexpected' + '\n' +
 								'Unexpected error: Unexpected token "${s}", is there invalid syntax on this line?');
 						default:
-							Polymod.error(SCRIPT_PARSE_ERROR, 'Error while executing function ${path}#${errLine}: ' + '\n' + 'An unknown error occurred: ${err}');
+							Polymod.error(SCRIPT_PARSE_ERROR,
+								'Error while executing function ${path}#${errLine}: ' + '\n' + 'An unknown error occurred: ${err}');
 					}
 					promise.error(err);
 				}
-			}).onError((err)->{
-				Polymod.error(SCRIPT_PARSE_ERROR, 'Error while parsing function ${path}: ' + '\n' + 'An unknown error occurred: ${err}');
-				promise.error(err);
-			});
+			}).onError((err) ->
+				{
+					Polymod.error(SCRIPT_PARSE_ERROR, 'Error while parsing function ${path}: ' + '\n' + 'An unknown error occurred: ${err}');
+					promise.error(err);
+				});
 
 			// Await the promise
 			return promise.future.result();
@@ -674,3 +681,4 @@ class PolymodScriptClass
 		}
 	}
 }
+#end

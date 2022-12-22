@@ -366,9 +366,10 @@ class PolymodAssetLibrary
 			// Else, FireTongue not enabled.
 			#end
 			var filePath = Util.pathJoin(d, id);
-			if (fileSystem.exists(filePath)) {
+			if (fileSystem.exists(filePath))
+			{
 				trace('Exists for (${filePath}) : ${true}');
-				return true;		
+				return true;
 			}
 		}
 		// The loop didn't find it.
@@ -444,7 +445,7 @@ class PolymodAssetLibrary
 
 		try
 		{
-    	if (fileSystem.exists(d))
+			if (fileSystem.exists(d))
 			{
 				all = fileSystem.readDirectoryRecursive(d);
 			}

@@ -3,8 +3,8 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.7.0] - 2022-08-??
-This version adds several powerful features: a new dependency system, support for zip files, and reworks several functions related to metadata and versioning.
+## [1.7.0] - 2022-12-??
+This version has been postposed a while, but adds several powerful features. A dependency system, support for zipped mods, reworks to versioning functions, and more.
 ## Added
 - Added the `dependencies` key to the ModMetadata format.
   - Example: `{"modA": "1.0.0", "modB": "3.*", "modC": "1.9.0 - 2.3.0"}`
@@ -14,7 +14,7 @@ This version adds several powerful features: a new dependency system, support fo
     - The provided mod list will be reordered to account for dependencies, as needed, and maintaining order otherwise.
     - Missing dependencies, mismatched dependency versions, or cyclical dependencies will result in an error. See `skipDependencyErrors` for more info.
 - Added the `optionalDependencies` key to the ModMetadata format.
-  - Mods provided in the optional dependencies list will reorder the dependency list, but 
+  - Mods provided in the optional dependencies list will reorder the dependency list, but will not cause dependency errors if absent.
 - Added the `skipDependencyChecks` parameter to `Polymod.init()`.
   - Defaults to `false`.
   - Setting this option to `true` will skip checks for the presence of mandatory dependencies, and prevent reordering the mod load list.
@@ -24,8 +24,8 @@ This version adds several powerful features: a new dependency system, support fo
   - While this option is `true`, any dependency issues will cause a warning to be reported, and Polymod will skip the problematic mods and load the rest.
   - While this option is `false`, any dependency issues (missing dependencies, mismatched versions, or cyclical dependencies) will cause an error to be reported, and Polymod will initialize with NO mods loaded.
 ## Changed
-- `thx.semver` has been added as a dependency library, replacing the existing Semantic Version code.
-  - This provides full support for the features of [node-semver](https://github.com/npm/node-semver).
+- `thx.semver` has been added as a mandatory dependency Haxelib, replacing the existing Semantic Version code.
+  - This provides full support for the features of [node-semver](https://github.com/npm/node-semver) when specifying version rules.
 - Updated `openfl` sample to showcase dependency features.
   - `mod2` now has a mandatory dependency on `mod1`.
   - Added a button to showcase the difference when `skipDependencyErrors` changes.

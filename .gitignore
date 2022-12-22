@@ -1,11 +1,9 @@
 *.hl
 docs/Gemfile.lock
-samples/*/export
-samples/*/bin
-samples/heaps/demo\.hl
+samples/*/.haxelib/
+samples/*/export/
+samples/*/bin/
+samples/*/dump/
 samples/heaps/res/
 samples/nme/Export/
-samples/openfl_hscript/dump/
 samples/openfl_hscript/pages/
-samples/openfl/dump/neko/lime/_internal/unifill/
-samples/openfl/dump/neko/openfl/geom/

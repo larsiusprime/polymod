@@ -253,7 +253,8 @@ class LimeModLibrary extends AssetLibrary
 {
 	public static function LimeToPoly(type:AssetType):PolymodAssetType
 	{
-		if (type == null) return null;
+		if (type == null)
+			return null;
 		return switch (type)
 		{
 			case AssetType.BINARY: PolymodAssetType.BYTES;
@@ -270,7 +271,8 @@ class LimeModLibrary extends AssetLibrary
 
 	public static function PolyToLime(type:PolymodAssetType):AssetType
 	{
-		if (type == null) return null;
+		if (type == null)
+			return null;
 		return switch (type)
 		{
 			case PolymodAssetType.BYTES: AssetType.BINARY;
@@ -735,7 +737,8 @@ class LimeModLibrary extends AssetLibrary
 		return Util.filterUnique(items);
 	}
 
-	public override function load():Future<AssetLibrary> {
+	public override function load():Future<AssetLibrary>
+	{
 		return super.load();
 	}
 }
