@@ -192,18 +192,29 @@ class LocalFileHeader extends Header
 	}
 
 	/**
-	 * Reads the bytes of the local file from the input ZIP it is associated with.
+	 * Reads and decompresses the bytes of the local file from the input ZIP it is associated with.
 	 */
 	public function readData():Bytes
 	{
 		fileInput.seek(dataOffset, SeekBegin);
-		var buf = Bytes.alloc(compressedSize);
-		var bytesRead = fileInput.readBytes(buf, 0, compressedSize);
-		if (bytesRead != compressedSize)
+		var bytesBuf = new haxe.io.BytesBuffer();
+		
+		var bytesToReturn = Bytes.alloc(compressedSize);
+		var bytesRead = fileInput.readBytes(bytesToReturn, 0, compressedSize);
+
+		if (bytesRead < compressedSize)
 		{
-			trace('[WARNING] Bytes read was fewer than requested (Requested: $compressedSize, Read: $bytesRead)');
+			// trace('[WARNING] Bytes read was fewer than requested (Requested: $compressedSize, Read: $bytesRead)');
+			bytesBuf.addBytes(bytesToReturn, 0, bytesRead);
+			while (bytesRead < compressedSize)
+			{
+				bytesRead += fileInput.readBytes(bytesToReturn, 0, compressedSize - bytesRead);
+				bytesBuf.addBytes(bytesToReturn, 0, compressedSize - bytesRead);
+			}
+			return (this.compressionMethod == DEFLATE) ? Util.unzipBytes(bytesBuf.getBytes()) : bytesBuf.getBytes();
 		}
-		return buf;
+
+		return (this.compressionMethod == DEFLATE) ? Util.unzipBytes(bytesToReturn) : bytesToReturn;
 	}
 
 	public function isValid()

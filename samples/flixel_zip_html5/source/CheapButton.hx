@@ -1,6 +1,6 @@
 import flixel.FlxSprite;
 import flixel.group.FlxSpriteGroup.FlxTypedSpriteGroup;
-import flixel.input.mouse.FlxMouseEventManager;
+import flixel.input.mouse.FlxMouseEvent;
 import flixel.text.FlxText;
 
 class CheapButton extends FlxTypedSpriteGroup<FlxSprite>
@@ -34,7 +34,7 @@ class CheapButton extends FlxTypedSpriteGroup<FlxSprite>
 
 	function addEvents()
 	{
-		FlxMouseEventManager.add(this, onDown, onUp, onOver, onOff);
+		FlxMouseEvent.add(this, onDown, onUp, onOver, onOff);
 	}
 
 	public function setText(str:String)
@@ -44,7 +44,7 @@ class CheapButton extends FlxTypedSpriteGroup<FlxSprite>
 
 	public override function destroy()
 	{
-		FlxMouseEventManager.remove(this);
+		FlxMouseEvent.remove(this);
 		callback = null;
 		bg.destroy();
 		bg = null;

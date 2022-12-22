@@ -114,6 +114,7 @@ class SysZipFileSystem extends SysFileSystem
 			path = path.substring(0, path.length - 1);
 
 		var result = super.readDirectory(path);
+		result = (result == null) ? [] : result;
 
 		if (fileDirectories.contains(path)) {
 			// We check if directory ==, because
