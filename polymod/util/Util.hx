@@ -400,15 +400,21 @@ class Util
 	}
 
 	/**
-	 * Runs the 'Inflate' decompression algorithm on the raw compressed bytes and returns the uncompressed data
+	 * Runs the 'Inflate' decompression algorithm on the raw compressed bytes
+	 * and returns the uncompressed data.
+	 *
 	 * @param bytes A raw block of compressed bytes
+	 * @return A raw block of uncompressed bytes
 	 */
-	public static function unzipBytes(bytes:Bytes)
+	public static function unzipBytes(compressedBytes:Bytes)
 	{
-		var bytesinp = new haxe.io.BytesInput(bytes);
-		var inflater = new haxe.zip.InflateImpl(bytesinp, false, false);
-
 		var returnBuf = new haxe.io.BytesBuffer();
+
+		// Initialize the Inflate algorithm.
+		var bytesInput = new haxe.io.BytesInput(compressedBytes);
+		var inflater = new haxe.zip.InflateImpl(bytesInput, false, false);
+
+		// Read and inflate the bytes in chunks of 65,535 bytes.
 		var unzipBuf = Bytes.alloc(65535);
 		var bytesRead = inflater.readBytes(unzipBuf, 0, unzipBuf.length);
 		while (bytesRead == unzipBuf.length)
@@ -416,11 +422,19 @@ class Util
 			returnBuf.addBytes(unzipBuf, 0, bytesRead);
 			bytesRead = inflater.readBytes(unzipBuf, 0, unzipBuf.length);
 		}
+		// Add the last chunk of bytes to the return buffer.
 		returnBuf.addBytes(unzipBuf, 0, bytesRead);
+
+		// Return the uncompressed bytes.
 		return returnBuf.getBytes();
 	}
 
-	/*****UTF shims*****/
+	/**
+	 * String concatenation	with UTF-8 compatibility.
+	 * @param a 
+	 * @param b 
+	 * @return String
+	 */
 	public static function uCat(a:String, b:String):String
 	{
 		var sb = new StringBuf();
