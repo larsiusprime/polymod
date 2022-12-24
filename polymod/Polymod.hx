@@ -328,6 +328,11 @@ class Polymod
 		return sortedModsToLoad;
 	}
 
+	public static function getLoadedModIds():Array<String>
+	{
+		return assetLibrary.dirs;
+	}
+
 	/**
 	 * Retrieve the IFileSystem instance currently in use by Polymod.
 	 * This may be useful if you're using a MemoryFileSystem or a custom file system that you want to call functions on.
@@ -348,21 +353,25 @@ class Polymod
 	 * 
 	 * Depending on the framework you are using, especially if you loaded a specific file already,
 	 * you may have to call `clearCache()` for this to take effect.
+	 * 
+	 * @return A list of all mods that were successfully loaded.
 	 */
-	public static function loadMod(modId:String):Void
+	public static function loadMod(modId:String):Array<ModMetadata>
 	{
 		// Check if Polymod is loaded.
 		if (prevParams == null || assetLibrary == null)
 		{
 			Polymod.warning(POLYMOD_NOT_LOADED, 'Polymod is not loaded yet, cannot load mod "$modId".', INIT);
-			return;
+			return [];
 		}
 
 		var newParams = Reflect.copy(prevParams);
 		// Add the mod to the list of mods to load.
 		newParams.dirs = newParams.dirs.concat([modId]);
+		// Keep the same file system between reloads.
+		newParams.customFilesystem = assetLibrary.fileSystem;
 
-		Polymod.init(newParams);
+		return Polymod.init(newParams);
 	}
 
 	/**
@@ -371,31 +380,69 @@ class Polymod
 	 * 
 	 * Depending on the framework you are using, especially if you loaded a specific file already.
 	 * you may have to call `clearCache()` for this to take effect.
+	 * 
+	 * @return A list of all mods that were successfully loaded.
 	 */
-	public static function loadMods(modIds:Array<String>):Void
+	public static function loadMods(modIds:Array<String>):Array<ModMetadata>
 	{
 		// Check if Polymod is loaded.
 		if (prevParams == null || assetLibrary == null)
 		{
 			Polymod.warning(POLYMOD_NOT_LOADED, 'Polymod is not loaded yet, cannot load mod "$modIds".', INIT);
-			return;
+			return [];
 		}
 
 		var newParams = Reflect.copy(prevParams);
-		// Add the mod to the list of mods to load.
+		// Add the mods to the list of mods to load.
 		newParams.dirs = newParams.dirs.concat(modIds);
+		// Keep the same file system between reloads.
+		newParams.customFilesystem = assetLibrary.fileSystem;
 
-		Polymod.init(newParams);
+		return Polymod.init(newParams);
+	}
+
+	/**
+	 * Reinitializes Polymod (with the same parameters) while enabling a list of mods.
+	 * The new modlist will replace the old modlist.
+	 * 
+	 * Depending on the framework you are using, especially if you loaded a specific file already.
+	 * you may have to call `clearCache()` for this to take effect.
+	 * 
+	 * @return A list of all mods that were successfully loaded.
+	 */
+	public static function loadOnlyMods(modIds:Array<String>):Array<ModMetadata>
+	{
+		// Check if Polymod is loaded.
+		if (prevParams == null || assetLibrary == null)
+		{
+			Polymod.warning(POLYMOD_NOT_LOADED, 'Polymod is not loaded yet, cannot load mod "$modIds".', INIT);
+			return [];
+		}
+
+		var newParams = Reflect.copy(prevParams);
+		// Set the list of mods to load.
+		newParams.dirs = modIds;
+		// Keep the same file system between reloads.
+		newParams.customFilesystem = assetLibrary.fileSystem;
+
+		return Polymod.init(newParams);
 	}
 
 	/**
 	 * Reinitializes Polymod, with the same parameters.
 	 * Useful to force Polymod to detect newly added files.
+	 * 
+	 * Depending on the framework you are using, especially if you loaded a specific file already,
+	 * you may have to call `clearCache()` for this to take effect.
+	 * 
+	 * @return A list of all mods that were successfully loaded.
 	 */
-	public static function reload():Void
+	public static function reload():Array<ModMetadata>
 	{
 		var newParams = Reflect.copy(prevParams);
-		Polymod.init(newParams);
+		// Keep the same file system between reloads.
+		newParams.customFilesystem = assetLibrary.fileSystem;
+		return Polymod.init(newParams);
 	}
 
 	/**
@@ -406,21 +453,25 @@ class Polymod
 	 * 
 	 * Depending on the framework you are using, especially if you loaded a specific file already.
 	 * you may have to call `clearCache()` for this to take effect.
+	 * 
+	 * @return A list of all mods that were successfully loaded.
 	 */
-	public static function unloadMod(modId:String):Void
+	public static function unloadMod(modId:String):Array<ModMetadata>
 	{
 		// Check if Polymod is loaded.
 		if (prevParams == null || assetLibrary == null)
 		{
 			Polymod.warning(POLYMOD_NOT_LOADED, 'Polymod is not loaded yet, cannot load mod "$modId".', INIT);
-			return;
+			return [];
 		}
 
 		var newParams = Reflect.copy(prevParams);
 		// Add the mod to the list of mods to load.
 		newParams.dirs.remove(modId);
+		// Keep the same file system between reloads.
+		newParams.customFilesystem = assetLibrary.fileSystem;
 
-		Polymod.init(newParams);
+		return Polymod.init(newParams);
 	}
 
 	/**
@@ -431,14 +482,16 @@ class Polymod
 	 * 
 	 * Depending on the framework you are using, especially if you loaded a specific file already.
 	 * you may have to call `clearCache()` for this to take effect.
+	 * 
+	 * @return A list of all mods that were successfully loaded.
 	 */
-	public static function unloadMods(modIds:Array<String>):Void
+	public static function unloadMods(modIds:Array<String>):Array<ModMetadata>
 	{
 		// Check if Polymod is loaded.
 		if (prevParams == null || assetLibrary == null)
 		{
 			Polymod.warning(POLYMOD_NOT_LOADED, 'Polymod is not loaded yet, cannot load mod "$modIds".', INIT);
-			return;
+			return [];
 		}
 
 		var newParams = Reflect.copy(prevParams);
@@ -447,8 +500,10 @@ class Polymod
 		{
 			newParams.dirs.remove(modId);
 		}
+		// Keep the same file system between reloads.
+		newParams.customFilesystem = assetLibrary.fileSystem;
 
-		Polymod.init(newParams);
+		return Polymod.init(newParams);
 	}
 
 	/**
@@ -470,6 +525,8 @@ class Polymod
 		var newParams = Reflect.copy(prevParams);
 		// Clear the modlist.
 		newParams.dirs = [];
+		// Keep the same file system between reloads.
+		newParams.customFilesystem = assetLibrary.fileSystem;
 
 		Polymod.init(newParams);
 	}
@@ -536,7 +593,16 @@ class Polymod
 				scanParams.apiVersionRule = VersionUtil.DEFAULT_VERSION_RULE;
 
 			if (scanParams.fileSystem == null)
-				scanParams.fileSystem = PolymodFileSystem.makeFileSystem(null, {modRoot: scanParams.modRoot});
+			{
+				if (assetLibrary != null)
+				{
+					scanParams.fileSystem = assetLibrary.fileSystem;
+				}
+				else
+				{
+					scanParams.fileSystem = PolymodFileSystem.makeFileSystem(null, {modRoot: scanParams.modRoot});
+				}
+			}
 
 			return scanParams.fileSystem.scanMods(scanParams.apiVersionRule);
 		}

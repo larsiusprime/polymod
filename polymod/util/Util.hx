@@ -1,8 +1,8 @@
 package polymod.util;
 
 import haxe.Utf8;
-import haxe.io.Path;
 import haxe.io.Bytes;
+import haxe.io.Path;
 import polymod.Polymod.PolymodError;
 import polymod.Polymod.PolymodErrorType;
 import polymod.Polymod;
@@ -31,6 +31,10 @@ class Util
 		{
 			parentDirs.push(parentDir);
 			parentDir = Path.directory(parentDir);
+
+			// Prevent infinite loop
+			if (parentDirs.contains(parentDir))
+				parentDir = null;
 		}
 		return parentDirs;
 	}

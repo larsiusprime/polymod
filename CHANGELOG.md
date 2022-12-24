@@ -19,6 +19,14 @@ This version has been postposed a while, but adds several powerful features. A d
   - Defaults to `false`.
   - Setting this option to `true` will skip checks for the presence of mandatory dependencies, and prevent reordering the mod load list.
   - Enabling this option is NOT recommended, since it may break mods which rely on their dependencies.
+- Added the new `ZipFileSystem`.
+  - Enable it with `Polymod.init({customFilesystem: polymod.fs.ZipFileSystem})`.
+  - 
+- Added a convenience functions to handle loading and unloading of mods at runtime.
+  - `loadOnlyMods()` loads a given set of mods, by re-initializing the framework with the appropriate mods enabled.
+    - This is as opposed to `loadMods()`, which appends to the mod list rather than setting it.
+  - Note you may need to call `clearCache()` depending on your framework and your app's current state.
+- `loadMod()`, `unloadMod()`, `loadMods()`, and `unloadMods()` now return an array of ModMetadata for each of the mods that are in use after the operation.
 - Added the `skipDependencyErrors` parameter to `Polymod.init()`.
   - Defaults to `false`.
   - While this option is `true`, any dependency issues will cause a warning to be reported, and Polymod will skip the problematic mods and load the rest.

@@ -9,9 +9,11 @@ typedef ZipFileSystemParams =
 	> polymod.fs.PolymodFileSystem.PolymodFileSystemParams,
 
 	/**
-	 * Path to the zip file (needed if you're using ZipFileSystem on a sys target)
+	 * If `true`, the mods folder will be scanned for zip files and they will be added to the zip file system automatically.
+	 * If `false`, call `fileSystem.addZipFile` or `fileSystem.addAllZips` manually.
+	 * @default `true`
 	 */
-	?zipPath:String
+	?autoScan:Bool,
 };
 
 // Automatically chooses between MemoryZipFileSystem and SysZipFileSystem

@@ -368,7 +368,6 @@ class PolymodAssetLibrary
 			var filePath = Util.pathJoin(d, id);
 			if (fileSystem.exists(filePath))
 			{
-				trace('Exists for (${filePath}) : ${true}');
 				return true;
 			}
 		}

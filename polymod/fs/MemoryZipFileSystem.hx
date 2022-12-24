@@ -27,6 +27,7 @@ class MemoryZipFileSystem extends StubFileSystem
 	}
 }
 #else
+
 /**
  * An implementation of an IFileSystem that can access files from an un-compressed zip archive.
  * Useful for loading mods from zip files.
@@ -34,12 +35,12 @@ class MemoryZipFileSystem extends StubFileSystem
  */
 class MemoryZipFileSystem extends MemoryFileSystem
 {
-	var pathIsZipped:Map<String, Bool>;
+	var pathIsCompressed:Map<String, Bool>;
 
 	public function new(params:ZipFileSystemParams)
 	{
 		super(params);
-		pathIsZipped = new Map();
+		pathIsCompressed = new Map();
 	}
 
 	#if debug
@@ -70,6 +71,8 @@ class MemoryZipFileSystem extends MemoryFileSystem
 		var bytesInput = new haxe.io.BytesInput(zipBytes);
 		var reader = new haxe.zip.Reader(bytesInput);
 
+		var modId = Path.withoutExtension(zipName);
+
 		// Read the zip file entries.
 		var entries:List<haxe.zip.Entry> = reader.read();
 		for (zipEntry in entries)
@@ -82,20 +85,29 @@ class MemoryZipFileSystem extends MemoryFileSystem
 			else
 			{
 				// This is a file entry! Register it in the MemoryFileSystem.
-				addFileBytes('mods/${zipEntry.fileName}', entryData);
-				pathIsZipped.set('mods/${zipEntry.fileName}', zipEntry.compressed);
+				var filePath = haxe.io.Path.join([this.modRoot, modId, zipEntry.fileName]);
+				addFileBytes(filePath, entryData);
+				pathIsCompressed.set(filePath, zipEntry.compressed);
 			}
 		}
+
+		@:privateAccess
+		Polymod.assetLibrary.
 	}
 
 	override function getFileBytes(path:String):Bytes
 	{
 		var compressedBytes = super.getFileBytes(path);
 
-		if (pathIsZipped.get(path) != null && pathIsZipped.get(path))
+		if (pathIsCompressed.get(path) != null && pathIsCompressed.get(path))
 			return Util.unzipBytes(compressedBytes);
 
 		return compressedBytes; // if it wasn't actually compressed
+	}
+
+	public override function getMetadata(modId:String)
+	{
+		return super.getMetadata(modId);
 	}
 }
 #end

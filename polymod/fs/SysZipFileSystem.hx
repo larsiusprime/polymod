@@ -23,7 +23,7 @@ using StringTools;
 
 /**
  * An implementation of an IFileSystem that can access mod files
- * from both directories AND ZIP archives.
+ * from both directories AND ZIP archives in the mod root.
  *
  * Supports compressed and uncompressed ZIP files.
  * Compatible only with native targets.
@@ -51,6 +51,12 @@ class SysZipFileSystem extends SysFileSystem
 		filesLocations = new Map<String, String>();
 		zipParsers = new Map<String, ZipParser>();
 		fileDirectories = [];
+
+		if (params.autoScan == null)
+			params.autoScan = true;
+
+		if (params.autoScan)
+			addAllZips();
 	}
 
 	/**
@@ -68,12 +74,22 @@ class SysZipFileSystem extends SysFileSystem
 		{
 			// Rather than going to the `files` map for the contents (which are empty),
 			// we go directly to the zip file and extract the individual file.
-			var zipParser = zipParsers.get(filesLocations.get(path));
+
+			// Determine which zip the target file is in.
+			var zipPath = filesLocations.get(path);
+			var zipParser = zipParsers.get(zipPath);
+			var modId = Path.withoutExtension(Path.withoutDirectory(zipPath));
 
 			var innerPath = path;
+			// Remove mod root from path
 			if (innerPath.startsWith(modRoot))
 			{
 				innerPath = innerPath.substring(modRoot.endsWith("/") ? modRoot.length : modRoot.length + 1);
+			}
+			// Remove mod ID from path
+			if (innerPath.startsWith(modId))
+			{
+				innerPath = innerPath.substring(modId.length + 1);
 			}
 
 			var fileHeader = zipParser.getLocalFileHeaderOf(innerPath);
@@ -148,21 +164,23 @@ class SysZipFileSystem extends SysFileSystem
 	 */
 	public function addAllZips():Void
 	{
-		trace('Searching for ZIP files in ' + modRoot);
+		Polymod.notice(MOD_LOAD_PREPARE, 'Searching for ZIP files in ' + modRoot);
 		// Use SUPER because we don't want to add in files within the ZIPs.
 		var modRootContents = super.readDirectory(modRoot);
-		trace('Found ' + modRootContents.length + ' files');
+		Polymod.notice(MOD_LOAD_PREPARE, 'Found ${modRootContents.length} files in modRoot.');
 
 		for (modRootFile in modRootContents)
 		{
 			var filePath = Util.pathJoin(modRoot, modRootFile);
 
+			// Skip directories.
 			if (isDirectory(filePath))
 				continue;
 
+			// Only process ZIP files.
 			if (StringTools.endsWith(filePath, ".zip"))
 			{
-				trace('- Found zip file' + filePath);
+				Polymod.notice(MOD_LOAD_PREPARE, '- Adding zip file: $filePath');
 				addZipFile(filePath);
 			}
 		}
@@ -170,27 +188,36 @@ class SysZipFileSystem extends SysFileSystem
 
 	public function addZipFile(zipPath:String)
 	{
+		// Strip the path and extension to get the mod ID.
+		var modId = Path.withoutExtension(Path.withoutDirectory(zipPath));
+
 		var zipParser = new ZipParser(zipPath);
 
 		// SysZipFileSystem doesn't actually use the internal `files` map.
 		// We populate it here simply so we know the files are there.
 		for (fileName => fileHeader in zipParser.centralDirectoryRecords)
 		{
-			if (fileHeader.compressedSize != 0 && fileHeader.uncompressedSize != 0 && !StringTools.endsWith(fileHeader.fileName, '/'))
-			{
-				// Add to the list of files.
-				var fullFilePath = Util.pathJoin(modRoot, fileHeader.fileName);
-				filesLocations.set(fullFilePath, zipPath);
+			// File is empty. Skip.
+			if (fileHeader.compressedSize == 0 || fileHeader.uncompressedSize == 0)
+				continue;
 
-				// Generate the list of directories.
-				var fileDirectory = Path.directory(fullFilePath);
-				// Resolving recursively ensures parent directories are registered.
-				// If the directory is already registered, its parents are already registered as well.
-				while (fileDirectory != "" && !fileDirectories.contains(fileDirectory))
-				{
-					fileDirectories.push(fileDirectory);
-					fileDirectory = Path.directory(fileDirectory);
-				}
+			// File is a directory. Skip.
+			if (StringTools.endsWith(fileName, '/'))
+				continue;
+
+			// Add to the list of files.
+			// The file should appear in the mod list as though it was in a directory rather than a ZIP.
+			var fullFilePath = Path.join([modRoot, modId, fileHeader.fileName]);
+			filesLocations.set(fullFilePath, zipPath);
+
+			// Generate the list of directories.
+			var fileDirectory = Path.directory(fullFilePath);
+			// Resolving recursively ensures parent directories are registered.
+			// If the directory is already registered, its parents are already registered as well.
+			while (fileDirectory != "" && !fileDirectories.contains(fileDirectory))
+			{
+				fileDirectories.push(fileDirectory);
+				fileDirectory = Path.directory(fileDirectory);
 			}
 		}
 
