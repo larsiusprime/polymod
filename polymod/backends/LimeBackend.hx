@@ -650,10 +650,10 @@ class LimeModLibrary extends AssetLibrary
 
 		var addItem = (path:String) ->
 		{
-			var modifiedPath = (libraryId != '') ? libraryId + ':' + path : path;
-			if (items.indexOf(modifiedPath) == -1)
+			// var modifiedPath = (libraryId != '') ? libraryId + ':' + path : path;
+			if (items.indexOf(path) == -1)
 			{
-				items.push(modifiedPath);
+				items.push(path);
 			}
 		};
 
@@ -736,10 +736,6 @@ class LimeModLibrary extends AssetLibrary
 	}
 
 	public override function load():Future<AssetLibrary> {
-		#if openfl
-		openfl.utils._internal.Log.info('Polymod.LimeBackend.LimeModLibrary.load()');
-		#end
-
 		return super.load();
 	}
 }
