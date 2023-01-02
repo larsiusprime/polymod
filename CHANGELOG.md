@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [1.7.0] - 2022-12-??
-This version has been postposed a while, but adds several powerful features. A dependency system, support for zipped mods, reworks to versioning functions, and more.
+This version has been postposed a while, but adds several powerful features. A dependency system, support for zipped mods (on both desktop and HTML5!), reworks to versioning functions, and more.
 ## Added
 - Added the `dependencies` key to the ModMetadata format.
   - Example: `{"modA": "1.0.0", "modB": "3.*", "modC": "1.9.0 - 2.3.0"}`
@@ -21,7 +21,9 @@ This version has been postposed a while, but adds several powerful features. A d
   - Enabling this option is NOT recommended, since it may break mods which rely on their dependencies.
 - Added the new `ZipFileSystem`.
   - Enable it with `Polymod.init({customFilesystem: polymod.fs.ZipFileSystem})`.
-  - 
+  - On desktop platforms, ZipFileSystem automatically behaves like SysFileSystem with the additional capability of loading mods from ZIP files (compressed or uncompressed) as though they were folders instead.
+  - On HTML5 builds, ZipFileSystem will instead act like a MemoryFileSystem which can load a mod when provided the byte data of a ZIP file.
+    - After loading mods, you may need to wait a short time before reloading any images. This is because the browser must asynchronously preload the image data before it can be provided to Haxe.
 - Added a convenience functions to handle loading and unloading of mods at runtime.
   - `loadOnlyMods()` loads a given set of mods, by re-initializing the framework with the appropriate mods enabled.
     - This is as opposed to `loadMods()`, which appends to the mod list rather than setting it.

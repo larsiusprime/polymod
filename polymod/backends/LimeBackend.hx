@@ -36,6 +36,10 @@ class LimeBackend extends StubBackend
 		super();
 		Polymod.error(FAILED_CREATE_BACKEND, "LimeBackend requires the lime library, did you forget to install it?");
 	}
+
+	public function preloadImagesToCache():Void {
+		Polymod.error(FAILED_CREATE_BACKEND, "LimeBackend requires the lime library, did you forget to install it?");
+	}
 }
 #else
 #if (!nme && !macro)
@@ -261,9 +265,10 @@ class LimeBackend implements IBackend
 	public function preloadImagesToCache():Void
 	{
 		// On HTML5, we need to call `loadImage()` on all images before they can be later loaded synchronously.
-
+		trace('Image preload global...');
 		for (modLibrary in modLibraries)
 		{
+			trace('Image preload local... (${modLibrary.libraryId})');
 			modLibrary.preloadImagesToCache();
 		}
 	}
@@ -335,6 +340,7 @@ class LimeModLibrary extends AssetLibrary
 		hasFallback = this.fallback != null;
 		#if html5
 		imageCache = new Map<String, lime.graphics.Image>();
+		preloadImagesToCache();
 		#end
 		super();
 	}
@@ -358,11 +364,14 @@ class LimeModLibrary extends AssetLibrary
 
 		for (imageAsset in this.list(AssetType.IMAGE))
 		{
-			var symbol = new IdAndLibrary(id, this);
+			var symbol = new IdAndLibrary(imageAsset, this);
 			var filePath = p.file(symbol.modId);
+			trace('Preloading image: ${imageAsset}~${filePath}');
 
+			#if html5
 			if (imageCache.exists(filePath))
 				continue;
+			#end
 
 			loadImage(imageAsset);
 		}
@@ -622,6 +631,8 @@ class LimeModLibrary extends AssetLibrary
 		var symbol = new IdAndLibrary(id, this);
 		if (p.check(symbol.modId))
 		{
+			trace('Loading image ' + symbol.modId + ' from ' + p.file(symbol.modId));
+
 			// We load the bytes, then load the file, rather than using Image.loadFromFile,
 			// because URLs don't work with MemoryFileSystem.
 			var filePath = p.file(symbol.modId);
@@ -633,6 +644,8 @@ class LimeModLibrary extends AssetLibrary
 			{
 				if (result != null)
 				{
+					trace('Adding ' + filePath + ' to image cache.');
+					trace(result);
 					imageCache.set(filePath, result);
 				}
 			});

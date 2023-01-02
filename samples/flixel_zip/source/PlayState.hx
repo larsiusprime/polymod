@@ -239,6 +239,8 @@ class PlayState extends FlxState
 				trace('Building animated image $image');
 
 				sprite.frames = FlxAtlasFrames.fromSparrow(image, Assets.getText(atlasPath));
+				trace('Sprite graphic');
+				trace(sprite.graphic);
 				sprite.animation.addByPrefix('idle', 'idle', 24, true);
 				sprite.animation.play('idle');
 			}
@@ -367,7 +369,25 @@ class PlayState extends FlxState
 			return item.id;
 		});
 		trace('Loaded mods: ${loadedMods}');
+
+		#if html5
+		for (thing in stuff)
+		{
+			remove(thing);
+		}
+		stuff.splice(0, stuff.length);
+
+		new flixel.util.FlxTimer().start(0.5, (_) ->
+		{
+			trace('Delayed refresh');
+
+			drawImages();
+			drawText();
+		}, 1);
+		#else
+		trace('Instant refresh');
 		refresh();
+		#end
 	}
 
 	private function onError(error:PolymodError)

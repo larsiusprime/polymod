@@ -90,9 +90,6 @@ class MemoryZipFileSystem extends MemoryFileSystem
 				pathIsCompressed.set(filePath, zipEntry.compressed);
 			}
 		}
-
-		@:privateAccess
-		Polymod.assetLibrary.
 	}
 
 	override function getFileBytes(path:String):Bytes
