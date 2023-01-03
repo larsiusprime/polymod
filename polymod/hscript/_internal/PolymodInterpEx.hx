@@ -61,15 +61,15 @@ class PolymodInterpEx extends Interp
 			@:privateAccess
 			if (_proxy._c.imports != null && _proxy._c.imports.exists(cl))
 			{
-				var importedClass = _proxy._c.imports.get(cl).join(".");
-				if (_scriptClassDescriptors.exists(importedClass))
+				var importedClass:PolymodClassImport = _proxy._c.imports.get(cl);
+				if (_scriptClassDescriptors.exists(importedClass.fullPath))
 				{
 					// OVERRIDE CHANGE: Create a PolymodScriptClass instead of a hscript.ScriptClass
 					var proxy:PolymodAbstractScriptClass = new PolymodScriptClass(_scriptClassDescriptors.get(importedClass), args);
 					return proxy;
 				}
 
-				var c = Type.resolveClass(importedClass);
+				var c = importedClass.cls;
 				if (c != null)
 				{
 					return Type.createInstance(c, args);
@@ -634,20 +634,12 @@ class PolymodInterpEx extends Interp
 			return v;
 		}
 		// OVERRIDE CHANGE: Allow access to modules for calling static functions.
-		if (_proxy != null && _proxy._c.imports.get(id) != null)
+		var importedClass:PolymodClassImport = _proxy._c.imports.get(id);
+		if (_proxy != null && importedClass != null)
 		{
-			var importedClass = _proxy._c.imports.get(id).join(".");
-
 			// TODO: Somehow allow accessing static fields of a ScriptClass without instantiating it.
 
-			var result:Dynamic = Type.resolveClass(importedClass);
-			if (result != null)
-				return result;
-
-			// If the class is not found, try to find it as an enum.
-			result = Type.resolveEnum(importedClass);
-			if (result != null)
-				return result;
+			if (importedClass.cls != null) return importedClass.cls;
 		}
 
 		var prop:Dynamic;
@@ -717,8 +709,31 @@ class PolymodInterpEx extends Interp
 				case DPackage(path):
 					pkg = path;
 				case DImport(path, _):
-					var last = path[path.length - 1];
-					imports.set(last, path);
+					var importedClass:PolymodClassImport = {
+						name: path[path.length - 1],
+						pkg: path.slice(0, path.length - 1),
+						fullPath: path.join("."),
+						cls: null,
+					};
+
+					if (PolymodScriptClass.importOverrides.exists(importedClass.fullPath)) {
+						// importOverrides can exist but be null (if it was set to null).
+						// If so, that means the class is blacklisted.
+
+						importedClass.cls = PolymodScriptClass.importOverrides.get(importedClass.fullPath);
+					} else {
+						var result:Dynamic = Type.resolveClass(importedClass);
+					
+						// If the class is not found, try to find it as an enum.
+						if (result == null)
+							result = Type.resolveEnum(importedClass);
+
+						// If the class is still not found, skip this import entirely.
+						if (result == null)
+							continue;
+					}
+
+					imports.set(importedClass.name, importedClass);
 				case DClass(c):
 					var extend = c.extend;
 					if (extend != null)
@@ -729,7 +744,7 @@ class PolymodInterpEx extends Interp
 							switch (extend)
 							{
 								case CTPath(_, params):
-									extend = CTPath(imports.get(superClassPath), params);
+									extend = CTPath(imports.get(superClassPath).fullPath, params);
 								case _:
 							}
 						}

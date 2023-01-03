@@ -24,7 +24,18 @@ class PolymodScriptClass
 	 * STATIC VARIABLES
 	 */
 	private static final scriptInterp = new PolymodInterpEx(null, null);
+
+	/**
+	 * Define a list of script classes to override the default behavior of Polymod.
+	 * For example, script classes should import `ScriptedSprite` instead of `Sprite`.
+	 */
 	public static final scriptClassOverrides:Map<String, Class<Dynamic>> = new Map<String, Class<Dynamic>>();
+
+	/**
+	 * Provide a class name along with a corresponding class to override imports.
+	 * You can set the value to `null` to prevent the class from being imported.
+	 */
+	public static final importOverrides:Map<String, Class<Dynamic>> = new Map<String, Class<Dynamic>>();
 
 	/*
 	 * STATIC METHODS
@@ -183,32 +194,46 @@ class PolymodScriptClass
 				extendString = extendString.split('<')[0];
 			}
 
+			var superCls:Class<Dynamic>;
+
 			if (classDecl.imports.exists(extendString))
 			{
-				extendString = classDecl.imports.get(extendString).join('.');
+				var importedClass:PolymodClassImport = classDecl.imports.get(extendString);
+				if (importedClass != null && importedClass.cls == null) {
+					// importedClass was defined but `cls` was null. This class must have been blacklisted.
+					var clsName = classDecl.pkg != null ? '${classDecl.pkg.join('.')}.${classDecl.name}' : classDecl.name;
+					Polymod.error(SCRIPT_PARSE_ERROR, 'Could not parse superclass "${classDecl.fullPath}" of scripted class "${clsName}". The superclass may be blacklisted.');
+					return [];
+				} else if (importedClass != null) {
+					superCls = importedClass.cls;
+				}
 			}
 
-			// Check if the superclass is a native class.
-			var superClass = Type.resolveClass(extendString);
-			if (superClass != null)
+			if (superCls == null) {
+				// Check if the superclass is a native class.
+				superCls = Type.resolveClass(extendString);
+			}
+
+			// Check if the superclass was resolved.
+			if (superCls != null)
 			{
 				var result = [];
 				// The superclass is a native class.
-				while (superClass != null)
+				while (superCls != null)
 				{
-					// Recursively add the other superclasses.
-					result.push(Type.getClassName(superClass));
+					// Recursively add this class's superclasses.
+					result.push(Type.getClassName(superCls));
 
 					// This returns null when the class has no superclass.
-					superClass = Type.getSuperClass(superClass);
+					superCls = Type.getSuperClass(superCls);
 				}
 				return result;
 			}
 			else
 			{
+				// The superclass is not a scripted class or native class. Probably doesn't exist, throw an error.
 				var clsName = classDecl.pkg != null ? '${classDecl.pkg.join('.')}.${classDecl.name}' : classDecl.name;
-				// The superclass is not a scripted class or native class. It doesn't exist?
-				Polymod.error(SCRIPT_PARSE_ERROR, 'Could not parse superclass "$extendString" of scripted class "${clsName}"');
+				Polymod.error(SCRIPT_PARSE_ERROR, 'Could not parse superclass "$extendString" of scripted class "${clsName}". Are you sure that the superclass exists?');
 				return [];
 			}
 		}
@@ -229,20 +254,21 @@ class PolymodScriptClass
 		{
 			case CTPath(pth, params):
 				var clsPath = pth.join('.');
-				if (!scriptClassOverrides.exists(clsPath))
-				{
-					if (c.imports.exists(clsPath))
-					{
-						clsPath = c.imports.get(clsPath).join('.');
-					}
+
+				if (scriptClassOverrides.exists(clsPath)) {
+					targetClass = scriptClassOverrides.get(clsPath);
 				}
-
-				// trace(scriptClassOverrides);
-
-				targetClass = scriptClassOverrides.get(clsPath);
-
-				if (targetClass == null)
+				else if (c.imports.exists(clsPath))
 				{
+					var importedClass:PolymodClassImport = c.imports.get(clsPath);
+					if (importedClass != null && importedClass.cls != null) {
+						targetClass = importedClass.cls;
+					} else if (importedClass != null && importedClass.cls == null) {
+						Polymod.error(SCRIPT_PARSE_ERROR, 'Could not determine target class for "${pth.join('.')}" (blacklisted type?)');
+					} else {
+						Polymod.error(SCRIPT_PARSE_ERROR, 'Could not determine target class for "${pth.join('.')}" (unregistered type?)');
+					}
+				} else {
 					Polymod.error(SCRIPT_PARSE_ERROR, 'Could not determine target class for "${pth.join('.')}" (unregistered type?)');
 				}
 			default:
@@ -310,27 +336,24 @@ class PolymodScriptClass
 		{
 			var clsToCreate:Class<Dynamic> = null;
 
-			if (_c.imports.exists(extendString))
-			{
-				extendString = _c.imports.get(extendString).join('.');
-			}
-
-			@:privateAccess
-			if (scriptClassOverrides.exists(extendString))
-			{
-				@:privateAccess
+			if (scriptClassOverrides.exists(extendString)) {
 				clsToCreate = scriptClassOverrides.get(extendString);
-			}
-			if (clsToCreate == null)
-			{
-				clsToCreate = Type.resolveClass(extendString);
-			}
 
-			if (clsToCreate == null)
-			{
-				@:privateAccess _interp.errorEx(ECustom('Could not resolve super class: ${extendString}'));
-			}
+				if (clsToCreate == null)
+				{
+					@:privateAccess _interp.errorEx(ECustom('Could not resolve super class: ${extendString} (why???)'));
+				}
+			} else if (_c.imports.exists(extendString)) {
+				clsToCreate = _c.imports.get(extendString).cls;
 
+				if (clsToCreate == null)
+				{
+					@:privateAccess _interp.errorEx(ECustom('Could not resolve super class: ${extendString} (target class is blacklisted)'));
+				}
+			} else {
+				@:privateAccess _interp.errorEx(ECustom('Could not resolve super class: ${extendString} (did you forget to import it?)'));
+			}
+			
 			superClass = Type.createInstance(clsToCreate, args);
 		}
 	}

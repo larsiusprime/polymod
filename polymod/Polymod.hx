@@ -644,6 +644,27 @@ class Polymod
 			return [];
 		}
 	}
+
+	/**
+	 * When a scripted class defines an import, you can define another class which should be imported instead.
+	 * @param importAlias The full import path to use as an alias, as a string.
+	 * @param importClass The class type to import instead.
+	 */
+	public static function addImportAlias(importAlias:String, importClass:Class<Dynamic>):Void {
+		PolymodScriptClass.importOverrides.set(importAlias, importClass);
+	}
+
+	public static function removeImportAlias(importAlias:String):Void {
+		PolymodScriptClass.importOverrides.remove(importAlias);
+	}
+
+	/**
+	 * When a scripted class define an import, you can blacklist it from being imported.
+	 * @param importPath The full import path to blacklist, as a string.
+	 */
+	public static function blacklistImport(importPath:String):Void {
+		PolymodScriptClass.importOverrides.set(importPath, null);
+	}
 }
 
 /**
