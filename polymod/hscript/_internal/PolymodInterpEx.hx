@@ -701,7 +701,21 @@ class PolymodInterpEx extends Interp
 	public function registerModule(module:Array<ModuleDecl>)
 	{
 		var pkg:Array<String> = null;
-		var imports:Map<String, Array<String>> = [];
+		var imports:Map<String, PolymodClassImport> = [];
+
+		for (importPath in PolymodScriptClass.defaultImports.keys())
+		{
+			var splitPath = importPath.split(".");
+			var clsName = splitPath[splitPath.length - 1];
+
+			imports.set(clsName, {
+				name: clsName,
+				pkg: splitPath.slice(0, splitPath.length - 1),
+				fullPath: importPath,
+				cls: PolymodScriptClass.defaultImports.get(importPath),
+			});
+		}
+
 		for (decl in module)
 		{
 			switch (decl)
@@ -709,8 +723,16 @@ class PolymodInterpEx extends Interp
 				case DPackage(path):
 					pkg = path;
 				case DImport(path, _):
+					var clsName = path[path.length - 1];
+					
+					if (imports.exists(clsName))
+					{
+						Polymod.warning(SCRIPT_CLASS_ALREADY_IMPORTED, 'Scripted class ${clsName} has already been imported.');
+						continue;
+					}
+
 					var importedClass:PolymodClassImport = {
-						name: path[path.length - 1],
+						name: clsName,
 						pkg: path.slice(0, path.length - 1),
 						fullPath: path.join("."),
 						cls: null,

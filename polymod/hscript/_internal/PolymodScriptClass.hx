@@ -37,6 +37,11 @@ class PolymodScriptClass
 	 */
 	public static final importOverrides:Map<String, Class<Dynamic>> = new Map<String, Class<Dynamic>>();
 
+	/**
+	 * Provide a class name along with a corresponding class to import it in every scripted class.
+	 */
+	public static final defaultImports:Map<String, Class<Dynamic>> = new Map<String, Class<Dynamic>>();
+
 	/*
 	 * STATIC METHODS
 	 */

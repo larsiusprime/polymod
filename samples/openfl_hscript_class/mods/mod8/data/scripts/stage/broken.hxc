@@ -1,0 +1,69 @@
+import stage.Stage;
+import openfl.utils.Assets;
+import openfl.display.Bitmap;
+import Reflect;
+
+class BrokenStage extends Stage {
+  public function new() {
+    super("advanced");
+    stageName = "Broken Stage";
+    carSprite = null;
+  }
+
+  var carSprite:Bitmap;
+
+  public override function create():Void {
+    super.create();
+
+    var landscapeBg = new Bitmap(Assets.getBitmapData('img/stage/street.png'));
+    landscapeBg.x = 0;
+    landscapeBg.y = 0;
+    landscapeBg.width = 480;
+    landscapeBg.height = 360;
+
+    carSprite = new Bitmap(Assets.getBitmapData('img/stage/car.png'));
+    carSprite.x = 50;
+    carSprite.y = 240;
+    carSprite.width = 100;
+    carSprite.height = 100;
+
+    this.addChild(landscapeBg);
+    this.addChild(carSprite);
+  }
+
+  var carSpeed:Float = 1.0;
+  public override function onUpdate():Void {
+    super.onUpdate();
+
+    if (carSprite != null) {
+
+      carSprite.x += carSpeed;
+      
+      if (carSprite.x > 330 || carSprite.x < 50) {
+        trace('Bounce!');
+        carSpeed *= -1;
+      }
+    }
+    // trace('car: '+carSpeed+' : '+carSprite.x);
+  }
+
+  public override function onKeyDown(event:KeyboardEvent):Void {
+    switch(event.keyCode) {
+      case 38: // Up
+        trace('Key pressed: Up');
+        carSpeed *= 1.5;
+      case 40: // Down
+        trace('Key pressed: Down');
+        carSpeed *= 0.75;
+      default:
+        // Do nothing.
+        trace('Key pressed: ${event.keyCode}');
+    }
+    if (Math.abs(carSpeed) < 0.1) {
+      carSpeed = 0.1;
+    }
+    if (Math.abs(carSpeed) > 10) {
+      carSpeed = 10;
+    }
+  }
+}

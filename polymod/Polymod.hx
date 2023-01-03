@@ -659,6 +659,17 @@ class Polymod
 	}
 
 	/**
+	 * Define a class to be imported by default in all scripted classes.
+	 * @param importClass The class type to import.
+	 * @param importAlias (optional) The alias to use for the import. If not provided, the full class path will be used.
+	 */
+	public static function addDefaultImport(importClass:Class<Dynamic>, ?importAlias:String):Void {
+		if (importAlias == null)
+			importAlias = Type.getClassName(importClass);
+		PolymodScriptClass.defaultImports.push(importAlias, importClass);
+	}
+
+	/**
 	 * When a scripted class define an import, you can blacklist it from being imported.
 	 * @param importPath The full import path to blacklist, as a string.
 	 */
