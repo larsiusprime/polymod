@@ -27,12 +27,7 @@ class ModWidget extends Sprite
 
 		var button = new CheapButton(str, onClick);
 		var left = '←';
-		var right = '→';
-		#if mac || linux
-		left = "<--";
-		right = "-->";
-		#end
-		moveLeft = new CheapButton(left, onMove.bind(-1));
+		var right = '→'; #if mac || linux left = "<--"; right = "-->"; #end moveLeft = new CheapButton(left, onMove.bind(-1));
 		moveRight = new CheapButton(right, onMove.bind(1));
 
 		addChild(status);

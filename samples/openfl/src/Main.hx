@@ -10,6 +10,7 @@ import haxe.io.Path;
 class Main extends Sprite
 {
 	private var demo:Demo = null;
+
 	public static final API_VERSION:Version = "1.1.1";
 	public static final API_VERSION_RULE:VersionRule = VersionUtil.anyPatch(API_VERSION);
 
@@ -56,6 +57,6 @@ class Main extends Sprite
 
 	private function onError(error:PolymodError)
 	{
-		trace('[${error.severity}] (${error.code.toUpperCase()}): ${error.message}');
+		trace('[${error.severity}] (${Std.string(error.code).toUpperCase()}): ${error.message}');
 	}
 }

@@ -1,7 +1,6 @@
 package polymod.fs;
 
 import polymod.fs.ZipFileSystem.ZipFileSystemParams;
-
 #if !sys
 class SysZipFileSystem extends polymod.fs.StubFileSystem
 {
@@ -19,14 +18,15 @@ import polymod.util.Util;
 import polymod.util.zip.ZipParser;
 import sys.io.File;
 import thx.semver.VersionRule;
+
 using StringTools;
 
 /**
- * An implementation of an IFileSystem that can access files from an un-compressed zip archive.
- * This file system pretends as though the files in the ZIPs are in the mod root;
- * this allows both zips and folders to be enabled as mods.
- * Useful for loading mods from zip files.
- * Compatible only with native targets. Currently does not support compressed zip files.
+ * An implementation of an IFileSystem that can access mod files
+ * from both directories AND ZIP archives in the mod root.
+ *
+ * Supports compressed and uncompressed ZIP files.
+ * Compatible only with native targets.
  */
 class SysZipFileSystem extends SysFileSystem
 {
@@ -51,6 +51,12 @@ class SysZipFileSystem extends SysFileSystem
 		filesLocations = new Map<String, String>();
 		zipParsers = new Map<String, ZipParser>();
 		fileDirectories = [];
+
+		if (params.autoScan == null)
+			params.autoScan = true;
+
+		if (params.autoScan)
+			addAllZips();
 	}
 
 	/**
@@ -58,7 +64,7 @@ class SysZipFileSystem extends SysFileSystem
 	 */
 	public override function getFileBytes(path:String):Null<Bytes>
 	{
-    path = Util.filterASCII(path);
+		path = Util.filterASCII(path);
 		if (!filesLocations.exists(path))
 		{
 			// Fallback to the inner SysFileSystem.
@@ -68,17 +74,27 @@ class SysZipFileSystem extends SysFileSystem
 		{
 			// Rather than going to the `files` map for the contents (which are empty),
 			// we go directly to the zip file and extract the individual file.
-			var zipParser = zipParsers.get(filesLocations.get(path));
+
+			// Determine which zip the target file is in.
+			var zipPath = filesLocations.get(path);
+			var zipParser = zipParsers.get(zipPath);
+			var modId = Path.withoutExtension(Path.withoutDirectory(zipPath));
 
 			var innerPath = path;
-			if (innerPath.startsWith(modRoot)) {
-				innerPath = innerPath.substring(
-					modRoot.endsWith("/") ? modRoot.length : modRoot.length + 1
-				);
+			// Remove mod root from path
+			if (innerPath.startsWith(modRoot))
+			{
+				innerPath = innerPath.substring(modRoot.endsWith("/") ? modRoot.length : modRoot.length + 1);
+			}
+			// Remove mod ID from path
+			if (innerPath.startsWith(modId))
+			{
+				innerPath = innerPath.substring(modId.length + 1);
 			}
 
 			var fileHeader = zipParser.getLocalFileHeaderOf(innerPath);
-			if (fileHeader == null) {
+			if (fileHeader == null)
+			{
 				// Couldn't access file
 				trace('WARNING: Could not access file $innerPath from ZIP ${zipParser.fileName}.');
 				return null;
@@ -88,43 +104,53 @@ class SysZipFileSystem extends SysFileSystem
 		}
 	}
 
-	public override function exists(path:String) {
+	public override function exists(path:String)
+	{
+		trace('Checking existance of file ${path}...');
 		if (filesLocations.exists(path))
 			return true;
 		if (fileDirectories.contains(path))
 			return true;
-		
+
 		return super.exists(path);
 	}
-	
-	public override function isDirectory(path:String) {
+
+	public override function isDirectory(path:String)
+	{
 		if (fileDirectories.contains(path))
 			return true;
-		
+
 		if (filesLocations.exists(path))
 			return false;
 
 		return super.isDirectory(path);
 	}
 
-	public override function readDirectory(path:String) {
+	public override function readDirectory(path:String)
+	{
 		// Remove trailing slash
 		if (path.endsWith("/"))
 			path = path.substring(0, path.length - 1);
 
 		var result = super.readDirectory(path);
+		result = (result == null) ? [] : result;
 
-		if (fileDirectories.contains(path)) {
+		if (fileDirectories.contains(path))
+		{
 			// We check if directory ==, because
 			// we don't want to read the directory recursively.
 
-			for (file in filesLocations.keys()) {
-				if (Path.directory(file) == path) {
+			for (file in filesLocations.keys())
+			{
+				if (Path.directory(file) == path)
+				{
 					result.push(Path.withoutDirectory(file));
 				}
 			}
-			for (dir in fileDirectories) {
-				if (Path.directory(dir) == path) {
+			for (dir in fileDirectories)
+			{
+				if (Path.directory(dir) == path)
+				{
 					result.push(Path.withoutDirectory(dir));
 				}
 			}
@@ -136,21 +162,25 @@ class SysZipFileSystem extends SysFileSystem
 	/**
 	 * Scan the mod root for ZIP files and add each one to the SysZipFileSystem.
 	 */
-	public function addAllZips():Void {
-		trace('Searching for ZIP files in ' + modRoot);
+	public function addAllZips():Void
+	{
+		Polymod.notice(MOD_LOAD_PREPARE, 'Searching for ZIP files in ' + modRoot);
 		// Use SUPER because we don't want to add in files within the ZIPs.
 		var modRootContents = super.readDirectory(modRoot);
-		trace('Found ' + modRootContents.length + ' files');
+		Polymod.notice(MOD_LOAD_PREPARE, 'Found ${modRootContents.length} files in modRoot.');
 
-
-		for (modRootFile in modRootContents) {
+		for (modRootFile in modRootContents)
+		{
 			var filePath = Util.pathJoin(modRoot, modRootFile);
 
+			// Skip directories.
 			if (isDirectory(filePath))
 				continue;
 
-			if (StringTools.endsWith(filePath, ".zip")) {
-				trace('- Found zip file' + filePath);
+			// Only process ZIP files.
+			if (StringTools.endsWith(filePath, ".zip"))
+			{
+				Polymod.notice(MOD_LOAD_PREPARE, '- Adding zip file: $filePath');
 				addZipFile(filePath);
 			}
 		}
@@ -158,29 +188,39 @@ class SysZipFileSystem extends SysFileSystem
 
 	public function addZipFile(zipPath:String)
 	{
+		// Strip the path and extension to get the mod ID.
+		var modId = Path.withoutExtension(Path.withoutDirectory(zipPath));
+
 		var zipParser = new ZipParser(zipPath);
 
 		// SysZipFileSystem doesn't actually use the internal `files` map.
 		// We populate it here simply so we know the files are there.
 		for (fileName => fileHeader in zipParser.centralDirectoryRecords)
 		{
-			if (fileHeader.compressedSize != 0 && fileHeader.uncompressedSize != 0 && !StringTools.endsWith(fileHeader.fileName, '/'))
+			// File is empty. Skip.
+			if (fileHeader.compressedSize == 0 || fileHeader.uncompressedSize == 0)
+				continue;
+
+			// File is a directory. Skip.
+			if (StringTools.endsWith(fileName, '/'))
+				continue;
+
+			// Add to the list of files.
+			// The file should appear in the mod list as though it was in a directory rather than a ZIP.
+			var fullFilePath = Path.join([modRoot, modId, fileHeader.fileName]);
+			filesLocations.set(fullFilePath, zipPath);
+
+			// Generate the list of directories.
+			var fileDirectory = Path.directory(fullFilePath);
+			// Resolving recursively ensures parent directories are registered.
+			// If the directory is already registered, its parents are already registered as well.
+			while (fileDirectory != "" && !fileDirectories.contains(fileDirectory))
 			{
-				// Add to the list of files.
-				var fullFilePath = Util.pathJoin(modRoot, fileHeader.fileName);
-				filesLocations.set(fullFilePath, zipPath);
-				
-				// Generate the list of directories.
-				var fileDirectory = Path.directory(fullFilePath);
-				// Resolving recursively ensures parent directories are registered.
-				// If the directory is already registered, its parents are already registered as well.
-				while (fileDirectory != "" && !fileDirectories.contains(fileDirectory)) {
-					fileDirectories.push(fileDirectory);
-					fileDirectory = Path.directory(fileDirectory);
-				}
+				fileDirectories.push(fileDirectory);
+				fileDirectory = Path.directory(fileDirectory);
 			}
 		}
-		
+
 		// Store the ZIP parser for later use.
 		zipParsers.set(zipPath, zipParser);
 	}

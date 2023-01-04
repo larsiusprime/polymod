@@ -1,0 +1,29 @@
+{
+  "dependencies": [
+    {
+      "name": "heaps",
+      "type": "haxelib",
+      "version": null
+    },
+    {
+      "name": "hlsdl",
+      "type": "haxelib",
+      "version": null
+    },
+    {
+      "name": "hxbit",
+      "type": "haxelib",
+      "version": null
+    },
+    {
+      "name": "polymod",
+      "path": "../..",
+      "type": "dev"
+    },
+    {
+      "name": "thx.semver",
+      "type": "haxelib",
+      "version": null
+    }
+  ]
+}

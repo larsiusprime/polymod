@@ -1,6 +1,7 @@
 -lib heaps
 -lib hlsdl
 -lib polymod
+-lib thx.semver
 -lib hxbit
 -hl demo.hl
 -main Main

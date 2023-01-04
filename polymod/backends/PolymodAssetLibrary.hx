@@ -367,7 +367,9 @@ class PolymodAssetLibrary
 			#end
 			var filePath = Util.pathJoin(d, id);
 			if (fileSystem.exists(filePath))
+			{
 				return true;
+			}
 		}
 		// The loop didn't find it.
 		return false;
@@ -442,7 +444,7 @@ class PolymodAssetLibrary
 
 		try
 		{
-    	if (fileSystem.exists(d))
+			if (fileSystem.exists(d))
 			{
 				all = fileSystem.readDirectoryRecursive(d);
 			}

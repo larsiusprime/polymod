@@ -1,5 +1,6 @@
 package polymod.hscript._internal;
 
+#if hscript
 import hscript.Parser;
 
 class PolymodParserEx extends Parser
@@ -10,3 +11,4 @@ class PolymodParserEx extends Parser
 		return decls;
 	}
 }
+#end

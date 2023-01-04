@@ -47,7 +47,7 @@ class MemoryFileSystem implements PolymodFileSystem.IFileSystem
 	{
 		path = Path.removeTrailingSlashes(path);
 		files.set(path, data);
-		var parentDirs = Util.listAllParentDirs(path);
+		var parentDirs = Util.listAllParentDirs(Path.directory(path));
 		// remove the actual path to the file from the directories array
 		parentDirs.remove(path);
 		directories = directories.concat(parentDirs);
@@ -141,8 +141,8 @@ class MemoryFileSystem implements PolymodFileSystem.IFileSystem
 
 	/**
 	 * List all files at or below the given path.
-	    *
-	    * @param path The path name of the directory to read.
+	 		*
+	 		* @param path The path name of the directory to read.
 	 */
 	public function readDirectoryRecursive(path:String)
 	{
@@ -169,7 +169,7 @@ class MemoryFileSystem implements PolymodFileSystem.IFileSystem
 		if (apiVersionRule == null)
 			apiVersionRule = VersionUtil.DEFAULT_VERSION_RULE;
 
-		var dirs = readDirectory('');
+		var dirs = readDirectory(modRoot);
 		var result:Array<ModMetadata> = [];
 		for (dir in dirs)
 		{

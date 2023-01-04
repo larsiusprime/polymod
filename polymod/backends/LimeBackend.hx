@@ -36,6 +36,10 @@ class LimeBackend extends StubBackend
 		super();
 		Polymod.error(FAILED_CREATE_BACKEND, "LimeBackend requires the lime library, did you forget to install it?");
 	}
+
+	public function preloadImagesToCache():Void {
+		Polymod.error(FAILED_CREATE_BACKEND, "LimeBackend requires the lime library, did you forget to install it?");
+	}
 }
 #else
 #if (!nme && !macro)
@@ -145,7 +149,12 @@ class LimeBackend implements IBackend
 				}
 			}
 			var fallbackLibrary = defaultLibraries.get(key);
-			var modLibrary = new LimeModLibrary(this, fallbackLibrary, pathPrefix, key);
+			// Prevent recursion when reinitializing Polymod.
+			while (Std.isOfType(fallbackLibrary, LimeModLibrary))
+			{
+				fallbackLibrary = cast(fallbackLibrary, LimeModLibrary).getFallbackLibrary();
+			}
+			var modLibrary = buildModLibrary(fallbackLibrary, pathPrefix, key);
 			modLibraries.set(key, modLibrary);
 		}
 
@@ -155,6 +164,11 @@ class LimeBackend implements IBackend
 		}
 
 		return true;
+	}
+
+	function buildModLibrary(fallbackLibrary:AssetLibrary, pathPrefix:String, libraryName:String):LimeModLibrary
+	{
+		return new LimeModLibrary(this, fallbackLibrary, pathPrefix, libraryName);
 	}
 
 	/**
@@ -247,13 +261,25 @@ class LimeBackend implements IBackend
 			}
 		}
 	}
+
+	public function preloadImagesToCache():Void
+	{
+		// On HTML5, we need to call `loadImage()` on all images before they can be later loaded synchronously.
+		trace('Image preload global...');
+		for (modLibrary in modLibraries)
+		{
+			trace('Image preload local... (${modLibrary.libraryId})');
+			modLibrary.preloadImagesToCache();
+		}
+	}
 }
 
 class LimeModLibrary extends AssetLibrary
 {
 	public static function LimeToPoly(type:AssetType):PolymodAssetType
 	{
-		if (type == null) return null;
+		if (type == null)
+			return null;
 		return switch (type)
 		{
 			case AssetType.BINARY: PolymodAssetType.BYTES;
@@ -270,7 +296,8 @@ class LimeModLibrary extends AssetLibrary
 
 	public static function PolyToLime(type:PolymodAssetType):AssetType
 	{
-		if (type == null) return null;
+		if (type == null)
+			return null;
 		return switch (type)
 		{
 			case PolymodAssetType.BYTES: AssetType.BINARY;
@@ -295,6 +322,14 @@ class LimeModLibrary extends AssetLibrary
 	var hasFallback:Bool;
 	var type(default, null):Map<String, AssetType>;
 
+	#if html5
+	/**
+	 * Preload images on HTML5 to allow images to be loaded synchronously.
+	 * This doesn't break mods because a new 
+	 */
+	var imageCache:Map<String, lime.graphics.Image>;
+	#end
+
 	public function new(backend:LimeBackend, fallback:AssetLibrary, ?pathPrefix:String = '', ?libraryId:String = 'default')
 	{
 		b = backend;
@@ -303,6 +338,10 @@ class LimeModLibrary extends AssetLibrary
 		this.libraryId = libraryId;
 		this.fallback = fallback;
 		hasFallback = this.fallback != null;
+		#if html5
+		imageCache = new Map<String, lime.graphics.Image>();
+		preloadImagesToCache();
+		#end
 		super();
 	}
 
@@ -312,6 +351,30 @@ class LimeModLibrary extends AssetLibrary
 		p = null;
 		fallback = null;
 		type = null;
+	}
+
+	public function getFallbackLibrary():AssetLibrary
+	{
+		return fallback;
+	}
+
+	public function preloadImagesToCache():Void
+	{
+		// On HTML5, we need to call `loadImage()` on all images before they can be later loaded synchronously.
+
+		for (imageAsset in this.list(AssetType.IMAGE))
+		{
+			var symbol = new IdAndLibrary(imageAsset, this);
+			var filePath = p.file(symbol.modId);
+			trace('Preloading image: ${imageAsset}~${filePath}');
+
+			#if html5
+			if (imageCache.exists(filePath))
+				continue;
+			#end
+
+			loadImage(imageAsset);
+		}
 	}
 
 	public override function getAsset(id:String, type:String):Dynamic
@@ -441,7 +504,27 @@ class LimeModLibrary extends AssetLibrary
 		var symbol = new IdAndLibrary(id, this);
 		if (p.check(symbol.modId))
 		{
+			#if html5
+			// NOTE: HTML5 does not like Images.fromBytes because images can't be loaded synchronously.
+			// So we cache the image data in a Bytes object and load it asynchronously.
+			var filePath = p.file(symbol.modId);
+			if (imageCache.exists(filePath))
+			{
+				return imageCache.get(filePath);
+			}
+			else
+			{
+				// LimeBackend has a function to precache mod images when a mod is added,
+				// and any HTML5-based file systems need to call it.
+
+				// If the image isn't cached, tough luck.
+				return null;
+			}
+			#else
+			// Other platforms don't have these issues with images,
+			// and other file types can be loaded synchronously.
 			return Image.fromBytes(p.fileSystem.getFileBytes(p.file(symbol.modId)));
+			#end
 		}
 		else if (hasFallback)
 		{
@@ -545,20 +628,30 @@ class LimeModLibrary extends AssetLibrary
 
 	public override function loadImage(id:String):Future<Image>
 	{
-		Polymod.debug('LimeModLibrary.loadImage($id)');
 		var symbol = new IdAndLibrary(id, this);
 		if (p.check(symbol.modId))
 		{
-			// for compatibility with the zip file systems (loadFromFile doesn't seem to work unless it's a url :/)
-			if (Std.isOfType(p.fileSystem, polymod.fs.ZipFileSystem))
+			trace('Loading image ' + symbol.modId + ' from ' + p.file(symbol.modId));
+
+			// We load the bytes, then load the file, rather than using Image.loadFromFile,
+			// because URLs don't work with MemoryFileSystem.
+			var filePath = p.file(symbol.modId);
+			var dabytes = p.fileSystem.getFileBytes(filePath);
+			var imageFuture = Image.loadFromBytes(dabytes);
+
+			#if html5
+			imageFuture.onComplete((result:Image) ->
 			{
-				var dabytes = p.fileSystem.getFileBytes(p.file(symbol.modId));
-				return Image.loadFromBytes(dabytes);
-			}
-			else
-			{
-				return Image.loadFromFile(p.file(symbol.modId));
-			}
+				if (result != null)
+				{
+					trace('Adding ' + filePath + ' to image cache.');
+					trace(result);
+					imageCache.set(filePath, result);
+				}
+			});
+			#end
+
+			return imageFuture;
 		}
 		else if (hasFallback)
 		{
@@ -735,7 +828,8 @@ class LimeModLibrary extends AssetLibrary
 		return Util.filterUnique(items);
 	}
 
-	public override function load():Future<AssetLibrary> {
+	public override function load():Future<AssetLibrary>
+	{
 		return super.load();
 	}
 }
