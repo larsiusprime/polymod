@@ -4,6 +4,7 @@ import hscript.Expr;
 import hscript.Interp;
 import hscript.Tools;
 import polymod.hscript._internal.PolymodExprEx;
+import polymod.hscript._internal.PolymodClassDeclEx.PolymodClassImport;
 
 /**
  * Based on code by Ian Harrigan
@@ -65,7 +66,7 @@ class PolymodInterpEx extends Interp
 				if (_scriptClassDescriptors.exists(importedClass.fullPath))
 				{
 					// OVERRIDE CHANGE: Create a PolymodScriptClass instead of a hscript.ScriptClass
-					var proxy:PolymodAbstractScriptClass = new PolymodScriptClass(_scriptClassDescriptors.get(importedClass), args);
+					var proxy:PolymodAbstractScriptClass = new PolymodScriptClass(_scriptClassDescriptors.get(importedClass.fullPath), args);
 					return proxy;
 				}
 
@@ -76,7 +77,7 @@ class PolymodInterpEx extends Interp
 				}
 				else
 				{
-					errorEx(EInvalidModule(importedClass));
+					errorEx(EInvalidModule(importedClass.fullPath));
 				}
 			}
 		}
@@ -727,7 +728,7 @@ class PolymodInterpEx extends Interp
 					
 					if (imports.exists(clsName))
 					{
-						Polymod.warning(SCRIPT_CLASS_ALREADY_IMPORTED, 'Scripted class ${clsName} has already been imported.');
+						Polymod.warning(SCRIPT_CLASS_ALREADY_REGISTERED, 'Scripted class ${clsName} has already been imported.');
 						continue;
 					}
 
@@ -744,11 +745,11 @@ class PolymodInterpEx extends Interp
 
 						importedClass.cls = PolymodScriptClass.importOverrides.get(importedClass.fullPath);
 					} else {
-						var result:Dynamic = Type.resolveClass(importedClass);
+						var result:Dynamic = Type.resolveClass(importedClass.name);
 					
 						// If the class is not found, try to find it as an enum.
 						if (result == null)
-							result = Type.resolveEnum(importedClass);
+							result = Type.resolveEnum(importedClass.name);
 
 						// If the class is still not found, skip this import entirely.
 						if (result == null)
@@ -766,7 +767,7 @@ class PolymodInterpEx extends Interp
 							switch (extend)
 							{
 								case CTPath(_, params):
-									extend = CTPath(imports.get(superClassPath).fullPath, params);
+									extend = CTPath([imports.get(superClassPath).fullPath], params);
 								case _:
 							}
 						}
