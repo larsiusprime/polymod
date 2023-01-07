@@ -12,6 +12,7 @@ import polymod.util.DependencyUtil;
 import polymod.util.VersionUtil;
 import thx.semver.Version;
 import thx.semver.VersionRule;
+import polymod.hscript._internal.PolymodScriptClass;
 using StringTools;
 
 #if firetongue
@@ -666,7 +667,7 @@ class Polymod
 	public static function addDefaultImport(importClass:Class<Dynamic>, ?importAlias:String):Void {
 		if (importAlias == null)
 			importAlias = Type.getClassName(importClass);
-		PolymodScriptClass.defaultImports.push(importAlias, importClass);
+		PolymodScriptClass.defaultImports.set(importAlias, importClass);
 	}
 
 	/**
@@ -813,7 +814,7 @@ class ModMetadata
 	 * A list of contributors to the mod.
 	 * Provides data about their roles as well as optional contact information.
 	 */
-	public var contributors:Array<ModContributor>;
+	public var contributors:Array<ModContributor> = [];
 
 	public function new()
 	{
