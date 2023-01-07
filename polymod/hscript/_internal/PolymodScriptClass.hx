@@ -199,7 +199,7 @@ class PolymodScriptClass
 				extendString = extendString.split('<')[0];
 			}
 
-			var superCls:Class<Dynamic>;
+			var superCls:Class<Dynamic> = null;
 
 			if (classDecl.imports.exists(extendString))
 			{
@@ -207,7 +207,7 @@ class PolymodScriptClass
 				if (importedClass != null && importedClass.cls == null) {
 					// importedClass was defined but `cls` was null. This class must have been blacklisted.
 					var clsName = classDecl.pkg != null ? '${classDecl.pkg.join('.')}.${classDecl.name}' : classDecl.name;
-					Polymod.error(SCRIPT_PARSE_ERROR, 'Could not parse superclass "${classDecl.fullPath}" of scripted class "${clsName}". The superclass may be blacklisted.');
+					Polymod.error(SCRIPT_PARSE_ERROR, 'Could not parse superclass "${importedClass.fullPath}" of scripted class "${clsName}". The superclass may be blacklisted.');
 					return [];
 				} else if (importedClass != null) {
 					superCls = importedClass.cls;
