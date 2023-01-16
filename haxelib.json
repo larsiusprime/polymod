@@ -6,5 +6,8 @@
   "description": "An atomic modding framework for Haxe games",
   "version": "1.7.0",
   "releasenote": "Dependencies, ZIP mods, blacklisting, and other improvements.",
-  "contributors": ["MasterEric", "larsiusprime"]
+  "contributors": ["MasterEric", "larsiusprime"],
+  "dependencies": {
+    "thx.semver": ""
+  }
 }
