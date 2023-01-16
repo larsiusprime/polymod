@@ -47,9 +47,12 @@ EInvalidOp(op:String);
 EInvalidAccess(f:String);
 // Polymod-specific error types.
 EInvalidModule(m:String);
+EBlacklistedModule(m:String);
 EInvalidScriptedFnAccess(f:String);
 EInvalidScriptedVarGet(v:String);
 EInvalidScriptedVarSet(v:String);
+EClassSuperNotCalled;
+EClassUnresolvedSuperclass(c:String, r:String); // superclass and reason
 // Fallback error type.
 ECustom(msg:String);
 } class ErrorExUtil
@@ -123,6 +126,6 @@ ECustom(msg:String);
 				return ECustom(msg);
 				#end
 		}
-		throw "Unimplemented error type";
+		throw "Unimplemented error type " + err;
 	}
 }

@@ -184,13 +184,13 @@ class HScriptedClassMacro
 				ret: Context.toComplexType(Context.getType(clsTypeName)),
 				expr: macro
 				{
-					polymod.hscript._internal.PolymodScriptClass.importOverrides.set($v{superClsTypeName}, Type.resolveClass($v{clsTypeName}));
+					polymod.hscript._internal.PolymodScriptClass.scriptClassOverrides.set($v{superClsTypeName}, Type.resolveClass($v{clsTypeName}));
 
 					var asc:polymod.hscript._internal.PolymodAbstractScriptClass = polymod.hscript._internal.PolymodScriptClass.createScriptClassInstance(clsName,
 						$a{constArgs});
 					if (asc == null)
 					{
-						polymod.Polymod.error(SCRIPT_EXCEPTION, 'Could not construct instance of scripted class (${clsName} extends ' + $v{clsTypeName} + ')');
+						polymod.Polymod.error(SCRIPT_RUNTIME_EXCEPTION, 'Could not construct instance of scripted class (${clsName} extends ' + $v{clsTypeName} + ')');
 						return null;
 					}
 					var scriptedObj = asc.superClass;

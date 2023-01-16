@@ -1,5 +1,6 @@
 package polymod.backends;
 
+import openfl.display3D.IndexBuffer3D;
 import haxe.io.Bytes;
 import polymod.backends.IBackend;
 import polymod.backends.PolymodAssets.PolymodAssetType;
@@ -232,6 +233,8 @@ class PolymodAssetLibrary
 
 		for (id in this.type.keys())
 		{
+			if (items.indexOf(id) != -1)
+				continue;
 			if (id.indexOf('_append') == 0 || id.indexOf('_merge') == 0)
 				continue;
 			if (type == null || type == BYTES || check(id, type))
@@ -393,32 +396,41 @@ class PolymodAssetLibrary
 	private function initExtensions()
 	{
 		extensions = new Map<String, PolymodAssetType>();
+
 		_extensionSet('mp3', AUDIO_GENERIC);
 		_extensionSet('ogg', AUDIO_GENERIC);
 		_extensionSet('wav', AUDIO_GENERIC);
+
+		_extensionSet('otf', FONT);
+		_extensionSet('ttf', FONT);
+
+		_extensionSet('bmp', IMAGE);
+		_extensionSet('gif', IMAGE);
 		_extensionSet('jpg', IMAGE);
 		_extensionSet('png', IMAGE);
-		_extensionSet('gif', IMAGE);
 		_extensionSet('tga', IMAGE);
-		_extensionSet('bmp', IMAGE);
 		_extensionSet('tif', IMAGE);
 		_extensionSet('tiff', IMAGE);
-		_extensionSet('txt', TEXT);
-		_extensionSet('xml', TEXT);
-		_extensionSet('json', TEXT);
+
 		_extensionSet('csv', TEXT);
-		_extensionSet('tsv', TEXT);
+		_extensionSet('hx', TEXT);
+		_extensionSet('hxc', TEXT);
+		_extensionSet('hxs', TEXT);
+		_extensionSet('json', TEXT);
+		_extensionSet('md', TEXT);
 		_extensionSet('mpf', TEXT);
-		_extensionSet('tsx', TEXT);
 		_extensionSet('tmx', TEXT);
+		_extensionSet('tsv', TEXT);
+		_extensionSet('tsx', TEXT);
+		_extensionSet('txt', TEXT);
 		_extensionSet('vdf', TEXT);
-		_extensionSet('ttf', FONT);
-		_extensionSet('otf', FONT);
-		_extensionSet('webm', VIDEO);
-		_extensionSet('mp4', VIDEO);
-		_extensionSet('mov', VIDEO);
+		_extensionSet('xml', TEXT);
+
 		_extensionSet('avi', VIDEO);
 		_extensionSet('mkv', VIDEO);
+		_extensionSet('mov', VIDEO);
+		_extensionSet('mp4', VIDEO);
+		_extensionSet('webm', VIDEO);
 	}
 
 	private function _extensionSet(str:String, type:PolymodAssetType)

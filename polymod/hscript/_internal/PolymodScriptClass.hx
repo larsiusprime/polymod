@@ -49,9 +49,9 @@ class PolymodScriptClass
 	/**
 	 * Register a scripted class by parsing the text of that script.
 	 */
-	static function registerScriptClassByString(body:String)
+	static function registerScriptClassByString(body:String, path:String = null):Void
 	{
-		scriptInterp.addModule(body);
+		scriptInterp.addModule(body, path == null ? 'hscriptClass' : 'hscriptClass($path)');
 	}
 
 	/**
@@ -63,10 +63,25 @@ class PolymodScriptClass
 			var scriptBody = Polymod.assetLibrary.getText(path);
 			try
 			{
-				registerScriptClassByString(scriptBody);
+				registerScriptClassByString(scriptBody, path);
 			}
 			catch (err:PolymodExprEx.ErrorEx)
 			{
+				var errLine:String = #if hscriptPos '${err.line}' #else "#???" #end;
+				#if hscriptPos
+				switch (err.e)
+				#else
+				switch (err)
+				#end
+				{
+					case EUnexpected(s):
+						Polymod.error(SCRIPT_PARSE_ERROR,
+							'Error while parsing function ${path}#${errLine}: EUnexpected' + '\n' +
+							'Unexpected error: Unexpected token "${s}", is there invalid syntax on this line?');
+					default:
+						Polymod.error(SCRIPT_PARSE_ERROR, 'Error while executing function ${path}#${errLine}: ' + '\n' + 'An unknown error occurred: ${err}');
+				}
+			} catch (err:hscript.Expr.Error) {
 				var errLine:String = #if hscriptPos '${err.line}' #else "#???" #end;
 				#if hscriptPos
 				switch (err.e)
@@ -206,7 +221,7 @@ class PolymodScriptClass
 				extendString = extendString.split('<')[0];
 			}
 
-			var superCls:Class<Dynamic>;
+			var superCls:Class<Dynamic> = null;
 
 			if (classDecl.imports.exists(extendString))
 			{
@@ -214,7 +229,7 @@ class PolymodScriptClass
 				if (importedClass != null && importedClass.cls == null) {
 					// importedClass was defined but `cls` was null. This class must have been blacklisted.
 					var clsName = classDecl.pkg != null ? '${classDecl.pkg.join('.')}.${classDecl.name}' : classDecl.name;
-					Polymod.error(SCRIPT_PARSE_ERROR, 'Could not parse superclass "${classDecl.fullPath}" of scripted class "${clsName}". The superclass may be blacklisted.');
+					Polymod.error(SCRIPT_PARSE_ERROR, 'Could not parse superclass "${classDecl.name}" of scripted class "${clsName}". The superclass may be blacklisted.');
 					return [];
 				} else if (importedClass != null) {
 					superCls = importedClass.cls;
@@ -296,7 +311,7 @@ class PolymodScriptClass
 			callFunction("new", args);
 			if (superClass == null && _c.extend != null)
 			{
-				@:privateAccess _interp.errorEx(ECustom("super() not called"));
+				@:privateAccess _interp.errorEx(EClassSuperNotCalled);
 			}
 		}
 		else if (_c.extend != null)
@@ -353,17 +368,17 @@ class PolymodScriptClass
 
 				if (clsToCreate == null)
 				{
-					@:privateAccess _interp.errorEx(ECustom('Could not resolve super class: ${extendString} (why???)'));
+					@:privateAccess _interp.errorEx(EClassUnresolvedSuperclass(extendString, 'WHY?'));
 				}
 			} else if (_c.imports.exists(extendString)) {
 				clsToCreate = _c.imports.get(extendString).cls;
 
 				if (clsToCreate == null)
 				{
-					@:privateAccess _interp.errorEx(ECustom('Could not resolve super class: ${extendString} (target class is blacklisted)'));
+					@:privateAccess _interp.errorEx(EClassUnresolvedSuperclass(extendString, 'target class blacklisted'));
 				}
 			} else {
-				@:privateAccess _interp.errorEx(ECustom('Could not resolve super class: ${extendString} (did you forget to import it?)'));
+				@:privateAccess _interp.errorEx(EClassUnresolvedSuperclass(extendString, 'missing import'));
 			}
 			
 			superClass = Type.createInstance(clsToCreate, args);
@@ -394,49 +409,42 @@ class PolymodScriptClass
 			// EInvalidIterator
 			// EInvalidOp
 			case ECustom(msg):
-				var SUPER_CLASS_PREFIX:String = "Could not resolve super class: ";
-				var SUPER_NOT_CALLED_PREFIX:String = "super() not called";
-				if (msg.startsWith(SUPER_CLASS_PREFIX))
-				{
-					var superCls:String = msg.substring(SUPER_CLASS_PREFIX.length);
-					Polymod.error(SCRIPT_EXCEPTION,
-						'Error while executing function ${className}.${fnName}()#${errLine}: ' + '\n' + 'Could not resolve super class type "${superCls}".');
-				}
-				else if (msg.startsWith(SUPER_NOT_CALLED_PREFIX))
-				{
-					Polymod.error(SCRIPT_EXCEPTION,
+				Polymod.error(SCRIPT_RUNTIME_EXCEPTION,
+					'Error while executing function ${className}.${fnName}()#${errLine}: ' + '\n' + 'An unknown error occurred: ${msg}');
+			case EClassUnresolvedSuperclass(c, r):
+				Polymod.error(SCRIPT_RUNTIME_EXCEPTION,
+					'Error while executing function ${className}.${fnName}()#${errLine}: ' + '\n' + 'Could not resolve super class type "${c}" (${r})');
+			case EClassSuperNotCalled:
+					Polymod.error(SCRIPT_RUNTIME_EXCEPTION,
 						'Error while executing function ${className}.${fnName}()#${errLine}: ' + '\n' + 'Custom constructor does not call "super()".');
-				}
-				else
-				{
-					Polymod.error(SCRIPT_EXCEPTION,
-						'Error while executing function ${className}.${fnName}()#${errLine}: ' + '\n' + 'An unknown error occurred: ${err}');
-				}
 			case EInvalidScriptedFnAccess(f):
-				Polymod.error(SCRIPT_EXCEPTION,
+				Polymod.error(SCRIPT_RUNTIME_EXCEPTION,
 					'Error while executing function ${className}.${fnName}()#${errLine}: ' + '\n' +
 					'Could not call function "${f}" on scripted class. Did you try obj.scriptCall("${f}", [...])?');
 			case EInvalidScriptedVarGet(v):
-				Polymod.error(SCRIPT_EXCEPTION,
+				Polymod.error(SCRIPT_RUNTIME_EXCEPTION,
 					'Error while executing function ${className}.${fnName}()#${errLine}: ' + '\n' +
 					'Could not retrieve variable "${v}" on scripted class. Did you try obj.scriptGet("${v}")?');
 			case EInvalidScriptedVarSet(v):
-				Polymod.error(SCRIPT_EXCEPTION,
+				Polymod.error(SCRIPT_RUNTIME_EXCEPTION,
 					'Error while executing function ${className}.${fnName}()#${errLine}: ' + '\n' +
 					'Could not assign variable "${v}" on scripted class. Did you try obj.scriptSet("${v}", value)?');
 			case EInvalidModule(m):
-				Polymod.error(SCRIPT_EXCEPTION,
+				Polymod.error(SCRIPT_RUNTIME_EXCEPTION,
 					'Error while executing function ${className}.${fnName}()#${errLine}: ' + '\n' + 'Could not resolve imported module type "${m}".');
+			case EBlacklistedModule(m):
+				Polymod.error(SCRIPT_RUNTIME_EXCEPTION,
+					'Error while executing function ${className}.${fnName}()#${errLine}: ' + '\n' + 'Imported module "${m}" has been blacklisted.');
 			case EUnknownVariable(v):
-				Polymod.error(SCRIPT_EXCEPTION,
+				Polymod.error(SCRIPT_RUNTIME_EXCEPTION,
 					'Error while executing function ${className}.${fnName}()#${errLine}: EUnknownVariable' + '\n' +
-					'UnknownVariable error: Tried to access "${v}", an unknown variable.');
+					'UnknownVariable error: Tried to access "${v}", an unknown variable or identifier.');
 			case EInvalidAccess(f):
-				Polymod.error(SCRIPT_EXCEPTION,
+				Polymod.error(SCRIPT_RUNTIME_EXCEPTION,
 					'Error while executing function ${className}.${fnName}()#${errLine}: EInvalidAccess' + '\n' +
 					'InvalidAccess error: Tried to access "${f}", but it is not a valid field or method. Is the target object null?');
 			default:
-				Polymod.error(SCRIPT_EXCEPTION,
+				Polymod.error(SCRIPT_RUNTIME_EXCEPTION,
 					'Error while executing function ${className}.${fnName}()#${errLine}: ' + '\n' + 'An unknown error occurred: ${err}');
 		}
 	}
@@ -525,9 +533,9 @@ class PolymodScriptClass
 			var fn = Reflect.field(superClass, fixedName);
 			if (fn == null)
 			{
-				Polymod.error(SCRIPT_EXCEPTION,
+				Polymod.error(SCRIPT_RUNTIME_EXCEPTION,
 					'Error while calling function super.${fnName}(): EInvalidAccess' + '\n' +
-					'InvalidAccess error: Scripted class function "${fnName}" does not exist! Define it or call the correct superclass function.');
+					'InvalidAccess error: Super function "${fnName}" does not exist! Define it or call the correct superclass function.');
 			}
 			r = Reflect.callMethod(superClass, fn, fixedArgs);
 		}

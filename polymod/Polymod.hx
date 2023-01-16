@@ -8,6 +8,7 @@ import polymod.backends.PolymodAssets;
 import polymod.format.JsonHelp;
 import polymod.format.ParseRules;
 import polymod.fs.PolymodFileSystem;
+import polymod.hscript._internal.PolymodScriptClass;
 import polymod.util.DependencyUtil;
 import polymod.util.VersionUtil;
 import thx.semver.Version;
@@ -132,7 +133,6 @@ typedef PolymodParams =
 	/**
 	 * (optional) Whether to perform the required initialization for scripted classes.
 	 * 
-	 * parse and allow for initialization of classes in script files
 	 * Defaults to false.
 	 */
 	?useScriptedClasses:Bool,
@@ -312,16 +312,16 @@ class Polymod
 		#if hscript
 		if (params.useScriptedClasses)
 		{
-			Polymod.notice(PolymodErrorCode.SCRIPT_CLASS_PARSING, 'Parsing script classes...');
+			Polymod.notice(PolymodErrorCode.SCRIPT_PARSING, 'Parsing script classes...');
 			Polymod.registerAllScriptClasses();
 
 			var classList = polymod.hscript._internal.PolymodScriptClass.listScriptClasses();
-			Polymod.notice(PolymodErrorCode.SCRIPT_CLASS_PARSED, 'Parsed and registered ${classList.length} scripted classes.');
+			Polymod.notice(PolymodErrorCode.SCRIPT_PARSED, 'Parsed and registered ${classList.length} scripted classes.');
 		}
 		#else
 		if (params.useScriptedClasses)
 		{
-			Polymod.warning(PolymodErrorCode.SCRIPT_CLASS_PARSING, 'Scripted classes were requested, but hscript is not installed.');
+			Polymod.warning(PolymodErrorCode.SCRIPT_HSCRIPT_NOT_INSTALLED, 'Scripted classes were requested, but hscript is not installed.');
 		}
 		#end
 
@@ -634,7 +634,7 @@ class Polymod
 		polymod.hscript._internal.PolymodInterpEx._scriptClassDescriptors.clear();
 		polymod.hscript.HScriptable.ScriptRunner.clearScripts();
 		#else
-		Polymod.warning(SCRIPT_MISSING_LIBRARY, "Cannot register script classes, HScript is not available.");
+		Polymod.warning(SCRIPT_HSCRIPT_NOT_INSTALLED, "Cannot register script classes, HScript is not available.");
 		#end
 	}
 
@@ -648,15 +648,14 @@ class Polymod
 			// Go through each script and parse any classes in them.
 			for (textPath in Polymod.assetLibrary.list(TEXT))
 			{
-				if (textPath.endsWith(PolymodConfig.scriptClassExt))
-				{
-					// Polymod.debug('Registering script class "$textPath"');
+				if (textPath.endsWith(PolymodConfig.scriptClassExt)) {
+					Polymod.debug('Registering script class "$textPath"');
 					polymod.hscript._internal.PolymodScriptClass.registerScriptClassByPath(textPath);
 				}
 			}
 		}
 		#else
-		Polymod.warning(SCRIPT_MISSING_LIBRARY, "Cannot register script classes, HScript is not available.");
+		Polymod.warning(SCRIPT_HSCRIPT_NOT_INSTALLED, "Cannot register script classes, HScript is not available.");
 		#end
 	}
 
@@ -734,7 +733,7 @@ class Polymod
 	public static function addDefaultImport(importClass:Class<Dynamic>, ?importAlias:String):Void {
 		if (importAlias == null)
 			importAlias = Type.getClassName(importClass);
-		PolymodScriptClass.defaultImports.push(importAlias, importClass);
+		PolymodScriptClass.defaultImports.set(importAlias, importClass);
 	}
 
 	/**
@@ -742,7 +741,7 @@ class Polymod
 	 * @param importPath The full import path to blacklist, as a string.
 	 */
 	public static function blacklistImport(importPath:String):Void {
-		PolymodScriptClass.importOverrides.set(importPath, null);
+		addImportAlias(importPath, null);
 	}
 }
 
@@ -1166,12 +1165,6 @@ enum PolymodErrorType
 	var BAD_CUSTOM_FILESYSTEM:String = 'bad_custom_filesystem';
 
 	/**
-	 * You attempted to register a new scripted class with a name that is already in use.
-	 * - If you need to clear the class descriptor, call `PolymodScriptClass.clearClasses()`.
-	 */
-	var SCRIPT_CLASS_ALREADY_REGISTERED:String = 'bad_custom_filesystem';
-
-	/**
 	 * You attempted to perform an operation that requires Polymod to be initialized.
 	 * - Make sure you call Polymod.init before attempting to call this function.
 	 */
@@ -1181,54 +1174,84 @@ enum PolymodErrorType
 	 * Script classes are currently disabled because the `hscript` library is not available.
 	 * - Make sure you have the `hscript` Haxelib installed if you want to use scripts.
 	 */
-	var SCRIPT_MISSING_LIBRARY:String = 'script_missing_library';
+	var SCRIPT_HSCRIPT_NOT_INSTALLED:String = 'script_hscript_not_installed';
+
+	/**
+	 * A script file of the given name could not be found.
+	 * - This happens when calling annotated functions in an HScriptable class when no script file exists.
+	 * - Make sure the script file exists in the proper location in your assets folder.
+	 * - Alternatively, you can expand your annotation to `@:hscript({optional: true})` to disable the error message,
+	 *     if your function can resolve properly without a script.
+	 */
+	var SCRIPT_NOT_FOUND:String = 'script_not_found';
 
 	/**
 	 * The scripted class does not import an `Assets` class to handle script loading.
 	 * - When loading scripts, the target of the HScriptable interface will call `Assets.getText` to read the relevant script file.
 	 * - You will need to import `openfl.util.Assets` on the HScriptable class, even if you don't otherwise use it.
 	 */
-	var SCRIPT_NO_ASSET_HANDLER:String = 'script_no_asset_handler';
+	 var SCRIPT_NO_ASSET_HANDLER:String = 'script_no_asset_handler';
 
 	/**
-	 * A script file of the given name could not be found.
-	 * - Make sure the script file exists in the proper location in your assets folder.
-	 * - Alternatively, you can expand your annotation to `@:hscript({optional: true})` to disable the error message,
-	 *     as long as your application is built to function without it.
+	 * You attempted to instantiate a scripted class that was not registered.
+	 * - Make sure your script is in the assets folder.
+	 * - Make sure that `useScriptedClasses` in your Polymod.init parameters is set to true.
+	 * - If your scripted class extends another class, make sure that class exists as well.
 	 */
-	var SCRIPT_NOT_FOUND:String = 'script_not_found';
+	var SCRIPT_CLASS_NOT_REGISTERED:String = 'script_class_not_registered';
 
 	/**
-	 * A script file contains an unknown class name.
-	 * - Make sure your scripted class extends an existing class.
-	 * - If your scripted class extends another scripted class, make sure both get loaded.
+	 * You attempted to register a new scripted class with a name that is already in use.
+	 * - Rename the scripted class to one that is unique and will not conflict with other scripted classes.
+	 * - If you need to clear the class descriptor, call `PolymodScriptClass.clearClasses()`.
 	 */
-	var SCRIPT_CLASS_NOT_FOUND:String = 'script_class_not_found';
+	var SCRIPT_CLASS_ALREADY_REGISTERED:String = 'script_class_already_registered';
 
 	/**
-	 * One or more scripted classes are about to be parsed in preparation to be initialized later.
+	 * Your script file attempted to import a class that was already imported.
+	 * - This is a warning and can be ignored.
+	 * - Remove the duplicate import statement to remove the warning.
+	 */
+	var SCRIPT_CLASS_MODULE_ALREADY_IMPORTED:String = 'script_class_module_already_imported';
+
+	/**
+	 * Your script file attempted to import a class that could not be resolved.
+	 * - Check the syntax of the import statement, and check for any typos.
+	 */
+	var SCRIPT_CLASS_MODULE_NOT_FOUND:String = 'script_class_module_not_found';
+
+	/**
+	 * Your script file attempted to import a blacklisted class.
+	 * - This is a security measure to prevent malicious scripts from accessing sensitive classes.
+	 * - Remove the import statement to remove the error.
+	 */
+	var SCRIPT_CLASS_MODULE_BLACKLISTED:String = 'script_class_module_blacklisted';
+
+	/**
+	 * One or more scripts are about to be parsed.
 	 * - This is an info message. You can log it or ignore it if you like.
 	 */
-	var SCRIPT_CLASS_PARSING:String = 'script_class_parsing';
+	var SCRIPT_PARSING:String = 'script_parsing';
 
 	/**
-	 * One or more scripted classes have been parsed and are ready to be initialized.
+	 * One or more scripts have been successfully parsed.
 	 * - This is an info message. You can log it or ignore it if you like.
 	 */
-	var SCRIPT_CLASS_PARSED:String = 'script_class_parsed';
+	var SCRIPT_PARSED:String = 'script_parsed';
 
 	/**
-	 * A script file of the given name could not be loaded for some unknown reason.
+	 * A script file could not be parsed for some unknown reason.
 	 * - Check the syntax of the script file is proper Haxe.
+	 * - Read the error message for more information.
 	 */
 	var SCRIPT_PARSE_ERROR:String = 'script_parse_error';
 
 	/**
-	 * When parsing or running a script, it threw a runtime exception.
-	 * - On a scripted function, the value `script_error` will be assigned, allowing you to handle the error gracefully.
-	 * - On a scripted class, use the message of this error to present useful debug information to the user.
+	 * While running a script, an exception was thrown.
+	 * - Read the error message for more information.
+	 * - Scripted functions will have the local variable `script_error` assigned, allowing you to handle the error gracefully.
 	 */
-	var SCRIPT_EXCEPTION:String = 'script_exception';
+	var SCRIPT_RUNTIME_EXCEPTION:String = 'script_runtime_exception';
 
 	/**
 	 * An installed mod is looking for another mod with a specific version, but the mod is not of that version.
@@ -1288,13 +1311,13 @@ enum PolymodErrorType
 	var FUNCTIONALITY_DEPRECATED:String = 'functionality_deprecated';
 
 	/**
-	 * There was an error attempting to perform a merge operation on a file.
+	 * There was a warning or error attempting to perform a merge operation on a file.
 	 * - Check the source and target files are correctly formatted and try again.
 	 */
 	var MERGE:String = 'merge_error';
 
 	/**
-	 * There was an error attempting to perform an append operation on a file.
+	 * There was a warning or error attempting to perform an append operation on a file.
 	 * - Check the source and target files are correctly formatted and try again.
 	 */
 	var APPEND:String = 'append_error';

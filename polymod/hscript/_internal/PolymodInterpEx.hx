@@ -5,6 +5,7 @@ import hscript.Expr;
 import hscript.Interp;
 import hscript.Tools;
 import polymod.hscript._internal.PolymodExprEx;
+import polymod.hscript._internal.PolymodClassDeclEx.PolymodClassImport;
 
 /**
  * Based on code by Ian Harrigan
@@ -66,22 +67,27 @@ class PolymodInterpEx extends Interp
 				if (_scriptClassDescriptors.exists(importedClass.fullPath))
 				{
 					// OVERRIDE CHANGE: Create a PolymodScriptClass instead of a hscript.ScriptClass
-					var proxy:PolymodAbstractScriptClass = new PolymodScriptClass(_scriptClassDescriptors.get(importedClass), args);
+					var proxy:PolymodAbstractScriptClass = new PolymodScriptClass(_scriptClassDescriptors.get(importedClass.fullPath), args);
 					return proxy;
 				}
 
 				var c = importedClass.cls;
-				if (c != null)
+				if (c == null)
 				{
+					errorEx(EBlacklistedModule(importedClass.fullPath));
+				} else {
 					return Type.createInstance(c, args);
-				}
-				else
-				{
-					errorEx(EInvalidModule(importedClass));
 				}
 			}
 		}
-		return super.cnew(cl, args);
+		
+		// Attempt to resolve the class without overrides.
+		var cls = Type.resolveClass(cl);
+		if (cls == null)
+			cls = resolve(cl);
+		if (cls == null)
+			errorEx(EInvalidModule(cl));
+		return Type.createInstance(cls,args);
 	}
 
 	/**
@@ -413,12 +419,12 @@ class PolymodInterpEx extends Interp
 	}
 
 	/**
- * Call a given function on the current proxy with the given arguments.
- * Ensures that the local scope is not destroyed.
- * @param fun The function to call.
- * @param args The arguments to apply to that function.
- * @return The result of the function call.
- */
+   * Call a given function on the current proxy with the given arguments.
+   * Ensures that the local scope is not destroyed.
+   * @param fun The function to call.
+   * @param args The arguments to apply to that function.
+   * @return The result of the function call.
+   */
 	function callThis(fun:Dynamic, args:Array<Dynamic>):Dynamic
 	{
 		// If we are calling this.fn(), special handling is needed to prevent the local scope from being destroyed.
@@ -675,11 +681,11 @@ class PolymodInterpEx extends Interp
 		return null;
 	}
 
-	public function addModule(moduleContents:String)
+	public function addModule(moduleContents:String, ?origin:String = "hscript")
 	{
 		var parser = new PolymodParserEx();
-		var decls = parser.parseModule(moduleContents);
-		registerModule(decls);
+		var decls = parser.parseModule(moduleContents, origin);
+		registerModule(decls, origin);
 	}
 
 	public function createScriptClassInstance(className:String, args:Array<Dynamic> = null):PolymodAbstractScriptClass
@@ -696,12 +702,12 @@ class PolymodInterpEx extends Interp
 		}
 		else
 		{
-			Polymod.error(SCRIPT_CLASS_NOT_FOUND, "Scripted class " + className + " has not been defined.");
+			Polymod.error(SCRIPT_CLASS_NOT_REGISTERED, 'Scripted class $className has not been defined.');
 		}
 		return null;
 	}
 
-	public function registerModule(module:Array<ModuleDecl>)
+	public function registerModule(module:Array<ModuleDecl>, ?origin:String = "hscript")
 	{
 		var pkg:Array<String> = null;
 		var imports:Map<String, PolymodClassImport> = [];
@@ -730,7 +736,11 @@ class PolymodInterpEx extends Interp
 					
 					if (imports.exists(clsName))
 					{
-						Polymod.warning(SCRIPT_CLASS_ALREADY_IMPORTED, 'Scripted class ${clsName} has already been imported.');
+						if (imports.get(clsName) == null) {
+							Polymod.error(SCRIPT_CLASS_MODULE_BLACKLISTED, 'Scripted class ${clsName} is blacklisted and cannot be used in scripts.', origin);
+						} else {
+							Polymod.warning(SCRIPT_CLASS_MODULE_ALREADY_IMPORTED, 'Scripted class ${clsName} has already been imported.', origin);
+						}
 						continue;
 					}
 
@@ -747,15 +757,19 @@ class PolymodInterpEx extends Interp
 
 						importedClass.cls = PolymodScriptClass.importOverrides.get(importedClass.fullPath);
 					} else {
-						var result:Dynamic = Type.resolveClass(importedClass);
+						var result:Dynamic = Type.resolveClass(importedClass.fullPath);
 					
 						// If the class is not found, try to find it as an enum.
 						if (result == null)
-							result = Type.resolveEnum(importedClass);
+							result = Type.resolveEnum(importedClass.fullPath);
 
 						// If the class is still not found, skip this import entirely.
-						if (result == null)
+						if (result == null) {
+							Polymod.error(SCRIPT_CLASS_MODULE_NOT_FOUND, 'Could not import class ${importedClass.fullPath}', origin);
 							continue;
+						}
+
+						importedClass.cls = result;
 					}
 
 					imports.set(importedClass.name, importedClass);
@@ -769,7 +783,7 @@ class PolymodInterpEx extends Interp
 							switch (extend)
 							{
 								case CTPath(_, params):
-									extend = CTPath(imports.get(superClassPath).fullPath, params);
+									extend = CTPath(imports.get(superClassPath).fullPath.split('.'), params);
 								case _:
 							}
 						}
@@ -791,25 +805,24 @@ class PolymodInterpEx extends Interp
 			}
 		}
 	}
-	} private class ArrayIterator<T>
+}
+
+private class ArrayIterator<T>
+{
+	var a:Array<T>;
+	var pos:Int;
+	public inline function new(a)
 	{
-		var a:Array<T>;
-		var pos:Int;
-
-		public inline function new(a)
-		{
-			this.a = a;
-			this.pos = 0;
-		}
-
-		public inline function hasNext()
-		{
-			return pos < a.length;
-		}
-
-		public inline function next()
-		{
-			return a[pos++];
-		}
+		this.a = a;
+		this.pos = 0;
 	}
+	public inline function hasNext()
+	{
+		return pos < a.length;
+	}
+	public inline function next()
+	{
+		return a[pos++];
+	}
+}
 #end

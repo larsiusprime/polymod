@@ -238,7 +238,18 @@ class LimeBackend implements IBackend
 		var arr = [];
 		for (modLibrary in modLibraries)
 		{
-			arr = arr.concat(modLibrary.list(LimeModLibrary.PolyToLime(type)));
+			// Get the list of all assets.
+			var items = modLibrary.list(null);
+			
+			// Filter out assets that don't match the type.
+			items = items.filter(function(item:String):Bool
+			{
+				// Use existsPoly() instead of exists() because exists() converts to a LimeAssetType.
+				return modLibrary.existsPoly(item, type);
+			});
+
+			// Add the assets to the list.
+			arr = arr.concat(items);
 		}
 		return arr;
 	}
@@ -301,14 +312,16 @@ class LimeModLibrary extends AssetLibrary
 		return switch (type)
 		{
 			case PolymodAssetType.BYTES: AssetType.BINARY;
-			case PolymodAssetType.FONT: AssetType.FONT;
+			case PolymodAssetType.TEXT: AssetType.TEXT;
 			case PolymodAssetType.IMAGE: AssetType.IMAGE;
+			case PolymodAssetType.FONT: AssetType.FONT;
+			case PolymodAssetType.AUDIO_GENERIC: AssetType.SOUND;
 			case PolymodAssetType.AUDIO_MUSIC: AssetType.MUSIC;
 			case PolymodAssetType.AUDIO_SOUND: AssetType.SOUND;
-			case PolymodAssetType.AUDIO_GENERIC: AssetType.SOUND;
 			case PolymodAssetType.MANIFEST: AssetType.MANIFEST;
 			case PolymodAssetType.TEMPLATE: AssetType.TEMPLATE;
-			case PolymodAssetType.TEXT: AssetType.TEXT;
+			// case PolymodAssetType.VIDEO: 
+			// case PolymodAssetType.UNKNOWN: AssetType.BINARY;
 			default: AssetType.BINARY;
 		}
 	}
@@ -410,7 +423,26 @@ class LimeModLibrary extends AssetLibrary
 	public override function exists(id:String, type:String):Bool
 	{
 		var symbol = new IdAndLibrary(id, this);
+		// We have to convert the LimeAssetType to a PolymodAssetType.
 		if (p.check(symbol.modId, LimeToPoly(cast type)))
+		{
+			// Found a modded asset.
+			return true;
+		}
+		else if (hasFallback)
+		{
+			// Check the base asset.
+			return existsDefault(id, type);
+		}
+		// No fallback.
+		return false;
+	}
+
+	// When are they going to add overloads ugh.
+	public function existsPoly(id:String, type:PolymodAssetType):Bool
+	{
+		var symbol = new IdAndLibrary(id, this);
+		if (p.check(symbol.modId, type))
 		{
 			// Found a modded asset.
 			return true;

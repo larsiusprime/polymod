@@ -18,9 +18,12 @@ class PolymodPrinterEx extends Printer
 			case EInvalidOp(op): "Invalid operator: " + op;
 			case EInvalidAccess(f): "Invalid access to field " + f;
 			case EInvalidModule(m): "Invalid module: " + m;
+			case EBlacklistedModule(m): "Blacklisted module: " + m;
 			case EInvalidScriptedFnAccess(f): "Invalid function access to scripted class: " + f;
 			case EInvalidScriptedVarGet(v): "Invalid variable retrieval to scripted class: " + v;
 			case EInvalidScriptedVarSet(v): "Invalid variable assignment to scripted class: " + v;
+			case EClassSuperNotCalled: "Super constructor not called";
+			case EClassUnresolvedSuperclass(c, r): 'Unresolved superclass $c (reason: $r)';
 			case ECustom(msg): msg;
 		};
 		#if hscriptPos

@@ -3,7 +3,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.7.0] - 2022-12-??
+## [1.7.0] - 2023-01-16
 This version has been postposed a while, but adds several powerful features. A dependency system, support for zipped mods (on both desktop and HTML5!), reworks to versioning functions, and more.
 ## Added
 - Added the `dependencies` key to the ModMetadata format.
@@ -28,7 +28,11 @@ This version has been postposed a while, but adds several powerful features. A d
   - `loadOnlyMods()` loads a given set of mods, by re-initializing the framework with the appropriate mods enabled.
     - This is as opposed to `loadMods()`, which appends to the mod list rather than setting it.
   - Note you may need to call `clearCache()` depending on your framework and your app's current state.
-- `loadMod()`, `unloadMod()`, `loadMods()`, and `unloadMods()` now return an array of ModMetadata for each of the mods that are in use after the operation.
+- Added import aliasing and blacklist system for scripted classes.
+  - Call `Polymod.addImportAlias('full.class.Path', TargetClass)` to replace any instances of that import with the target class.
+  - Call `Polymod.removeImportAlias('full.class.Path')` to remove a previously assigned import alias.
+  - Call `Polymod.blacklistImport('full.class.Path')` to throw an error whenever a scripted class attempts to import the chosen module.
+- `loadMod()`, `unloadMod()`, `loadMods()`, and `unloadMods()` now return an array of ModMetadata for each of the mods that are loaded after the operation.
 - Added the `skipDependencyErrors` parameter to `Polymod.init()`.
   - Defaults to `false`.
   - While this option is `true`, any dependency issues will cause a warning to be reported, and Polymod will skip the problematic mods and load the rest.
@@ -51,6 +55,7 @@ This version has been postposed a while, but adds several powerful features. A d
   - `scanMods` now takes an optional `apiVersionRule` parameter, and returns `Array<ModMetadata>`.
   - `scanMods` will now parse and return the mod metadata, rather than returning an array of mod IDs.
   - `scanMods` will now optionally filter to only mods which match the provided `apiVersionRule` (pass `null` to skip this).
+- Reworked error codes for script-related exceptions and warnings.
 ## Removed
 - Several deprecated and obsolete options and variables related to this update's changes have been removed.
   - Removed the `SemanticVersion` utility class.
