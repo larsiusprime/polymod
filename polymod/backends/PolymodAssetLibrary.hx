@@ -425,6 +425,8 @@ class PolymodAssetLibrary
 		_extensionSet('txt', TEXT);
 		_extensionSet('vdf', TEXT);
 		_extensionSet('xml', TEXT);
+		_extensionSet('frag', TEXT);
+		_extensionSet('vert', TEXT);
 
 		_extensionSet('avi', VIDEO);
 		_extensionSet('mkv', VIDEO);
