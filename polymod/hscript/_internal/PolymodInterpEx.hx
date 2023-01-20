@@ -97,7 +97,7 @@ class PolymodInterpEx extends Interp
 	override function fcall(o:Dynamic, f:String, args:Array<Dynamic>):Dynamic
 	{
 		// OVERRIDE CHANGE: Custom logic to handle super calls to prevent infinite recursion
-		if (o == _proxy.superClass)
+		if (_proxy != null && o == _proxy.superClass)
 		{
 			// Force call super function.
 			return super.fcall(o, '__super_${f}', args);
