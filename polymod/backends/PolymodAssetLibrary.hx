@@ -474,6 +474,14 @@ class PolymodAssetLibrary
 			ext = ext.toLowerCase();
 			var assetType = getExtensionType(ext);
 			type.set(f, assetType);
+			#if openfl
+			if (assetType == FONT)
+			{
+				var font = openfl.text.Font.fromBytes(fileSystem.getFileBytes(file(f, d)));
+				@:privateAccess if (!openfl.text.Font.__fontByName.exists(font.name))
+					openfl.text.Font.registerFont(font);
+			}
+			#end
 		}
 		Polymod.notice(MOD_LOAD_DONE, 'Done loading mod $d');
 	}
