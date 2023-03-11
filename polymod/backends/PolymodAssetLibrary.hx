@@ -395,7 +395,8 @@ class PolymodAssetLibrary
 
 	private function initExtensions()
 	{
-		extensions = new Map<String, PolymodAssetType>();
+		if (extensions == null)
+			extensions = new Map<String, PolymodAssetType>();
 
 		_extensionSet('mp3', AUDIO_GENERIC);
 		_extensionSet('ogg', AUDIO_GENERIC);
