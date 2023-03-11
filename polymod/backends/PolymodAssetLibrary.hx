@@ -398,9 +398,9 @@ class PolymodAssetLibrary
 		if (extensions == null)
 			extensions = new Map<String, PolymodAssetType>();
 
-		_extensionSet('mp3', AUDIO_GENERIC);
-		_extensionSet('ogg', AUDIO_GENERIC);
-		_extensionSet('wav', AUDIO_GENERIC);
+		_extensionSet('mp3', AUDIO_SOUND);
+		_extensionSet('ogg', AUDIO_SOUND);
+		_extensionSet('wav', AUDIO_SOUND);
 
 		_extensionSet('otf', FONT);
 		_extensionSet('ttf', FONT);
