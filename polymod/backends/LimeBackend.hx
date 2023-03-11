@@ -18,6 +18,9 @@ import lime.net.HTTPRequest;
 import lime.text.Font;
 import lime.utils.Assets;
 import lime.utils.Bytes;
+#if openfl
+import openfl.text.Font as OpenFLFont;
+#end
 #if (lime >= '4.0.0')
 import lime.media.AudioBuffer;
 import lime.utils.AssetLibrary;
@@ -518,7 +521,13 @@ class LimeModLibrary extends AssetLibrary
 		var symbol = new IdAndLibrary(id, this);
 		if (p.check(symbol.modId))
 		{
-			return Font.fromBytes(p.fileSystem.getFileBytes(p.file(symbol.modId)));
+			var font = #if openfl OpenFLFont #else Font #end.fromBytes(p.fileSystem.getFileBytes(p.file(symbol.modId)));
+			#if openfl
+			@:privateAccess if (!OpenFLFont.__fontByName.exists(font.name)) 
+				OpenFLFont.registerFont(font);
+			#end
+			
+			return font;
 		}
 		else if (hasFallback)
 		{

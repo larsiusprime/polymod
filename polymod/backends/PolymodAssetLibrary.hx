@@ -395,11 +395,12 @@ class PolymodAssetLibrary
 
 	private function initExtensions()
 	{
-		extensions = new Map<String, PolymodAssetType>();
+		if (extensions == null)
+			extensions = new Map<String, PolymodAssetType>();
 
-		_extensionSet('mp3', AUDIO_GENERIC);
-		_extensionSet('ogg', AUDIO_GENERIC);
-		_extensionSet('wav', AUDIO_GENERIC);
+		_extensionSet('mp3', AUDIO_SOUND);
+		_extensionSet('ogg', AUDIO_SOUND);
+		_extensionSet('wav', AUDIO_SOUND);
 
 		_extensionSet('otf', FONT);
 		_extensionSet('ttf', FONT);
@@ -473,6 +474,14 @@ class PolymodAssetLibrary
 			ext = ext.toLowerCase();
 			var assetType = getExtensionType(ext);
 			type.set(f, assetType);
+			#if openfl
+			if (assetType == FONT)
+			{
+				var font = openfl.text.Font.fromBytes(fileSystem.getFileBytes(file(f, d)));
+				@:privateAccess if (!openfl.text.Font.__fontByName.exists(font.name))
+					openfl.text.Font.registerFont(font);
+			}
+			#end
 		}
 		Polymod.notice(MOD_LOAD_DONE, 'Done loading mod $d');
 	}
