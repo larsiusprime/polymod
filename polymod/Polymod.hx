@@ -8,7 +8,9 @@ import polymod.backends.PolymodAssets;
 import polymod.format.JsonHelp;
 import polymod.format.ParseRules;
 import polymod.fs.PolymodFileSystem;
+#if hscript
 import polymod.hscript._internal.PolymodScriptClass;
+#end
 import polymod.util.DependencyUtil;
 import polymod.util.VersionUtil;
 import thx.semver.Version;
@@ -718,11 +720,19 @@ class Polymod
 	 * @param importClass The class type to import instead.
 	 */
 	public static function addImportAlias(importAlias:String, importClass:Class<Dynamic>):Void {
+		#if hscript
 		PolymodScriptClass.importOverrides.set(importAlias, importClass);
+		#else
+		Polymod.warning(PolymodErrorCode.SCRIPT_HSCRIPT_NOT_INSTALLED, 'Scripted classes imports were requested, but hscript is not installed.');
+		#end
 	}
 
 	public static function removeImportAlias(importAlias:String):Void {
+		#if hscript
 		PolymodScriptClass.importOverrides.remove(importAlias);
+		#else
+		Polymod.warning(PolymodErrorCode.SCRIPT_HSCRIPT_NOT_INSTALLED, 'Scripted classes imports were requested, but hscript is not installed.');
+		#end
 	}
 
 	/**
@@ -731,9 +741,13 @@ class Polymod
 	 * @param importAlias (optional) The alias to use for the import. If not provided, the full class path will be used.
 	 */
 	public static function addDefaultImport(importClass:Class<Dynamic>, ?importAlias:String):Void {
+		#if hscript
 		if (importAlias == null)
 			importAlias = Type.getClassName(importClass);
 		PolymodScriptClass.defaultImports.set(importAlias, importClass);
+		#else
+		Polymod.warning(PolymodErrorCode.SCRIPT_HSCRIPT_NOT_INSTALLED, 'Scripted classes imports were requested, but hscript is not installed.');
+		#end
 	}
 
 	/**
@@ -741,7 +755,11 @@ class Polymod
 	 * @param importPath The full import path to blacklist, as a string.
 	 */
 	public static function blacklistImport(importPath:String):Void {
+		#if hscript
 		addImportAlias(importPath, null);
+		#else
+		Polymod.warning(PolymodErrorCode.SCRIPT_HSCRIPT_NOT_INSTALLED, 'Scripted classes imports were requested, but hscript is not installed.');
+		#end
 	}
 }
 
