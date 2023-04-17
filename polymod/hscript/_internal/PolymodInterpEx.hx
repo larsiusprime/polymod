@@ -777,7 +777,7 @@ class PolymodInterpEx extends Interp
 					var extend = c.extend;
 					if (extend != null)
 					{
-						var superClassPath = new hscript.Printer().typeToString(extend);
+						var superClassPath = new PolymodPrinterEx().baseTypeToString(extend);
 						if (imports.exists(superClassPath))
 						{
 							switch (extend)
@@ -786,6 +786,9 @@ class PolymodInterpEx extends Interp
 									extend = CTPath(imports.get(superClassPath).fullPath.split('.'), params);
 								case _:
 							}
+						} else {
+							Polymod.error(SCRIPT_CLASS_SUPERCLASS_NOT_FOUND, 'Could not extend class ${superClassPath}, import not found?', origin);
+							continue;
 						}
 					}
 					var classDecl:PolymodClassDeclEx = {

@@ -32,4 +32,25 @@ class PolymodPrinterEx extends Printer
 		return message;
 		#end
 	}
+
+	public function baseTypeToString( t : CType ) {
+		buf = new StringBuf();
+		tabs = "";
+		typeEx(t, true);
+		return buf.toString();
+	}
+	
+	/**
+	 * @param base If `true`, only 
+	 **/
+	function typeEx(t:CType, ?base:Bool = false) {
+		switch( t ) {
+			case CType(path, params):
+				if (base && params != null ) {
+					return typeEx(CTPath(path, null), base);
+				}
+		}
+
+		return type(t);
+	}
 }

@@ -1221,6 +1221,13 @@ enum PolymodErrorType
 	var SCRIPT_CLASS_MODULE_NOT_FOUND:String = 'script_class_module_not_found';
 
 	/**
+	 * Your script file attempted to extend a class that could not be resolved.
+	 * - Check the syntax of the import statement, and check for any typos.
+	 * - Check the syntax of the extends statement, and check for any typos.
+	 */
+	 var SCRIPT_CLASS_SUPERCLASS_NOT_FOUND:String = 'script_class_superclass_not_found';
+
+	/**
 	 * Your script file attempted to import a blacklisted class.
 	 * - This is a security measure to prevent malicious scripts from accessing sensitive classes.
 	 * - Remove the import statement to remove the error.
