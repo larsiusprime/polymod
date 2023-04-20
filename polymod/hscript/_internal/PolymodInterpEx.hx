@@ -625,9 +625,16 @@ class PolymodInterpEx extends Interp
 		{
 			return _proxy;
 		}
-		else if (id == "null")
-		{
-			return null;
+
+		switch(id) {
+			case "Int": return Int;
+			case "Float": return Float;
+			case "Bool": return Bool;
+			// case "Single": return Single;
+			// case "Void": return Void;
+			// case "Null": return Null;
+			case "null": return null;
+			case "String": return String;
 		}
 
 		var l = locals.get(id);
