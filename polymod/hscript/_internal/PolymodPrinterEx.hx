@@ -1,6 +1,7 @@
 package polymod.hscript._internal;
 
 import hscript.Printer;
+import hscript.Expr;
 
 class PolymodPrinterEx extends Printer
 {
@@ -45,10 +46,13 @@ class PolymodPrinterEx extends Printer
 	 **/
 	function typeEx(t:CType, ?base:Bool = false) {
 		switch( t ) {
-			case CType(path, params):
+			case CTPath(path, params):
 				if (base && params != null ) {
 					return typeEx(CTPath(path, null), base);
 				}
+				// Else fallthrough
+			default:
+				// Fallthrough
 		}
 
 		return type(t);
