@@ -13,7 +13,7 @@ import thx.semver.VersionRule;
  */
 class SysFileSystem implements IFileSystem
 {
-	public var modRoot(default, null):String;
+	public final modRoot:String;
 
 	public function new(params:PolymodFileSystemParams)
 	{
@@ -30,7 +30,7 @@ class SysFileSystem implements IFileSystem
 		return sys.FileSystem.isDirectory(path);
 	}
 
-	public function readDirectory(path:String)
+	public function readDirectory(path:String):Array<String>
 	{
 		try
 		{

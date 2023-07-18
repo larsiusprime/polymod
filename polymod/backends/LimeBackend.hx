@@ -141,14 +141,7 @@ class LimeBackend implements IBackend
 				}
 				else
 				{
-					if (key == 'default')
-					{
-						pathPrefix = '';
-					}
-					else
-					{
-						pathPrefix = params.assetLibraryPaths.get(key);
-					}
+					pathPrefix = params.assetLibraryPaths.get(key) ?? '';
 				}
 			}
 			var fallbackLibrary = defaultLibraries.get(key);
@@ -157,6 +150,11 @@ class LimeBackend implements IBackend
 			{
 				fallbackLibrary = cast(fallbackLibrary, LimeModLibrary).getFallbackLibrary();
 			}
+
+			if (params.coreAssetRedirect != null) {
+				fallbackLibrary = new LimeCoreLibrary(this, fallbackLibrary, params.coreAssetRedirect, pathPrefix, key);
+			}
+
 			var modLibrary = buildModLibrary(fallbackLibrary, pathPrefix, key);
 			modLibraries.set(key, modLibrary);
 		}
@@ -243,7 +241,7 @@ class LimeBackend implements IBackend
 		{
 			// Get the list of all assets.
 			var items = modLibrary.list(null);
-			
+
 			// Filter out assets that don't match the type.
 			items = items.filter(function(item:String):Bool
 			{
@@ -323,7 +321,7 @@ class LimeModLibrary extends AssetLibrary
 			case PolymodAssetType.AUDIO_SOUND: AssetType.SOUND;
 			case PolymodAssetType.MANIFEST: AssetType.MANIFEST;
 			case PolymodAssetType.TEMPLATE: AssetType.TEMPLATE;
-			// case PolymodAssetType.VIDEO: 
+			// case PolymodAssetType.VIDEO:
 			// case PolymodAssetType.UNKNOWN: AssetType.BINARY;
 			default: AssetType.BINARY;
 		}
@@ -334,14 +332,17 @@ class LimeModLibrary extends AssetLibrary
 
 	var b:LimeBackend;
 	var p:PolymodAssetLibrary;
-	var fallback:AssetLibrary;
-	var hasFallback:Bool;
+	var fallback:Null<AssetLibrary>;
 	var type(default, null):Map<String, AssetType>;
+	var hasFallback(get, null):Bool;
+	function get_hasFallback():Bool {
+		return fallback != null;
+	}
 
 	#if html5
 	/**
 	 * Preload images on HTML5 to allow images to be loaded synchronously.
-	 * This doesn't break mods because a new 
+	 * This doesn't break mods because a new
 	 */
 	var imageCache:Map<String, lime.graphics.Image>;
 	#end
@@ -353,7 +354,6 @@ class LimeModLibrary extends AssetLibrary
 		this.pathPrefix = pathPrefix;
 		this.libraryId = libraryId;
 		this.fallback = fallback;
-		hasFallback = this.fallback != null;
 		#if html5
 		imageCache = new Map<String, lime.graphics.Image>();
 		preloadImagesToCache();
@@ -425,6 +425,8 @@ class LimeModLibrary extends AssetLibrary
 	 */
 	public override function exists(id:String, type:String):Bool
 	{
+		if (id == null) return false;
+
 		var symbol = new IdAndLibrary(id, this);
 		// We have to convert the LimeAssetType to a PolymodAssetType.
 		if (p.check(symbol.modId, LimeToPoly(cast type)))
@@ -444,6 +446,8 @@ class LimeModLibrary extends AssetLibrary
 	// When are they going to add overloads ugh.
 	public function existsPoly(id:String, type:PolymodAssetType):Bool
 	{
+		if (id == null) return false;
+
 		var symbol = new IdAndLibrary(id, this);
 		if (p.check(symbol.modId, type))
 		{
@@ -647,9 +651,9 @@ class LimeModLibrary extends AssetLibrary
 		if (p.check(symbol.modId))
 		{
 			#if (js && html5)
-			return Font.loadFromName(paths.get(p.file(symbol.modId)));
+			return Font.loadFromName(getPath(p.file(symbol.modId)));
 			#else
-			return Font.loadFromFile(paths.get(p.file(symbol.modId)));
+			return Font.loadFromFile(getPath(p.file(symbol.modId)));
 			#end
 		}
 		else if (hasFallback)
@@ -661,9 +665,9 @@ class LimeModLibrary extends AssetLibrary
 				return fallback.loadFont(id);
 		}
 		#if (js && html5)
-		return Font.loadFromName(paths.get(''));
+		return Font.loadFromName(getPath(''));
 		#else
-		return Font.loadFromFile(paths.get(''));
+		return Font.loadFromFile(getPath(''));
 		#end
 	}
 
@@ -716,7 +720,7 @@ class LimeModLibrary extends AssetLibrary
 			}
 			else
 			{
-				return AudioBuffer.loadFromFile(paths.get(p.file(symbol.modId)));
+				return AudioBuffer.loadFromFile(getPath(p.file(symbol.modId)));
 			}
 		}
 		else if (hasFallback)
@@ -876,6 +880,232 @@ class LimeModLibrary extends AssetLibrary
 }
 
 /**
+ * An asset library which redirects all requests to another folder.
+ */
+@:access(lime.utils.AssetLibrary)
+class LimeCoreLibrary extends AssetLibrary {
+	public final redirectPath:String;
+
+	var backend:LimeBackend;
+	var polymodLibrary(get, null):PolymodAssetLibrary;
+	function get_polymodLibrary():PolymodAssetLibrary {
+		return backend.polymodLibrary;
+	}
+	var fallback:Null<AssetLibrary>;
+	var hasFallback(get, null):Bool;
+	function get_hasFallback():Bool {
+		return fallback != null;
+	}
+	var pathPrefix:String;
+	var libraryName:String;
+
+	public function new(backend:LimeBackend, fallback:AssetLibrary, redirectPath:String, pathPrefix:String, libraryName:String) {
+		super();
+		this.backend = backend;
+		this.fallback = fallback;
+		this.redirectPath = redirectPath;
+		this.pathPrefix = pathPrefix;
+		this.libraryName = libraryName;
+
+		polymodLibrary.initRedirectPath(redirectPath);
+	}
+
+	function buildRedirectId(id:String):String {
+		var baseId = if (pathPrefix == '') {
+			Util.pathJoin(libraryName, polymodLibrary.stripAssetsPrefix(id));
+		} else {
+			var strippedId = Util.stripPathPrefix(polymodLibrary.stripAssetsPrefix(id), pathPrefix);
+			Util.pathJoin(pathPrefix, strippedId);
+		}
+
+		return Util.pathJoin(redirectPath, baseId);
+	}
+
+	public override function exists(id:String, type:String):Bool {
+		if (id == null) return false;
+
+		var redirectId:String = buildRedirectId(id);
+		if (polymodLibrary.fileSystem.exists(redirectId)) {
+			return true;
+		}
+		return fallback.exists(id, type);
+	}
+
+	public override function getAsset(id:String, type:String):Dynamic {
+		// Calls one of the other get* functions.
+		return super.getAsset(id, type);
+	}
+
+	public override function getAudioBuffer(id:String):AudioBuffer {
+		var redirectId:String = buildRedirectId(id);
+		if (polymodLibrary.fileSystem.exists(redirectId)) {
+			return AudioBuffer.fromBytes(polymodLibrary.fileSystem.getFileBytes(redirectId));
+		}
+		return fallback.getAudioBuffer(id);
+	}
+	public override function getBytes(id:String):Bytes {
+		var redirectId:String = buildRedirectId(id);
+		if (polymodLibrary.fileSystem.exists(redirectId)) {
+			return polymodLibrary.fileSystem.getFileBytes(redirectId);
+		}
+		return fallback.getBytes(id);
+	}
+	public override function getFont(id:String):Font {
+		var redirectId:String = buildRedirectId(id);
+		if (polymodLibrary.fileSystem.exists(redirectId)) {
+			var font = #if openfl OpenFLFont #else Font #end.fromBytes(polymodLibrary.fileSystem.getFileBytes(redirectId));
+			#if openfl
+			@:privateAccess if (!OpenFLFont.__fontByName.exists(font.name)) 
+				OpenFLFont.registerFont(font);
+			#end
+		}
+
+		return fallback.getFont(id);
+	}
+	public override function getImage(id:String):Image {
+		var redirectId:String = buildRedirectId(id);
+		if (polymodLibrary.fileSystem.exists(redirectId)) {
+			return Image.fromBytes(polymodLibrary.fileSystem.getFileBytes(redirectId));
+		}
+		return fallback.getImage(id);
+	}
+	public override function getText(id:String):String {
+		// super.getText() just uses getBytes().
+		return super.getText(id);
+	}
+
+	public override function getPath(id:String):String {
+		var redirectId:String = buildRedirectId(id);
+		if (polymodLibrary.fileSystem.exists(redirectId)) {
+			return redirectId;
+		}
+		return fallback.getPath(id);
+	}
+	public override function isLocal(id:String, type:String):Bool {
+		var redirectId:String = buildRedirectId(id);
+		if (polymodLibrary.fileSystem.exists(redirectId)) {
+			return true;
+		}
+		return fallback.isLocal(id, type);
+	}
+
+	public override function loadBytes(id:String):Future<Bytes>
+	{
+		var redirectId:String = buildRedirectId(id);
+		if (polymodLibrary.fileSystem.exists(redirectId)) {
+			return Bytes.loadFromFile(redirectId);
+		}
+
+		return fallback.loadBytes(id);
+	}
+
+	public override function loadFont(id:String):Future<Font>
+	{
+		var redirectId:String = buildRedirectId(id);
+		if (polymodLibrary.fileSystem.exists(redirectId)) {
+			#if (js && html5)
+			return Font.loadFromName(getPath(redirectId));
+			#else
+			return Font.loadFromFile(getPath(redirectId));
+			#end
+		}
+
+		return fallback.loadFont(id);
+	}
+
+	public override function loadImage(id:String):Future<Image>
+	{
+		var redirectId:String = buildRedirectId(id);
+		if (polymodLibrary.fileSystem.exists(redirectId)) {
+			// We load the bytes, then load the file, rather than using Image.loadFromFile,
+			// because URLs don't work with MemoryFileSystem.
+			var filePath = polymodLibrary.file(redirectId);
+			var dabytes = polymodLibrary.fileSystem.getFileBytes(filePath);
+			var imageFuture = Image.loadFromBytes(dabytes);
+
+			#if html5
+			imageFuture.onComplete((result:Image) ->
+			{
+				if (result != null)
+				{
+					trace('Adding ' + filePath + ' to image cache.');
+					trace(result);
+					imageCache.set(filePath, result);
+				}
+			});
+			#end
+
+			return imageFuture;
+		}
+
+		return fallback.loadImage(id);
+	}
+
+	public override function loadAudioBuffer(id:String)
+	{
+		var redirectId:String = buildRedirectId(id);
+		if (polymodLibrary.fileSystem.exists(redirectId)) {
+			return AudioBuffer.loadFromFile(redirectId);
+		}
+
+		return fallback.loadAudioBuffer(id);
+	}
+
+	public override function loadText(id:String):Future<String>
+	{
+		var redirectId:String = buildRedirectId(id);
+		if (polymodLibrary.fileSystem.exists(redirectId)) {
+			var request = new HTTPRequest<String>();
+			return request.load(redirectId).then((modText) ->
+			{
+				if (modText != null)
+				{
+					modText = polymodLibrary.mergeAndAppendText(id, modText);
+				}
+				return Future.withValue(modText);
+			});
+		}
+
+		return fallback.loadText(id);
+	}
+
+	public override function list(type:String):Array<String>
+	{
+		var fallbackList = hasFallback ? fallback.list(type) : [];
+
+		var requestedType = type != null ? cast(type, AssetType) : null;
+		var items = [];
+
+		var addItem = (path:String) ->
+		{
+			// var modifiedPath = (libraryId != '') ? libraryId + ':' + path : path;
+
+			// Only add unique items.
+			if (items.indexOf(path) == -1) items.push(path);
+		};
+
+		for (id in polymodLibrary.fileSystem.readDirectoryRecursive(redirectPath)) {
+			if (id.startsWith(pathPrefix)) {
+
+				var fullId:String = polymodLibrary.prependAssetsPrefix(Util.pathJoin(libraryName, id));
+				trace(id + ' -> ' + fullId);
+				addItem(fullId);
+			}
+		}
+
+		for (id in fallbackList) {
+			addItem(id);
+		}
+
+		return Util.filterUnique(items);
+	}
+	public override function load():Future<AssetLibrary>
+	{
+		return super.load();
+	}
+}
+
+/**
  * This helper class helps me deal with all the path nonsense of custom asset library asset calls
  * e.g. asking library 'foo' for 'bar.png' will result in:
  *   id = 'foo:bar.png'
@@ -883,7 +1113,7 @@ class LimeModLibrary extends AssetLibrary
  *   library = the 'foo' library
  *   nakedId = 'bar.png'
  *   modId = 'foo/bar.png' (assuming 'foo' is the mod path prefix for the 'foo' library)
- *   fallbackId = 'foo:bar.png' 
+ *   fallbackId = 'foo:bar.png'
  */
 private class IdAndLibrary
 {

@@ -111,7 +111,7 @@ class PolymodAssetLibrary
 
 	/**
 	 * The directory where the current locale's FireTongue localized assets are stored.
-	 * 
+	 *
 	 * Prefix asset paths with this string to get a localized version of the asset.
 	 */
 	public var localeAssetPrefix(default, null):String = null;
@@ -322,9 +322,12 @@ class PolymodAssetLibrary
 			// Else, FireTongue not enabled.
 			#end
 
-			// If we have a localized result, any unlocalized result will be ignored
+			if (resultLocalized) continue;
+
 			if (!resultLocalized)
 			{
+				// If we have an asset prefix
+
 				var filePath = Util.pathJoin(modDir, idStripped);
 				if (fileSystem.exists(filePath))
 					result = filePath;
@@ -368,6 +371,7 @@ class PolymodAssetLibrary
 			}
 			// Else, FireTongue not enabled.
 			#end
+
 			var filePath = Util.pathJoin(d, id);
 			if (fileSystem.exists(filePath))
 			{
@@ -450,10 +454,7 @@ class PolymodAssetLibrary
 
 		var all:Array<String> = null;
 
-		if (d == '' || d == null)
-		{
-			all = [];
-		}
+		if (d == '') all = [];
 
 		try
 		{
@@ -486,10 +487,44 @@ class PolymodAssetLibrary
 		Polymod.notice(MOD_LOAD_DONE, 'Done loading mod $d');
 	}
 
+	@:allow(polymod.backends.LimeCoreLibrary)
+	private function initRedirectPath(redirectPath:String) {
+		if (redirectPath == null || redirectPath == '') return;
+
+		var all:Array<String> = null;
+
+		try {
+			if (fileSystem.exists(redirectPath))
+			{
+				all = fileSystem.readDirectoryRecursive(redirectPath);
+			}
+		}
+		catch (msg:Dynamic)
+		{
+			Polymod.error(MOD_LOAD_FAILED, 'Failed to load core asset redirect $redirectPath : $msg');
+			throw('ModAssetLibrary.initRedirectPath("$redirectPath") failed: $msg');
+		}
+		for (f in all) {
+			var doti = Util.uLastIndexOf(f, '.');
+			var ext:String = doti != -1 ? f.substring(doti + 1) : '';
+			ext = ext.toLowerCase();
+			var assetType = getExtensionType(ext);
+			type.set(f, assetType);
+			#if openfl
+			if (assetType == FONT)
+			{
+				var font = openfl.text.Font.fromBytes(fileSystem.getFileBytes(file(f, redirectPath)));
+				@:privateAccess if (!openfl.text.Font.__fontByName.exists(font.name))
+					openfl.text.Font.registerFont(font);
+			}
+			#end
+		}
+	}
+
 	/**
 	 * Strip the `assets/` prefix from a file path, if it is present.
 	 * If your app uses a different asset path prefix, you can override this with the `assetPrefix` parameter.
-	 * 
+	 *
 	 * @param id The path to strip.
 	 * @return The modified path
 	 */
@@ -505,7 +540,7 @@ class PolymodAssetLibrary
 	/**
 	 * Add the `assets/` prefix to a file path, if it isn't present.
 	 * If your app uses a different asset path prefix, you can override this with the `assetPrefix` parameter.
-	 * 
+	 *
 	 * @param id The path to prepend
 	 * @return The modified path
 	 */
