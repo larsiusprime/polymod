@@ -527,10 +527,10 @@ class LimeModLibrary extends AssetLibrary
 		{
 			var font = #if openfl OpenFLFont #else Font #end.fromBytes(p.fileSystem.getFileBytes(p.file(symbol.modId)));
 			#if openfl
-			@:privateAccess if (!OpenFLFont.__fontByName.exists(font.name)) 
+			@:privateAccess if (!OpenFLFont.__fontByName.exists(font.name))
 				OpenFLFont.registerFont(font);
 			#end
-			
+
 			return font;
 		}
 		else if (hasFallback)
@@ -955,7 +955,7 @@ class LimeCoreLibrary extends AssetLibrary {
 		if (polymodLibrary.fileSystem.exists(redirectId)) {
 			var font = #if openfl OpenFLFont #else Font #end.fromBytes(polymodLibrary.fileSystem.getFileBytes(redirectId));
 			#if openfl
-			@:privateAccess if (!OpenFLFont.__fontByName.exists(font.name)) 
+			@:privateAccess if (!OpenFLFont.__fontByName.exists(font.name))
 				OpenFLFont.registerFont(font);
 			#end
 		}
@@ -1084,13 +1084,10 @@ class LimeCoreLibrary extends AssetLibrary {
 			if (items.indexOf(path) == -1) items.push(path);
 		};
 
-		for (id in polymodLibrary.fileSystem.readDirectoryRecursive(redirectPath)) {
-			if (id.startsWith(pathPrefix)) {
-
-				var fullId:String = polymodLibrary.prependAssetsPrefix(Util.pathJoin(libraryName, id));
-				trace(id + ' -> ' + fullId);
-				addItem(fullId);
-			}
+		var fileList:Array<String> = polymodLibrary.fileSystem.readDirectoryRecursive(Util.pathJoin(redirectPath, pathPrefix));
+		for (id in fileList) {
+			var fullId:String = polymodLibrary.prependAssetsPrefix(Util.pathJoin(libraryName, id));
+			addItem(fullId);
 		}
 
 		for (id in fallbackList) {
