@@ -1010,7 +1010,7 @@ class PolymodError
 /**
  * Indicates where the error occurred.
  */
-@:enum abstract PolymodErrorOrigin(String) from String to String
+enum abstract PolymodErrorOrigin(String) from String to String
 {
 	/**
 	 * This error occurred while scanning for mods.
@@ -1056,7 +1056,7 @@ enum PolymodErrorType
  * Represents the particular type of error that occurred.
  * Great to use as the condition of a switch statement to provide special handling for specific errors.
  */
-@:enum abstract PolymodErrorCode(String) from String to String
+enum abstract PolymodErrorCode(String) from String to String
 {
 	/**
 	 * The mod's metadata file could not be parsed.
