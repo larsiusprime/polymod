@@ -899,6 +899,14 @@ class LimeCoreLibrary extends AssetLibrary {
 	var pathPrefix:String;
 	var libraryName:String;
 
+	#if html5
+	/**
+	 * Preload images on HTML5 to allow images to be loaded synchronously.
+	 * This doesn't break mods because a new
+	 */
+	var imageCache:Map<String, lime.graphics.Image>;
+	#end
+
 	public function new(backend:LimeBackend, fallback:AssetLibrary, redirectPath:String, pathPrefix:String, libraryName:String) {
 		super();
 		this.backend = backend;
@@ -1022,18 +1030,6 @@ class LimeCoreLibrary extends AssetLibrary {
 			var filePath = polymodLibrary.file(redirectId);
 			var dabytes = polymodLibrary.fileSystem.getFileBytes(filePath);
 			var imageFuture = Image.loadFromBytes(dabytes);
-
-			#if html5
-			imageFuture.onComplete((result:Image) ->
-			{
-				if (result != null)
-				{
-					trace('Adding ' + filePath + ' to image cache.');
-					trace(result);
-					imageCache.set(filePath, result);
-				}
-			});
-			#end
 
 			return imageFuture;
 		}
