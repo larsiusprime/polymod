@@ -491,12 +491,15 @@ class PolymodAssetLibrary
 	private function initRedirectPath(redirectPath:String) {
 		if (redirectPath == null || redirectPath == '') return;
 
-		var all:Array<String> = null;
+		var all:Array<String> = [];
 
 		try {
 			if (fileSystem.exists(redirectPath))
 			{
 				all = fileSystem.readDirectoryRecursive(redirectPath);
+			} else {
+				Polymod.error(MOD_LOAD_FAILED, 'Failed to load core asset redirect $redirectPath : Directory does not exist!');
+				throw('ModAssetLibrary.initRedirectPath("$redirectPath") failed: $msg');
 			}
 		}
 		catch (msg:Dynamic)
