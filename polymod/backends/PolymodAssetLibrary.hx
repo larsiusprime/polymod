@@ -499,7 +499,7 @@ class PolymodAssetLibrary
 				all = fileSystem.readDirectoryRecursive(redirectPath);
 			} else {
 				Polymod.error(MOD_LOAD_FAILED, 'Failed to load core asset redirect $redirectPath : Directory does not exist!');
-				throw('ModAssetLibrary.initRedirectPath("$redirectPath") failed: $msg');
+				throw('ModAssetLibrary.initRedirectPath("$redirectPath") failed: Directory does not exist!');
 			}
 		}
 		catch (msg:Dynamic)
