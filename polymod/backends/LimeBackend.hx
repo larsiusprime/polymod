@@ -160,7 +160,7 @@ class LimeBackend implements IBackend
 
 		for (key in modLibraries.keys())
 		{
-			Assets.registerLibrary(key, modLibraries.get(key));
+			registerLibrary(key, modLibraries.get(key));
 		}
 
 		return true;
@@ -169,6 +169,61 @@ class LimeBackend implements IBackend
 	function buildModLibrary(fallbackLibrary:AssetLibrary, pathPrefix:String, libraryName:String):LimeModLibrary
 	{
 		return new LimeModLibrary(this, fallbackLibrary, pathPrefix, libraryName);
+	}
+
+	function registerLibrary(name:String, library:AssetLibrary):Void
+	{
+		if (name == null || name == "")
+		{
+			name = "default";
+		}
+
+		@:privateAccess
+		if (lime.utils.Assets.libraries.exists(name))
+		{
+			@:privateAccess
+			if (lime.utils.Assets.libraries.get(name) == library)
+			{
+				return;
+			}
+			else
+			{
+				unloadLibrary(name);
+			}
+		}
+
+		if (library != null)
+		{
+			@:privateAccess
+			library.onChange.add(lime.utils.Assets.library_onChange);
+		}
+
+		@:privateAccess
+		lime.utils.Assets.libraries.set(name, library);
+	}
+
+	function unloadLibrary(name:String):Void
+	{
+		#if (tools && !display)
+		if (name == null || name == "")
+		{
+			name = "default";
+		}
+
+		@:privateAccess
+		var library = lime.utils.Assets.libraries.get(name);
+
+		if (library != null)
+		{
+			// lime.utils.Assets.cache.clear(name + ":");
+			@:privateAccess
+			library.onChange.remove(lime.utils.Assets.library_onChange);
+			// library.unload();
+		}
+
+		@:privateAccess
+		lime.utils.Assets.libraries.remove(name);
+		#end
 	}
 
 	/**
