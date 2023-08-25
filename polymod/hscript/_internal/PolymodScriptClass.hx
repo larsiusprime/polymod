@@ -61,6 +61,10 @@ class PolymodScriptClass
 	{
 		@:privateAccess {
 			var scriptBody = Polymod.assetLibrary.getText(path);
+			if (scriptBody == null) {
+				Polymod.error(SCRIPT_PARSE_ERROR, 'Error while loading script "${path}", could not retrieve script contents!');
+				return;
+			}
 			try
 			{
 				registerScriptClassByString(scriptBody, path);
@@ -380,7 +384,7 @@ class PolymodScriptClass
 			} else {
 				@:privateAccess _interp.errorEx(EClassUnresolvedSuperclass(extendString, 'missing import'));
 			}
-			
+
 			superClass = Type.createInstance(clsToCreate, args);
 		}
 	}

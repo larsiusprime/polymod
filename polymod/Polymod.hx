@@ -135,9 +135,16 @@ typedef PolymodParams =
 	/**
 	 * (optional) Whether to perform the required initialization for scripted classes.
 	 *
-	 * Defaults to false.
+	 * Defaults to `false`.
 	 */
 	?useScriptedClasses:Bool,
+
+	/**
+	 * (optional) If `useScriptedClasses` is true, perform script loading asynchronously.
+	 *
+	 * Defaults to `false`.
+	 */
+	?loadScriptsAsync:Bool,
 }
 
 /**
@@ -322,10 +329,15 @@ class Polymod
 		if (params.useScriptedClasses)
 		{
 			Polymod.notice(PolymodErrorCode.SCRIPT_PARSING, 'Parsing script classes...');
-			Polymod.registerAllScriptClasses();
 
-			var classList = polymod.hscript._internal.PolymodScriptClass.listScriptClasses();
-			Polymod.notice(PolymodErrorCode.SCRIPT_PARSED, 'Parsed and registered ${classList.length} scripted classes.');
+			if (params.loadScriptsAsync) {
+				Polymod.registerAllScriptClassesAsync();
+			} else {
+				Polymod.registerAllScriptClasses();
+
+				var classList = polymod.hscript._internal.PolymodScriptClass.listScriptClasses();
+				Polymod.notice(PolymodErrorCode.SCRIPT_PARSED, 'Parsed and registered ${classList.length} scripted classes.');
+			}
 		}
 		#else
 		if (params.useScriptedClasses)
@@ -661,6 +673,29 @@ class Polymod
 				if (textPath.endsWith(PolymodConfig.scriptClassExt)) {
 					Polymod.debug('Registering script class "$textPath"');
 					polymod.hscript._internal.PolymodScriptClass.registerScriptClassByPath(textPath);
+				}
+			}
+		}
+		#else
+		Polymod.warning(SCRIPT_HSCRIPT_NOT_INSTALLED, "Cannot register script classes, HScript is not available.");
+		#end
+	}
+
+	/**
+	 * Get a list of all the available scripted classes (`.hxc` files), interpret them asynchronously, and register any classes.
+	 * Called on platforms that don't support synchronous file access.
+	 */
+	public static function registerAllScriptClassesAsync():Void
+	{
+		#if hscript
+		@:privateAccess {
+			// Go through each script and parse any classes in them.
+			var potentialScripts:Array<String> = Polymod.assetLibrary.list(TEXT);
+			for (textPath in potentialScripts)
+			{
+				if (textPath.endsWith(PolymodConfig.scriptClassExt)) {
+					Polymod.debug('Registering script class "$textPath"');
+					polymod.hscript._internal.PolymodScriptClass.registerScriptClassByPathAsync(textPath);
 				}
 			}
 		}
