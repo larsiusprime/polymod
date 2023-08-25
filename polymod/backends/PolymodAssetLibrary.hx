@@ -1,13 +1,13 @@
 package polymod.backends;
 
-import openfl.display3D.IndexBuffer3D;
 import haxe.io.Bytes;
+import openfl.display3D.IndexBuffer3D;
 import polymod.backends.IBackend;
 import polymod.backends.PolymodAssets.PolymodAssetType;
 import polymod.format.ParseRules;
 import polymod.fs.PolymodFileSystem.IFileSystem;
-import polymod.util.Util;
 // import polymod.hscript.PolymodScriptClass;
+import polymod.util.Util;
 #if firetongue
 import firetongue.FireTongue;
 #end
@@ -522,6 +522,7 @@ class PolymodAssetLibrary
 			}
 			#end
 		}
+		Polymod.notice(MOD_LOAD_DONE, 'Done loading core asset redirect $redirectPath');
 	}
 
 	/**

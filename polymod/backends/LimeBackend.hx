@@ -5,7 +5,6 @@ import polymod.Polymod;
 import polymod.backends.PolymodAssetLibrary;
 import polymod.backends.PolymodAssets.PolymodAssetType;
 import polymod.util.Util;
-
 using StringTools;
 
 #if unifill
@@ -920,7 +919,11 @@ class LimeCoreLibrary extends AssetLibrary {
 
 	function buildRedirectId(id:String):String {
 		var baseId = if (pathPrefix == '') {
-			Util.pathJoin(libraryName, polymodLibrary.stripAssetsPrefix(id));
+			if (libraryName != 'default') {
+				Util.pathJoin(libraryName, polymodLibrary.stripAssetsPrefix(id));
+			} else {
+				polymodLibrary.stripAssetsPrefix(id);
+			}
 		} else {
 			var strippedId = Util.stripPathPrefix(polymodLibrary.stripAssetsPrefix(id), pathPrefix);
 			Util.pathJoin(pathPrefix, strippedId);
