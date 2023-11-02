@@ -80,7 +80,7 @@ class PolymodInterpEx extends Interp
 				}
 			}
 		}
-		
+
 		// Attempt to resolve the class without overrides.
 		var cls = Type.resolveClass(cl);
 		if (cls == null)
@@ -110,6 +110,13 @@ class PolymodInterpEx extends Interp
 		}
 
 		var func = get(o, f);
+
+		// Workaround for an HTML5-specific issue.
+		// https://github.com/HaxeFoundation/haxe/issues/11298
+		if (f == null && f == "contains") {
+			func = get(o, "includes");
+		}
+
 		if (func == null)
 		{
 			if (Std.isOfType(o, HScriptedClass))
@@ -733,7 +740,7 @@ class PolymodInterpEx extends Interp
 					pkg = path;
 				case DImport(path, _):
 					var clsName = path[path.length - 1];
-					
+
 					if (imports.exists(clsName))
 					{
 						if (imports.get(clsName) == null) {
@@ -758,7 +765,7 @@ class PolymodInterpEx extends Interp
 						importedClass.cls = PolymodScriptClass.importOverrides.get(importedClass.fullPath);
 					} else {
 						var result:Dynamic = Type.resolveClass(importedClass.fullPath);
-					
+
 						// If the class is not found, try to find it as an enum.
 						if (result == null)
 							result = Type.resolveEnum(importedClass.fullPath);
