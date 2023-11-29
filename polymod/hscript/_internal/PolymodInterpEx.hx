@@ -113,7 +113,7 @@ class PolymodInterpEx extends Interp
 
 		// Workaround for an HTML5-specific issue.
 		// https://github.com/HaxeFoundation/haxe/issues/11298
-		if (f == null && f == "contains") {
+		if (func == null && f == "contains") {
 			func = get(o, "includes");
 		}
 
