@@ -80,7 +80,7 @@ class PolymodInterpEx extends Interp
 				}
 			}
 		}
-		
+
 		// Attempt to resolve the class without overrides.
 		var cls = Type.resolveClass(cl);
 		if (cls == null)
@@ -733,7 +733,7 @@ class PolymodInterpEx extends Interp
 					pkg = path;
 				case DImport(path, _):
 					var clsName = path[path.length - 1];
-					
+
 					if (imports.exists(clsName))
 					{
 						if (imports.get(clsName) == null) {
@@ -749,6 +749,7 @@ class PolymodInterpEx extends Interp
 						pkg: path.slice(0, path.length - 1),
 						fullPath: path.join("."),
 						cls: null,
+						enm: null
 					};
 
 					if (PolymodScriptClass.importOverrides.exists(importedClass.fullPath)) {
@@ -757,19 +758,22 @@ class PolymodInterpEx extends Interp
 
 						importedClass.cls = PolymodScriptClass.importOverrides.get(importedClass.fullPath);
 					} else {
-						var result:Dynamic = Type.resolveClass(importedClass.fullPath);
-					
+						var resultCls:Class<Dynamic> = Type.resolveClass(importedClass.fullPath);
+
 						// If the class is not found, try to find it as an enum.
-						if (result == null)
-							result = Type.resolveEnum(importedClass.fullPath);
+						var resultEnm:Enum<Dynamic> = null;
+						if (resultCls == null)
+							resultEnm = Type.resolveEnum(importedClass.fullPath);
 
 						// If the class is still not found, skip this import entirely.
-						if (result == null) {
+						if (resultCls == null && resultEnm == null) {
 							Polymod.error(SCRIPT_CLASS_MODULE_NOT_FOUND, 'Could not import class ${importedClass.fullPath}', origin);
 							continue;
+						} else if (resultCls != null) {
+							importedClass.cls = resultCls;
+						} else if (resultEnm != null) {
+							importedClass.enm = resultEnm;
 						}
-
-						importedClass.cls = result;
 					}
 
 					imports.set(importedClass.name, importedClass);
@@ -780,6 +784,10 @@ class PolymodInterpEx extends Interp
 						var superClassPath = new hscript.Printer().typeToString(extend);
 						if (imports.exists(superClassPath))
 						{
+							var extendImport = imports.get(superClassPath);
+							if (extendImport.cls == null)
+								errorEx(EClassUnresolvedSuperclass(superClassPath, 'expected a class'));
+
 							switch (extend)
 							{
 								case CTPath(_, params):

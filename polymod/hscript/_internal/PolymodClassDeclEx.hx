@@ -18,4 +18,5 @@ typedef PolymodClassImport = {
 	@:optional var pkg:Array<String>;
 	@:optional var fullPath:String; // pkg.pkg.pkg.name
 	@:optional var cls:Class<Dynamic>;
+	@:optional var enm:Enum<Dynamic>;
 }
