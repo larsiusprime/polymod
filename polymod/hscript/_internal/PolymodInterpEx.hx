@@ -71,6 +71,7 @@ class PolymodInterpEx extends Interp
 					return proxy;
 				}
 
+				// Ignore importedClass.enm as enums cannot be instantiated.
 				var c = importedClass.cls;
 				if (c == null)
 				{
@@ -647,6 +648,7 @@ class PolymodInterpEx extends Interp
 			// TODO: Somehow allow accessing static fields of a ScriptClass without instantiating it.
 
 			if (importedClass.cls != null) return importedClass.cls;
+			if (importedClass.enm != null) return importedClass.enm;
 		}
 
 		var prop:Dynamic;
