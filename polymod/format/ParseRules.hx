@@ -439,17 +439,12 @@ class LinesParseFormat implements BaseParseFormat // <Array<String>>
 
 	public function merge(baseText:String, mergeText:String, id:String):String
 	{
-		if (baseText == null || mergeText == '')
-			return baseText;
-		if (baseText == null || mergeText == '')
-			return baseText;
+		if (baseText == null || mergeText == '') return baseText;
 		var lines = parse(baseText);
-		if (lines == null || lines.length <= 0)
-			return baseText;
+		if (lines == null || lines.length <= 0) return baseText;
 		var mergeLines = parse(mergeText);
-		if (mergeLines == null || mergeLines.length <= 1)
-			return baseText;
-		var pattern = mergeLines.shift();
+		if (mergeLines == null || mergeLines.length <= 1) return baseText;
+		var pattern = mergeLines[0];
 		var newLines = [];
 		for (line in lines)
 		{

@@ -62,6 +62,7 @@ class PolymodAssetLibrary
 	public var fileSystem(default, null):IFileSystem;
 
 	public var type(default, null):Map<String, PolymodAssetType>;
+	public var typeLibraries(default, null):Map<String, Array<String>>;
 
 	public var assetPrefix(default, null):String = "assets/";
 	public var dirs:Array<String> = null;
@@ -384,7 +385,8 @@ class PolymodAssetLibrary
 
 	private function init()
 	{
-		type = new Map<String, PolymodAssetType>();
+		type = [];
+		typeLibraries = [];
 		initExtensions();
 		if (parseRules == null)
 			parseRules = ParseRules.getDefault();
@@ -488,8 +490,10 @@ class PolymodAssetLibrary
 	}
 
 	@:allow(polymod.backends.LimeCoreLibrary)
-	private function initRedirectPath(redirectPath:String) {
+	private function initRedirectPath(libraryId:String, redirectPath:String, pathPrefix:String = '') {
 		if (redirectPath == null || redirectPath == '') return;
+
+		redirectPath = Util.pathJoin(redirectPath, pathPrefix);
 
 		var all:Array<String> = [];
 
@@ -507,12 +511,18 @@ class PolymodAssetLibrary
 			Polymod.error(MOD_LOAD_FAILED, 'Failed to load core asset redirect $redirectPath : $msg');
 			throw('ModAssetLibrary.initRedirectPath("$redirectPath") failed: $msg');
 		}
+
+		if (!typeLibraries.exists(libraryId)) {
+			typeLibraries.set(libraryId, []);
+		}
+
 		for (f in all) {
 			var doti = Util.uLastIndexOf(f, '.');
 			var ext:String = doti != -1 ? f.substring(doti + 1) : '';
 			ext = ext.toLowerCase();
 			var assetType = getExtensionType(ext);
 			type.set(f, assetType);
+			typeLibraries.get(libraryId).push(f);
 			#if openfl
 			if (assetType == FONT)
 			{
@@ -522,7 +532,8 @@ class PolymodAssetLibrary
 			}
 			#end
 		}
-		Polymod.notice(MOD_LOAD_DONE, 'Done loading core asset redirect $redirectPath');
+		var keyCount = typeLibraries.get(libraryId).length;
+		Polymod.notice(MOD_LOAD_DONE, 'Done loading core asset redirect $redirectPath ($keyCount keys)');
 	}
 
 	/**

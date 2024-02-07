@@ -214,7 +214,7 @@ class DependencyUtil
 					}
 					else
 					{
-						trace('Skipping optional dependency ' + depKey + ' for mod ' + mod.id);
+						// trace('Skipping optional dependency ' + depKey + ' for mod ' + mod.id);
 						// dependencies.set(mod.id, [mod.id]);
 					}
 				}
