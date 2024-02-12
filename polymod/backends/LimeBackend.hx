@@ -842,7 +842,7 @@ class LimeModLibrary extends LimeAssetLibrary
 			}
 		};
 
-		var libraryItems = p.typeLibraries.get(libraryId);
+		var libraryItems = p.typeLibraries.get(libraryId) ?? [];
 		for (id in libraryItems)
 		{
 			if (id.startsWith(PolymodConfig.appendFolder) || id.startsWith(PolymodConfig.mergeFolder))

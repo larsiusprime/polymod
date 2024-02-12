@@ -12,6 +12,8 @@ import polymod.util.Util;
 import firetongue.FireTongue;
 #end
 
+using StringTools;
+
 typedef PolymodAssetLibraryParams =
 {
 	/**
@@ -303,6 +305,7 @@ class PolymodAssetLibrary
 		var idStripped = stripAssetsPrefix(id);
 		if (theDir != '')
 		{
+			if (idStripped.startsWith(theDir)) return idStripped;
 			return Util.pathJoin(theDir, idStripped);
 		}
 
@@ -386,7 +389,7 @@ class PolymodAssetLibrary
 	private function init()
 	{
 		type = [];
-		typeLibraries = [];
+		typeLibraries = [ 'default' => [] ];
 		initExtensions();
 		if (parseRules == null)
 			parseRules = ParseRules.getDefault();
@@ -477,6 +480,8 @@ class PolymodAssetLibrary
 			ext = ext.toLowerCase();
 			var assetType = getExtensionType(ext);
 			type.set(f, assetType);
+			// TODO: What about other asset libraries?
+			typeLibraries.get('default').push(f);
 			#if openfl
 			if (assetType == FONT)
 			{
@@ -522,6 +527,7 @@ class PolymodAssetLibrary
 			ext = ext.toLowerCase();
 			var assetType = getExtensionType(ext);
 			type.set(f, assetType);
+			if (!typeLibraries.exists(libraryId)) typeLibraries.set(libraryId, []);
 			typeLibraries.get(libraryId).push(f);
 			#if openfl
 			if (assetType == FONT)
