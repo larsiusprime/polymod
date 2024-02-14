@@ -462,11 +462,10 @@ class PolymodScriptClass
 		// trace('Calling function ${name} on scripted class.');
 		var field = findField(fnName);
 		var r:Dynamic = null;
+		var fn = (field != null) ? findFunction(fnName, true) : null;
 
-		if (field != null)
+		if (fn != null)
 		{
-			// trace('  Override found on class!');
-			var fn = findFunction(fnName);
 			var previousValues:Map<String, Dynamic> = [];
 			var i = 0;
 			for (a in fn.args)
@@ -497,11 +496,17 @@ class PolymodScriptClass
 			catch (err:PolymodExprEx.ErrorEx)
 			{
 				reportErrorEx(err, fnName);
+				// A script error occurred while executing the script function.
+				// Purge the function from the cache so it is not called again.
+				purgeFunction(fnName);
 				return null;
 			}
 			catch (err:hscript.Expr.Error)
 			{
 				reportError(err, fnName);
+				// A script error occurred while executing the script function.
+				// Purge the function from the cache so it is not called again.
+				purgeFunction(fnName);
 				return null;
 			}
 			catch (err:Dynamic)
@@ -629,12 +634,19 @@ class PolymodScriptClass
 		return callFunction(name, [arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7]);
 	}
 
-	private function findFunction(name:String):FunctionDecl
+	/**
+	 * Search for a function field with the given name.
+	 * @param name The name of the function to search for.
+	 * @param cacheOnly If false, scan the full list of fields.
+	 *                  If true, ignore uncached fields.
+	 */
+	private function findFunction(name:String, cacheOnly:Bool = true):Null<FunctionDecl>
 	{
 		if (_cachedFunctionDecls != null)
 		{
 			return _cachedFunctionDecls.get(name);
 		}
+		if (cacheOnly) return null;
 
 		for (f in _c.fields)
 		{
@@ -652,12 +664,31 @@ class PolymodScriptClass
 		return null;
 	}
 
-	private function findVar(name:String):VarDecl
+	/**
+	 * Remove a function from the cache.
+	 * This is useful when a function is broken and needs to be skipped.
+	 * @param name The name of the function to remove from the cache.
+	 */
+	private function purgeFunction(name:String):Void {
+		if (_cachedFunctionDecls != null)
+		{
+			_cachedFunctionDecls.remove(name);
+		}
+	}
+
+	/**
+	 * Search for a variable field with the given name.
+	 * @param name The name of the variable to search for.
+	 * @param cacheOnly If false, scan the full list of fields.
+	 *                  If true, ignore uncached fields.
+	 */
+	private function findVar(name:String, cacheOnly:Bool = false):Null<VarDecl>
 	{
 		if (_cachedVarDecls != null)
 		{
 			_cachedVarDecls.get(name);
 		}
+		if (cacheOnly) return null;
 
 		for (f in _c.fields)
 		{
@@ -675,12 +706,19 @@ class PolymodScriptClass
 		return null;
 	}
 
-	private function findField(name:String):FieldDecl
+	/**
+	 * Search for a field (function OR variable) with the given name.
+	 * @param name The name of the field to search for.
+	 * @param cacheOnly If false, scan the full list of fields.
+	 *                  If true, ignore uncached fields.
+	 */
+	private function findField(name:String, cacheOnly:Bool = true):Null<FieldDecl>
 	{
 		if (_cachedFieldDecls != null)
 		{
 			return _cachedFieldDecls.get(name);
 		}
+		if (cacheOnly) return null;
 
 		for (f in _c.fields)
 		{
@@ -721,6 +759,8 @@ class PolymodScriptClass
 						var varValue = this._interp.expr(v.expr);
 						this._interp.variables.set(f.name, varValue);
 					}
+				default:
+					throw 'Unknown field kind: ${f.kind}';
 			}
 		}
 	}

@@ -704,7 +704,7 @@ class PolymodInterpEx extends Interp
 
 		var prop:Dynamic;
 		// We are calling a LOCAL function from the same module.
-		if (_proxy != null && _proxy.findFunction(id) != null)
+		if (_proxy != null && _proxy.findFunction(id, true) != null)
 		{
 			_nextCallObject = _proxy;
 			return _proxy.resolveField(id);
