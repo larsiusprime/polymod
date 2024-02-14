@@ -447,6 +447,10 @@ class PolymodScriptClass
 				Polymod.error(SCRIPT_RUNTIME_EXCEPTION,
 					'Error while executing function ${className}.${fnName}()#${errLine}: EInvalidAccess' + '\n' +
 					'InvalidAccess error: Tried to access "${f}", but it is not a valid field or method. Is the target object null?');
+			case EScriptThrow(v):
+				Polymod.error(SCRIPT_RUNTIME_EXCEPTION,
+					'Error while executing function ${className}.${fnName}()#${errLine}: EScriptThrow' + '\n' +
+					'User script threw an error: ${v}');
 			default:
 				Polymod.error(SCRIPT_RUNTIME_EXCEPTION,
 					'Error while executing function ${className}.${fnName}()#${errLine}: ' + '\n' + 'An unknown error occurred: ${err}');

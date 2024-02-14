@@ -24,6 +24,7 @@ class PolymodPrinterEx extends Printer
 			case EInvalidScriptedVarSet(v): "Invalid variable assignment to scripted class: " + v;
 			case EClassSuperNotCalled: "Super constructor not called";
 			case EClassUnresolvedSuperclass(c, r): 'Unresolved superclass $c (reason: $r)';
+			case EScriptThrow(v): "Script called throw: " + v;
 			case ECustom(msg): msg;
 		};
 		#if hscriptPos
