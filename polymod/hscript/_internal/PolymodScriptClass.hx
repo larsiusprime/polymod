@@ -285,13 +285,14 @@ class PolymodScriptClass
 		{
 			case CTPath(pth, params):
 				var clsPath = pth.join('.');
+				var clsName = pth[pth.length - 1];
 
 				if (scriptClassOverrides.exists(clsPath)) {
 					targetClass = scriptClassOverrides.get(clsPath);
 				}
-				else if (c.imports.exists(clsPath))
+				else if (c.imports.exists(clsName))
 				{
-					var importedClass:PolymodClassImport = c.imports.get(clsPath);
+					var importedClass:PolymodClassImport = c.imports.get(clsName);
 					if (importedClass != null && importedClass.cls != null) {
 						targetClass = importedClass.cls;
 					} else if (importedClass != null && importedClass.cls == null) {
@@ -345,17 +346,17 @@ class PolymodScriptClass
 			args = [];
 		}
 
-		var extendString = new hscript.Printer().typeToString(_c.extend);
-		if (_c.pkg != null && extendString.indexOf(".") == -1)
-		{
-			extendString = _c.pkg.join(".") + "." + extendString;
-		}
+		var fullExtendString = new hscript.Printer().typeToString(_c.extend);
 
 		// Templates are ignored completely since there's no type checking in HScript.
-		if (extendString.indexOf('<') != -1)
+		if (fullExtendString.indexOf('<') != -1)
 		{
-			extendString = extendString.split('<')[0];
+			fullExtendString = fullExtendString.split('<')[0];
 		}
+
+		// Build an unqualified path too.
+		var fullExtendStringParts = fullExtendString.split('.');
+		var extendString = fullExtendStringParts[fullExtendStringParts.length - 1];
 
 		var classDescriptor = PolymodInterpEx.findScriptClassDescriptor(extendString);
 		if (classDescriptor != null)
@@ -367,12 +368,12 @@ class PolymodScriptClass
 		{
 			var clsToCreate:Class<Dynamic> = null;
 
-			if (scriptClassOverrides.exists(extendString)) {
-				clsToCreate = scriptClassOverrides.get(extendString);
+			if (scriptClassOverrides.exists(fullExtendString)) {
+				clsToCreate = scriptClassOverrides.get(fullExtendString);
 
 				if (clsToCreate == null)
 				{
-					@:privateAccess _interp.errorEx(EClassUnresolvedSuperclass(extendString, 'WHY?'));
+					@:privateAccess _interp.errorEx(EClassUnresolvedSuperclass(fullExtendString, 'WHY?'));
 				}
 			} else if (_c.imports.exists(extendString)) {
 				clsToCreate = _c.imports.get(extendString).cls;
