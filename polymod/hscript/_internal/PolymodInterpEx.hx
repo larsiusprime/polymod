@@ -464,9 +464,15 @@ class PolymodInterpEx extends Interp
 		}
 		else
 		{
-			var result = Reflect.callMethod(target, fun, args);
-			_nextCallObject = null;
-			return result;
+			try {
+				var result = Reflect.callMethod(target, fun, args);
+				_nextCallObject = null;
+				return result;
+			} catch (e) {
+				errorEx(EScriptCallThrow(e));
+				_nextCallObject = null;
+				return null;
+			}
 		}
 	}
 
@@ -488,14 +494,26 @@ class PolymodInterpEx extends Interp
 		this.depth++;
 
 		// Call the function.
-		var result = Reflect.callMethod(_proxy, fun, args);
+		try {
+			var result = Reflect.callMethod(_proxy, fun, args);
 
-		// Restore the local scope.
-		this.locals = capturedLocals;
-		this.declared = capturedDeclared;
-		this.depth = capturedDepth;
+			// Restore the local scope.
+			this.locals = capturedLocals;
+			this.declared = capturedDeclared;
+			this.depth = capturedDepth;
 
-		return result;
+			return result;
+		} catch (e) {
+			errorEx(EScriptCallThrow(e));
+
+			// Restore the local scope.
+			this.locals = capturedLocals;
+			this.declared = capturedDeclared;
+			this.depth = capturedDepth;
+
+			return null;
+		}
+
 	}
 
 	override function execute(expr:Expr):Dynamic
@@ -645,18 +663,15 @@ class PolymodInterpEx extends Interp
 
 	override function exprReturn(expr:Expr):Dynamic
 	{
-		try
-		{
-			return super.exprReturn(expr);
-		}
-		catch (err:hscript.Expr.Error)
-		{
-			#if hscriptPos
-			throw err;
-			#else
-			throw err;
-			#end
-		}
+		return super.exprReturn(expr);
+		// catch (err:hscript.Expr.Error)
+		// {
+		// 	#if hscriptPos
+		// 	throw err;
+		// 	#else
+		// 	throw err;
+		// 	#end
+		// }
 	}
 
 	override function resolve(id:String):Dynamic

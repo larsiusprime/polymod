@@ -54,6 +54,7 @@ EInvalidScriptedVarSet(v:String);
 EClassSuperNotCalled;
 EClassUnresolvedSuperclass(c:String, r:String); // superclass and reason
 EScriptThrow(v:Dynamic); // Script called "throw"
+EScriptCallThrow(v:Dynamic); // Script called a function which threw
 // Fallback error type.
 ECustom(msg:String);
 } class ErrorExUtil

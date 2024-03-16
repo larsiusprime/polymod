@@ -510,10 +510,6 @@ class PolymodScriptClass
 				purgeFunction(fnName);
 				return null;
 			}
-			catch (err:Dynamic)
-			{
-				throw err;
-			}
 
 			for (a in fn.args)
 			{
