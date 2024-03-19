@@ -27,9 +27,9 @@ class PolymodInterpEx extends Interp
 		this.targetCls = targetCls;
 	}
 
-	inline function errorEx(e:#if hscriptPos ErrorDefEx #else ErrorEx #end, rethrow = false):Dynamic
+	function errorEx(e:#if hscriptPos ErrorDefEx #else ErrorEx #end, rethrow = false):Dynamic
 	{
-		#if hscriptPos var e = new ErrorEx(e, curExpr.pmin, curExpr.pmax, curExpr.origin, curExpr.line); #end
+		#if hscriptPos var e = new ErrorEx(e, curExpr?.pmin ?? 0, curExpr?.pmax ?? 0, curExpr?.origin ?? 'unknown', curExpr?.line ?? 0); #end
 		if (rethrow)
 			this.rethrow(e)
 		else
@@ -857,6 +857,19 @@ class PolymodInterpEx extends Interp
 					if (extend != null)
 					{
 						var superClassPath = new hscript.Printer().typeToString(extend);
+						if (!imports.exists(superClassPath)) {
+							switch (extend) {
+								case CTPath(path, params):
+									if (params.length > 0) {
+										errorEx(EClassUnresolvedSuperclass(superClassPath, 'do not include type parameters in super class name'));
+									}
+								default:
+									// Other error handling?
+							}
+							// Default
+							errorEx(EClassUnresolvedSuperclass(superClassPath, 'not recognized, is the type imported?'));
+						}
+
 						if (imports.exists(superClassPath))
 						{
 							var extendImport = imports.get(superClassPath);
