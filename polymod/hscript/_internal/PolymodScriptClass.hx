@@ -460,7 +460,6 @@ class PolymodScriptClass
 
 	public function callFunction(fnName:String, args:Array<Dynamic> = null):Dynamic
 	{
-		// trace('Calling function ${name} on scripted class.');
 		var field = findField(fnName);
 		var r:Dynamic = null;
 		var fn = (field != null) ? findFunction(fnName, true) : null;
@@ -525,7 +524,6 @@ class PolymodScriptClass
 		}
 		else
 		{
-			// trace('  No override found on class, time to call the superclass!');
 			var fixedArgs = [];
 			// OVERRIDE CHANGE: Use __super_ when calling superclass
 			var fixedName = '__super_${fnName}';
