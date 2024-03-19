@@ -111,6 +111,13 @@ class PolymodInterpEx extends Interp
 		}
 
 		var func = get(o, f);
+
+		// Workaround for an HTML5-specific issue.
+		// https://github.com/HaxeFoundation/haxe/issues/11298
+		if (func == null && f == "contains") {
+			func = get(o, "includes");
+		}
+
 		if (func == null)
 		{
 			if (Std.isOfType(o, HScriptedClass))
