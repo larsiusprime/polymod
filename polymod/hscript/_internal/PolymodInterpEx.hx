@@ -704,15 +704,15 @@ class PolymodInterpEx extends Interp
 			return null;
 		}
 
-		var l = locals.get(id);
-		if (l != null)
+		if (locals.exists(id))
 		{
-			return l.r;
+			// NOTE: id may exist but be null
+			return locals.get(id).r;
 		}
-		var v = variables.get(id);
-		if (v != null)
+		if (variables.exists(id))
 		{
-			return v;
+			// NOTE: id may exist but be null
+			return variables.get(id);
 		}
 		// OVERRIDE CHANGE: Allow access to modules for calling static functions.
 		var importedClass:PolymodClassImport = _proxy._c.imports.get(id);

@@ -19,6 +19,7 @@ enum Param
  * Based on code by Ian Harrigan
  * @see https://github.com/ianharrigan/hscript-ex
  */
+@:access(hscript.Interp)
 class PolymodScriptClass
 {
 	/*
@@ -458,6 +459,7 @@ class PolymodScriptClass
 		}
 	}
 
+	@:privateAccess(hscript.Interp)
 	public function callFunction(fnName:String, args:Array<Dynamic> = null):Dynamic
 	{
 		var field = findField(fnName);
@@ -466,6 +468,8 @@ class PolymodScriptClass
 
 		if (fn != null)
 		{
+			var fn = findFunction(fnName);
+			// previousValues is used to restore variables after they are shadowed in the local scope.
 			var previousValues:Map<String, Dynamic> = [];
 			var i = 0;
 			for (a in fn.args)
@@ -481,6 +485,7 @@ class PolymodScriptClass
 					value = _interp.expr(a.value);
 				}
 
+				// NOTE: We assign these as variables rather than locals because those get wiped when we enter the function.
 				if (_interp.variables.exists(a.name))
 				{
 					previousValues.set(a.name, _interp.variables.get(a.name));
