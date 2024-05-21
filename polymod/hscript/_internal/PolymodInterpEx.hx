@@ -21,7 +21,6 @@ class PolymodInterpEx extends Interp
 	{
 		super();
 		_proxy = proxy;
-		variables.set("Type", Type);
 		variables.set("Math", Math);
 		variables.set("Std", Std);
 		this.targetCls = targetCls;
