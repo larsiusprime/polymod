@@ -681,9 +681,15 @@ class LimeModLibrary extends LimeAssetLibrary
 	public override function loadBytes(id:String):Future<Bytes>
 	{
 		var symbol = new IdAndLibrary(id, this);
+		var file = p.file(symbol.modId);
 		if (p.check(symbol.modId))
 		{
-			return Bytes.loadFromFile(p.file(symbol.modId));
+			var promise = new lime.app.Promise<Bytes>();
+
+			// TODO: Make this actually async :P
+			var result:Bytes = p.fileSystem.getFileBytes(p.file(symbol.modId));
+			promise.complete(result);
+			return promise.future;
 		}
 		else if (hasFallback)
 		{
