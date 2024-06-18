@@ -1,9 +1,12 @@
 package polymod.backends;
 
-import polymod.Polymod.FrameworkParams;
-import polymod.Polymod;
+import lime.system.ThreadPool;
 import polymod.backends.PolymodAssetLibrary;
 import polymod.backends.PolymodAssets.PolymodAssetType;
+import polymod.fs.PolymodFileSystem;
+import polymod.fs.PolymodFileSystem.IFileSystem;
+import polymod.Polymod;
+import polymod.Polymod.FrameworkParams;
 import polymod.util.Util;
 using StringTools;
 
@@ -684,12 +687,7 @@ class LimeModLibrary extends LimeAssetLibrary
 		var file = p.file(symbol.modId);
 		if (p.check(symbol.modId))
 		{
-			var promise = new lime.app.Promise<Bytes>();
-
-			// TODO: Make this actually async :P
-			var result:Bytes = p.fileSystem.getFileBytes(p.file(symbol.modId));
-			promise.complete(result);
-			return promise.future;
+			return LimeAsyncHandler.loadBytesFromFileSystem(p.file(symbol.modId), p.fileSystem);
 		}
 		else if (hasFallback)
 		{
@@ -924,6 +922,90 @@ class LimeModLibrary extends LimeAssetLibrary
 	public override function load():Future<LimeAssetLibrary>
 	{
 		return super.load();
+	}
+}
+
+/**
+ * Mostly copied from lime._internal.backend.native.NativeHTTPRequest.
+ * https://github.com/openfl/lime/blob/develop/src/lime/_internal/backend/native/NativeHTTPRequest.hx#L285
+ */
+class LimeAsyncHandler {
+	private static var localThreadPool:ThreadPool;
+
+	static function initThreadPool() {
+		if (localThreadPool == null) {
+			localThreadPool = new ThreadPool(0, 1);
+			localThreadPool.doWork.add(localThreadPool_doWork);
+			localThreadPool.onProgress.add(localThreadPool_onProgress);
+			localThreadPool.onComplete.add(localThreadPool_onComplete);
+			localThreadPool.onError.add(localThreadPool_onError);
+		}
+	}
+
+	/**
+	 * Tell the thread pool to asynchronously load the bytes at the given path from the given file system.
+	 * @param path The string path to load the bytes from.
+	 * @param fileSystem The IFilesystem to use when loading the bytes.
+	 * @return A future promising that the bytes will be made available when the task is complete.
+	 */
+	public static function loadBytesFromFileSystem(path:String, fileSystem:IFileSystem):Future<Bytes> {
+		initThreadPool();
+
+		var promise = new lime.app.Promise<Bytes>();
+
+		localThreadPool.queue({
+			task: "loadBytesFromFileSystem",
+			path: path,
+			fileSystem: fileSystem,
+			promise: promise
+		});
+
+		return promise.future;
+	}
+
+	static function localThreadPool_doWork(state:Dynamic):Void {
+		var task:String = state.task;
+		var path:String = state.path;
+		var fileSystem:IFileSystem = state.fileSystem;
+		var promise:lime.app.Promise<Bytes> = state.promise;
+
+		switch (task) {
+			case "loadBytesFromFileSystem":
+				var result:Bytes = fileSystem.getFileBytes(path);
+				localThreadPool.sendProgress({
+					bytesLoaded: result.length,
+					bytesTotal: result.length,
+					promise: promise
+				});
+				localThreadPool.sendComplete({
+					result: result,
+					promise: promise
+				});
+				promise.complete(result);
+			default:
+				localThreadPool.sendError("Invalid task: " + task);
+		}
+	}
+
+	static function localThreadPool_onProgress(state:Dynamic):Void {
+		var promise = state.promise;
+		var bytesLoaded = state.bytesLoaded;
+		var bytesTotal = state.bytesTotal;
+		if (promise.isComplete || promise.isError) return;
+		promise.progress(bytesLoaded, bytesTotal);
+	}
+
+	static function localThreadPool_onError(state:Dynamic):Void {
+		var promise = state.promise;
+		var error = state.error;
+		promise.error(error);
+	}
+
+	static function localThreadPool_onComplete(state:Dynamic):Void {
+		var promise = state.promise;
+		var result = state.result;
+		if (promise.isError || result == null) return;
+		promise.complete(result);
 	}
 }
 
