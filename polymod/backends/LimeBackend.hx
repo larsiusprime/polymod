@@ -733,9 +733,12 @@ class LimeModLibrary extends LimeAssetLibrary
 		{
 			// We load the bytes, then load the file, rather than using Image.loadFromFile,
 			// because URLs don't work with MemoryFileSystem.
+
 			var filePath = p.file(symbol.modId);
-			var dabytes = p.fileSystem.getFileBytes(filePath);
-			var imageFuture = Image.loadFromBytes(dabytes);
+			var imageFuture = LimeAsyncHandler.loadBytesFromFileSystem(filePath, p.fileSystem)
+				.then((bytes:Bytes) -> {
+					return Image.loadFromBytes(bytes);
+				});
 
 			#if html5
 			imageFuture.onComplete((result:Image) ->
@@ -790,15 +793,19 @@ class LimeModLibrary extends LimeAssetLibrary
 		var symbol = new IdAndLibrary(id, this);
 		if (p.check(symbol.modId))
 		{
-			var request = new HTTPRequest<String>();
-			return request.load(paths.get(p.file(symbol.modId))).then((modText) ->
-			{
-				if (modText != null)
-				{
-					modText = p.mergeAndAppendText(id, modText);
-				}
-				return Future.withValue(modText);
-			});
+			var filePath = p.file(symbol.modId);
+			var textFuture = LimeAsyncHandler.loadBytesFromFileSystem(filePath, p.fileSystem)
+				.then((bytes:Bytes) -> {
+					// Convert the bytes to a string with UTF-8 encoding.
+					var modText = bytes.toString();
+					if (modText != null)
+					{
+						modText = p.mergeAndAppendText(id, modText);
+					}
+					return Future.withValue(modText);
+				});
+
+			return textFuture;
 		}
 		else if (hasFallback)
 		{
@@ -932,6 +939,7 @@ class LimeModLibrary extends LimeAssetLibrary
 class LimeAsyncHandler {
 	private static var localThreadPool:ThreadPool;
 
+	@:haxe.warning("-WDeprecated")
 	static function initThreadPool() {
 		if (localThreadPool == null) {
 			localThreadPool = new ThreadPool(0, 1);
