@@ -16,6 +16,8 @@ abstract PolymodAbstractScriptClass(PolymodScriptClass) from PolymodScriptClass
 				return this.findFunction;
 			case "callFunction":
 				return this.callFunction;
+			case "findVar":
+				return this.findVar;
 			case _:
 				if (this.findFunction(name) != null)
 				{
