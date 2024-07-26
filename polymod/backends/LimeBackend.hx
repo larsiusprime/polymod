@@ -891,7 +891,7 @@ class LimeModLibrary extends LimeAssetLibrary
 				if (fallbackId.startsWith(p.localeAssetPrefix))
 				{
 					// Localized asset file in CURRENT locale! (example: assets/locales/en-US/assets/...)
-					if (requestedType == null || fallback.exists(fallbackId, type))
+					if (requestedType == null || fallback.exists(fallbackId, limeType))
 					{
 						// The asset in the current locale should 'silently' override the default.
 						// We should register this with the locale path prefix removed.
