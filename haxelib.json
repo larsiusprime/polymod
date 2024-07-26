@@ -4,10 +4,12 @@
   "license": "MIT",
   "tags": ["mod","game","data","asset"],
   "description": "An atomic modding framework for Haxe games",
-  "version": "1.7.0",
+  "version": "1.8.0",
   "releasenote": "Dependencies, ZIP mods, blacklisting, and other improvements.",
   "contributors": ["MasterEric", "larsiusprime"],
   "dependencies": {
-    "thx.semver": ""
+    "thx.semver": "",
+    "jsonpath": "",
+    "jsonpatch": ""
   }
 }
