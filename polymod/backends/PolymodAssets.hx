@@ -223,7 +223,7 @@ class PolymodAssets
 	}
 }
 
-@:enum abstract PolymodAssetType(String) from String to String
+enum abstract PolymodAssetType(String) from String to String
 {
 	var BYTES = 'BYTES';
 	var TEXT = 'TEXT';

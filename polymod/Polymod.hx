@@ -8,7 +8,9 @@ import polymod.backends.PolymodAssets;
 import polymod.format.JsonHelp;
 import polymod.format.ParseRules;
 import polymod.fs.PolymodFileSystem;
+#if hscript
 import polymod.hscript._internal.PolymodScriptClass;
+#end
 import polymod.util.DependencyUtil;
 import polymod.util.VersionUtil;
 import thx.semver.Version;
@@ -83,12 +85,12 @@ typedef PolymodParams =
 	?extensionMap:Map<String, PolymodAssetType>,
 	/**
 	 * (optional) Your own custom backend for accessing the file system.
-	 * 
+	 *
 	 * By default, Polymod will load mods from your local native filesystem.
 	 * This parameter lets you provide your own filesystem implementation.
 	 * This is important if you want to support HTML5, or load mods from a remote server, or something custom.
 	 * You can either write your own filesystem, or use one of the ones provided in the `polymod.fs` package.
-	 * 
+	 *
 	 * This parameter takes either an instance of `IFileSystem` or a `Class<T>` implementing `IFileSystem`.
 	 */
 	?customFilesystem:Dynamic,
@@ -107,7 +109,7 @@ typedef PolymodParams =
 	 * (optional) Disables dependency checks. Defaults to `false`.
 	 * By default, Polymod will query all the loaded mods, and either exclude mods whose dependencies are not met,
 	 * or reorganize the load order to ensure that mods are loaded after their dependencies.
-	 * 
+	 *
 	 * Setting this to `true` will disable this behavior entirely.
 	 * Mods will be loaded in the order they are provided.
 	 *
@@ -118,7 +120,7 @@ typedef PolymodParams =
 	/**
 	 * (optional) If `false`, Polymod will completely stop loading mods if any mods have missing dependencies.
 	 * If `true`, Polymod will skip loading mods that have missing dependencies, but will continue loading other mods.
-	 * 
+	 *
 	 * Defaults to `false`.
 	 */
 	?skipDependencyErrors:Bool,
@@ -132,10 +134,17 @@ typedef PolymodParams =
 	#end
 	/**
 	 * (optional) Whether to perform the required initialization for scripted classes.
-	 * 
-	 * Defaults to false.
+	 *
+	 * Defaults to `false`.
 	 */
 	?useScriptedClasses:Bool,
+
+	/**
+	 * (optional) If `useScriptedClasses` is true, perform script loading asynchronously.
+	 *
+	 * Defaults to `false`.
+	 */
+	?loadScriptsAsync:Bool,
 }
 
 /**
@@ -148,6 +157,13 @@ typedef FrameworkParams =
 	 * (optional) if you're using Lime/OpenFL AND you're using custom or non-default asset libraries, then you must provide a key=>value store mapping the name of each asset library to a path prefix in your mod structure
 	 */
 	?assetLibraryPaths:Map<String, String>,
+
+	/**
+	 * (optional) specify this path to redirect core asset loading to a different path
+	 * you can set this up to load core assets from a parent directory!
+	 * Not applicable for file systems which don't use a directory obvs.
+	 */
+	 ?coreAssetRedirect:String
 }
 
 typedef ScanParams =
@@ -203,7 +219,7 @@ class Polymod
 
 	/**
 	 * Initializes Polymod, while loading the chosen mod or mods.
-	 * 
+	 *
 	 * @param params A set of parameters to use when initializing Polymod.
 	 * @return An array of metadata entries for the mods which were successfully loaded.
 	 */
@@ -313,10 +329,15 @@ class Polymod
 		if (params.useScriptedClasses)
 		{
 			Polymod.notice(PolymodErrorCode.SCRIPT_PARSING, 'Parsing script classes...');
-			Polymod.registerAllScriptClasses();
 
-			var classList = polymod.hscript._internal.PolymodScriptClass.listScriptClasses();
-			Polymod.notice(PolymodErrorCode.SCRIPT_PARSED, 'Parsed and registered ${classList.length} scripted classes.');
+			if (params.loadScriptsAsync) {
+				Polymod.registerAllScriptClassesAsync();
+			} else {
+				Polymod.registerAllScriptClasses();
+
+				var classList = polymod.hscript._internal.PolymodScriptClass.listScriptClasses();
+				Polymod.notice(PolymodErrorCode.SCRIPT_PARSED, 'Parsed and registered ${classList.length} scripted classes.');
+			}
 		}
 		#else
 		if (params.useScriptedClasses)
@@ -350,10 +371,10 @@ class Polymod
 	/**
 	 * Reinitializes Polymod (with the same parameters) while additionally enabling an individual mod.
 	 * The new mod will get added to the end of the modlist (unless mod dependencies require otherwise).
-	 * 
+	 *
 	 * Depending on the framework you are using, especially if you loaded a specific file already,
 	 * you may have to call `clearCache()` for this to take effect.
-	 * 
+	 *
 	 * @return A list of all mods that were successfully loaded.
 	 */
 	public static function loadMod(modId:String):Array<ModMetadata>
@@ -377,10 +398,10 @@ class Polymod
 	/**
 	 * Reinitializes Polymod (with the same parameters) while additionally enabling several mods.
 	 * The new mods will get added to the end of the modlist (unless mod dependencies require otherwise).
-	 * 
+	 *
 	 * Depending on the framework you are using, especially if you loaded a specific file already.
 	 * you may have to call `clearCache()` for this to take effect.
-	 * 
+	 *
 	 * @return A list of all mods that were successfully loaded.
 	 */
 	public static function loadMods(modIds:Array<String>):Array<ModMetadata>
@@ -404,10 +425,10 @@ class Polymod
 	/**
 	 * Reinitializes Polymod (with the same parameters) while enabling a list of mods.
 	 * The new modlist will replace the old modlist.
-	 * 
+	 *
 	 * Depending on the framework you are using, especially if you loaded a specific file already.
 	 * you may have to call `clearCache()` for this to take effect.
-	 * 
+	 *
 	 * @return A list of all mods that were successfully loaded.
 	 */
 	public static function loadOnlyMods(modIds:Array<String>):Array<ModMetadata>
@@ -431,10 +452,10 @@ class Polymod
 	/**
 	 * Reinitializes Polymod, with the same parameters.
 	 * Useful to force Polymod to detect newly added files.
-	 * 
+	 *
 	 * Depending on the framework you are using, especially if you loaded a specific file already,
 	 * you may have to call `clearCache()` for this to take effect.
-	 * 
+	 *
 	 * @return A list of all mods that were successfully loaded.
 	 */
 	public static function reload():Array<ModMetadata>
@@ -450,10 +471,10 @@ class Polymod
 	 * The specified mod will get removed from the modlist.
 	 * If the unloaded mod was a dependency, depending on your configuration,
 	 * either dependent mods will also be disabled, or Polymod will throw an error and unload nothing.
-	 * 
+	 *
 	 * Depending on the framework you are using, especially if you loaded a specific file already.
 	 * you may have to call `clearCache()` for this to take effect.
-	 * 
+	 *
 	 * @return A list of all mods that were successfully loaded.
 	 */
 	public static function unloadMod(modId:String):Array<ModMetadata>
@@ -479,10 +500,10 @@ class Polymod
 	 * The specified mods will get removed from the modlist.
 	 * If the unloaded mods were dependencies, depending on your configuration,
 	 * either dependent mods will also be disabled, or Polymod will throw an error and unload nothing.
-	 * 
+	 *
 	 * Depending on the framework you are using, especially if you loaded a specific file already.
 	 * you may have to call `clearCache()` for this to take effect.
-	 * 
+	 *
 	 * @return A list of all mods that were successfully loaded.
 	 */
 	public static function unloadMods(modIds:Array<String>):Array<ModMetadata>
@@ -509,7 +530,7 @@ class Polymod
 	/**
 	 * Reinitializes Polymod (with the same parameters) while turning off all mods.
 	 * If you are using Firetongue integration, localized asset replacements will still apply.
-	 * 
+	 *
 	 * Depending on the framework you are using, especially if you loaded a specific file already.
 	 * you may have to call `clearCache()` for this to take effect.
 	 */
@@ -533,7 +554,7 @@ class Polymod
 
 	/**
 	 * Fully disables Polymod and disables any asset replacements, from mods or from locales.
-	 * 
+	 *
 	 * Depending on the framework you are using, especially if you loaded a specific file already.
 	 * you may have to call `clearCache()` for this to take effect.
 	 */
@@ -553,7 +574,7 @@ class Polymod
 	/**
 	 * Builds the list of files which Polymod will ignore, by default, when loading mods.
 	 * Includes license files and metadata files.
-	 * 
+	 *
 	 * @return A list of filenames.
 	 */
 	public static function getDefaultIgnoreList():Array<String>
@@ -646,11 +667,35 @@ class Polymod
 		#if hscript
 		@:privateAccess {
 			// Go through each script and parse any classes in them.
-			for (textPath in Polymod.assetLibrary.list(TEXT))
+			var potentialScripts:Array<String> = Polymod.assetLibrary.list(TEXT);
+			for (textPath in potentialScripts)
 			{
 				if (textPath.endsWith(PolymodConfig.scriptClassExt)) {
 					Polymod.debug('Registering script class "$textPath"');
 					polymod.hscript._internal.PolymodScriptClass.registerScriptClassByPath(textPath);
+				}
+			}
+		}
+		#else
+		Polymod.warning(SCRIPT_HSCRIPT_NOT_INSTALLED, "Cannot register script classes, HScript is not available.");
+		#end
+	}
+
+	/**
+	 * Get a list of all the available scripted classes (`.hxc` files), interpret them asynchronously, and register any classes.
+	 * Called on platforms that don't support synchronous file access.
+	 */
+	public static function registerAllScriptClassesAsync():Void
+	{
+		#if hscript
+		@:privateAccess {
+			// Go through each script and parse any classes in them.
+			var potentialScripts:Array<String> = Polymod.assetLibrary.list(TEXT);
+			for (textPath in potentialScripts)
+			{
+				if (textPath.endsWith(PolymodConfig.scriptClassExt)) {
+					Polymod.debug('Registering script class "$textPath"');
+					polymod.hscript._internal.PolymodScriptClass.registerScriptClassByPathAsync(textPath);
 				}
 			}
 		}
@@ -718,11 +763,19 @@ class Polymod
 	 * @param importClass The class type to import instead.
 	 */
 	public static function addImportAlias(importAlias:String, importClass:Class<Dynamic>):Void {
+		#if hscript
 		PolymodScriptClass.importOverrides.set(importAlias, importClass);
+		#else
+		Polymod.warning(PolymodErrorCode.SCRIPT_HSCRIPT_NOT_INSTALLED, 'Scripted classes imports were requested, but hscript is not installed.');
+		#end
 	}
 
 	public static function removeImportAlias(importAlias:String):Void {
+		#if hscript
 		PolymodScriptClass.importOverrides.remove(importAlias);
+		#else
+		Polymod.warning(PolymodErrorCode.SCRIPT_HSCRIPT_NOT_INSTALLED, 'Scripted classes imports were requested, but hscript is not installed.');
+		#end
 	}
 
 	/**
@@ -731,9 +784,11 @@ class Polymod
 	 * @param importAlias (optional) The alias to use for the import. If not provided, the full class path will be used.
 	 */
 	public static function addDefaultImport(importClass:Class<Dynamic>, ?importAlias:String):Void {
-		if (importAlias == null)
-			importAlias = Type.getClassName(importClass);
-		PolymodScriptClass.defaultImports.set(importAlias, importClass);
+		#if hscript
+		PolymodScriptClass.defaultImports.set(importAlias == null ? Type.getClassName(importClass) : importAlias, importClass);
+		#else
+		Polymod.warning(PolymodErrorCode.SCRIPT_HSCRIPT_NOT_INSTALLED, 'Scripted classes imports were requested, but hscript is not installed.');
+		#end
 	}
 
 	/**
@@ -741,7 +796,11 @@ class Polymod
 	 * @param importPath The full import path to blacklist, as a string.
 	 */
 	public static function blacklistImport(importPath:String):Void {
+		#if hscript
 		addImportAlias(importPath, null);
+		#else
+		Polymod.warning(PolymodErrorCode.SCRIPT_HSCRIPT_NOT_INSTALLED, 'Scripted classes imports were requested, but hscript is not installed.');
+		#end
 	}
 }
 
@@ -759,7 +818,7 @@ typedef ModContributor =
 
 /**
  * A type representing a mod's dependencies.
- * 
+ *
  * The map takes the mod's ID as the key and the required version as the value.
  * The version follows the Semantic Versioning format, with `*.*.*` meaning any version.
  */
@@ -833,13 +892,13 @@ class ModMetadata
 	/**
 	 * A list of dependencies.
 	 * These other mods must be also be loaded in order for this mod to load,
-	 * and this mod must be loaded after the dependencies. 
+	 * and this mod must be loaded after the dependencies.
 	 */
 	public var dependencies:ModDependencies;
 
 	/**
 	 * A list of dependencies.
-	 * This mod must be loaded after the optional dependencies, 
+	 * This mod must be loaded after the optional dependencies,
 	 * but those mods do not necessarily need to be loaded.
 	 */
 	public var optionalDependencies:ModDependencies;
@@ -1002,7 +1061,7 @@ class PolymodError
 /**
  * Indicates where the error occurred.
  */
-@:enum abstract PolymodErrorOrigin(String) from String to String
+enum abstract PolymodErrorOrigin(String) from String to String
 {
 	/**
 	 * This error occurred while scanning for mods.
@@ -1048,7 +1107,7 @@ enum PolymodErrorType
  * Represents the particular type of error that occurred.
  * Great to use as the condition of a switch statement to provide special handling for specific errors.
  */
-@:enum abstract PolymodErrorCode(String) from String to String
+enum abstract PolymodErrorCode(String) from String to String
 {
 	/**
 	 * The mod's metadata file could not be parsed.

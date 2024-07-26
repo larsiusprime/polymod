@@ -19,6 +19,7 @@ enum Param
  * Based on code by Ian Harrigan
  * @see https://github.com/ianharrigan/hscript-ex
  */
+@:access(hscript.Interp)
 class PolymodScriptClass
 {
 	/*
@@ -61,6 +62,10 @@ class PolymodScriptClass
 	{
 		@:privateAccess {
 			var scriptBody = Polymod.assetLibrary.getText(path);
+			if (scriptBody == null) {
+				Polymod.error(SCRIPT_PARSE_ERROR, 'Error while loading script "${path}", could not retrieve script contents!');
+				return;
+			}
 			try
 			{
 				registerScriptClassByString(scriptBody, path);
@@ -281,13 +286,14 @@ class PolymodScriptClass
 		{
 			case CTPath(pth, params):
 				var clsPath = pth.join('.');
+				var clsName = pth[pth.length - 1];
 
 				if (scriptClassOverrides.exists(clsPath)) {
 					targetClass = scriptClassOverrides.get(clsPath);
 				}
-				else if (c.imports.exists(clsPath))
+				else if (c.imports.exists(clsName))
 				{
-					var importedClass:PolymodClassImport = c.imports.get(clsPath);
+					var importedClass:PolymodClassImport = c.imports.get(clsName);
 					if (importedClass != null && importedClass.cls != null) {
 						targetClass = importedClass.cls;
 					} else if (importedClass != null && importedClass.cls == null) {
@@ -341,17 +347,17 @@ class PolymodScriptClass
 			args = [];
 		}
 
-		var extendString = new hscript.Printer().typeToString(_c.extend);
-		if (_c.pkg != null && extendString.indexOf(".") == -1)
-		{
-			extendString = _c.pkg.join(".") + "." + extendString;
-		}
+		var fullExtendString = new hscript.Printer().typeToString(_c.extend);
 
 		// Templates are ignored completely since there's no type checking in HScript.
-		if (extendString.indexOf('<') != -1)
+		if (fullExtendString.indexOf('<') != -1)
 		{
-			extendString = extendString.split('<')[0];
+			fullExtendString = fullExtendString.split('<')[0];
 		}
+
+		// Build an unqualified path too.
+		var fullExtendStringParts = fullExtendString.split('.');
+		var extendString = fullExtendStringParts[fullExtendStringParts.length - 1];
 
 		var classDescriptor = PolymodInterpEx.findScriptClassDescriptor(extendString);
 		if (classDescriptor != null)
@@ -363,12 +369,12 @@ class PolymodScriptClass
 		{
 			var clsToCreate:Class<Dynamic> = null;
 
-			if (scriptClassOverrides.exists(extendString)) {
-				clsToCreate = scriptClassOverrides.get(extendString);
+			if (scriptClassOverrides.exists(fullExtendString)) {
+				clsToCreate = scriptClassOverrides.get(fullExtendString);
 
 				if (clsToCreate == null)
 				{
-					@:privateAccess _interp.errorEx(EClassUnresolvedSuperclass(extendString, 'WHY?'));
+					@:privateAccess _interp.errorEx(EClassUnresolvedSuperclass(fullExtendString, 'WHY?'));
 				}
 			} else if (_c.imports.exists(extendString)) {
 				clsToCreate = _c.imports.get(extendString).cls;
@@ -380,7 +386,7 @@ class PolymodScriptClass
 			} else {
 				@:privateAccess _interp.errorEx(EClassUnresolvedSuperclass(extendString, 'missing import'));
 			}
-			
+
 			superClass = Type.createInstance(clsToCreate, args);
 		}
 	}
@@ -443,22 +449,27 @@ class PolymodScriptClass
 				Polymod.error(SCRIPT_RUNTIME_EXCEPTION,
 					'Error while executing function ${className}.${fnName}()#${errLine}: EInvalidAccess' + '\n' +
 					'InvalidAccess error: Tried to access "${f}", but it is not a valid field or method. Is the target object null?');
+			case EScriptThrow(v):
+				Polymod.error(SCRIPT_RUNTIME_EXCEPTION,
+					'Error while executing function ${className}.${fnName}()#${errLine}: EScriptThrow' + '\n' +
+					'User script threw an error: ${v}');
 			default:
 				Polymod.error(SCRIPT_RUNTIME_EXCEPTION,
 					'Error while executing function ${className}.${fnName}()#${errLine}: ' + '\n' + 'An unknown error occurred: ${err}');
 		}
 	}
 
+	@:privateAccess(hscript.Interp)
 	public function callFunction(fnName:String, args:Array<Dynamic> = null):Dynamic
 	{
-		// trace('Calling function ${name} on scripted class.');
 		var field = findField(fnName);
 		var r:Dynamic = null;
+		var fn = (field != null) ? findFunction(fnName, true) : null;
 
-		if (field != null)
+		if (fn != null)
 		{
-			// trace('  Override found on class!');
 			var fn = findFunction(fnName);
+			// previousValues is used to restore variables after they are shadowed in the local scope.
 			var previousValues:Map<String, Dynamic> = [];
 			var i = 0;
 			for (a in fn.args)
@@ -474,6 +485,7 @@ class PolymodScriptClass
 					value = _interp.expr(a.value);
 				}
 
+				// NOTE: We assign these as variables rather than locals because those get wiped when we enter the function.
 				if (_interp.variables.exists(a.name))
 				{
 					previousValues.set(a.name, _interp.variables.get(a.name));
@@ -489,16 +501,18 @@ class PolymodScriptClass
 			catch (err:PolymodExprEx.ErrorEx)
 			{
 				reportErrorEx(err, fnName);
+				// A script error occurred while executing the script function.
+				// Purge the function from the cache so it is not called again.
+				purgeFunction(fnName);
 				return null;
 			}
 			catch (err:hscript.Expr.Error)
 			{
 				reportError(err, fnName);
+				// A script error occurred while executing the script function.
+				// Purge the function from the cache so it is not called again.
+				purgeFunction(fnName);
 				return null;
-			}
-			catch (err:Dynamic)
-			{
-				throw err;
 			}
 
 			for (a in fn.args)
@@ -515,7 +529,6 @@ class PolymodScriptClass
 		}
 		else
 		{
-			// trace('  No override found on class, time to call the superclass!');
 			var fixedArgs = [];
 			// OVERRIDE CHANGE: Use __super_ when calling superclass
 			var fixedName = '__super_${fnName}';
@@ -621,12 +634,19 @@ class PolymodScriptClass
 		return callFunction(name, [arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7]);
 	}
 
-	private function findFunction(name:String):FunctionDecl
+	/**
+	 * Search for a function field with the given name.
+	 * @param name The name of the function to search for.
+	 * @param cacheOnly If false, scan the full list of fields.
+	 *                  If true, ignore uncached fields.
+	 */
+	private function findFunction(name:String, cacheOnly:Bool = true):Null<FunctionDecl>
 	{
 		if (_cachedFunctionDecls != null)
 		{
 			return _cachedFunctionDecls.get(name);
 		}
+		if (cacheOnly) return null;
 
 		for (f in _c.fields)
 		{
@@ -644,12 +664,31 @@ class PolymodScriptClass
 		return null;
 	}
 
-	private function findVar(name:String):VarDecl
+	/**
+	 * Remove a function from the cache.
+	 * This is useful when a function is broken and needs to be skipped.
+	 * @param name The name of the function to remove from the cache.
+	 */
+	private function purgeFunction(name:String):Void {
+		if (_cachedFunctionDecls != null)
+		{
+			_cachedFunctionDecls.remove(name);
+		}
+	}
+
+	/**
+	 * Search for a variable field with the given name.
+	 * @param name The name of the variable to search for.
+	 * @param cacheOnly If false, scan the full list of fields.
+	 *                  If true, ignore uncached fields.
+	 */
+	private function findVar(name:String, cacheOnly:Bool = false):Null<VarDecl>
 	{
 		if (_cachedVarDecls != null)
 		{
 			_cachedVarDecls.get(name);
 		}
+		if (cacheOnly) return null;
 
 		for (f in _c.fields)
 		{
@@ -667,12 +706,19 @@ class PolymodScriptClass
 		return null;
 	}
 
-	private function findField(name:String):FieldDecl
+	/**
+	 * Search for a field (function OR variable) with the given name.
+	 * @param name The name of the field to search for.
+	 * @param cacheOnly If false, scan the full list of fields.
+	 *                  If true, ignore uncached fields.
+	 */
+	private function findField(name:String, cacheOnly:Bool = true):Null<FieldDecl>
 	{
 		if (_cachedFieldDecls != null)
 		{
 			return _cachedFieldDecls.get(name);
 		}
+		if (cacheOnly) return null;
 
 		for (f in _c.fields)
 		{
@@ -713,6 +759,8 @@ class PolymodScriptClass
 						var varValue = this._interp.expr(v.expr);
 						this._interp.variables.set(f.name, varValue);
 					}
+				default:
+					throw 'Unknown field kind: ${f.kind}';
 			}
 		}
 	}

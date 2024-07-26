@@ -1,8 +1,0 @@
-{
-	"merge":[
-		{
-			"target":"object_1",
-			"payload":{"value":"sunflower"}
-		}
-	]
-}

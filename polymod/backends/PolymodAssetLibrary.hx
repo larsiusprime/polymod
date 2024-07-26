@@ -1,16 +1,18 @@
 package polymod.backends;
 
-import openfl.display3D.IndexBuffer3D;
 import haxe.io.Bytes;
+import openfl.display3D.IndexBuffer3D;
 import polymod.backends.IBackend;
 import polymod.backends.PolymodAssets.PolymodAssetType;
 import polymod.format.ParseRules;
 import polymod.fs.PolymodFileSystem.IFileSystem;
-import polymod.util.Util;
 // import polymod.hscript.PolymodScriptClass;
+import polymod.util.Util;
 #if firetongue
 import firetongue.FireTongue;
 #end
+
+using StringTools;
 
 typedef PolymodAssetLibraryParams =
 {
@@ -62,6 +64,7 @@ class PolymodAssetLibrary
 	public var fileSystem(default, null):IFileSystem;
 
 	public var type(default, null):Map<String, PolymodAssetType>;
+	public var typeLibraries(default, null):Map<String, Array<String>>;
 
 	public var assetPrefix(default, null):String = "assets/";
 	public var dirs:Array<String> = null;
@@ -111,7 +114,7 @@ class PolymodAssetLibrary
 
 	/**
 	 * The directory where the current locale's FireTongue localized assets are stored.
-	 * 
+	 *
 	 * Prefix asset paths with this string to get a localized version of the asset.
 	 */
 	public var localeAssetPrefix(default, null):String = null;
@@ -302,6 +305,7 @@ class PolymodAssetLibrary
 		var idStripped = stripAssetsPrefix(id);
 		if (theDir != '')
 		{
+			if (idStripped.startsWith(theDir)) return idStripped;
 			return Util.pathJoin(theDir, idStripped);
 		}
 
@@ -322,9 +326,12 @@ class PolymodAssetLibrary
 			// Else, FireTongue not enabled.
 			#end
 
-			// If we have a localized result, any unlocalized result will be ignored
+			if (resultLocalized) continue;
+
 			if (!resultLocalized)
 			{
+				// If we have an asset prefix
+
 				var filePath = Util.pathJoin(modDir, idStripped);
 				if (fileSystem.exists(filePath))
 					result = filePath;
@@ -368,6 +375,7 @@ class PolymodAssetLibrary
 			}
 			// Else, FireTongue not enabled.
 			#end
+
 			var filePath = Util.pathJoin(d, id);
 			if (fileSystem.exists(filePath))
 			{
@@ -380,7 +388,8 @@ class PolymodAssetLibrary
 
 	private function init()
 	{
-		type = new Map<String, PolymodAssetType>();
+		type = [];
+		typeLibraries = [ 'default' => [] ];
 		initExtensions();
 		if (parseRules == null)
 			parseRules = ParseRules.getDefault();
@@ -450,10 +459,7 @@ class PolymodAssetLibrary
 
 		var all:Array<String> = null;
 
-		if (d == '' || d == null)
-		{
-			all = [];
-		}
+		if (d == '') all = [];
 
 		try
 		{
@@ -474,6 +480,8 @@ class PolymodAssetLibrary
 			ext = ext.toLowerCase();
 			var assetType = getExtensionType(ext);
 			type.set(f, assetType);
+			// TODO: What about other asset libraries?
+			typeLibraries.get('default').push(f);
 			#if openfl
 			if (assetType == FONT)
 			{
@@ -486,10 +494,58 @@ class PolymodAssetLibrary
 		Polymod.notice(MOD_LOAD_DONE, 'Done loading mod $d');
 	}
 
+	@:allow(polymod.backends.LimeCoreLibrary)
+	private function initRedirectPath(libraryId:String, redirectPath:String, pathPrefix:String = '') {
+		if (redirectPath == null || redirectPath == '') return;
+
+		redirectPath = Util.pathJoin(redirectPath, pathPrefix);
+
+		var all:Array<String> = [];
+
+		try {
+			if (fileSystem.exists(redirectPath))
+			{
+				all = fileSystem.readDirectoryRecursive(redirectPath);
+			} else {
+				Polymod.error(MOD_LOAD_FAILED, 'Failed to load core asset redirect $redirectPath : Directory does not exist!');
+				throw('ModAssetLibrary.initRedirectPath("$redirectPath") failed: Directory does not exist!');
+			}
+		}
+		catch (msg:Dynamic)
+		{
+			Polymod.error(MOD_LOAD_FAILED, 'Failed to load core asset redirect $redirectPath : $msg');
+			throw('ModAssetLibrary.initRedirectPath("$redirectPath") failed: $msg');
+		}
+
+		if (!typeLibraries.exists(libraryId)) {
+			typeLibraries.set(libraryId, []);
+		}
+
+		for (f in all) {
+			var doti = Util.uLastIndexOf(f, '.');
+			var ext:String = doti != -1 ? f.substring(doti + 1) : '';
+			ext = ext.toLowerCase();
+			var assetType = getExtensionType(ext);
+			type.set(f, assetType);
+			if (!typeLibraries.exists(libraryId)) typeLibraries.set(libraryId, []);
+			typeLibraries.get(libraryId).push(f);
+			#if openfl
+			if (assetType == FONT)
+			{
+				var font = openfl.text.Font.fromBytes(fileSystem.getFileBytes(file(f, redirectPath)));
+				@:privateAccess if (!openfl.text.Font.__fontByName.exists(font.name))
+					openfl.text.Font.registerFont(font);
+			}
+			#end
+		}
+		var keyCount = typeLibraries.get(libraryId).length;
+		Polymod.notice(MOD_LOAD_DONE, 'Done loading core asset redirect $redirectPath ($keyCount keys)');
+	}
+
 	/**
 	 * Strip the `assets/` prefix from a file path, if it is present.
 	 * If your app uses a different asset path prefix, you can override this with the `assetPrefix` parameter.
-	 * 
+	 *
 	 * @param id The path to strip.
 	 * @return The modified path
 	 */
@@ -505,7 +561,7 @@ class PolymodAssetLibrary
 	/**
 	 * Add the `assets/` prefix to a file path, if it isn't present.
 	 * If your app uses a different asset path prefix, you can override this with the `assetPrefix` parameter.
-	 * 
+	 *
 	 * @param id The path to prepend
 	 * @return The modified path
 	 */

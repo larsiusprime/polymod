@@ -21,15 +21,14 @@ class PolymodInterpEx extends Interp
 	{
 		super();
 		_proxy = proxy;
-		variables.set("Type", Type);
 		variables.set("Math", Math);
 		variables.set("Std", Std);
 		this.targetCls = targetCls;
 	}
 
-	inline function errorEx(e:#if hscriptPos ErrorDefEx #else ErrorEx #end, rethrow = false):Dynamic
+	function errorEx(e:#if hscriptPos ErrorDefEx #else ErrorEx #end, rethrow = false):Dynamic
 	{
-		#if hscriptPos var e = new ErrorEx(e, curExpr.pmin, curExpr.pmax, curExpr.origin, curExpr.line); #end
+		#if hscriptPos var e = new ErrorEx(e, curExpr?.pmin ?? 0, curExpr?.pmax ?? 0, curExpr?.origin ?? 'unknown', curExpr?.line ?? 0); #end
 		if (rethrow)
 			this.rethrow(e)
 		else
@@ -71,6 +70,7 @@ class PolymodInterpEx extends Interp
 					return proxy;
 				}
 
+				// Ignore importedClass.enm as enums cannot be instantiated.
 				var c = importedClass.cls;
 				if (c == null)
 				{
@@ -80,7 +80,7 @@ class PolymodInterpEx extends Interp
 				}
 			}
 		}
-		
+
 		// Attempt to resolve the class without overrides.
 		var cls = Type.resolveClass(cl);
 		if (cls == null)
@@ -97,7 +97,7 @@ class PolymodInterpEx extends Interp
 	override function fcall(o:Dynamic, f:String, args:Array<Dynamic>):Dynamic
 	{
 		// OVERRIDE CHANGE: Custom logic to handle super calls to prevent infinite recursion
-		if (o == _proxy.superClass)
+		if (_proxy != null && o == _proxy.superClass)
 		{
 			// Force call super function.
 			return super.fcall(o, '__super_${f}', args);
@@ -110,6 +110,13 @@ class PolymodInterpEx extends Interp
 		}
 
 		var func = get(o, f);
+
+		// Workaround for an HTML5-specific issue.
+		// https://github.com/HaxeFoundation/haxe/issues/11298
+		if (func == null && f == "contains") {
+			func = get(o, "includes");
+		}
+
 		if (func == null)
 		{
 			if (Std.isOfType(o, HScriptedClass))
@@ -351,6 +358,57 @@ class PolymodInterpEx extends Interp
 					}
 				}
 				return newFun;
+			case ETry(e,n,_,ecatch):
+				var old = declared.length;
+				var oldTry = inTry;
+				try {
+					inTry = true;
+					var v : Dynamic = expr(e);
+					restore(old);
+					inTry = oldTry;
+					return v;
+			} catch( error : PolymodExprEx.ErrorEx ) {
+					#if hscriptPos
+					var err = error.e;
+					#else
+					var err = error;
+					#end
+					switch (err) {
+						case EScriptThrow(errValue):
+							// restore vars
+							restore(old);
+							inTry = oldTry;
+							// declare 'v'
+							declared.push({ n : n, old : locals.get(n) });
+							locals.set(n,{ r : errValue });
+							var v : Dynamic = expr(ecatch);
+							restore(old);
+							return v;
+						default:
+							throw err;
+					}
+				} catch( err : Dynamic ) {
+					// I can't handle this error the normal way because Stop is private GRAAAAA
+					if (Type.getEnumName(err) == "hscript.Interp.Stop") {
+						inTry = oldTry;
+						throw err;
+					}
+
+					// restore vars
+					restore(old);
+					inTry = oldTry;
+					// declare 'v'
+					declared.push({ n : n, old : locals.get(n) });
+					locals.set(n,{ r : err });
+					var v : Dynamic = expr(ecatch);
+					restore(old);
+					return v;
+				}
+			case EThrow(e):
+				var str = 'Script Error: ${expr(e)}';
+				// If there is a try/catch block, the error will be caught.
+				// If there is no try/catch block, the error will be reported.
+				errorEx(EScriptThrow(str));
 			default:
 				// Do nothing.
 		}
@@ -412,9 +470,15 @@ class PolymodInterpEx extends Interp
 		}
 		else
 		{
-			var result = Reflect.callMethod(target, fun, args);
-			_nextCallObject = null;
-			return result;
+			try {
+				var result = Reflect.callMethod(target, fun, args);
+				_nextCallObject = null;
+				return result;
+			} catch (e) {
+				errorEx(EScriptCallThrow(e));
+				_nextCallObject = null;
+				return null;
+			}
 		}
 	}
 
@@ -436,14 +500,26 @@ class PolymodInterpEx extends Interp
 		this.depth++;
 
 		// Call the function.
-		var result = Reflect.callMethod(_proxy, fun, args);
+		try {
+			var result = Reflect.callMethod(_proxy, fun, args);
 
-		// Restore the local scope.
-		this.locals = capturedLocals;
-		this.declared = capturedDeclared;
-		this.depth = capturedDepth;
+			// Restore the local scope.
+			this.locals = capturedLocals;
+			this.declared = capturedDeclared;
+			this.depth = capturedDepth;
 
-		return result;
+			return result;
+		} catch (e) {
+			errorEx(EScriptCallThrow(e));
+
+			// Restore the local scope.
+			this.locals = capturedLocals;
+			this.declared = capturedDeclared;
+			this.depth = capturedDepth;
+
+			return null;
+		}
+
 	}
 
 	override function execute(expr:Expr):Dynamic
@@ -593,18 +669,15 @@ class PolymodInterpEx extends Interp
 
 	override function exprReturn(expr:Expr):Dynamic
 	{
-		try
-		{
-			return super.exprReturn(expr);
-		}
-		catch (err:hscript.Expr.Error)
-		{
-			#if hscriptPos
-			throw err;
-			#else
-			throw err;
-			#end
-		}
+		return super.exprReturn(expr);
+		// catch (err:hscript.Expr.Error)
+		// {
+		// 	#if hscriptPos
+		// 	throw err;
+		// 	#else
+		// 	throw err;
+		// 	#end
+		// }
 	}
 
 	override function resolve(id:String):Dynamic
@@ -630,15 +703,15 @@ class PolymodInterpEx extends Interp
 			return null;
 		}
 
-		var l = locals.get(id);
-		if (l != null)
+		if (locals.exists(id))
 		{
-			return l.r;
+			// NOTE: id may exist but be null
+			return locals.get(id).r;
 		}
-		var v = variables.get(id);
-		if (v != null)
+		if (variables.exists(id))
 		{
-			return v;
+			// NOTE: id may exist but be null
+			return variables.get(id);
 		}
 		// OVERRIDE CHANGE: Allow access to modules for calling static functions.
 		var importedClass:PolymodClassImport = _proxy._c.imports.get(id);
@@ -647,11 +720,12 @@ class PolymodInterpEx extends Interp
 			// TODO: Somehow allow accessing static fields of a ScriptClass without instantiating it.
 
 			if (importedClass.cls != null) return importedClass.cls;
+			if (importedClass.enm != null) return importedClass.enm;
 		}
 
 		var prop:Dynamic;
 		// We are calling a LOCAL function from the same module.
-		if (_proxy != null && _proxy.findFunction(id) != null)
+		if (_proxy != null && _proxy.findFunction(id, true) != null)
 		{
 			_nextCallObject = _proxy;
 			return _proxy.resolveField(id);
@@ -733,7 +807,7 @@ class PolymodInterpEx extends Interp
 					pkg = path;
 				case DImport(path, _):
 					var clsName = path[path.length - 1];
-					
+
 					if (imports.exists(clsName))
 					{
 						if (imports.get(clsName) == null) {
@@ -749,6 +823,7 @@ class PolymodInterpEx extends Interp
 						pkg: path.slice(0, path.length - 1),
 						fullPath: path.join("."),
 						cls: null,
+						enm: null
 					};
 
 					if (PolymodScriptClass.importOverrides.exists(importedClass.fullPath)) {
@@ -757,19 +832,22 @@ class PolymodInterpEx extends Interp
 
 						importedClass.cls = PolymodScriptClass.importOverrides.get(importedClass.fullPath);
 					} else {
-						var result:Dynamic = Type.resolveClass(importedClass.fullPath);
-					
+						var resultCls:Class<Dynamic> = Type.resolveClass(importedClass.fullPath);
+
 						// If the class is not found, try to find it as an enum.
-						if (result == null)
-							result = Type.resolveEnum(importedClass.fullPath);
+						var resultEnm:Enum<Dynamic> = null;
+						if (resultCls == null)
+							resultEnm = Type.resolveEnum(importedClass.fullPath);
 
 						// If the class is still not found, skip this import entirely.
-						if (result == null) {
+						if (resultCls == null && resultEnm == null) {
 							Polymod.error(SCRIPT_CLASS_MODULE_NOT_FOUND, 'Could not import class ${importedClass.fullPath}', origin);
 							continue;
+						} else if (resultCls != null) {
+							importedClass.cls = resultCls;
+						} else if (resultEnm != null) {
+							importedClass.enm = resultEnm;
 						}
-
-						importedClass.cls = result;
 					}
 
 					imports.set(importedClass.name, importedClass);
@@ -778,8 +856,25 @@ class PolymodInterpEx extends Interp
 					if (extend != null)
 					{
 						var superClassPath = new hscript.Printer().typeToString(extend);
+						if (!imports.exists(superClassPath)) {
+							switch (extend) {
+								case CTPath(path, params):
+									if (params.length > 0) {
+										errorEx(EClassUnresolvedSuperclass(superClassPath, 'do not include type parameters in super class name'));
+									}
+								default:
+									// Other error handling?
+							}
+							// Default
+							errorEx(EClassUnresolvedSuperclass(superClassPath, 'not recognized, is the type imported?'));
+						}
+
 						if (imports.exists(superClassPath))
 						{
+							var extendImport = imports.get(superClassPath);
+							if (extendImport.cls == null)
+								errorEx(EClassUnresolvedSuperclass(superClassPath, 'expected a class'));
+
 							switch (extend)
 							{
 								case CTPath(_, params):

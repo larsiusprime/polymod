@@ -1,6 +1,9 @@
 package polymod.format;
 
 import haxe.Json;
+
+import json.JSONData;
+import json.patch.JSONPatch;
 import polymod.Polymod;
 import polymod.Polymod.PolymodError;
 import polymod.Polymod.PolymodErrorType;
@@ -439,17 +442,12 @@ class LinesParseFormat implements BaseParseFormat // <Array<String>>
 
 	public function merge(baseText:String, mergeText:String, id:String):String
 	{
-		if (baseText == null || mergeText == '')
-			return baseText;
-		if (baseText == null || mergeText == '')
-			return baseText;
+		if (baseText == null || mergeText == '') return baseText;
 		var lines = parse(baseText);
-		if (lines == null || lines.length <= 0)
-			return baseText;
+		if (lines == null || lines.length <= 0) return baseText;
 		var mergeLines = parse(mergeText);
-		if (mergeLines == null || mergeLines.length <= 1)
-			return baseText;
-		var pattern = mergeLines.shift();
+		if (mergeLines == null || mergeLines.length <= 1) return baseText;
+		var pattern = mergeLines[0];
 		var newLines = [];
 		for (line in lines)
 		{
@@ -571,8 +569,18 @@ typedef JsonMergeStruct =
 class JSONParseFormat implements BaseParseFormat
 {
 	public var format:TextFileFormat;
-	public var space(default, null):String;
+
+	/**
+	 * If replacer is given and is not null, it is used to retrieve the actual object to be encoded.
+	 * The replacer function takes two parameters, the key and the value being encoded.
+	 * Initial key value is an empty string.
+	 */
 	public var replacer(default, null):Dynamic->Dynamic->Dynamic;
+
+	/**
+	 * If space is given and is not null, the result will be pretty-printed. Successive levels will be indented by this string.
+	 */
+	public var space(default, null):String;
 
 	public function new(space:String = null, replacer:Dynamic->Dynamic->Dynamic = null)
 	{
@@ -581,421 +589,53 @@ class JSONParseFormat implements BaseParseFormat
 		format = JSON;
 	}
 
-	public function parse(str:String):Dynamic
+	public function parse(str:String):JSONData
 	{
-		var result = Json.parse(~/(\r|\n|\t)/g.replace(str, ''));
+		var result = JSONData.parse(~/(\r|\n|\t)/g.replace(str, ''));
 		return result;
 	}
 
 	public function append(baseText:String, appendText:String, id:String):String
 	{
-		var lastBracket = Util.uLastIndexOf(baseText, '}');
-		var baseFirst = Util.uSubstr(baseText, 0, lastBracket);
-		var baseEnd = Util.uSubstr(baseText, lastBracket, baseText.length);
+		var baseJson:JSONData = parse(baseText);
+		var appendJson:JSONData = parse(appendText);
 
-		var firstAppendBracket = Util.uIndexOf(appendText, '{');
-		var lastAppendBracket = Util.uLastIndexOf(appendText, '}');
-		var injectText = Util.uSubstring(appendText, firstAppendBracket + 1, lastAppendBracket);
+		var patchData = convertJSONToPatches(appendJson);
 
-		if (injectText == null || injectText == '')
-			return baseText;
+		trace('Applying patches: ${patchData}');
 
-		// var whiteSpace = [32,10,13,9]; //' ','\n','\r','\t'
+		var finalJson = JSONPatch.applyPatches(baseJson, patchData);
 
-		baseFirst = Util.uTrimFinalEndlines(baseFirst);
-		injectText = Util.uTrimFinalEndlines(injectText);
-		injectText = Util.uTrimFirstEndlines(injectText);
-		baseEnd = Util.uTrimFinalEndlines(baseEnd);
+		return print(finalJson);
+	}
 
-		return '$baseFirst,\n$injectText$baseEnd';
+	/**
+	 * Convert a JSON object to an array of JSON patches, to append this JSON to another.
+	 */
+	function convertJSONToPatches(json:Dynamic):Array<JSONData> {
+		var keys = Reflect.fields(json);
+
+		var patches:Array<JSONData> = [];
+
+		for (key in keys)
+		{
+			var value = Reflect.field(json, key);
+			patches.push({"op": "add", "path": '/${key}', "value": value});
+		}
+
+		return patches;
 	}
 
 	public function merge(baseText:String, mergeText:String, id:String):String
 	{
-		var base:Dynamic = null;
-		var merge:JsonMergeStruct = null;
+		var baseJson:JSONData = parse(baseText);
+		var mergeJson:JSONData = parse(mergeText);
 
-		try
-		{
-			base = cast parse(baseText);
-		}
-		catch (msg:Dynamic)
-		{
-			Polymod.error(MERGE, "JSON merge error (" + id + "): couldn't parse base text! : " + msg);
-		}
+		trace('Applying patches: ${mergeJson}');
 
-		try
-		{
-			merge = cast parse(mergeText);
-		}
-		catch (msg:Dynamic)
-		{
-			Polymod.error(MERGE, "JSON merge error (" + id + "): couldn't parse merge text! : " + msg);
-			return baseText;
-		}
+		var finalJson = JSONPatch.applyPatches(baseJson, mergeJson);
 
-		if (Reflect.hasField(merge, 'merge'))
-		{
-			if (Std.isOfType(merge.merge, Array))
-			{
-				var merge:Array<JsonMergeEntry> = merge.merge;
-				for (entry in merge)
-				{
-					var target = null;
-					var payload = null;
-
-					target = entry.target;
-					payload = entry.payload;
-					try
-					{
-						base = _mergeJson(base, entry, id);
-					}
-					catch (msg:Dynamic)
-					{
-						Polymod.error(MERGE, 'JSON merge error ($id): could not merge payload "${Json.stringify(payload)}" into target : $msg');
-					}
-				}
-			}
-			else
-			{
-				Polymod.error(MERGE,
-					'JSON merge error ($id): merge file must contain a single top-level array named "merge" (expected an array, found an object)');
-			}
-		}
-		else
-		{
-			Polymod.error(MERGE, 'JSON merge error ($id): merge file must contain a single top-level array named "merge"');
-		}
-		return print(base);
-	}
-
-	private function _mergeJson(base:Dynamic, entry:JsonMergeEntry, id:String):Dynamic
-	{
-		var sig = _getTargetSignature(entry.target);
-		var obj = base;
-		var currTarget = sig[0];
-		if (currTarget == null)
-		{
-			Polymod.warning(MERGE, 'JSON merge failed ($id), sig was $sig');
-			return obj;
-		}
-
-		var done = false;
-		var last = obj;
-		var i:Int = 0;
-		var signatureSoFar = '';
-		var struct:
-			{
-				next:Dynamic,
-				parent:Dynamic,
-				arrIndex:Int,
-				target:String
-			} = {
-				next: null,
-				parent: null,
-				arrIndex: -1,
-				target: null
-			};
-		var next = null;
-		while (!done)
-		{
-			struct = _descend(last, currTarget, signatureSoFar, struct);
-			if (struct == null)
-			{
-				next = null;
-			}
-			else
-			{
-				next = struct.next;
-			}
-
-			if (signatureSoFar != '')
-				signatureSoFar += '.';
-			signatureSoFar += _targSigElementToString(currTarget);
-			i++;
-
-			if (next == null)
-			{
-				Polymod.warning(MERGE, 'JSON merge failed ($id), could not find object "${signatureSoFar}"');
-				done = true;
-			}
-			else
-			{
-				if (i < sig.length)
-				{
-					currTarget = sig[i];
-				}
-				else
-				{
-					_inject(struct.parent, struct.target, struct.arrIndex, entry.payload, signatureSoFar);
-					done = true;
-				}
-			}
-			last = next;
-		}
-		return obj;
-	}
-
-	private function _targSigElementToString(target:TargetSignatureElement):String
-	{
-		var str = target.value;
-		if (target.arrayIndeces != null && target.arrayIndeces.length > 0)
-		{
-			for (arri in target.arrayIndeces)
-			{
-				if (arri >= 0)
-				{
-					str += '[$arri]';
-				}
-			}
-		}
-		return str;
-	}
-
-	private function _inject(obj:Dynamic, target:String, arrIndex:Int, payload:Dynamic, signatureSoFar:String = '')
-	{
-		if (arrIndex == -1)
-		{
-			if (Reflect.hasField(obj, target))
-			{
-				var baseObject = Reflect.field(obj, target);
-				var mergedValue = _mergeObjects(baseObject, payload, signatureSoFar);
-				Reflect.setField(obj, target, mergedValue);
-			}
-			else
-			{
-				Reflect.setField(obj, target, payload);
-			}
-		}
-		else
-		{
-			if (Std.isOfType(obj, Array))
-			{
-				var arr:Array<Dynamic> = cast obj;
-				if (arr.length > arrIndex)
-				{
-					var baseObject = arr[arrIndex];
-					var mergedValue = _mergeObjects(baseObject, payload, signatureSoFar);
-				}
-				else
-				{
-					Polymod.warning(MERGE,
-						"JSON merge failed, array index ("
-						+ arrIndex
-						+ ") out of bounds for array of length ("
-						+ arr.length
-						+ ") at "
-						+ signatureSoFar);
-				}
-			}
-		}
-	}
-
-	private function _mergeObjects(a:Dynamic, b:Dynamic, signatureSoFar:String = ''):Dynamic
-	{
-		if (Std.isOfType(a, Array) && Std.isOfType(b, Array))
-		{
-			// if they are both arrays, stomp with b's values
-			return b;
-		}
-		else if (!Std.isOfType(a, Array) && !Std.isOfType(b, Array))
-		{
-			var aPrimitive = isPrimitive(a);
-			var bPrimitive = isPrimitive(b);
-			if (aPrimitive && bPrimitive)
-			{
-				// if they are both primitives, stomp with b
-				return b;
-			}
-			else if (aPrimitive != bPrimitive)
-			{
-				// if they are incompatible, stomp with a
-				return a;
-			}
-			else
-			{
-				// if they are both objects, merge their values
-				for (field in Reflect.fields(b))
-				{
-					if (Reflect.hasField(a, field))
-					{
-						// If a & b share a field, merge that field recursively
-						var aValue = Reflect.field(a, field);
-						var bValue = Reflect.field(b, field);
-						var mergedValue = copyVal(_mergeObjects(aValue, bValue, '$signatureSoFar.$field'));
-						Reflect.setField(a, field, mergedValue);
-					}
-					else
-					{
-						// If b has a field that a doesn't have, add it to a
-						Reflect.setField(a, field, Reflect.field(b, field));
-					}
-				}
-			}
-		}
-		else
-		{
-			// if they're incompatible types, return a
-			var aArr = Std.isOfType(a, Array) ? 'array' : 'object';
-			var bArr = Std.isOfType(b, Array) ? 'array' : 'object';
-			Polymod.warning(MERGE, "JSON can't merge @ (" + signatureSoFar + ") because base is (" + aArr + ") but payload is (" + bArr + ')');
-		}
-		return a;
-	}
-
-	private function copyVal(a:Dynamic):Dynamic
-	{
-		var b:Dynamic = null;
-		if (Std.isOfType(a, Int))
-			b = Std.int(a);
-		if (Std.isOfType(a, Float))
-			b = cast(a, Float);
-		if (Std.isOfType(a, String))
-			b = Std.string(b);
-		if (Std.isOfType(a, Bool))
-			b = (a == true);
-		else
-			b = Std.string(a);
-		return b;
-	}
-
-	private function isPrimitive(a:Dynamic):Bool
-	{
-		if (Std.isOfType(a, String))
-			return true;
-		if (Std.isOfType(a, Float))
-			return true;
-		if (Std.isOfType(a, Int))
-			return true;
-		if (Std.isOfType(a, Bool))
-			return true;
-		return false;
-	}
-
-	private function _descend(obj:Dynamic, target:TargetSignatureElement, signatureSoFar:String = '', struct:
-		{
-			next:Dynamic,
-			parent:Dynamic,
-			arrIndex:Int,
-			target:String
-		} = null):
-		{
-			next:Dynamic,
-			parent:Dynamic,
-			arrIndex:Int,
-			target:String
-		}
-	{
-		if (struct == null)
-		{
-			struct = {
-				next: null,
-				parent: null,
-				arrIndex: -1,
-				target: null
-			};
-		}
-		if (obj == null)
-			return null;
-		if (target == null)
-			return null;
-
-		if (Reflect.hasField(obj, target.value) == false)
-		{
-			Polymod.warning(MERGE, "JSON merge error : object (" + signatureSoFar + ") has no field (" + target.value + ')');
-			return null;
-		}
-		var next = Reflect.field(obj, target.value);
-
-		struct.next = next;
-		struct.parent = obj;
-		struct.target = target.value;
-
-		if (next == null)
-		{
-			return struct;
-		}
-		if (target.arrayIndeces.length > 0)
-		{
-			struct.next = next;
-			if (Std.isOfType(next, Array))
-			{
-				var arr:Array<Dynamic> = cast next;
-				var arrIndeces = target.arrayIndeces.copy();
-				var done = false;
-				signatureSoFar += '.${target.value}';
-				while (arrIndeces.length > 0)
-				{
-					var arrIndex = arrIndeces.shift();
-					if (arrIndex < arr.length)
-					{
-						struct.parent = next;
-						next = arr[arrIndex];
-						struct.next = next;
-						struct.arrIndex = arrIndex;
-						if (Std.isOfType(next, Array))
-						{
-							arr = cast next;
-						}
-						else
-						{
-							Polymod.warning(MERGE, 'JSON merge error : invalid array access [$arrIndex] on target "$signatureSoFar"');
-							done = true;
-						}
-					}
-					else
-					{
-						Polymod.warning(MERGE,
-							'JSON merge error : array index ($arrIndex) out of bounds on target "$signatureSoFar" with length ${arr.length}');
-						done = true;
-					}
-					signatureSoFar += '[$arrIndex]';
-				}
-			}
-			else
-			{
-				return null;
-			}
-		}
-		return struct;
-	}
-
-	private function _getTargetSignature(str:String):Array<TargetSignatureElement>
-	{
-		if (str == null)
-			return [];
-		var result = [];
-		var arr = str.split('.');
-		for (bit in arr)
-		{
-			if (bit.indexOf('[') != -1)
-			{
-				var arr2 = bit.split('[');
-				var value = arr2.shift();
-				var arrayIndeces = [];
-				while (arr2.length > 0)
-				{
-					var value2 = arr2.shift();
-					value2 = Util.uTrimFinalCharIf(value2, ']');
-					var arrIndex = Std.parseInt(value2);
-					if (arrIndex != null && arrIndex >= 0)
-					{
-						arrayIndeces.push(arrIndex);
-					}
-					else
-					{
-						Polymod.warning(MERGE, "JSON merge error: found invalid array index (" + value2 + ") in signature (" + str + ')');
-						break;
-					}
-				}
-				result.push({value: value, arrayIndeces: arrayIndeces});
-			}
-			else
-			{
-				result.push({value: bit, arrayIndeces: []});
-			}
-		}
-		return result;
+		return print(finalJson);
 	}
 
 	public function print(data:Dynamic):String

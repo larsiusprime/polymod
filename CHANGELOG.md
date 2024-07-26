@@ -3,6 +3,38 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+# [1.8.0] - 2024-07-??
+The version is the result of resolving practical needs that arose from using Polymod with [Friday Night Funkin'](https://github.com/FunkinCrew/Funkin) over the past year and a half!
+## Added
+- Added the config option `frameworkParams.coreAssetRedirect` which lets you use another directory as your primary `assets/` folder.
+  - This is useful if you are hot reloading scripts or other data files!
+- Added the `loadScriptsAsync` parameter to `Polymod.init()` to load scripted classes asynchronously.
+- Reworked `_append` and `_merge` functionality for JSON. 
+  - `_append` now adds the keys of the provided JSON to the target JSON.
+  - `_merge` now utilizes a [JSONPatch](https://jsonpatch.com/) file to modify the target JSON with operations.
+    - This implementation of JSONPatch has been modified to allow for [JSONPath](https://goessner.net/articles/JsonPath/) strings in the `path` argument.
+## Changed
+- Replaced several instances of the deprecated `@:enum` syntax (via @MAJigsaw77)
+- Improved image caching on HTML5 builds.
+- Reimplement the `loadBytes` function so that it properly loads the files's contents asynchronously.
+  - Also reimplemented `loadImage` and `loadText` to be properly asynchronous.
+- Made improvements to error handling for script parsing.
+- Greatly improved the speed of Lime's `Assets.list()` function.
+- Added proper handling for calls to `throw` in scripts.
+- Fixed an issue when using HScript 2.5.0.
+- Improve parsing of scripted superclass types.
+- Improve error handling when a function called by a script throws an uncaught exception.
+## Fixed
+- Fix an issue where variables may not resolve properly when assigned to `null`.
+- Fixed an issue where scripts could not access or import enums.
+- Fixed a build issue with the HashLink library.
+- Fixed an issue where Polymod's Lime backend would destroy the underlying library's cached assets.
+- Fixed an issue where invalid `coreAssetRedirect` paths would crash the game.
+- Fixed an issue where `coreAssetRedirect` wouldn't allow accessing files from the default library.
+- Fixed an issue where Polymod would fail to build if HScript wasn't installed (via @MAJigsaw77)
+- Fixed an issue with a null object reference in the script parser (via @AltronMaxX)
+- Fixed an issue with loading custom fonts (via @gamerbross)
+
 ## [1.7.0] - 2023-01-16
 This version has been postposed a while, but adds several powerful features. A dependency system, support for zipped mods (on both desktop and HTML5!), reworks to versioning functions, and more.
 ## Added

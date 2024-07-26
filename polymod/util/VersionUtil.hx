@@ -21,6 +21,7 @@ class VersionUtil
 	 */
 	public static inline function match(version:Version, rule:VersionRule):Bool
 	{
+		if (version == null || rule == null) return false;
 		return stripPre(version).satisfies(rule);
 	}
 

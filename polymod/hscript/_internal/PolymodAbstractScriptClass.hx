@@ -62,16 +62,18 @@ abstract PolymodAbstractScriptClass(PolymodScriptClass) from PolymodScriptClass
 					}
 					return varValue;
 				}
-				else if (Reflect.isFunction(Reflect.getProperty(this.superClass, name)))
-				{
-					return Reflect.getProperty(this.superClass, name);
-				}
-				else if (Reflect.hasField(this.superClass, name))
-				{
-					return Reflect.field(this.superClass, name);
-				}
-				else if (this.superClass != null && Std.isOfType(this.superClass, PolymodScriptClass))
-				{
+				else if (this.superClass == null) {
+					throw "field '" + name + "' does not exist in script class '" + this.className + "'";
+				} else if (Type.getClass(this.superClass) == null) {
+					// Anonymous structure
+					if (Reflect.hasField(this.superClass, name)) {
+						return Reflect.field(this.superClass, name);
+					} else {
+						throw "field '" + name + "' does not exist in script class '" + this.className + "' or super class '"
+							+ Type.getClassName(Type.getClass(this.superClass)) + "'";
+					}
+				} else if (Std.isOfType(this.superClass, PolymodScriptClass)) {
+					// PolymodScriptClass
 					var superScriptClass:PolymodAbstractScriptClass = cast(this.superClass, PolymodScriptClass);
 					try
 					{
@@ -79,6 +81,15 @@ abstract PolymodAbstractScriptClass(PolymodScriptClass) from PolymodScriptClass
 					}
 					catch (e:Dynamic)
 					{
+					}
+				} else {
+					// Class object
+					var fields = Type.getInstanceFields(Type.getClass(this.superClass));
+					if (fields.contains(name) || fields.contains('get_$name')) {
+						return Reflect.getProperty(this.superClass, name);
+					} else {
+						throw "field '" + name + "' does not exist in script class '" + this.className + "' or super class '"
+							+ Type.getClassName(Type.getClass(this.superClass)) + "'";
 					}
 				}
 		}
