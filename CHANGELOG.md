@@ -9,6 +9,10 @@ The version is the result of resolving practical needs that arose from using Pol
 - Added the config option `frameworkParams.coreAssetRedirect` which lets you use another directory as your primary `assets/` folder.
   - This is useful if you are hot reloading scripts or other data files!
 - Added the `loadScriptsAsync` parameter to `Polymod.init()` to load scripted classes asynchronously.
+- Reworked `_append` and `_merge` functionality for JSON. 
+  - `_append` now adds the keys of the provided JSON to the target JSON.
+  - `_merge` now utilizes a [JSONPatch](https://jsonpatch.com/) file to modify the target JSON with operations.
+    - This implementation of JSONPatch has been modified to allow for [JSONPath](https://goessner.net/articles/JsonPath/) strings in the `path` argument.
 ## Changed
 - Replaced several instances of the deprecated `@:enum` syntax (via @MAJigsaw77)
 - Improved image caching on HTML5 builds.
