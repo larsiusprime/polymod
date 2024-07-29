@@ -292,7 +292,6 @@ class Script
 		if (parser == null)
 		{
 			parser = buildParser();
-			parser.allowTypes = true;
 		}
 		program = parser.parseString(script, origin);
 		interp = buildInterp();
