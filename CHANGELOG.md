@@ -3,7 +3,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-# [1.8.0] - 2024-07-??
+# [1.8.0] - 2024-07-26
 The version is the result of resolving practical needs that arose from using Polymod with [Friday Night Funkin'](https://github.com/FunkinCrew/Funkin) over the past year and a half!
 ## Added
 - Added the config option `frameworkParams.coreAssetRedirect` which lets you use another directory as your primary `assets/` folder.
