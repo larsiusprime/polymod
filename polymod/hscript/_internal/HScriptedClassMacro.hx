@@ -575,6 +575,8 @@ class HScriptedClassMacro
 				{
 					// If so, replace it with the real type.
 					resultType = targetParams.get(ty.toString());
+					// recursive call in case result is a parameter
+					resultType = deparameterizeType(resultType, targetParams);
 				}
 				else if (params.length != 0)
 				{
@@ -624,6 +626,8 @@ class HScriptedClassMacro
 				{
 					// If so, replace it with the real type.
 					resultType = targetParams.get(ty.toString());
+					// recursive call in case result is a parameter
+					resultType = deparameterizeType(resultType, targetParams);
 				}
 				else if (params.length != 0)
 				{
