@@ -859,7 +859,7 @@ class PolymodInterpEx extends Interp
 						if (!imports.exists(superClassPath)) {
 							switch (extend) {
 								case CTPath(path, params):
-									if (params.length > 0) {
+									if (params != null && params.length > 0) {
 										errorEx(EClassUnresolvedSuperclass(superClassPath, 'do not include type parameters in super class name'));
 									}
 								default:
