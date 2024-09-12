@@ -73,8 +73,10 @@ class SysFileSystem implements IFileSystem
 			if (meta == null)
 				continue;
 
-			if (!VersionUtil.match(meta.apiVersion, apiVersionRule))
+			if (!VersionUtil.match(meta.apiVersion, apiVersionRule)) {
+				Polymod.warning(MOD_API_VERSION_MISMATCH, 'Mod "${dir}" is not compatible with API version "${apiVersionRule.toString()}", got "${meta.apiVersion.toString()}"');
 				continue;
+			}
 
 			result.push(meta);
 		}

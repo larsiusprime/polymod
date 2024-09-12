@@ -1167,6 +1167,13 @@ enum abstract PolymodErrorCode(String) from String to String
 	var DEPENDENCY_CHECK_SKIPPED:String = 'dependency_check_skipped';
 
 	/**
+	 * The given mod's API version does not match the version rule passed to Polymod.init.
+	 * - This generally indicates the mod is outdated and should be updated by the author.
+	 * - Depending on the changes made between API versions, it may be that the only necessary change is editing the version string in the metadata file.
+	 */
+	var MOD_API_VERSION_MISMATCH:String = 'mod_api_version_mismatch';
+
+	/**
 	 * Polymod tried to access a file that was not found.
 	 * - Make sure the file exists before attempting to access it.
 	 */
