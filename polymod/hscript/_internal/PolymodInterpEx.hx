@@ -144,9 +144,13 @@ class PolymodInterpEx extends Interp
 		{
 			if (Std.isOfType(o, HScriptedClass))
 			{
-				// Could not call the function.
-				// It might be a custom function on the scripted class,
-				// in which case you need to use `scriptCall()` instead.
+				// This is a scripted class!
+				// We should try to call the function on the scripted class.
+				// If it doesn't exist, `asc.callFunction()` will handle generating an error message.
+				if (o.scriptCall != null) {
+					return o.scriptCall(f, args);
+				}
+
 				errorEx(EInvalidScriptedFnAccess(f));
 			}
 			else
@@ -624,34 +628,27 @@ class PolymodInterpEx extends Interp
 		}
 		else if (Std.isOfType(o, HScriptedClass))
 		{
-			try
-			{
-				var result = Reflect.getProperty(o, f);
-				// I guess there's no way to distinguish between properties that don't exist,
-				// and properties that are equal to null?
-				if (result == null)
-				{
-					// To save a bit of performance, we only query for the existence of the property
-					// if the value is reported as null, AND only in debug builds.
+			if (o.scriptGet != null) {
+				return o.scriptGet(f);
+			}
 
-					#if debug
-					if (!Reflect.hasField(o, f))
-					{
-						var propertyList = Type.getInstanceFields(Type.getClass(o));
-						if (propertyList.indexOf(f) == -1)
-						{
-							errorEx(EInvalidScriptedVarGet(f));
-						}
-					}
-					#end
-					return result;
-				}
-				return result;
-			}
-			catch (e:Dynamic)
-			{
-				errorEx(EInvalidScriptedVarGet(f));
-			}
+			errorEx(EInvalidScriptedVarGet(f));
+
+			// var result = Reflect.getProperty(o, f);
+			// To save a bit of performance, we only query for the existence of the property
+			// if the value is reported as null, AND only in debug builds.
+
+			// #if debug
+			// if (!Reflect.hasField(o, f))
+			// {
+			// 	  var propertyList = Type.getInstanceFields(Type.getClass(o));
+			// 	  if (propertyList.indexOf(f) == -1)
+			// 	  {
+			// 	  	errorEx(EInvalidScriptedVarGet(f));
+			// 	  }
+			// }
+			// #end
+			// return result;
 		}
 		return super.get(o, f);
 	}
@@ -687,15 +684,14 @@ class PolymodInterpEx extends Interp
 		}
 		else if (Std.isOfType(o, HScriptedClass))
 		{
-			try
-			{
-				Reflect.setProperty(o, f, v);
+			if (o.scriptSet != null) {
+				return o.scriptSet(f, v);
 			}
-			catch (e)
-			{
-				errorEx(EInvalidScriptedVarSet(f));
-			}
-			return v;
+
+			errorEx(EInvalidScriptedVarSet(f));
+
+			// Reflect.setProperty(o, f, v);
+			// return v;
 		}
 
 		try
@@ -819,14 +815,15 @@ class PolymodInterpEx extends Interp
 			{
 				// Skip and fall through to the next case.
 			}
-		} else if (getClassDecl() != null) {
+		}
+		if (getClassDecl() != null) {
 			// We are retrieving an adjacent field from a static context.
 			var cls = getClassDecl();
 			var name = cls.name;
 			if (cls.pkg != null && cls.pkg.length > 0) {
 				name = cls.pkg.join('.') + "." + name;
 			}
-			return getScriptClassStaticField(name, id);
+			return PolymodScriptClass.getScriptClassStaticField(name, id);
 		}
 
 		errorEx(EUnknownVariable(id));

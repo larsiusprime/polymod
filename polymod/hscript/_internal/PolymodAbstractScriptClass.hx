@@ -63,12 +63,14 @@ abstract PolymodAbstractScriptClass(PolymodScriptClass) from PolymodScriptClass
 					return varValue;
 				}
 				else if (this.superClass == null) {
+					// @:privateAccess this._interp.error(EInvalidAccess(name));
 					throw 'field "$name" does not exist in script class ${this.fullyQualifiedName}"';
 				} else if (Type.getClass(this.superClass) == null) {
 					// Anonymous structure
 					if (Reflect.hasField(this.superClass, name)) {
 						return Reflect.field(this.superClass, name);
 					} else {
+						// @:privateAccess this._interp.error(EInvalidAccess(name));
 						throw 'field "$name" does not exist in script class ${this.fullyQualifiedName}" or super class "${Type.getClassName(Type.getClass(this.superClass))}"';
 					}
 				} else if (Std.isOfType(this.superClass, PolymodScriptClass)) {
@@ -87,8 +89,8 @@ abstract PolymodAbstractScriptClass(PolymodScriptClass) from PolymodScriptClass
 					if (fields.contains(name) || fields.contains('get_$name')) {
 						return Reflect.getProperty(this.superClass, name);
 					} else {
-						throw "field '" + name + "' does not exist in script class '" + this.fullyQualifiedName + "' or super class '"
-							+ Type.getClassName(Type.getClass(this.superClass)) + "'";
+						// @:privateAccess this._interp.error(EInvalidAccess(name));
+						throw "field '" + name + "' does not exist in script class '" + this.fullyQualifiedName + "' or super class '" + Type.getClassName(Type.getClass(this.superClass)) + "'";
 					}
 				}
 		}
@@ -119,11 +121,6 @@ abstract PolymodAbstractScriptClass(PolymodScriptClass) from PolymodScriptClass
 					this._interp.variables.set(name, value);
 					return value;
 				}
-				else if (Reflect.hasField(this.superClass, name))
-				{
-					Reflect.setProperty(this.superClass, name, value);
-					return value;
-				}
 				else if (this.superClass != null && Std.isOfType(this.superClass, PolymodScriptClass))
 				{
 					var superScriptClass:PolymodAbstractScriptClass = cast(this.superClass, PolymodScriptClass);
@@ -135,16 +132,28 @@ abstract PolymodAbstractScriptClass(PolymodScriptClass) from PolymodScriptClass
 					{
 					}
 				}
+				else {
+					// Class object
+					var fields = Type.getInstanceFields(Type.getClass(this.superClass));
+					if (fields.contains(name) || fields.contains('get_$name')) {
+						Reflect.setProperty(this.superClass, name, value);
+						return value;
+					} else {
+						@:privateAccess this._interp.error(EInvalidAccess(name));
+						// throw "field '" + name + "' does not exist in script class '" + this.fullyQualifiedName + "' or super class '" + Type.getClassName(Type.getClass(this.superClass)) + "'";
+					}
+				}
 		}
 
 		if (this.superClass == null)
 		{
-			throw "field '" + name + "' does not exist in script class '" + this.fullyQualifiedName + "'";
+			@:privateAccess this._interp.error(EInvalidAccess(name));
+			// throw "field '" + name + "' does not exist in script class '" + this.fullyQualifiedName + "'";
 		}
 		else
 		{
-			throw "field '" + name + "' does not exist in script class '" + this.fullyQualifiedName + "' or super class '"
-				+ Type.getClassName(Type.getClass(this.superClass)) + "'";
+			@:privateAccess this._interp.error(EInvalidAccess(name));
+			// throw "field '" + name + "' does not exist in script class '" + this.fullyQualifiedName + "' or super class '" + Type.getClassName(Type.getClass(this.superClass)) + "'";
 		}
 	}
 }
