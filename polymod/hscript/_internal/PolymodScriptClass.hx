@@ -571,8 +571,9 @@ class PolymodScriptClass
 			if (fn == null)
 			{
 				Polymod.error(SCRIPT_RUNTIME_EXCEPTION,
-					'Error while calling function super.${fnName}(): EInvalidAccess' + '\n' +
-					'InvalidAccess error: Super function "${fnName}" does not exist! Define it or call the correct superclass function.');
+					'Error while calling function ${fnName}(): EInvalidAccess' + '\n' +
+					'InvalidAccess error: Script does not have function "${fnName}"! Define it or call the correct script function or superclass function.');
+				return null;
 			}
 
 			var fixedArgs = (args?.length == 0) ? args : args.map((a) -> {
@@ -613,7 +614,7 @@ class PolymodScriptClass
 	private function get_fullyQualifiedName():String
 	{
 		var name = "";
-		if (_c.pkg.length > 0)
+		if (_c.pkg != null && _c.pkg.length > 0)
 		{
 			name += _c.pkg?.join(".") ?? '' + ".";
 		}
