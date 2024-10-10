@@ -652,7 +652,7 @@ class Polymod
 	{
 		#if hscript
 		@:privateAccess
-		polymod.hscript._internal.PolymodInterpEx._scriptClassDescriptors.clear();
+		polymod.hscript._internal.PolymodScriptClass.clearScriptedClasses();
 		polymod.hscript.HScriptable.ScriptRunner.clearScripts();
 		#else
 		Polymod.warning(SCRIPT_HSCRIPT_NOT_INSTALLED, "Cannot register script classes, HScript is not available.");
@@ -1269,7 +1269,8 @@ enum abstract PolymodErrorCode(String) from String to String
 	/**
 	 * You attempted to register a new scripted class with a name that is already in use.
 	 * - Rename the scripted class to one that is unique and will not conflict with other scripted classes.
-	 * - If you need to clear the class descriptor, call `PolymodScriptClass.clearClasses()`.
+	 * - You can also use a package name to avoid conflicts, although you may have to refer to the class by its full name in some places.
+	 * - If you need to clear all existing class descriptors, call `Polymod.clearScripts()`.
 	 */
 	var SCRIPT_CLASS_ALREADY_REGISTERED:String = 'script_class_already_registered';
 

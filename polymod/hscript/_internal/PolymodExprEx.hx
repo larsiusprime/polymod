@@ -51,6 +51,7 @@ EBlacklistedModule(m:String);
 EInvalidScriptedFnAccess(f:String);
 EInvalidScriptedVarGet(v:String);
 EInvalidScriptedVarSet(v:String);
+EInvalidInStaticContext(v:String);
 EClassSuperNotCalled;
 EClassUnresolvedSuperclass(c:String, r:String); // superclass and reason
 EScriptThrow(v:Dynamic); // Script called "throw"

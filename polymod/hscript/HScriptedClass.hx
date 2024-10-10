@@ -12,21 +12,70 @@ interface HScriptedClass
 	// and those classes rely on the scripted class functions having already been defined).
 	//
 	// The alternatives are using expensive reflection or adding a verbose warning, and I chose the latter.
+
+	//
+	// STATIC METHODS
+	//
+
 	/**
-	 * Call a custom function on a scripted class, by the given name, with the given arguments.
+	 * Initialize an instance of this scripted class.
+	 * 
+	 * @param clsName The full classpath of the scripted class to instantiate.
+	 * @param constArgs The arguments to pass to the constructor.
+	 * @return The instance of the scripted class.
+	 */
+	// public static function init(clsName:String, constArgs:Array<Dynamic>):ThisType;
+
+	/**
+	 * Call a custom static function on a scripted class, by the given name, with the given arguments.
+	 * 
+	 * @param clsName The full classpath of the scripted class to invoke on.
+	 * @param funcName The name of the function to call.
+	 * @param funcArgs The arguments to pass to the function.
+	 * @return The result of the function call.
+	 */
+	// public static function scriptStaticCall(clsName:String, funcName:String, funcArgs:Array<Dynamic>):Dynamic;
+
+	/**
+	 * Retrieves a custom static variable on a scripted class, by the given name.
+	 * 
+	 * @param clsName The full classpath of the scripted class to invoke on.
+	 * @param fieldName The name of the variable to retrieve.
+	 * @return The value of the variable.
+	 */
+	// public static function scriptStaticGet(clsName:String, fieldName:String):Dynamic;
+
+	/**
+	 * Sets the value of a custom static variable on a scripted class, by the given name.
+	 * 
+	 * @param clsName The full classpath of the scripted class to invoke on.
+	 * @param fieldName The name of the variable to set.
+	 * @param value The value to set.
+	 * @return The newly set value.
+	 */
+	// public static function scriptStaticSet(clsName:String, fieldName:String, value:Dynamic):Dynamic;
+
+	//
+	// INSTANCE METHODS
+	//
+
+	/**
+	 * Call a custom instance function on a scripted class, by the given name, with the given arguments.
 	 * 
 	 * @param funcName The name of the function to call.
 	 * @param funcArgs The arguments to pass to the function.
 	 * @return The result of the function call.
 	 */
 	// public function scriptCall(funcName:String, funcArgs:Array<Dynamic>):Dynamic;
+
 	/**
-	 * Returns the value of a custom field of the scripted class, by the given name.
-	 	 * 
-	 	 * @param fieldName The name of the field to return.
-	 	 * @return The value of the field, if any.
+	 * Returns the value of a custom instancefield of the scripted class, by the given name.
+	 * 
+	 * @param fieldName The name of the field to return.
+	 * @return The value of the field, if any.
 	 */
 	// public function scriptGet(fieldName:String):Dynamic;
+
 	/**
 	 * Sets the value of a custom field of the scripted class, by the given name.
 	 * 

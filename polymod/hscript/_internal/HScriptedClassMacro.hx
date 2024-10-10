@@ -184,20 +184,23 @@ class HScriptedClassMacro
 				ret: Context.toComplexType(Context.getType(clsTypeName)),
 				expr: macro
 				{
-					polymod.hscript._internal.PolymodScriptClass.scriptClassOverrides.set($v{superClsTypeName}, Type.resolveClass($v{clsTypeName}));
+					var clsRef = polymod.hscript._internal.PolymodClassDeclEx.PolymodStaticClassReference.tryBuild(clsName);
 
-					var asc:polymod.hscript._internal.PolymodAbstractScriptClass = polymod.hscript._internal.PolymodScriptClass.createScriptClassInstance(clsName,
-						$a{constArgs});
-					if (asc == null)
+					if (clsRef == null)
 					{
 						polymod.Polymod.error(SCRIPT_RUNTIME_EXCEPTION, 'Could not construct instance of scripted class (${clsName} extends ' + $v{clsTypeName} + ')');
 						return null;
 					}
-					var scriptedObj = asc.superClass;
 
-					Reflect.setField(scriptedObj, '_asc', asc);
+					var result = clsRef.instantiate([$a{constArgs}]);
 
-					return scriptedObj;
+					if (result == null)
+					{
+						polymod.Polymod.error(SCRIPT_RUNTIME_EXCEPTION, 'Could not construct instance of scripted class (${clsName} extends ' + $v{clsTypeName} + ')');
+						return null;
+					}
+
+					return result;
 				},
 			}),
 		};
@@ -300,12 +303,80 @@ class HScriptedClassMacro
 			}),
 		};
 
+		var function_scriptStaticCall:Field = {
+			name: 'scriptStaticCall',
+			doc: "Call a custom static function on a scripted class, by the given name, with the given arguments.",
+			access: [APublic, AStatic],
+			meta: null,
+			pos: cls.pos,
+			kind: FFun({
+				args: [
+					{name: 'clsName', type: Context.toComplexType(Context.getType('String'))},
+					{name: 'funcName', type: Context.toComplexType(Context.getType('String'))},
+				],
+				params: null,
+				ret: Context.toComplexType(Context.getType('Dynamic')),
+				expr: macro
+				{
+					return polymod.hscript._internal.PolymodScriptClass.callScriptClassStaticFunction(clsName, funcName);
+				}
+			})
+		};
+
+		var function_scriptStaticGet:Field = {
+			name: 'scriptStaticGet',
+			doc: "Retrieves a custom static variable on a scripted class, by the given name.",
+			access: [APublic, AStatic],
+			meta: null,
+			pos: cls.pos,
+			kind: FFun({
+				args: [
+					{name: 'clsName', type: Context.toComplexType(Context.getType('String'))},
+					{name: 'fieldName', type: Context.toComplexType(Context.getType('String'))},
+				],
+				params: null,
+				ret: Context.toComplexType(Context.getType('Dynamic')),
+				expr: macro
+				{
+					return polymod.hscript._internal.PolymodScriptClass.getScriptClassStaticField(clsName, fieldName);
+				}
+			})
+		};
+
+		var function_scriptStaticSet:Field = {
+			name: 'scriptStaticSet',
+			doc: "Sets the value of a custom static variable on a scripted class, by the given name.",
+			access: [APublic, AStatic],
+			meta: null,
+			pos: cls.pos,
+			kind: FFun({
+				args: [
+					{name: 'clsName', type: Context.toComplexType(Context.getType('String'))},
+					{name: 'fieldName', type: Context.toComplexType(Context.getType('String'))},
+					{
+						name: 'fieldValue',
+						type: Context.toComplexType(Context.getType('Dynamic')),
+						value: macro null,
+					},
+				],
+				params: null,
+				ret: Context.toComplexType(Context.getType('Dynamic')),
+				expr: macro
+				{
+					return polymod.hscript._internal.PolymodScriptClass.setScriptClassStaticField(clsName, fieldName, fieldValue);
+				}
+			})
+		};
+
 		return [
 			var__asc,
 			function_listScriptClasses,
 			function_scriptCall,
 			function_scriptGet,
-			function_scriptSet
+			function_scriptSet,
+			function_scriptStaticCall,
+			function_scriptStaticGet,
+			function_scriptStaticSet
 		];
 	}
 

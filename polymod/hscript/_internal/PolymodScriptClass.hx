@@ -28,12 +28,6 @@ class PolymodScriptClass
 	private static final scriptInterp = new PolymodInterpEx(null, null);
 
 	/**
-	 * Define a list of script classes to override the default behavior of Polymod.
-	 * For example, script classes should import `ScriptedSprite` instead of `Sprite`.
-	 */
-	public static final scriptClassOverrides:Map<String, Class<Dynamic>> = new Map<String, Class<Dynamic>>();
-
-	/**
 	 * Provide a class name along with a corresponding class to override imports.
 	 * You can set the value to `null` to prevent the class from being imported.
 	 */
@@ -53,6 +47,31 @@ class PolymodScriptClass
 	static function registerScriptClassByString(body:String, path:String = null):Void
 	{
 		scriptInterp.addModule(body, path == null ? 'hscriptClass' : 'hscriptClass($path)');
+	}
+
+	/**
+	 * STATIC PROPERTIES
+	 */
+
+	/**
+	 * Define a list of script classes to override the default behavior of Polymod.
+	 * For example, script classes should import `ScriptedSprite` instead of `Sprite`.
+	 */
+	public static var scriptClassOverrides(get, never):Map<String, Class<Dynamic>>;
+	static var _scriptClassOverrides:Map<String, Class<Dynamic>> = null;
+
+	static function get_scriptClassOverrides():Map<String, Class<Dynamic>> {
+		if (_scriptClassOverrides == null) {
+			_scriptClassOverrides = new Map<String, Class<Dynamic>>();
+
+			var baseScriptClassOverrides:Map<String, Class<Dynamic>> = PolymodScriptClassMacro.listHScriptedClasses();
+
+			for (key => value in baseScriptClassOverrides) {
+				_scriptClassOverrides.set(key, value);
+			}
+		}
+
+		return _scriptClassOverrides;
 	}
 
 	/**
@@ -167,6 +186,14 @@ class PolymodScriptClass
 	}
 
 	/**
+	 * Clears all parsed scripted class descriptors.
+	 * You can call `Polymod.registerAllScriptClasses()` to re-register them later.
+	 */
+	public static function clearScriptedClasses():Void {
+		scriptInterp.clearScriptClassDescriptors();
+	}
+
+	/**
 	 * Returns a list of all registered classes which extend the class specified by the given name.
 	 * @return Array<String>
 	 */
@@ -271,9 +298,16 @@ class PolymodScriptClass
 		}
 	}
 
-	public static function createScriptClassInstance(name:String, args:Array<Dynamic> = null):PolymodAbstractScriptClass
-	{
-		return scriptInterp.createScriptClassInstance(name, args);
+	public static function callScriptClassStaticFunction(clsName:String, funcName:String, args:Array<Dynamic> = null):Dynamic {
+		return scriptInterp.callScriptClassStaticFunction(clsName, funcName, args);
+	}
+
+	public static function getScriptClassStaticField(clsName:String, fieldName:String):Dynamic {
+		return scriptInterp.getScriptClassStaticField(clsName, fieldName);
+	}
+
+	public static function setScriptClassStaticField(clsName:String, fieldName:String, fieldValue:Dynamic):Dynamic {
+		return scriptInterp.setScriptClassStaticField(clsName, fieldName, fieldValue);
 	}
 
 	/**
@@ -391,13 +425,13 @@ class PolymodScriptClass
 		}
 	}
 
-	public function reportError(err:hscript.Expr.Error, fnName:String = null)
+	public static function reportError(err:hscript.Expr.Error, className:String = null, fnName:String = null)
 	{
 		var errEx = PolymodExprEx.ErrorExUtil.toErrorEx(err);
 		reportErrorEx(errEx, fnName);
 	}
 
-	public function reportErrorEx(err:PolymodExprEx.ErrorEx, fnName:String = null):Void
+	public static function reportErrorEx(err:PolymodExprEx.ErrorEx, className:String = null, fnName:String = null):Void
 	{
 		var errLine:String = #if hscriptPos '${err.line}' #else "#???" #end;
 
@@ -427,6 +461,10 @@ class PolymodScriptClass
 				Polymod.error(SCRIPT_RUNTIME_EXCEPTION,
 					'Error while executing function ${className}.${fnName}()#${errLine}: ' + '\n' +
 					'Could not call function "${f}" on scripted class. Did you try obj.scriptCall("${f}", [...])?');
+			case EInvalidInStaticContext(v):
+				Polymod.error(SCRIPT_RUNTIME_EXCEPTION,
+					'Error while executing function ${className}.${fnName}()#${errLine}: ' + '\n' +
+					'Cannot access value "${v}" from a static context.');
 			case EInvalidScriptedVarGet(v):
 				Polymod.error(SCRIPT_RUNTIME_EXCEPTION,
 					'Error while executing function ${className}.${fnName}()#${errLine}: ' + '\n' +
@@ -469,7 +507,6 @@ class PolymodScriptClass
 
 		if (fn != null)
 		{
-			var fn = findFunction(fnName);
 			// previousValues is used to restore variables after they are shadowed in the local scope.
 			previousValues.clear();
 			var i = 0;
@@ -501,7 +538,7 @@ class PolymodScriptClass
 			}
 			catch (err:PolymodExprEx.ErrorEx)
 			{
-				reportErrorEx(err, fnName);
+				reportErrorEx(err, fullyQualifiedName, fnName);
 				// A script error occurred while executing the script function.
 				// Purge the function from the cache so it is not called again.
 				purgeFunction(fnName);
@@ -509,7 +546,7 @@ class PolymodScriptClass
 			}
 			catch (err:hscript.Expr.Error)
 			{
-				reportError(err, fnName);
+				reportError(err, fullyQualifiedName, fnName);
 				// A script error occurred while executing the script function.
 				// Purge the function from the cache so it is not called again.
 				purgeFunction(fnName);
@@ -571,14 +608,14 @@ class PolymodScriptClass
 
 	public var superClass:Dynamic = null;
 
-	public var className(get, null):String;
+	public var fullyQualifiedName(get, null):String;
 
-	private function get_className():String
+	private function get_fullyQualifiedName():String
 	{
 		var name = "";
-		if (_c.pkg != null)
+		if (_c.pkg.length > 0)
 		{
-			name += _c.pkg.join(".") + ".";
+			name += _c.pkg?.join(".") ?? '' + ".";
 		}
 		name += _c.name;
 		return name;
@@ -646,12 +683,13 @@ class PolymodScriptClass
 	}
 
 	/**
-	 * Search for a function field with the given name.
+	 * Search for a function field with the given name. Excludes variables and static functions.
 	 * @param name The name of the function to search for.
 	 * @param cacheOnly If false, scan the full list of fields.
 	 *                  If true, ignore uncached fields.
+	 * @param excludeStatic If true, exclude static fields.
 	 */
-	private function findFunction(name:String, cacheOnly:Bool = true):Null<FunctionDecl>
+	private function findFunction(name:String, cacheOnly:Bool = true, excludeStatic:Bool = true):Null<FunctionDecl>
 	{
 		if (_cachedFunctionDecls != null && _cachedFunctionDecls.exists(name))
 		{
@@ -663,6 +701,7 @@ class PolymodScriptClass
 		if (fn == null) return null;
 		switch (fn.kind) {
 			case KFunction(func):
+				if (excludeStatic && func.access.contains(AStatic)) continue;
 				_cachedFunctionDecls.set(name, func);
 				return func;
 			default:
@@ -702,12 +741,13 @@ class PolymodScriptClass
 	}
 
 	/**
-	 * Search for a variable field with the given name.
+	 * Search for a variable field with the given name. Excludes functions and static variables.
 	 * @param name The name of the variable to search for.
 	 * @param cacheOnly If false, scan the full list of fields.
 	 *                  If true, ignore uncached fields.
+	 * @param excludeStatic If true, exclude static fields.
 	 */
-	private function findVar(name:String, cacheOnly:Bool = false):Null<VarDecl>
+	private function findVar(name:String, cacheOnly:Bool = false, excludeStatic:Bool = true):Null<VarDecl>
 	{
 		if (_cachedVarDecls != null && _cachedVarDecls.exists(name))
 		{
@@ -722,6 +762,7 @@ class PolymodScriptClass
 				switch (f.kind)
 				{
 					case KVar(v):
+						if (excludeStatic && v.access.contains(AStatic)) continue;
 						return v;
 					case _:
 				}
