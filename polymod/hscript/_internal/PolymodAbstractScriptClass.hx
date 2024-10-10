@@ -63,14 +63,13 @@ abstract PolymodAbstractScriptClass(PolymodScriptClass) from PolymodScriptClass
 					return varValue;
 				}
 				else if (this.superClass == null) {
-					throw "field '" + name + "' does not exist in script class '" + this.className + "'";
+					throw 'field "$name" does not exist in script class ${this.fullyQualifiedName}"';
 				} else if (Type.getClass(this.superClass) == null) {
 					// Anonymous structure
 					if (Reflect.hasField(this.superClass, name)) {
 						return Reflect.field(this.superClass, name);
 					} else {
-						throw "field '" + name + "' does not exist in script class '" + this.className + "' or super class '"
-							+ Type.getClassName(Type.getClass(this.superClass)) + "'";
+						throw 'field "$name" does not exist in script class ${this.fullyQualifiedName}" or super class "${Type.getClassName(Type.getClass(this.superClass))}"';
 					}
 				} else if (Std.isOfType(this.superClass, PolymodScriptClass)) {
 					// PolymodScriptClass
@@ -88,7 +87,7 @@ abstract PolymodAbstractScriptClass(PolymodScriptClass) from PolymodScriptClass
 					if (fields.contains(name) || fields.contains('get_$name')) {
 						return Reflect.getProperty(this.superClass, name);
 					} else {
-						throw "field '" + name + "' does not exist in script class '" + this.className + "' or super class '"
+						throw "field '" + name + "' does not exist in script class '" + this.fullyQualifiedName + "' or super class '"
 							+ Type.getClassName(Type.getClass(this.superClass)) + "'";
 					}
 				}
@@ -96,11 +95,11 @@ abstract PolymodAbstractScriptClass(PolymodScriptClass) from PolymodScriptClass
 
 		if (this.superClass == null)
 		{
-			throw "field '" + name + "' does not exist in script class '" + this.className + "'";
+			throw "field '" + name + "' does not exist in script class '" + this.fullyQualifiedName + "'";
 		}
 		else
 		{
-			throw "field '" + name + "' does not exist in script class '" + this.className + "' or super class '"
+			throw "field '" + name + "' does not exist in script class '" + this.fullyQualifiedName + "' or super class '"
 				+ Type.getClassName(Type.getClass(this.superClass)) + "'";
 		}
 	}
@@ -140,11 +139,11 @@ abstract PolymodAbstractScriptClass(PolymodScriptClass) from PolymodScriptClass
 
 		if (this.superClass == null)
 		{
-			throw "field '" + name + "' does not exist in script class '" + this.className + "'";
+			throw "field '" + name + "' does not exist in script class '" + this.fullyQualifiedName + "'";
 		}
 		else
 		{
-			throw "field '" + name + "' does not exist in script class '" + this.className + "' or super class '"
+			throw "field '" + name + "' does not exist in script class '" + this.fullyQualifiedName + "' or super class '"
 				+ Type.getClassName(Type.getClass(this.superClass)) + "'";
 		}
 	}
