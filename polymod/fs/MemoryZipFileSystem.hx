@@ -49,7 +49,7 @@ class MemoryZipFileSystem extends MemoryFileSystem
 	 */
 	function printEntry(e:haxe.zip.Entry)
 	{
-		trace('
+		Polymod.debug('
 			datasize: ${e.dataSize},
 			data: ${e.data.length},
 			crc32: ${e.crc32},

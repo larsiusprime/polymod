@@ -602,7 +602,7 @@ class JSONParseFormat implements BaseParseFormat
 
 		var patchData = convertJSONToPatches(appendJson);
 
-		trace('Applying patches: ${patchData}');
+		// trace('Applying patches: ${patchData}');
 
 		var finalJson = JSONPatch.applyPatches(baseJson, patchData);
 
@@ -631,7 +631,7 @@ class JSONParseFormat implements BaseParseFormat
 		var baseJson:JSONData = parse(baseText);
 		var mergeJson:JSONData = parse(mergeText);
 
-		trace('Applying patches: ${mergeJson}');
+		// trace('Applying patches: ${mergeJson}');
 
 		var finalJson = JSONPatch.applyPatches(baseJson, mergeJson);
 

@@ -96,7 +96,7 @@ class SysZipFileSystem extends SysFileSystem
 			if (fileHeader == null)
 			{
 				// Couldn't access file
-				trace('WARNING: Could not access file $innerPath from ZIP ${zipParser.fileName}.');
+				Polymod.debug('Could not access file $innerPath from ZIP ${zipParser.fileName}.');
 				return null;
 			}
 			var fileBytes = fileHeader.readData();
