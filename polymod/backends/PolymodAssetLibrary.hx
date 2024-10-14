@@ -1,7 +1,6 @@
 package polymod.backends;
 
 import haxe.io.Bytes;
-import openfl.display3D.IndexBuffer3D;
 import polymod.backends.IBackend;
 import polymod.backends.PolymodAssets.PolymodAssetType;
 import polymod.format.ParseRules;
