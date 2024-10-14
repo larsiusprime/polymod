@@ -18,8 +18,8 @@ interface IBackend
 	public function getBytes(id:String):Bytes;
 	public function getText(id:String):String;
 	#if lime
-	public function loadBytes(id:String):lime.app.Future<Bytes>;
-	public function loadText(id:String):lime.app.Future<String>;
+	public function loadBytes(id:String):#if !macro lime.app.Future<Bytes> #else Dynamic #end;
+	public function loadText(id:String):#if !macro lime.app.Future<String> #else Dynamic #end;
 	#end
 
 	public function getPath(id:String):String;
