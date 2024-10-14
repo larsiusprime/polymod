@@ -266,10 +266,14 @@ class PolymodInterpEx extends Interp
 		#end
 			// These overrides are used to handle specific cases where problems occur.
 
-			case EVar(n, _, e): // Fix to ensure local variables are committed properly.
-				declared.push({n: n, old: locals.get(n)});
-				var result = (e == null) ? null : expr(e);
-				locals.set(n, {r: result});
+			case EVar(name, type, expression):
+				// Fix to ensure local variables are committed properly.
+				declared.push({n: name, old: locals.get(name)});
+
+				// Evaluate the expression before assigning, applying typing if possible.
+				var result = (expression != null) ? exprWithType(expression, type) : null;
+
+				locals.set(name, {r: result});
 				return null;
 			case EFunction(params, fexpr, name, _): // Fix to ensure callback functions catch thrown errors.
 				var capturedLocals = duplicate(locals);
@@ -398,6 +402,16 @@ class PolymodInterpEx extends Interp
 					}
 				}
 				return newFun;
+			case EArrayDecl(arr):
+				// Initialize an array (or map) from a declaration.
+				var hasElements = arr.length > 0;
+				var hasMapElements = (hasElements && Tools.expr(arr[0]).match(EBinop("=>", _)));
+
+				if( hasMapElements ) {
+					return exprMap(arr);
+				} else {
+					return exprArray(arr);
+				}
 			case ETry(e,n,_,ecatch):
 				var old = declared.length;
 				var oldTry = inTry;
@@ -455,6 +469,136 @@ class PolymodInterpEx extends Interp
 
 		// Default case.
 		return super.expr(e);
+	}
+
+	/**
+	 * Parse an expression, but optionally utilizing additional provided type information.
+	 * @param e The expression to parse.
+	 * @param t The explicit type of the expression, if provided.
+	 * @return The parsed expression.
+	 */
+	public function exprWithType(e:Expr, ?t:CType):Dynamic {
+		if (t == null) {
+			return this.expr(e);
+		}
+
+		#if hscriptPos
+		curExpr = e;
+		switch (e.e)
+		{
+		#else
+		switch (e)
+		{
+		#end
+			case EArrayDecl(arr):
+				// Initialize an array (or map) from a declaration.
+				var hasElements = arr.length > 0;
+				var hasMapElements = (hasElements && Tools.expr(arr[0]).match(EBinop("=>", _)));
+				var hasArrayElements = (hasElements && !hasMapElements);
+
+				switch (t) {
+					case CTPath(path, params):
+						if (path.length > 0) {
+							var last = path[path.length - 1];
+							if (last == "Map") {
+								if (!hasElements) {
+									// Properly handle maps with no keys.
+									return this.makeMapEmpty(params[0]);
+								}
+								else if (hasMapElements) {
+									// Properly handle maps with no keys.
+									return exprMap(arr);
+								} else {
+									#if hscriptPos
+									curExpr = e;
+									#end
+									var error = 'Invalid expression in map initialization (expected key=>value, got ${hscript.Printer.toString(e)})';
+									errorEx(ECustom(error));
+								}
+							} else if (last == "Array") {
+								if (!hasElements) {
+									// Create an empty Array<Dynamic>.
+									return exprArray([]);
+								}
+								if (hasArrayElements) {
+									// Create an array of elements.
+									return exprArray(arr);
+								} else {
+									#if hscriptPos
+									curExpr = e;
+									#end
+									var error = 'Invalid expression in array initialization (expected no key=>value pairs, got ${hscript.Printer.toString(e)})';
+									errorEx(ECustom(error));
+								}
+							} else {
+								// Whatever.
+							}
+						}
+					default:
+						// Whatever.
+				}
+
+			default:
+				// Whatever.
+			}
+
+			// Fallthrough.
+			return this.expr(e);
+		}
+
+	function exprMap(entries:Array<Expr>):Dynamic {
+		if (entries.length == 0) return super.makeMap([],[]);
+
+		var keys = [];
+		var values = [];
+		for( e in entries ) {
+			switch(Tools.expr(e)) {
+				case EBinop("=>", eKey, eValue):
+					// Look for map entries.
+					keys.push(expr(eKey));
+					values.push(expr(eValue));
+				default:
+					// Complain about anything else.
+					// This error message has been modified to provide more information.
+					#if hscriptPos
+					curExpr = e;
+					#end
+					var error = 'Invalid expression in map initialization (expected key=>value, got ${hscript.Printer.toString(e)})';
+					errorEx(ECustom(error));
+			}
+		}
+
+		return super.makeMap(keys, values);
+	}
+
+	function makeMapEmpty(keyType:CType):Dynamic {
+		switch (keyType) {
+			case CTPath(path, params):
+				if (path.length > 0) {
+					var last = path[path.length - 1];
+					switch (last) {
+						case "Int":
+							return new Map<Int, Dynamic>();
+						case "String":
+							return new Map<String, Dynamic>();
+						default:
+							// TODO: Properly handle distinguishing Enum maps from Object maps.
+							return new Map<{}, Dynamic>();
+					}
+				}
+			default:
+				// Whatever.
+				error(ECustom('Invalid key type for empty map initialization (${new hscript.Printer().typeToString(keyType)}).'));
+		}
+		return super.makeMap([], []);
+	}
+
+	function exprArray(entries:Array<Expr>):Dynamic {
+		// Create an Array<Dynamic>
+		var a = new Array();
+		for( e in entries )
+			a.push(expr(e));
+		return a;
 	}
 
 	override function makeIterator(v:Dynamic):Iterator<Dynamic>
