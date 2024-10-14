@@ -74,6 +74,23 @@ class PolymodScriptClass
 		return _scriptClassOverrides;
 	}
 
+	public static var abstractClassImpls(get, never):Map<String, Class<Dynamic>>;
+	static var _abstractClassImpls:Map<String, Class<Dynamic>> = null;
+
+	static function get_abstractClassImpls():Map<String, Class<Dynamic>> {
+		if (_abstractClassImpls == null) {
+			_abstractClassImpls = new Map<String, Class<Dynamic>>();
+
+			var baseAbstractClassImpls:Map<String, Class<Dynamic>> = PolymodScriptClassMacro.listAbstractImpls();
+
+			for (key => value in baseAbstractClassImpls) {
+				_abstractClassImpls.set(key, value);
+			}
+		}
+
+		return _abstractClassImpls;
+	}
+
 	/**
 	 * Register a scripted class by retrieving the script from the given path.
 	 */

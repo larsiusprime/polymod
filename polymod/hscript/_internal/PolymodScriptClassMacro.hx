@@ -29,63 +29,86 @@ class PolymodScriptClassMacro {
 		return macro polymod.hscript._internal.PolymodScriptClassMacro.fetchHScriptedClasses();
 	}
 
+	public static macro function listAbstractImpls():ExprOf<Map<String, Class<Dynamic>>> {
+		if (!onGenerateCallbackRegistered)
+		{
+		  onGenerateCallbackRegistered = true;
+		  haxe.macro.Context.onGenerate(onGenerate);
+		}
+
+		return macro polymod.hscript._internal.PolymodScriptClassMacro.fetchAbstractImpls();
+	}
+
 	#if macro
-  static var onGenerateCallbackRegistered:Bool = false;
+  	static var onGenerateCallbackRegistered:Bool = false;
 
-  static function onGenerate(allTypes:Array<haxe.macro.Type>) {
-    // Reset these, since onGenerate persists across multiple builds.
-	  var hscriptedClassType:ClassType = MacroUtil.getClassType('polymod.hscript.HScriptedClass');
-    var hscriptedClasses:Array<ClassType> = [];
+  	static function onGenerate(allTypes:Array<haxe.macro.Type>) {
+    	// Reset these, since onGenerate persists across multiple builds.
+		var hscriptedClassType:ClassType = MacroUtil.getClassType('polymod.hscript.HScriptedClass');
 
-	  for (type in allTypes) {
-		  switch (type) {
+    	var hscriptedClassEntries:Array<Expr> = [];
+		var abstractImplEntries:Array<Expr> = [];
+
+		for (type in allTypes) {
+		  	switch (type) {
 			  // Class instances
 			  case TInst(t, _params):
 			    var classType:ClassType = t.get();
-					var classPath:String = '${classType.pack.join(".")}.${classType.name}';
+				var classPath:String = '${classType.pack.join(".")}.${classType.name}';
 
 			    if (classType.isInterface) {
     				// Ignore interfaces.
-	    		} else if (MacroUtil.implementsInterface(classType, hscriptedClassType)) {
-				    hscriptedClasses.push(classType);
-						Context.info('${classPath} implements HScriptedClass? YEAH', Context.currentPos());
-				  } else { }
-			  // Other types (things like enums)
+				} else if (MacroUtil.implementsInterface(classType, hscriptedClassType)) {
+					Context.info('${classPath} implements HScriptedClass? YEAH', Context.currentPos());
+				    // TODO: Do we need to parameterize?
+					var superClass:Null<ClassType> = classType.superClass != null ? classType.superClass.t.get() : null;
+
+					if (superClass == null) throw 'No superclass for ' + classPath;
+
+					var superClassPath:String = '${superClass.pack.join(".")}.${superClass.name}';
+					var entryData = [
+						macro $v{superClassPath},
+						// TODO: How do we do reification to get a class?
+						macro $v{classPath}
+					];
+					hscriptedClassEntries.push(macro $a{entryData});
+				} else { }
+			  case TAbstract(t, _params):
+				var abstractPath:String = t.toString();
+				if (abstractPath == 'flixel.util.FlxColor') {
+					var abstractType = t.get();
+					var abstractImpl = abstractType.impl.get();
+					var abstractImplPath = abstractType.impl.toString();
+					Context.info('${abstractImplPath} implements FlxColor', Context.currentPos());
+
+					var entryData = [
+						macro $v{abstractPath},
+						macro $v{abstractImplPath}
+					];
+
+					abstractImplEntries.push(macro $a{entryData});
+
+					// Try to apply RTTI?
+					abstractType.meta.add(':rtti', [], Context.currentPos());
+					abstractImpl.meta.add(':rtti', [], Context.currentPos());
+				}
 			  default:
 			    continue;
-		  }
+		  	}
 		}
 
-    var entries:Array<Expr> = [];
-
-    for (hscriptedClass in hscriptedClasses) {
-      var classPath:String = '${hscriptedClass.pack.join(".")}.${hscriptedClass.name}';
-
-      // TODO: Do we need to parameterize?
-      var superClass:Null<ClassType> = hscriptedClass.superClass != null ? hscriptedClass.superClass.t.get() : null;
-
-      if (superClass == null) throw 'No superclass for ' + classPath;
-
-			var superClassPath:String = '${superClass.pack.join(".")}.${superClass.name}';
-			var entryData = [
-          macro $v{superClassPath},
-					// TODO: How do we do reification to get a class?
-          macro $v{classPath}
-      ];
-      entries.push(macro $a{entryData});
-    }
-
-    var polymodScriptClassClassType:ClassType = MacroUtil.getClassType('polymod.hscript._internal.PolymodScriptClass');
-    polymodScriptClassClassType.meta.add('hscriptedClasses', entries, Context.currentPos());
+    	var polymodScriptClassClassType:ClassType = MacroUtil.getClassType('polymod.hscript._internal.PolymodScriptClassMacro');
+    	polymodScriptClassClassType.meta.add('hscriptedClasses', hscriptedClassEntries, Context.currentPos());
+		polymodScriptClassClassType.meta.add('abstractImpls', abstractImplEntries, Context.currentPos());
 
 		polymodScriptClassClassType.meta.add('hello', [macro $v{'world'}], Context.currentPos());
 	}
 	#end
 
 	public static function fetchHScriptedClasses():Map<String, Class<Dynamic>> {
-		var metaData = Meta.getType(PolymodScriptClass);
+		var metaData = Meta.getType(PolymodScriptClassMacro);
 
-    trace('Got metaData: ' + metaData);
+    // trace('Got metaData: ' + metaData);
 
 		if (metaData.hscriptedClasses != null) {
       trace('Got hscriptedClasses: ' + metaData.hscriptedClasses);
@@ -95,19 +118,72 @@ class PolymodScriptClassMacro {
 			// Each element is formatted as `[superClassPath, classPath]`.
 
 			for (element in metaData.hscriptedClasses) {
-        if (element.length != 2) {
-          throw 'Malformed element in hscriptedClasses: ' + element;
-        }
+        		if (element.length != 2) {
+        	  		throw 'Malformed element in hscriptedClasses: ' + element;
+        		}
 
-        var superClassPath:String = element[0];
-        var classPath:String = element[1];
+        		var superClassPath:String = element[0];
+        		var classPath:String = element[1];
 				var classType:Class<Dynamic> = cast Type.resolveClass(classPath);
-        result.set(superClassPath, classType);
-      }
+        		result.set(superClassPath, classType);
+      		}
 
 			return result;
 		} else {
-			throw 'No hscriptedClasses found in PolymodScriptClass!';
+			throw 'No hscriptedClasses found in PolymodScriptClassMacro!';
 		}
 	}
+
+	public static function fetchAbstractImpls():Map<String, Class<Dynamic>> {
+		var metaData = Meta.getType(PolymodScriptClassMacro);
+
+		if (metaData.abstractImpls != null) {
+			var result:Map<String, Class<Dynamic>> = [];
+
+			// Each element is formatted as `[abstractPath, abstractImplPath]`.
+
+			for (element in metaData.abstractImpls) {
+				if (element.length != 2) {
+					throw 'Malformed element in abstractImpls: ' + element;
+				}
+
+				var abstractPath:String = element[0];
+				var abstractImplPath:String = element[1];
+				// var abstractType:Class<Dynamic> = cast Type.resolveClass(abstractPath);
+				#if js
+				trace('Resolving using JS method');
+				var abstractImplType:Class<Dynamic> = resolveClass(abstractPath);
+
+				if (abstractImplType == null) {
+					throw 'Could not resolve ' + abstractPath;
+				}
+				#else
+				// trace('Resolving using native method');
+				var abstractImplType:Class<Dynamic> = cast Type.resolveClass(abstractImplPath);
+
+				if (abstractImplType == null) {
+					throw 'Could not resolve ' + abstractImplPath;
+				}
+				#end
+
+				result.set(abstractPath, abstractImplType);
+			}
+
+			return result;
+		} else {
+			throw 'No abstractImpls found in PolymodScriptClassMacro!';
+		}
+	}
+
+	#if js
+	static var PACKAGE_NAME_INVALID = ~/[^.a-zA-Z0-9]/;
+
+	// Fucked up workaround, volatile and could break at any moment.
+	static function resolveClass(clsName:String):Class<Dynamic> {
+		// Sanitize just in case someone tries to exploit this.
+		var sanitizedName = PACKAGE_NAME_INVALID.replace(clsName, '');
+		var parsedName = StringTools.replace(sanitizedName, '.', '_');
+		return js.Syntax.code('eval({0})', parsedName);
+	}
+	#end
 }

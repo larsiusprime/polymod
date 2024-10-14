@@ -597,8 +597,7 @@ class PolymodInterpEx extends Interp
 
 	override function get(o:Dynamic, f:String):Dynamic
 	{
-		if (o == null)
-			errorEx(EInvalidAccess(f));
+		if (o == null) errorEx(EInvalidAccess(f));
 		if (Std.isOfType(o, PolymodStaticClassReference)) {
 			var ref:PolymodStaticClassReference = cast(o, PolymodStaticClassReference);
 
@@ -650,7 +649,18 @@ class PolymodInterpEx extends Interp
 			// #end
 			// return result;
 		}
-		return super.get(o, f);
+
+		// Default behavior
+		if (Reflect.hasField(o, f)) {
+			return Reflect.field(o, f);
+		} else {
+			try {
+				return Reflect.getProperty(o, f);
+			} catch (e:Dynamic) {
+				return Reflect.field(o, f);
+			}
+		}
+		// return super.get(o, f);
 	}
 
 	override function set(o:Dynamic, f:String, v:Dynamic):Dynamic
@@ -1119,6 +1129,11 @@ class PolymodInterpEx extends Interp
 						// If so, that means the class is blacklisted.
 
 						importedClass.cls = PolymodScriptClass.importOverrides.get(importedClass.fullPath);
+					} else if (PolymodScriptClass.abstractClassImpls.exists(importedClass.fullPath)) {
+						// We used a macro to map each abstract to its implementation.
+						importedClass.cls = PolymodScriptClass.abstractClassImpls.get(importedClass.fullPath);
+						trace('RESOLVED ABSTRACT CLASS ${importedClass.fullPath} -> ${Type.getClassName(importedClass.cls)}');
+						trace(Type.getClassFields(importedClass.cls));
 					} else {
 						var resultCls:Class<Dynamic> = Type.resolveClass(importedClass.fullPath);
 
