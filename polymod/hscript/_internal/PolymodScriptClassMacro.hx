@@ -59,8 +59,8 @@ class PolymodScriptClassMacro {
 			    if (classType.isInterface) {
     				// Ignore interfaces.
 				} else if (MacroUtil.implementsInterface(classType, hscriptedClassType)) {
-					Context.info('${classPath} implements HScriptedClass? YEAH', Context.currentPos());
-				    // TODO: Do we need to parameterize?
+					// Context.info('${classPath} implements HScriptedClass? YEAH', Context.currentPos());
+				  // TODO: Do we need to parameterize?
 					var superClass:Null<ClassType> = classType.superClass != null ? classType.superClass.t.get() : null;
 
 					if (superClass == null) throw 'No superclass for ' + classPath;
@@ -79,7 +79,7 @@ class PolymodScriptClassMacro {
 					var abstractType = t.get();
 					var abstractImpl = abstractType.impl.get();
 					var abstractImplPath = abstractType.impl.toString();
-					Context.info('${abstractImplPath} implements FlxColor', Context.currentPos());
+					// Context.info('${abstractImplPath} implements FlxColor', Context.currentPos());
 
 					var entryData = [
 						macro $v{abstractPath},
