@@ -74,6 +74,11 @@ class PolymodScriptClass
 		return _scriptClassOverrides;
 	}
 
+	/**
+	 * Define a list of all the abstracts we have available at compile time,
+	 * and map them to internal implementation classes.
+	 * We use this to access the functions of these abstracts.
+	 */
 	public static var abstractClassImpls(get, never):Map<String, Class<Dynamic>>;
 	static var _abstractClassImpls:Map<String, Class<Dynamic>> = null;
 
@@ -317,6 +322,10 @@ class PolymodScriptClass
 
 	public static function callScriptClassStaticFunction(clsName:String, funcName:String, args:Array<Dynamic> = null):Dynamic {
 		return scriptInterp.callScriptClassStaticFunction(clsName, funcName, args);
+	}
+
+	public static function hasScriptClassStaticFunction(clsName:String, funcName:String):Bool {
+		return scriptInterp.hasScriptClassStaticFunction(clsName, funcName);
 	}
 
 	public static function getScriptClassStaticField(clsName:String, fieldName:String):Dynamic {
