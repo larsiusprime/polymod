@@ -1101,6 +1101,34 @@ class PolymodInterpEx extends Interp
 		}
 	}
 
+	public function hasScriptClassStaticFunction(clsName:String, fnName:String, args:Array<Dynamic> = null):Bool {
+		var imports:Map<String, PolymodClassImport> = [];
+
+		var cls:Null<PolymodClassDeclEx> = _scriptClassDescriptors.get(clsName);
+		if (cls != null) {
+			imports = cls.imports;
+
+			// TODO: Optimize with a cache?
+			for (f in cls.staticFields)
+			{
+				if (f.name == fnName)
+				{
+					switch (f.kind)
+					{
+						case KFunction(func):
+							return true;
+						case _:
+					}
+				}
+			}
+		} else {
+			Polymod.error(SCRIPT_CLASS_NOT_REGISTERED, 'Scripted class $clsName has not been defined.');
+			return false;
+		}
+
+		return false;
+	}
+
 	public function getScriptClassStaticField(clsName:String, fieldName:String):Dynamic {
 		var prefixedName = clsName + '#' + fieldName;
 		var fieldDecl = getScriptClassStaticFieldDecl(clsName, fieldName);
