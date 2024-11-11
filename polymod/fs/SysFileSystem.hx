@@ -137,10 +137,11 @@ class SysFileSystem implements IFileSystem
 		for (i in 0...all.length)
 		{
 			var f = all[i];
-			var stri = Util.uIndexOf(f, path + '/');
+			var prefix = Util.withTrailingSlash(path);
+			var stri = Util.uIndexOf(f, prefix);
 			if (stri == 0)
 			{
-				f = Util.uSubstr(f, Util.uLength(path + '/'), Util.uLength(f));
+				f = Util.uSubstr(f, Util.uLength(prefix), Util.uLength(f));
 				all[i] = f;
 			}
 		}
