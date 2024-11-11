@@ -397,7 +397,7 @@ class LimeModLibrary extends LimeAssetLibrary
 	#if html5
 	/**
 	 * Preload images on HTML5 to allow images to be loaded synchronously.
-	 * This doesn't break mods because a new
+	 * This doesn't break mods.
 	 */
 	var imageCache:Map<String, lime.graphics.Image>;
 	#end
@@ -411,7 +411,7 @@ class LimeModLibrary extends LimeAssetLibrary
 		this.fallback = fallback;
 		#if html5
 		imageCache = new Map<String, lime.graphics.Image>();
-		preloadImagesToCache();
+		// preloadImagesToCache();
 		#end
 		super();
 	}
@@ -843,7 +843,7 @@ class LimeModLibrary extends LimeAssetLibrary
 		var fallbackList:Array<String> = hasFallback ? fallback.list(requestedType) : [];
 		var limeType:AssetType = requestedType != null ? cast(requestedType, AssetType) : null;
 
-		var items = [];
+		var items:Array<String> = [];
 
 		var addItem = (path:String) ->
 		{
@@ -865,14 +865,17 @@ class LimeModLibrary extends LimeAssetLibrary
 				var assetId = Util.stripPathPrefix(id, p.localeAssetPrefix);
 				if (id.startsWith(p.assetPrefix))
 					assetId = p.prependAssetsPrefix(assetId);
-				addItem(assetId);
+				var symbol = new IdAndLibrary(assetId, this);
+				addItem(symbol.fullId);
 			}
 			else
 			#end
 			// p.type(id) == requestedType is quicker than exists()!
 			if (limeType == null || p.type.get(id) == polyType)
 			{
-				addItem(p.prependAssetsPrefix(id));
+				var assetId = p.prependAssetsPrefix(id);
+				var symbol = new IdAndLibrary(assetId, this);
+				addItem(symbol.fullId);
 			}
 		}
 
@@ -898,27 +901,31 @@ class LimeModLibrary extends LimeAssetLibrary
 						var assetId = Util.stripPathPrefix(fallbackId, p.localeAssetPrefix);
 						if (fallbackId.startsWith(p.assetPrefix))
 							assetId = p.prependAssetsPrefix(assetId);
-						addItem(assetId);
+						var symbol = new IdAndLibrary(assetId, this);
+						addItem(symbol.fullId);
 					}
 				}
 				else
 				{
 					// Localized FireTongue data file, or asset file in other locale! (example: assets/locales/en-US/data.tsv)
 					var assetId = fallbackId;
+					var symbol = new IdAndLibrary(assetId, this);
 					// The asset in other locales should be added to the list normally.
-					addItem(assetId);
+					addItem(symbol.fullId);
 				}
 			}
 			else
 			{
 				// Unlocalized asset. Handle the original path.
 				var assetId = fallbackId;
-				addItem(assetId);
+				var symbol = new IdAndLibrary(assetId, this);
+				addItem(symbol.fullId);
 			}
 			#else
 			// Unlocalized asset. Handle the original path.
 			var assetId = fallbackId;
-			addItem(assetId);
+			var symbol = new IdAndLibrary(assetId, this);
+			addItem(symbol.fullId);
 			#end
 		}
 
@@ -1169,10 +1176,12 @@ class LimeCoreLibrary extends LimeAssetLibrary {
 	{
 		var redirectId:String = buildRedirectId(id);
 		if (polymodLibrary.fileSystem.exists(redirectId)) {
+			// TODO: What was this line for? This is already the redirect ID.
+			// var filePath = polymodLibrary.file(redirectId);
+
 			// We load the bytes, then load the file, rather than using Image.loadFromFile,
 			// because URLs don't work with MemoryFileSystem.
-			var filePath = polymodLibrary.file(redirectId);
-			var dabytes = polymodLibrary.fileSystem.getFileBytes(filePath);
+			var dabytes = polymodLibrary.fileSystem.getFileBytes(redirectId);
 			var imageFuture = Image.loadFromBytes(dabytes);
 
 			return imageFuture;
@@ -1265,6 +1274,15 @@ private class IdAndLibrary
 	public var nakedId(default, null):String;
 	public var fallbackId(default, null):String;
 
+	public var fullId(get, never):String;
+
+	function get_fullId():String {
+		if (lib == null || lib == 'default' || lib == '') {
+			return modId;
+		}
+		return '${lib}:$nakedId';
+	}
+
 	public inline function new(id:String, ?libs:Map<String, LimeModLibrary>, ?l:LimeModLibrary)
 	{
 		fallbackId = id;
@@ -1274,6 +1292,10 @@ private class IdAndLibrary
 		if (l != null)
 		{
 			library = l;
+			if (lib == '' || lib == null)
+			{
+				lib = library.libraryId ?? 'default';
+			}
 		}
 		else if (libs != null)
 		{
@@ -1286,8 +1308,9 @@ private class IdAndLibrary
 		if (library != null && library.pathPrefix != null && library.pathPrefix != '')
 		{
 			modId = '${library.pathPrefix}/$nakedId';
+		} else {
+			modId = nakedId;
 		}
-		modId = nakedId;
 	}
 }
 #end

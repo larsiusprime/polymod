@@ -129,7 +129,7 @@ class PolymodScriptClass
 							'Error while parsing class ${path}#${errLine}: EClassUnresolvedSuperclass' + '\n' +
 							'Unresolved superclass "${cls}", ${reason}');
 					default:
-						Polymod.error(SCRIPT_PARSE_ERROR, 'Error while executing function ${path}#${errLine}: ' + '\n' + 'An unknown error occurred: ${err}');
+						Polymod.error(SCRIPT_PARSE_ERROR, 'Error while executing script ${path}#${errLine}: ' + '\n' + 'An unknown error occurred: ${err}');
 				}
 			} catch (err:hscript.Expr.Error) {
 				var errLine:String = #if hscriptPos '${err.line}' #else "#???" #end;
@@ -141,10 +141,10 @@ class PolymodScriptClass
 				{
 					case EUnexpected(s):
 						Polymod.error(SCRIPT_PARSE_ERROR,
-							'Error while parsing function ${path}#${errLine}: EUnexpected' + '\n' +
+							'Error while parsing script ${path}#${errLine}: EUnexpected' + '\n' +
 							'Unexpected error: Unexpected token "${s}", is there invalid syntax on this line?');
 					default:
-						Polymod.error(SCRIPT_PARSE_ERROR, 'Error while executing function ${path}#${errLine}: ' + '\n' + 'An unknown error occurred: ${err}');
+						Polymod.error(SCRIPT_PARSE_ERROR, 'Error while executing script ${path}#${errLine}: ' + '\n' + 'An unknown error occurred: ${err}');
 				}
 			}
 		}
@@ -173,18 +173,22 @@ class PolymodScriptClass
 					{
 						case EUnexpected(s):
 							Polymod.error(SCRIPT_PARSE_ERROR,
-								'Error while parsing function ${path}#${errLine}: EUnexpected' + '\n' +
+								'Error while parsing script ${path}#${errLine}: EUnexpected' + '\n' +
 								'Unexpected error: Unexpected token "${s}", is there invalid syntax on this line?');
 						default:
 							Polymod.error(SCRIPT_PARSE_ERROR,
-								'Error while executing function ${path}#${errLine}: ' + '\n' + 'An unknown error occurred: ${err}');
+								'Error while parsing script ${path}#${errLine}: ' + '\n' + 'An unknown error occurred: ${err}');
 					}
 					promise.error(err);
 				}
 			}).onError((err) ->
 				{
-					Polymod.error(SCRIPT_PARSE_ERROR, 'Error while parsing function ${path}: ' + '\n' + 'An unknown error occurred: ${err}');
-					promise.error(err);
+					if (err == "404") {
+						Polymod.error(SCRIPT_PARSE_ERROR, 'Error while loading script "${path}", could not retrieve script contents (404 error)!');
+					} else {
+						Polymod.error(SCRIPT_PARSE_ERROR, 'Error while parsing script ${path}: ' + '\n' + 'An unknown error occurred: ${err}');
+						promise.error(err);
+					}
 				});
 
 			// Await the promise

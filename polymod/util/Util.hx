@@ -91,7 +91,7 @@ class Util
 	public static function mergeText(baseText:String, id:String, theDir:String = '', getModText:String->String->String, parseRules:ParseRules = null):String
 	{
 		var extension = uExtension(id, true);
-		id = stripAssetsPrefix(id);
+		id = stripPrefix(id);
 		var mergeFile = PolymodConfig.mergeFolder + sl() + id;
 		// try the path first
 		var format:BaseParseFormat = parseRules.get(id);
@@ -116,7 +116,7 @@ class Util
 	public static function appendText(baseText:String, id:String, theDir:String, getModText:String->String->String, parseRules:ParseRules = null):String
 	{
 		var extension = uExtension(id, true);
-		id = stripAssetsPrefix(id);
+		id = stripPrefix(id);
 		// try the path first
 		var format:BaseParseFormat = parseRules.get(id);
 		if (format == null)
@@ -306,9 +306,9 @@ class Util
 		return pathSpecial(id, PolymodConfig.appendFolder, theDir);
 	}
 
-	public static inline function stripAssetsPrefix(id:String):String
+	public static inline function stripPrefix(id:String, prefix:String = 'assets/'):String
 	{
-		if (uIndexOf(id, 'assets/') == 0)
+		if (uIndexOf(id, prefix) == 0)
 		{
 			id = uSubstring(id, 7);
 		}
@@ -318,7 +318,7 @@ class Util
 	public static function pathSpecial(id:String, special:String = '', theDir:String = ''):String
 	{
 		#if (sys || nodefs || html5)
-		id = stripAssetsPrefix(id);
+		id = stripPrefix(id);
 		var thePath = uCombine([theDir, sl(), special, sl(), id]);
 		return thePath;
 		#else
@@ -348,6 +348,16 @@ class Util
 		str = uSplitReplace(str, '\\', '/');
 		str = uSplitReplace(str, '//', '/');
 		return str;
+	}
+
+	public static function withTrailingSlash(str:String):String {
+		var result = cleanSlashes(str);
+
+		if (uLastIndexOf(result, '/') != uLength(result) - 1) {
+			result += '/';
+		}
+
+		return result;
 	}
 
 	public static function sl():String
@@ -435,8 +445,8 @@ class Util
 
 	/**
 	 * String concatenation	with UTF-8 compatibility.
-	 * @param a 
-	 * @param b 
+	 * @param a
+	 * @param b
 	 * @return String
 	 */
 	public static function uCat(a:String, b:String):String
