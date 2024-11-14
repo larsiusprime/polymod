@@ -866,7 +866,7 @@ class LimeModLibrary extends LimeAssetLibrary
 				if (id.startsWith(p.assetPrefix))
 					assetId = p.prependAssetsPrefix(assetId);
 				var symbol = new IdAndLibrary(assetId, this);
-				addItem(symbol.fullId);
+				addItem(symbol.modId);
 			}
 			else
 			#end
@@ -875,7 +875,7 @@ class LimeModLibrary extends LimeAssetLibrary
 			{
 				var assetId = p.prependAssetsPrefix(id);
 				var symbol = new IdAndLibrary(assetId, this);
-				addItem(symbol.fullId);
+				addItem(symbol.modId);
 			}
 		}
 
@@ -902,7 +902,7 @@ class LimeModLibrary extends LimeAssetLibrary
 						if (fallbackId.startsWith(p.assetPrefix))
 							assetId = p.prependAssetsPrefix(assetId);
 						var symbol = new IdAndLibrary(assetId, this);
-						addItem(symbol.fullId);
+						addItem(symbol.modId);
 					}
 				}
 				else
@@ -911,7 +911,7 @@ class LimeModLibrary extends LimeAssetLibrary
 					var assetId = fallbackId;
 					var symbol = new IdAndLibrary(assetId, this);
 					// The asset in other locales should be added to the list normally.
-					addItem(symbol.fullId);
+					addItem(symbol.modId);
 				}
 			}
 			else
@@ -919,13 +919,13 @@ class LimeModLibrary extends LimeAssetLibrary
 				// Unlocalized asset. Handle the original path.
 				var assetId = fallbackId;
 				var symbol = new IdAndLibrary(assetId, this);
-				addItem(symbol.fullId);
+				addItem(symbol.modId);
 			}
 			#else
 			// Unlocalized asset. Handle the original path.
 			var assetId = fallbackId;
 			var symbol = new IdAndLibrary(assetId, this);
-			addItem(symbol.fullId);
+			addItem(symbol.modId);
 			#end
 		}
 
@@ -1244,8 +1244,8 @@ class LimeCoreLibrary extends LimeAssetLibrary {
 			} else {
 				polymodLibrary.stripAssetsPrefix(id);
 			}
-			var fullId:String = polymodLibrary.prependAssetsPrefix(basePath);
-			addItem(fullId);
+			var prefixedId:String = polymodLibrary.prependAssetsPrefix(basePath);
+			addItem(prefixedId);
 		}
 
 		return Util.filterUnique(items);
@@ -1305,12 +1305,7 @@ private class IdAndLibrary
 			}
 			library = libs.get(lib);
 		}
-		if (library != null && library.pathPrefix != null && library.pathPrefix != '')
-		{
-			modId = '${library.pathPrefix}/$nakedId';
-		} else {
-			modId = nakedId;
-		}
+		modId = nakedId;
 	}
 }
 #end
