@@ -20,6 +20,7 @@ enum Param
  * @see https://github.com/ianharrigan/hscript-ex
  */
 @:access(hscript.Interp)
+@:allow(polymod.Polymod)
 class PolymodScriptClass
 {
 	/*
@@ -150,50 +151,53 @@ class PolymodScriptClass
 		}
 	}
 
-	static function registerScriptClassByPathAsync(path:String):Bool
+	static function registerScriptClassByPathAsync(path:String):lime.app.Future<Bool>
 	{
-		@:privateAccess {
-			var promise = new lime.app.Promise<Bool>();
+		var promise = new lime.app.Promise<Bool>();
 
-			Polymod.assetLibrary.loadText(path).onComplete((text) ->
+		if (!Polymod.assetLibrary.exists(path)) {
+			Polymod.error(SCRIPT_PARSE_ERROR, 'Error while loading script "${path}", could not retrieve contents of non-existent script!');
+			return null;
+		}
+
+		Polymod.assetLibrary.loadText(path).onComplete((text) ->
+		{
+			try
 			{
-				try
+				Polymod.debug('Fetched script class "$path", parsing...');
+				registerScriptClassByString(text);
+				promise.complete(true);
+			}
+			catch (err:PolymodExprEx.ErrorEx)
+			{
+				var errLine:String = #if hscriptPos '${err.line}' #else "#???" #end;
+				#if hscriptPos
+				switch (err.e)
+				#else
+				switch (err)
+				#end
 				{
-					registerScriptClassByString(text);
-					promise.complete(true);
+					case EUnexpected(s):
+						Polymod.error(SCRIPT_PARSE_ERROR,
+							'Error while parsing script ${path}#${errLine}: EUnexpected' + '\n' +
+							'Unexpected error: Unexpected token "${s}", is there invalid syntax on this line?');
+					default:
+						Polymod.error(SCRIPT_PARSE_ERROR,
+							'Error while parsing script ${path}#${errLine}: ' + '\n' + 'An unknown error occurred: ${err}');
 				}
-				catch (err:PolymodExprEx.ErrorEx)
-				{
-					var errLine:String = #if hscriptPos '${err.line}' #else "#???" #end;
-					#if hscriptPos
-					switch (err.e)
-					#else
-					switch (err)
-					#end
-					{
-						case EUnexpected(s):
-							Polymod.error(SCRIPT_PARSE_ERROR,
-								'Error while parsing script ${path}#${errLine}: EUnexpected' + '\n' +
-								'Unexpected error: Unexpected token "${s}", is there invalid syntax on this line?');
-						default:
-							Polymod.error(SCRIPT_PARSE_ERROR,
-								'Error while parsing script ${path}#${errLine}: ' + '\n' + 'An unknown error occurred: ${err}');
-					}
+				promise.error(err);
+			}
+		}).onError((err) ->
+			{
+				if (err == "404") {
+					Polymod.error(SCRIPT_PARSE_ERROR, 'Error while loading script "${path}", could not retrieve script contents (404 error)!');
+				} else {
+					Polymod.error(SCRIPT_PARSE_ERROR, 'Error while parsing script ${path}: ' + '\n' + 'An unknown error occurred: ${err}');
 					promise.error(err);
 				}
-			}).onError((err) ->
-				{
-					if (err == "404") {
-						Polymod.error(SCRIPT_PARSE_ERROR, 'Error while loading script "${path}", could not retrieve script contents (404 error)!');
-					} else {
-						Polymod.error(SCRIPT_PARSE_ERROR, 'Error while parsing script ${path}: ' + '\n' + 'An unknown error occurred: ${err}');
-						promise.error(err);
-					}
-				});
-
-			// Await the promise
-			return promise.future.result();
-		}
+			});
+		// Await the promise
+		return promise.future;
 	}
 
 	/**

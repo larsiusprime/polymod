@@ -192,6 +192,8 @@ enum Framework
 	UNKNOWN;
 }
 
+
+@:allow(polymod.hscript._internal.PolymodScriptClass)
 class Polymod
 {
 	/**
@@ -668,11 +670,25 @@ class Polymod
 		@:privateAccess {
 			// Go through each script and parse any classes in them.
 			var potentialScripts:Array<String> = Polymod.assetLibrary.list(TEXT);
+			var libraryIds:Array<String> = Polymod.assetLibrary.listLibraries();
+
 			for (textPath in potentialScripts)
 			{
 				if (textPath.endsWith(PolymodConfig.scriptClassExt)) {
-					Polymod.debug('Registering script class "$textPath"');
-					polymod.hscript._internal.PolymodScriptClass.registerScriptClassByPath(textPath);
+					var path = textPath;
+					if (!Polymod.assetLibrary.exists(path)) {
+						trace('Trying libraries: ${libraryIds}');
+						for (libraryId in libraryIds) {
+							if (Polymod.assetLibrary.exists('$libraryId:$textPath')) {
+								trace('Found file in library: $libraryId');
+								path = '$libraryId:$textPath';
+								break;
+							}
+						}
+						if (!Polymod.assetLibrary.exists(path)) throw 'Couldn\'t find file "$textPath"';
+					}
+					Polymod.debug('Registering script class "$path"');
+					polymod.hscript._internal.PolymodScriptClass.registerScriptClassByPath(path);
 				}
 			}
 		}
@@ -685,20 +701,34 @@ class Polymod
 	 * Get a list of all the available scripted classes (`.hxc` files), interpret them asynchronously, and register any classes.
 	 * Called on platforms that don't support synchronous file access.
 	 */
-	public static function registerAllScriptClassesAsync():Void
+	public static function registerAllScriptClassesAsync():Array<lime.app.Future<Bool>>
 	{
 		#if hscript
-		@:privateAccess {
-			// Go through each script and parse any classes in them.
-			var potentialScripts:Array<String> = Polymod.assetLibrary.list(TEXT);
-			for (textPath in potentialScripts)
-			{
-				if (textPath.endsWith(PolymodConfig.scriptClassExt)) {
-					Polymod.debug('Registering script class "$textPath"');
-					polymod.hscript._internal.PolymodScriptClass.registerScriptClassByPathAsync(textPath);
+		// Go through each script and parse any classes in them.
+		var potentialScripts:Array<String> = Polymod.assetLibrary.list(TEXT);
+		var libraryIds:Array<String> = Polymod.assetLibrary.listLibraries();
+
+		var futures:Array<lime.app.Future<Bool>> = [];
+		for (textPath in potentialScripts)
+		{
+			if (textPath.endsWith(PolymodConfig.scriptClassExt)) {
+				var path = textPath;
+				if (!Polymod.assetLibrary.exists(path)) {
+					for (libraryId in libraryIds) {
+						if (Polymod.assetLibrary.exists('$libraryId:$textPath')) {
+							trace('Found file in library: $libraryId');
+							path = '$libraryId:$textPath';
+							break;
+						}
+					}
+					if (!Polymod.assetLibrary.exists(path)) throw 'Couldn\'t find file "$textPath" (tried libraries ${libraryIds})';
 				}
+				Polymod.debug('Fetching script class "$path"');
+				var future = polymod.hscript._internal.PolymodScriptClass.registerScriptClassByPathAsync(path);
+				if (future != null) futures.push(future);
 			}
 		}
+		return futures;
 		#else
 		Polymod.warning(SCRIPT_HSCRIPT_NOT_INSTALLED, "Cannot register script classes, HScript is not available.");
 		#end
