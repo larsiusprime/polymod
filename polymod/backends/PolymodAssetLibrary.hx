@@ -229,6 +229,10 @@ class PolymodAssetLibrary
 		return backend.list(type);
 	}
 
+	public function listLibraries():Array<String> {
+		return backend.listLibraries();
+	}
+
 	public function listModFiles(type:PolymodAssetType = null):Array<String>
 	{
 		var items = [];
@@ -495,6 +499,10 @@ class PolymodAssetLibrary
 
 	@:allow(polymod.backends.LimeCoreLibrary)
 	private function initRedirectPath(libraryId:String, redirectPath:String, pathPrefix:String = '') {
+		if (!typeLibraries.exists(libraryId)) {
+			typeLibraries.set(libraryId, []);
+		}
+
 		if (redirectPath == null || redirectPath == '') return;
 
 		redirectPath = Util.pathJoin(redirectPath, pathPrefix);
@@ -514,10 +522,6 @@ class PolymodAssetLibrary
 		{
 			Polymod.error(MOD_LOAD_FAILED, 'Failed to load core asset redirect $redirectPath : $msg');
 			throw('ModAssetLibrary.initRedirectPath("$redirectPath") failed: $msg');
-		}
-
-		if (!typeLibraries.exists(libraryId)) {
-			typeLibraries.set(libraryId, []);
 		}
 
 		for (f in all) {

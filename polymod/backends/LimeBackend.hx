@@ -309,7 +309,18 @@ class LimeBackend implements IBackend
 			// Add the assets to the list.
 			arr = arr.concat(items);
 		}
+
+		// Filter out duplicates.
+		arr = Util.filterUnique(arr);
+
 		return arr;
+	}
+
+	public function listLibraries():Array<String> {
+		if (modLibraries == null)
+			return [];
+
+		return [for (i in modLibraries.keys()) i];
 	}
 
 	public function clearCache()
@@ -853,7 +864,7 @@ class LimeModLibrary extends LimeAssetLibrary
 			}
 		};
 
-		var libraryItems = p.typeLibraries.get(libraryId) ?? [];
+		var libraryItems = [for (i in p.type.keys()) i];
 		for (id in libraryItems)
 		{
 			if (id.startsWith(PolymodConfig.appendFolder) || id.startsWith(PolymodConfig.mergeFolder))

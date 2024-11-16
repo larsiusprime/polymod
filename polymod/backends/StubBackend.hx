@@ -63,6 +63,11 @@ class StubBackend implements IBackend
 		return [];
 	}
 
+	public function listLibraries():Array<String>
+	{
+		return [];
+	}
+
 	public function stripAssetsPrefix(id:String):String
 	{
 		return id;

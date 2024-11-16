@@ -24,4 +24,5 @@ interface IBackend
 
 	public function getPath(id:String):String;
 	public function list(type:PolymodAssetType = null):Array<String>;
+	public function listLibraries():Array<String>;
 }
