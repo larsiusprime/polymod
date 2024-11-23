@@ -867,6 +867,11 @@ class LimeModLibrary extends LimeAssetLibrary
 		var libraryItems = [for (i in p.type.keys()) i];
 		for (id in libraryItems)
 		{
+			// Skip ignored files.
+			if (p.ignoredFiles.length > 0 && p.ignoredFiles.indexOf(id) != -1)
+				continue;
+
+			// Skip append/merge files.
 			if (id.startsWith(PolymodConfig.appendFolder) || id.startsWith(PolymodConfig.mergeFolder))
 				continue;
 
@@ -1077,7 +1082,8 @@ class LimeCoreLibrary extends LimeAssetLibrary {
 	function buildRedirectId(id:String):String {
 		var baseId = if (pathPrefix == '') {
 			if (libraryId != 'default') {
-				Util.pathJoin(libraryId, polymodLibrary.stripAssetsPrefix(id));
+				// Util.pathJoin(libraryId, polymodLibrary.stripAssetsPrefix(id));
+				polymodLibrary.stripAssetsPrefix(id);
 			} else {
 				polymodLibrary.stripAssetsPrefix(id);
 			}
@@ -1250,11 +1256,12 @@ class LimeCoreLibrary extends LimeAssetLibrary {
 		// that are excluded in the fallback library.
 		var fileList:Array<String> = polymodLibrary.fileSystem.readDirectoryRecursive(Util.pathJoin(redirectPath, pathPrefix));
 		for (id in fileList) {
-			var basePath = if (libraryId != 'default') {
-				Util.pathJoin(libraryId, polymodLibrary.stripAssetsPrefix(id));
-			} else {
-				polymodLibrary.stripAssetsPrefix(id);
-			}
+			var basePath = polymodLibrary.stripAssetsPrefix(id);
+			// if (libraryId != 'default') {
+			// 	Util.pathJoin(libraryId, polymodLibrary.stripAssetsPrefix(id));
+			// } else {
+			// }
+
 			var prefixedId:String = polymodLibrary.prependAssetsPrefix(basePath);
 			addItem(prefixedId);
 		}
