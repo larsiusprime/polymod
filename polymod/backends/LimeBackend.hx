@@ -249,8 +249,7 @@ class LimeBackend implements IBackend
 	public function exists(id:String):Bool
 	{
 		var symbol = new IdAndLibrary(id, modLibraries);
-		var e = symbol.library.exists(symbol.modId, null);
-		return e;
+		return symbol.exists();
 	}
 
 	public function getBytes(id:String):Bytes
@@ -882,6 +881,10 @@ class LimeModLibrary extends LimeAssetLibrary
 				if (id.startsWith(p.assetPrefix))
 					assetId = p.prependAssetsPrefix(assetId);
 				var symbol = new IdAndLibrary(assetId, this);
+				// Skip entries that aren't part of this library.
+				if (!symbol.exists()) {
+					continue;
+				}
 				addItem(symbol.modId);
 			}
 			else
@@ -891,6 +894,10 @@ class LimeModLibrary extends LimeAssetLibrary
 			{
 				var assetId = p.prependAssetsPrefix(id);
 				var symbol = new IdAndLibrary(assetId, this);
+				// Skip entries that aren't part of this library.
+				if (!symbol.exists()) {
+					continue;
+				}
 				addItem(symbol.modId);
 			}
 		}
@@ -1324,6 +1331,10 @@ private class IdAndLibrary
 			library = libs.get(lib);
 		}
 		modId = nakedId;
+	}
+
+	public function exists():Bool {
+		return this.library.exists(this.modId, null);
 	}
 }
 #end
