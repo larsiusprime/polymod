@@ -867,8 +867,7 @@ class LimeModLibrary extends LimeAssetLibrary
 		for (id in libraryItems)
 		{
 			// Skip ignored files.
-			if (p.ignoredFiles.length > 0 && p.ignoredFiles.indexOf(id) != -1)
-				continue;
+			if (p.isAssetExcluded(id)) continue;
 
 			// Skip append/merge files.
 			if (id.startsWith(PolymodConfig.appendFolder) || id.startsWith(PolymodConfig.mergeFolder))
@@ -1270,6 +1269,10 @@ class LimeCoreLibrary extends LimeAssetLibrary {
 			// }
 
 			var prefixedId:String = polymodLibrary.prependAssetsPrefix(basePath);
+
+			// Exclude files in the `ignoredFiles` list.
+			if (polymodLibrary.isAssetExcluded(basePath)) continue;
+
 			addItem(prefixedId);
 		}
 
