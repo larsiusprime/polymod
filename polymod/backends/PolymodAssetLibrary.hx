@@ -364,8 +364,8 @@ class PolymodAssetLibrary
 
 	private function _checkExists(id:String):Bool
 	{
-		if (ignoredFiles.length > 0 && ignoredFiles.indexOf(id) != -1)
-			return false;
+		if (isAssetExcluded(id)) return false;
+
 		id = stripAssetsPrefix(id);
 		for (d in dirs)
 		{
@@ -575,5 +575,22 @@ class PolymodAssetLibrary
 			return id;
 		}
 		return '$assetPrefix$id';
+	}
+
+	public function isAssetExcluded(id:String):Bool {
+		if (ignoredFiles.length == 0) return false;
+
+		var idStripped = stripAssetsPrefix(id);
+		var idPrepend = prependAssetsPrefix(idStripped);
+
+		if (ignoredFiles.contains(idStripped) || ignoredFiles.contains(idPrepend)) return true;
+
+		// TODO: This is MASSIVELY SLOW, any other solutions for this?
+		// for (pattern in ignoredFiles) {
+		// 	var regex = new EReg('^${pattern}$', 'i');
+		// 	if (regex.match(idStripped) || regex.match(idPrepend)) return true;
+		// }
+
+		return false;
 	}
 }
