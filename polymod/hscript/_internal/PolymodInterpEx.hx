@@ -248,7 +248,7 @@ class PolymodInterpEx extends Interp
 				}
 
 				// This CREATES a new function in memory, that we call later.
-				var newFun = function(args:Array<Dynamic>)
+				var newFun:Dynamic = function(args:Array<Dynamic>)
 				{
 					if (((args == null) ? 0 : args.length) != params.length)
 					{
