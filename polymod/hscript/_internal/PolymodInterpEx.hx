@@ -8,6 +8,8 @@ import polymod.hscript._internal.PolymodExprEx;
 import polymod.hscript._internal.PolymodClassDeclEx.PolymodClassImport;
 import polymod.hscript._internal.PolymodClassDeclEx.PolymodStaticClassReference;
 
+using StringTools;
+
 /**
  * Based on code by Ian Harrigan
  * @see https://github.com/ianharrigan/hscript-ex
@@ -791,6 +793,11 @@ class PolymodInterpEx extends Interp
 			// }
 			// #end
 			// return result;
+		}
+
+		var abstractKey:String = Type.getClassName(o) + '.' + f;
+		if (PolymodScriptClass.abstractClassStatics.exists(abstractKey)) {
+			return Reflect.getProperty(PolymodScriptClass.abstractClassStatics[abstractKey], abstractKey.replace('.', '_'));
 		}
 
 		// Default behavior
