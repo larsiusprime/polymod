@@ -1384,8 +1384,9 @@ class PolymodInterpEx extends Interp
 			{
 				case DPackage(path):
 					pkg = path;
-				case DImport(path, _):
+				case DImport(path, _, name):
 					var clsName = path[path.length - 1];
+					if (name != null) clsName = name;
 
 					if (imports.exists(clsName))
 					{
