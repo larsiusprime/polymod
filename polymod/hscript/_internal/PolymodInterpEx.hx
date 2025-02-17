@@ -14,6 +14,7 @@ import polymod.hscript._internal.PolymodClassDeclEx.PolymodStaticClassReference;
  */
 @:access(polymod.hscript._internal.PolymodScriptClass)
 @:access(polymod.hscript._internal.PolymodAbstractScriptClass)
+@:access(polymod.hscript._internal.PolymodEnum)
 class PolymodInterpEx extends Interp
 {
 	var targetCls:Class<Dynamic>;
@@ -191,6 +192,53 @@ class PolymodInterpEx extends Interp
 	public static function findScriptClassDescriptor(name:String)
 	{
 		return _scriptClassDescriptors.get(name);
+	}
+
+	private static var _scriptEnumDescriptors:Map<String, PolymodEnumDeclEx> = new Map<String, PolymodEnumDeclEx>();
+
+	private static function registerScriptEnum(e:PolymodEnumDeclEx)
+	{
+		var name = e.name;
+		if (e.pkg != null)
+		{
+			name = e.pkg.join(".") + "." + name;
+		}
+
+		if (_scriptEnumDescriptors.exists(name)) {
+			Polymod.error(SCRIPT_ENUM_ALREADY_REGISTERED, 'An enum with the fully qualified name "$name" has already been defined. Please change the enum name to ensure a unique name.');
+			return;
+		} else {
+			Polymod.debug('Registering enum $name');
+			_scriptEnumDescriptors.set(name, e);
+		}
+	}
+
+	public function clearScriptEnumDescriptors():Void {
+		// Clear the script enum descriptors.
+		_scriptEnumDescriptors.clear();
+
+		// Also destroy local variable scope.
+		this.resetVariables();
+	}
+
+	public static function validateImports():Void 
+	{
+		for (cls in _scriptClassDescriptors) 
+		{
+			var clsPath = cls.pkg != null ? (cls.pkg.join(".") + ".") : "";
+			clsPath += cls.name;
+
+			for (key => imp in cls.importsToValidate) 
+			{
+				if (_scriptEnumDescriptors.exists(imp.fullPath))
+				{
+					cls.imports.set(key, imp);
+					continue;
+				}
+
+				Polymod.error(SCRIPT_CLASS_MODULE_NOT_FOUND, 'Could not import ${imp.fullPath}', clsPath);
+			}
+		}
 	}
 
 	override function setVar(id:String, v:Dynamic)
@@ -570,6 +618,88 @@ class PolymodInterpEx extends Interp
 				// If there is a try/catch block, the error will be caught.
 				// If there is no try/catch block, the error will be reported.
 				errorEx(EScriptThrow('${expr(e)}'));
+			// Enums
+			case EField(e,f):
+				var name = getIdent(e);
+				name = getClassDecl().imports.get(name)?.fullPath ?? name;
+				if (name != null && _scriptEnumDescriptors.exists(name))
+				{
+					return new PolymodEnum(_scriptEnumDescriptors.get(name), f, []);
+				}
+			case ECall(e,params):
+				var args = new Array();
+				for (p in params)
+					args.push(expr(p));
+
+				switch(Tools.expr(e)) {
+					case EField(e,f):
+						var name = getIdent(e);
+						name = getClassDecl().imports.get(name)?.fullPath ?? name;
+						if (name != null && _scriptEnumDescriptors.exists(name))
+						{
+							return new PolymodEnum(_scriptEnumDescriptors.get(name), f, args);
+						}
+					default:
+				}
+				case ESwitch(e, cases, def):
+					var val:Dynamic = expr(e);
+					
+					if (Std.isOfType(val, PolymodEnum))
+					{
+						var old:Int = declared.length;
+						var match = false;
+						for(c in cases) 
+						{
+							for(v in c.values) 
+							{
+								switch (Tools.expr(v)) 
+								{
+									case ECall(e, params):
+										switch (Tools.expr(e)) 
+										{
+											case EField(_, f):
+												if (val._value == f) 
+												{
+													for (i => p in params) 
+													{
+														switch (Tools.expr(p)) 
+														{
+															case EIdent(n):
+																declared.push({
+																	n: n,
+																	old: {r: locals.get(n)}
+																});
+																locals.set(n, {r: val._args[i]});
+															default:
+														}
+													}
+													match = true;
+													break;
+												}
+											default:
+										}
+									case EField(_, f):
+										if (val._value == f) 
+										{
+											match = true;
+											break;
+										}
+									default:
+								}
+							}
+							if(match) 
+							{
+								val = expr(c.expr);
+								break;
+							}
+						}
+						if (!match)
+						{
+							val = def == null ? null : expr(def);
+						}
+						restore(old);
+						return val;
+					}
 			default:
 				// Do nothing.
 		}
@@ -706,6 +836,21 @@ class PolymodInterpEx extends Interp
 		for( e in entries )
 			a.push(expr(e));
 		return a;
+	}
+
+	function getIdent(e:Expr):Null<String> {
+		#if hscriptPos
+		switch (e.e)
+		{
+		#else
+		switch (e)
+		{
+		#end
+			case EIdent(v):
+				return v;
+			default:
+				return null;
+		}
 	}
 
 	override function makeIterator(v:Dynamic):Iterator<Dynamic>
@@ -1364,6 +1509,7 @@ class PolymodInterpEx extends Interp
 	{
 		var pkg:Array<String> = null;
 		var imports:Map<String, PolymodClassImport> = [];
+		var importsToValidate:Map<String, PolymodClassImport> = [];
 
 		for (importPath in PolymodScriptClass.defaultImports.keys())
 		{
@@ -1415,6 +1561,8 @@ class PolymodInterpEx extends Interp
 						importedClass.cls = PolymodScriptClass.abstractClassImpls.get(importedClass.fullPath);
 						trace('RESOLVED ABSTRACT CLASS ${importedClass.fullPath} -> ${Type.getClassName(importedClass.cls)}');
 						trace(Type.getClassFields(importedClass.cls));
+					} else if (_scriptEnumDescriptors.exists(importedClass.fullPath)) {
+						// do nothing
 					} else {
 						var resultCls:Class<Dynamic> = Type.resolveClass(importedClass.fullPath);
 
@@ -1425,7 +1573,9 @@ class PolymodInterpEx extends Interp
 
 						// If the class is still not found, skip this import entirely.
 						if (resultCls == null && resultEnm == null) {
-							Polymod.error(SCRIPT_CLASS_MODULE_NOT_FOUND, 'Could not import class ${importedClass.fullPath}', origin);
+							//Polymod.error(SCRIPT_CLASS_MODULE_NOT_FOUND, 'Could not import class ${importedClass.fullPath}', origin);
+							// this could be a scripted class or enum that hasn't been registered yet
+							importsToValidate.set(importedClass.name, importedClass);
 							continue;
 						} else if (resultCls != null) {
 							importedClass.cls = resultCls;
@@ -1482,6 +1632,7 @@ class PolymodInterpEx extends Interp
 
 					var classDecl:PolymodClassDeclEx = {
 						imports: imports,
+						importsToValidate: importsToValidate,
 						pkg: pkg,
 						name: c.name,
 						params: c.params,
@@ -1494,6 +1645,25 @@ class PolymodInterpEx extends Interp
 						staticFields: staticFields,
 					};
 					registerScriptClass(classDecl);
+				case DEnum(e):
+					if (pkg != null) 
+					{
+						imports.set(e.name, {
+							name: e.name,
+							pkg: pkg,
+							fullPath: pkg.join(".") + "." + e.name,
+							cls: null,
+							enm: null,
+						});
+					}
+
+					var enumDecl:PolymodEnumDeclEx = {
+						pkg: pkg,
+						name: e.name,
+						fields: e.fields,
+					};
+
+					registerScriptEnum(enumDecl);
 				case DTypedef(_):
 			}
 		}
