@@ -186,6 +186,25 @@ class PolymodInterpEx extends Interp
 						return v;
 					}
 				}
+
+				@:privateAccess
+				{
+					if (_proxy != null)
+					{
+						var decl = _proxy.findVar(id);
+						var v = expr(e2);
+						switch (decl?.set)
+						{
+							case "set":
+								var out = _proxy.callFunction('set_$id', [v]);
+								return (out == null) ? v : out;
+
+							case "never":
+								errorEx(EInvalidAccess(id));
+								return null;
+						}
+					}
+				}
 			case EField(e0, id):
 				// Make sure setting superclass fields works when using this.
 				// Also ensures property functions are accounted for.
@@ -213,6 +232,82 @@ class PolymodInterpEx extends Interp
 		return super.assign(e1, e2);
 	}
 
+	override function increment(e:Expr, prefix:Bool, delta:Int)
+	{
+		switch (Tools.expr(e))
+		{
+			case EIdent(id):
+				@:privateAccess
+				{
+					if (_proxy != null)
+					{
+						var decl = _proxy.findVar(id);
+						if (decl != null)
+						{
+							var v = switch (decl.get)
+							{
+								case "get": _proxy.callFunction('get_$id');
+								default: expr(decl.expr);
+							}
+
+							if (prefix)
+								v += delta;
+
+							switch(decl.set)
+							{
+								case "set":
+									_proxy.callFunction('set_$id', [prefix ? v : (v += delta)]);
+									return prefix ? v : (v += delta);
+								case "never":
+									errorEx(EInvalidAccess(id));
+									return prefix ? v : (v += delta);
+							}
+						}
+					}
+				}
+			default:
+		}
+
+		return super.increment(e, prefix, delta);
+	}
+
+	override function evalAssignOp(op:String, fop:Dynamic->Dynamic->Dynamic, e1:Expr, e2:Expr)
+	{
+		switch (Tools.expr(e1))
+		{
+			case EIdent(id):
+				@:privateAccess
+				{
+					if (_proxy != null)
+					{
+						var decl = _proxy.findVar(id);
+						if (decl != null)
+						{
+							var value = switch (decl.get)
+							{
+								case "get": _proxy.callFunction('get_$id');
+								default: expr(e1);
+							}
+
+							var v = fop(value,expr(e2));
+
+							switch(decl.set)
+							{
+								case "set":
+									_proxy.callFunction('set_$id', [v]);
+									return v;
+								case "never":
+									errorEx(EInvalidAccess(id));
+									return v;
+							}
+						}
+					}
+				}
+			default:
+		}
+		return super.evalAssignOp(op, fop, e1, e2);
+	}
+
 	public override function expr(e:Expr):Dynamic
 	{
 		// Override to provide some fixes, falling back to super.expr() when not needed.
@@ -225,6 +320,20 @@ class PolymodInterpEx extends Interp
 		{
 		#end
 			// These overrides are used to handle specific cases where problems occur.
+
+			case EIdent(id):
+				@:privateAccess
+				{
+					if (_proxy != null)
+					{
+						var decl = _proxy.findVar(id);
+						switch (decl?.get)
+						{
+							case "get":
+								return _proxy.callFunction('get_$id');
+						}
+					}
+				}
 
 			case EVar(n, _, e): // Fix to ensure local variables are committed properly.
 				declared.push({n: n, old: locals.get(n)});
