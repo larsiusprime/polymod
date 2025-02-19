@@ -47,6 +47,15 @@ abstract PolymodAbstractScriptClass(PolymodScriptClass) from PolymodScriptClass
 				{
 					var v = this.findVar(name);
 
+					switch (v.get) {
+						case "get":
+							return this.callFunction('get_$name');
+
+						case "null":
+							throw "Invalid access to field " + name;
+							return null;
+					}
+
 					var varValue:Dynamic = null;
 					if (this._interp.variables.exists(name) == false)
 					{
@@ -118,6 +127,17 @@ abstract PolymodAbstractScriptClass(PolymodScriptClass) from PolymodScriptClass
 			case _:
 				if (this.findVar(name) != null)
 				{
+					var decl = this.findVar(name);
+					switch (decl.set) {
+						case "set":
+							this.callFunction('set_$name', [value]);
+							return value;
+
+						case "never" | "null":
+							throw "Invalid access to field " + name;
+							return value;
+					}
+
 					this._interp.variables.set(name, value);
 					return value;
 				}
