@@ -225,6 +225,25 @@ class PolymodInterpEx extends Interp
 						return v;
 					}
 				}
+
+				@:privateAccess
+				{
+					if (_proxy != null)
+					{
+						var decl = _proxy.findVar(id);
+						var v = expr(e2);
+						switch (decl?.set)
+						{
+							case "set":
+								var out = _proxy.callFunction('set_$id', [v]);
+								return (out == null) ? v : out;
+
+							case "never":
+								errorEx(EInvalidAccess(id));
+								return null;
+						}
+					}
+				}
 			case EField(e0, id):
 				// Make sure setting superclass fields works when using this.
 				// Also ensures property functions are accounted for.
@@ -252,6 +271,82 @@ class PolymodInterpEx extends Interp
 		return super.assign(e1, e2);
 	}
 
+	override function increment(e:Expr, prefix:Bool, delta:Int)
+	{
+		switch (Tools.expr(e))
+		{
+			case EIdent(id):
+				@:privateAccess
+				{
+					if (_proxy != null)
+					{
+						var decl = _proxy.findVar(id);
+						if (decl != null)
+						{
+							var v = switch (decl.get)
+							{
+								case "get": _proxy.callFunction('get_$id');
+								default: expr(decl.expr);
+							}
+
+							if (prefix)
+								v += delta;
+
+							switch(decl.set)
+							{
+								case "set":
+									_proxy.callFunction('set_$id', [prefix ? v : (v += delta)]);
+									return prefix ? v : (v += delta);
+								case "never":
+									errorEx(EInvalidAccess(id));
+									return prefix ? v : (v += delta);
+							}
+						}
+					}
+				}
+			default:
+		}
+
+		return super.increment(e, prefix, delta);
+	}
+
+	override function evalAssignOp(op:String, fop:Dynamic->Dynamic->Dynamic, e1:Expr, e2:Expr)
+	{
+		switch (Tools.expr(e1))
+		{
+			case EIdent(id):
+				@:privateAccess
+				{
+					if (_proxy != null)
+					{
+						var decl = _proxy.findVar(id);
+						if (decl != null)
+						{
+							var value = switch (decl.get)
+							{
+								case "get": _proxy.callFunction('get_$id');
+								default: expr(e1);
+							}
+
+							var v = fop(value,expr(e2));
+
+							switch(decl.set)
+							{
+								case "set":
+									_proxy.callFunction('set_$id', [v]);
+									return v;
+								case "never":
+									errorEx(EInvalidAccess(id));
+									return v;
+							}
+						}
+					}
+				}
+			default:
+		}
+		return super.evalAssignOp(op, fop, e1, e2);
+	}
+
 	public override function expr(e:Expr):Dynamic
 	{
 		// Override to provide some fixes, falling back to super.expr() when not needed.
@@ -273,8 +368,22 @@ class PolymodInterpEx extends Interp
 				var result = (expression != null) ? exprWithType(expression, type) : null;
 
 				locals.set(name, {r: result});
-				return null;
-			case EFunction(params, fexpr, name, _): // Fix to ensure callback functions catch thrown errors.
+			case EIdent(id):
+				// When resolving a variable, check if it is a property with a getter, and call it if necessary.
+				@:privateAccess
+				{
+					if (_proxy != null)
+					{
+						var decl = _proxy.findVar(id);
+						switch (decl?.get)
+						{
+							case "get":
+								return _proxy.callFunction('get_$id');
+						}
+					}
+				}
+			case EFunction(params, fexpr, name, _):
+				// Fix to ensure callback functions catch thrown errors.
 				var capturedLocals = duplicate(locals);
 				var me = this;
 				var hasOpt = false, minParams = 0;
@@ -1154,8 +1263,8 @@ class PolymodInterpEx extends Interp
 			}
 		} else {
 			Polymod.error(SCRIPT_RUNTIME_EXCEPTION,
-				'Error while retrieving static field ${fieldName}(): EInvalidAccess' + '\n' +
-				'InvalidAccess error: Static field "${fieldName}" does not exist! Define it or access the correct variable.');
+				'Error while retrieving static field ${fieldName}: EInvalidAccess' + '\n' +
+				'Static field "${fieldName}" does not exist! Define it, import it, or access the correct variable.');
 			return null;
 		}
 	}
@@ -1218,8 +1327,8 @@ class PolymodInterpEx extends Interp
 			return value;
 		} else {
 			Polymod.error(SCRIPT_RUNTIME_EXCEPTION,
-				'Error while modifying static field ${fieldName}(): EInvalidAccess' + '\n' +
-				'InvalidAccess error: Static field "${fieldName}" does not exist! Define it or access the correct variable.');
+				'Error while modifying static field ${fieldName}: EInvalidAccess' + '\n' +
+				'Static field "${fieldName}" does not exist! Define it or modify the correct variable.');
 			return null;
 		}
 	}
