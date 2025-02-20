@@ -117,6 +117,11 @@ abstract PolymodAbstractScriptClass(PolymodScriptClass) from PolymodScriptClass
 			case _:
 				if (this.findVar(name) != null)
 				{
+					if (this.findVar(name).isfinal && this.findVar(name).expr != null) // The variable already exists and has a set value.
+					{
+						throw "Invalid access to field " + name;
+						return null;
+					}
 					this._interp.variables.set(name, value);
 					return value;
 				}
