@@ -68,6 +68,13 @@ class PolymodInterpEx extends Interp
 		if (clsRef != null) return clsRef.instantiate(args);
 
 		@:privateAccess
+		if (getClassDecl().imports != null && getClassDecl().imports.exists(cl)) 
+		{
+			var clsRef = PolymodStaticClassReference.tryBuild(getClassDecl().imports.get(cl).fullPath);
+			if (clsRef != null) return clsRef.instantiate(args);
+		}
+
+		@:privateAccess
 		if (getClassDecl()?.pkg != null)
 		{
 			@:privateAccess
@@ -232,6 +239,12 @@ class PolymodInterpEx extends Interp
 
 			for (key => imp in cls.importsToValidate) 
 			{
+				if (_scriptClassDescriptors.exists(imp.fullPath))
+				{
+					cls.imports.set(key, imp);
+					continue;
+				}
+
 				if (_scriptEnumDescriptors.exists(imp.fullPath))
 				{
 					cls.imports.set(key, imp);
