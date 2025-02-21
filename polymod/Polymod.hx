@@ -691,6 +691,8 @@ class Polymod
 					polymod.hscript._internal.PolymodScriptClass.registerScriptClassByPath(path);
 				}
 			}
+
+			polymod.hscript._internal.PolymodInterpEx.validateImports();
 		}
 		#else
 		Polymod.warning(SCRIPT_HSCRIPT_NOT_INSTALLED, "Cannot register script classes, HScript is not available.");
@@ -728,6 +730,9 @@ class Polymod
 				if (future != null) futures.push(future);
 			}
 		}
+
+		polymod.hscript._internal.PolymodInterpEx.validateImports();
+
 		return futures;
 		#else
 		Polymod.warning(SCRIPT_HSCRIPT_NOT_INSTALLED, "Cannot register script classes, HScript is not available.");
