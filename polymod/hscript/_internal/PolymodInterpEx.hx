@@ -111,6 +111,21 @@ class PolymodInterpEx extends Interp
 
 		var func = get(o, f);
 
+		@:privateAccess
+		{
+			if (_proxy != null && _proxy._c != null)
+			{
+				for (n => data in _proxy._c.usings)
+				{
+					var fields = Type.getClassFields(data.cls);
+					if (!fields.contains(f)) continue;
+
+					var func = Reflect.getProperty(data.cls, f);
+					return Reflect.callMethod(data.cls, func, [o].concat(args));
+				}
+			}
+		}
+
 		// Workaround for an HTML5-specific issue.
 		// https://github.com/HaxeFoundation/haxe/issues/11298
 		if (func == null && f == "contains") {
@@ -785,6 +800,7 @@ class PolymodInterpEx extends Interp
 	{
 		var pkg:Array<String> = null;
 		var imports:Map<String, PolymodClassImport> = [];
+		var usings:Map<String, PolymodClassImport> = [];
 
 		for (importPath in PolymodScriptClass.defaultImports.keys())
 		{
@@ -799,6 +815,56 @@ class PolymodInterpEx extends Interp
 			});
 		}
 
+		var importClass = function(path:Array<String>, isUsing:Bool = false)
+		{
+			var mapToUse = (isUsing ? usings : imports);
+			var clsName = path[path.length - 1];
+
+			if (mapToUse.exists(clsName))
+			{
+				if (mapToUse.get(clsName) == null) {
+					Polymod.error(SCRIPT_CLASS_MODULE_BLACKLISTED, 'Scripted class ${clsName} is blacklisted and cannot be used in scripts.', origin);
+				} else {
+					Polymod.warning(SCRIPT_CLASS_MODULE_ALREADY_IMPORTED, 'Scripted class ${clsName} has already been imported.', origin);
+				}
+				continue;
+			}
+
+			var importedClass:PolymodClassImport = {
+				name: clsName,
+				pkg: path.slice(0, path.length - 1),
+				fullPath: path.join("."),
+				cls: null,
+				enm: null
+			};
+
+			if (PolymodScriptClass.importOverrides.exists(importedClass.fullPath)) {
+				// importOverrides can exist but be null (if it was set to null).
+				// If so, that means the class is blacklisted.
+
+				importedClass.cls = PolymodScriptClass.importOverrides.get(importedClass.fullPath);
+			} else {
+				var resultCls:Class<Dynamic> = Type.resolveClass(importedClass.fullPath);
+
+				// If the class is not found, try to find it as an enum.
+				var resultEnm:Enum<Dynamic> = null;
+				if (resultCls == null)
+					resultEnm = Type.resolveEnum(importedClass.fullPath);
+
+				// If the class is still not found, skip this import entirely.
+				if (resultCls == null && resultEnm == null) {
+					Polymod.error(SCRIPT_CLASS_MODULE_NOT_FOUND, 'Could not import class ${importedClass.fullPath}', origin);
+					continue;
+				} else if (resultCls != null) {
+					importedClass.cls = resultCls;
+				} else if (resultEnm != null) {
+					importedClass.enm = resultEnm;
+				}
+			}
+
+			mapToUse.set(importedClass.name, importedClass);
+		}
+
 		for (decl in module)
 		{
 			switch (decl)
@@ -806,51 +872,9 @@ class PolymodInterpEx extends Interp
 				case DPackage(path):
 					pkg = path;
 				case DImport(path, _):
-					var clsName = path[path.length - 1];
-
-					if (imports.exists(clsName))
-					{
-						if (imports.get(clsName) == null) {
-							Polymod.error(SCRIPT_CLASS_MODULE_BLACKLISTED, 'Scripted class ${clsName} is blacklisted and cannot be used in scripts.', origin);
-						} else {
-							Polymod.warning(SCRIPT_CLASS_MODULE_ALREADY_IMPORTED, 'Scripted class ${clsName} has already been imported.', origin);
-						}
-						continue;
-					}
-
-					var importedClass:PolymodClassImport = {
-						name: clsName,
-						pkg: path.slice(0, path.length - 1),
-						fullPath: path.join("."),
-						cls: null,
-						enm: null
-					};
-
-					if (PolymodScriptClass.importOverrides.exists(importedClass.fullPath)) {
-						// importOverrides can exist but be null (if it was set to null).
-						// If so, that means the class is blacklisted.
-
-						importedClass.cls = PolymodScriptClass.importOverrides.get(importedClass.fullPath);
-					} else {
-						var resultCls:Class<Dynamic> = Type.resolveClass(importedClass.fullPath);
-
-						// If the class is not found, try to find it as an enum.
-						var resultEnm:Enum<Dynamic> = null;
-						if (resultCls == null)
-							resultEnm = Type.resolveEnum(importedClass.fullPath);
-
-						// If the class is still not found, skip this import entirely.
-						if (resultCls == null && resultEnm == null) {
-							Polymod.error(SCRIPT_CLASS_MODULE_NOT_FOUND, 'Could not import class ${importedClass.fullPath}', origin);
-							continue;
-						} else if (resultCls != null) {
-							importedClass.cls = resultCls;
-						} else if (resultEnm != null) {
-							importedClass.enm = resultEnm;
-						}
-					}
-
-					imports.set(importedClass.name, importedClass);
+					importClass(path, false);
+				case DUsing(path):
+					importClass(path, true);
 				case DClass(c):
 					var extend = c.extend;
 					if (extend != null)
@@ -885,6 +909,7 @@ class PolymodInterpEx extends Interp
 					}
 					var classDecl:PolymodClassDeclEx = {
 						imports: imports,
+						usings: usings,
 						pkg: pkg,
 						name: c.name,
 						params: c.params,
