@@ -1540,6 +1540,56 @@ class PolymodInterpEx extends Interp
 			});
 		}
 
+		var importClass = function(path:Array<String>, isUsing:Bool = false)
+		{
+			var mapToUse = (isUsing ? usings : imports);
+			var clsName = path[path.length - 1];
+
+			if (mapToUse.exists(clsName))
+			{
+				if (mapToUse.get(clsName) == null) {
+					Polymod.error(SCRIPT_CLASS_MODULE_BLACKLISTED, 'Scripted class ${clsName} is blacklisted and cannot be used in scripts.', origin);
+				} else {
+					Polymod.warning(SCRIPT_CLASS_MODULE_ALREADY_IMPORTED, 'Scripted class ${clsName} has already been imported.', origin);
+				}
+				continue;
+			}
+
+			var importedClass:PolymodClassImport = {
+				name: clsName,
+				pkg: path.slice(0, path.length - 1),
+				fullPath: path.join("."),
+				cls: null,
+				enm: null
+			};
+
+			if (PolymodScriptClass.importOverrides.exists(importedClass.fullPath)) {
+				// importOverrides can exist but be null (if it was set to null).
+				// If so, that means the class is blacklisted.
+
+				importedClass.cls = PolymodScriptClass.importOverrides.get(importedClass.fullPath);
+			} else {
+				var resultCls:Class<Dynamic> = Type.resolveClass(importedClass.fullPath);
+
+				// If the class is not found, try to find it as an enum.
+				var resultEnm:Enum<Dynamic> = null;
+				if (resultCls == null)
+					resultEnm = Type.resolveEnum(importedClass.fullPath);
+
+				// If the class is still not found, skip this import entirely.
+				if (resultCls == null && resultEnm == null) {
+					Polymod.error(SCRIPT_CLASS_MODULE_NOT_FOUND, 'Could not import class ${importedClass.fullPath}', origin);
+					continue;
+				} else if (resultCls != null) {
+					importedClass.cls = resultCls;
+				} else if (resultEnm != null) {
+					importedClass.enm = resultEnm;
+				}
+			}
+
+			mapToUse.set(importedClass.name, importedClass);
+		}
+
 		for (decl in module)
 		{
 			switch (decl)
