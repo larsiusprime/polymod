@@ -3,12 +3,17 @@ package polymod.hscript._internal;
 import haxe.macro.Context;
 import haxe.macro.Expr;
 import haxe.macro.Type;
+import haxe.rtti.Meta;
 
 class PolymodFinalMacro
 {
+  private static var _allFinals:Map<String, Array<String>> = null;
+
   public static function getAllFinals():Map<String, Array<String>>
   {
-    return Reflect.callMethod(null, Reflect.field(Type.resolveClass("polymod.hscript._internal.PolymodFinals"), "getAllFinals"), []);
+    if (_allFinals == null)
+      _allFinals = PolymodFinalMacro.fetchAllFinals();
+    return _allFinals;
   }
 
   public static macro function locateAllFinals():Void
@@ -18,7 +23,7 @@ class PolymodFinalMacro
       if (calledBefore)
         return;
 
-      var allFinals:Map<String,Array<String>> = [];
+      var allFinals:Array<Expr> = [];
 
       for (type in types)
       {
@@ -26,45 +31,37 @@ class PolymodFinalMacro
         {
           case TClassDecl(t):
             var classType:ClassType = t.get();
-            var className:String = t.toString();
+            var classPath:String = t.toString();
             if (classType.isInterface) continue;
 
-            allFinals.set(className, []);
+            var finals:Array<String> = [];
             for (field in classType.statics.get())
             {
               if (!field.isFinal) continue;
-              allFinals[className].push(field.name);
+              finals.push(field.name);
             }
 
+            var entryData = [
+              macro $v{classPath},
+              macro $v{finals}
+            ];
+
+            allFinals.push(macro $a{entryData});
           default:
             continue;
         }
       }
 
-      Context.defineModule('polymod.hscript._internal.PolymodFinalMacro', [
-        {
-          pack: ['polymod', 'hscript', '_internal'],
-          name: 'PolymodFinals',
-          kind: TypeDefKind.TDClass(null, [], false, false, false),
-          fields: [
-            {
-              name: 'getAllFinals',
-              access: [Access.APublic, Access.AStatic],
-              kind: FieldType.FFun(
-                {
-                  args: [],
-                  ret: (macro :Map<String, Array<String>>),
-                  expr: macro
-                  {
-                    return $v{allFinals};
-                  }
-                }),
-              pos: Context.currentPos()
-            }
-          ],
-          pos: Context.currentPos()
-        }
-      ]);
+      var finalMacroType:Type = Context.getType('polymod.hscript._internal.PolymodFinalMacro');
+
+      switch (finalMacroType)
+      {
+        case TInst(t, _):
+          var finalMacroClassType:ClassType = t.get();
+          finalMacroClassType.meta.add('finals', allFinals, Context.currentPos());
+        default:
+          throw 'Could not find PolymodFinalMacro type';
+      }
 
       calledBefore = true;
     });
@@ -73,4 +70,31 @@ class PolymodFinalMacro
   #if macro
   static var calledBefore:Bool = false;
   #end
+
+  public static function fetchAllFinals():Map<String, Array<String>>
+  {
+    var metaData = Meta.getType(PolymodFinalMacro);
+
+    if (metaData.finals != null) 
+    {
+      var result:Map<String, Array<String>> = [];
+
+      for (element in metaData.finals)
+      {
+        if (element.length != 2) 
+          throw 'Malformed element in finals: ' + element;
+
+        var classPath:String = element[0];
+        var finals:Array<String> = element[1];
+
+        result.set(classPath, finals);
+      }
+
+      return result;
+    } 
+    else 
+    {
+      throw 'No finals found in PolymodFinalMacro';
+    }
+  }
 }
