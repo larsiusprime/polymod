@@ -312,6 +312,27 @@ class PolymodInterpEx extends Interp
 								}
 							}
 						}
+						else
+						{
+							@:privateAccess
+							{
+								// Check if we are setting a final. If so, throw an error.
+								if (_proxy != null && _proxy._c != null)
+								{
+									for (imp in _proxy._c.imports)
+									{
+										if (imp.name != id0) continue;
+										var finals = PolymodFinalMacro.getAllFinals().get(imp.fullPath);
+										for (fin in finals)
+										{
+											if (fin != id) continue;
+											errorEx(EInvalidAccess(fin));
+											return null;
+										}
+									}
+								}
+							}
+						}
 					default:
 						// Do nothing
 				}
