@@ -1,7 +1,12 @@
 package polymod.util;
 
-import polymod.Polymod.ModDependencies;
+import haxe.Http;
+import haxe.io.Bytes;
+import haxe.zip.Reader;
+import polymod.Polymod.ModDependency;
 import polymod.Polymod.ModMetadata;
+import sys.FileSystem;
+import sys.io.File;
 import thx.semver.VersionRule;
 
 /**
@@ -53,7 +58,7 @@ class DependencyUtil
 		var result:Array<ModMetadata> = [];
 
 		// Compile a map of mod dependencies.
-		var deps:ModDependencies = compileDependencies(modList);
+		var deps:Map<String, ModDependency> = compileDependencies(modList);
 
 		// Check that all mods are in the mod list.
 		var relevantMods:Array<ModMetadata> = [];
@@ -68,7 +73,7 @@ class DependencyUtil
 		// Check that all dependencies are satisfied.
 		for (dep in deps.keys())
 		{
-			var depRule:VersionRule = deps.get(dep);
+			var depRule:VersionRule = deps.get(dep).version;
 
 			// Check that the dependency is in the mod list.
 			var depMod:ModMetadata = null;
@@ -112,7 +117,7 @@ class DependencyUtil
 	static function validateDependencies(modList:Array<ModMetadata>):Bool
 	{
 		// Compile a map of mod dependencies.
-		var deps:ModDependencies = compileDependencies(modList);
+		var deps:Map<String, ModDependency> = compileDependencies(modList);
 
 		// Check that all mods are in the mod list.
 		var relevantMods:Array<ModMetadata> = [];
@@ -127,7 +132,7 @@ class DependencyUtil
 		// Check that all dependencies are satisfied.
 		for (dep in deps.keys())
 		{
-			var depRule:VersionRule = deps.get(dep);
+			var depRule:VersionRule = deps.get(dep).version;
 
 			// Check that the dependency is in the mod list.
 			var depMod:ModMetadata = null;
@@ -307,33 +312,124 @@ class DependencyUtil
 	 * For example, if one mod requires `>1.2.0` of `modA` and another requires `>1.3.0` of `modA`,
 	 * the merged list will be `[modA: '>1.2.0 && >1.3.0']`.
 	 */
-	public static function compileDependencies(modList:Array<ModMetadata>):Map<String, VersionRule>
+	public static function compileDependencies(modList:Array<ModMetadata>):Map<String, ModDependency>
 	{
-		var result:Map<String, VersionRule> = [];
+		var result:Map<String, ModDependency> = [];
 
 		for (mod in modList)
 		{
 			if (result[mod.id] == null)
-				result[mod.id] = VersionUtil.DEFAULT_VERSION_RULE;
+				result[mod.id] = {
+					version: VersionUtil.DEFAULT_VERSION_RULE
+				};
 
 			if (mod.dependencies != null)
 			{
 				for (dependencyId in mod.dependencies.keys())
 				{
-					var dependencyRule:VersionRule = mod.dependencies[dependencyId];
+					if (result[dependencyId] == null)
+						result[dependencyId] = {
+							version: VersionUtil.DEFAULT_VERSION_RULE
+						};
 
-					if (result[dependencyId] != null)
+					result[dependencyId].url = mod.dependencies[dependencyId].url;
+					result[dependencyId].commit = mod.dependencies[dependencyId].commit;
+					var dependencyRule:VersionRule = mod.dependencies[dependencyId].version;
+
+					if (result[dependencyId].version != null)
 					{
-						result[dependencyId] = VersionUtil.combineRulesAnd(result[dependencyId], dependencyRule);
+						result[dependencyId].version = VersionUtil.combineRulesAnd(result[dependencyId].version, dependencyRule);
 					}
 					else
 					{
-						result[dependencyId] = dependencyRule;
+						result[dependencyId].version = dependencyRule;
 					}
 				}
 			}
 		}
 
 		return result;
+	}
+
+	/**
+	 * Given a github url and commit hash, download the dependency.
+	 * This is done using an http request.
+	 * @param outputDir the directory to download the dependency to
+	 * @param url github repository url: https://github.com/OWNER/REPOSITORY
+	 * @param commit commit hash 
+	 */
+	public static function downloadDependency(outputDir:String, url:String, commit:String):Void
+	{
+		var zipBytes:Null<Bytes> = getDependencyAsZip(url, commit);
+
+		if (zipBytes == null || zipBytes.length == 0)
+			return;
+
+		var reader = new Reader(new haxe.io.BytesInput(zipBytes));
+		var entries = reader.read();
+
+		if (!FileSystem.exists(outputDir))
+		{
+			FileSystem.createDirectory(outputDir);
+		}
+
+		for (entry in entries)
+		{
+			var fileName = entry.fileName;
+			if (entry.fileSize > 0)
+			{
+				var content = entry.data;
+				var filePath = outputDir + "/" + fileName;
+
+				var dirs = fileName.split("/");
+				dirs.pop();
+				var currentDir = outputDir;
+				for (dir in dirs)
+				{
+					currentDir += "/" + dir;
+					if (!FileSystem.exists(currentDir))
+					{
+						FileSystem.createDirectory(currentDir);
+					}
+				}
+
+				File.saveBytes(filePath, content);
+				trace("Extracted: " + filePath);
+			}
+		}
+
+		trace("Extraction complete. Files saved in: " + outputDir);
+	}
+
+	/**
+	 * Get the bytes of a dependency as a zip file.
+	 * @param url github repository url: https://github.com/OWNER/REPOSITORY
+	 * @param commit commit hash 
+	 * @return Null<Bytes>
+	 */
+	public static function getDependencyAsZip(url:String, commit:String):Null<Bytes>
+	{
+		// url structure of the code to download
+		// https://codeload.github.com/OWNER/REPOSITORY/zip/COMMIT
+
+		var urlSplit = url.split('/');
+		var repository = urlSplit[urlSplit.length - 1];
+		var owner = urlSplit[urlSplit.length - 2];
+
+		var downloadUrl = 'https://codeload.github.com/${owner}/${repository}/zip/${commit}';
+
+		var zipBytes:Null<Bytes> = null;
+
+		var http = new Http(downloadUrl);
+		http.onBytes = function(bytes:Bytes)
+		{
+			zipBytes = bytes;
+		}
+		http.request(false);
+
+		if (zipBytes == null || zipBytes.length == 0)
+			Polymod.error(DEPENDENCY_NOT_DOWNLOADABLE, 'Failed to download dependency: ${downloadUrl}');
+
+		return zipBytes;
 	}
 }

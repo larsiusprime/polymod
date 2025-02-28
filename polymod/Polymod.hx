@@ -817,12 +817,17 @@ typedef ModContributor =
 };
 
 /**
- * A type representing a mod's dependencies.
- *
- * The map takes the mod's ID as the key and the required version as the value.
- * The version follows the Semantic Versioning format, with `*.*.*` meaning any version.
+ * A type representing a mod's dependency.
+ * The `version` field is the version of the dependency
+ * The `url` field is the Github Repository's url to download the dependency from
+ * The `commit` field is the commit hash of the dependency
  */
-typedef ModDependencies = Map<String, VersionRule>;
+typedef ModDependency = 
+{
+	version:VersionRule,
+	?url:String,
+	?commit:String
+};
 
 /**
  * A type representing data about a mod, as retrieved from its metadata file.
@@ -894,14 +899,14 @@ class ModMetadata
 	 * These other mods must be also be loaded in order for this mod to load,
 	 * and this mod must be loaded after the dependencies.
 	 */
-	public var dependencies:ModDependencies;
+	public var dependencies:Map<String, ModDependency>;
 
 	/**
 	 * A list of dependencies.
 	 * This mod must be loaded after the optional dependencies,
 	 * but those mods do not necessarily need to be loaded.
 	 */
-	public var optionalDependencies:ModDependencies;
+	public var optionalDependencies:Map<String, ModDependency>;
 
 	/**
 	 * A deprecated field representing the mod's author.
@@ -1014,8 +1019,8 @@ class ModMetadata
 		m.license = JsonHelp.str(json, 'license');
 		m.metadata = JsonHelp.mapStr(json, 'metadata');
 
-		m.dependencies = JsonHelp.mapVersionRule(json, 'dependencies');
-		m.optionalDependencies = JsonHelp.mapVersionRule(json, 'optionalDependencies');
+		m.dependencies = JsonHelp.mapModDependency(json, 'dependencies');
+		m.optionalDependencies = JsonHelp.mapModDependency(json, 'optionalDependencies');
 
 		return m;
 	}
@@ -1165,6 +1170,11 @@ enum abstract PolymodErrorCode(String) from String to String
 	 * - This is a warning and can be ignored.
 	 */
 	var DEPENDENCY_CHECK_SKIPPED:String = 'dependency_check_skipped';
+
+	/**
+	 * Polymod attempted to download a mod, but it failed to do so.
+	 */
+	var DEPENDENCY_NOT_DOWNLOADABLE:String = 'dependency_not_downloadable';
 
 	/**
 	 * The given mod's API version does not match the version rule passed to Polymod.init.

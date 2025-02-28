@@ -1,5 +1,6 @@
 package polymod.format;
 
+import polymod.Polymod.ModDependency;
 import thx.semver.VersionRule;
 
 class JsonHelp
@@ -88,6 +89,25 @@ class JsonHelp
 		}
 		return map;
 	}
+
+	public static function mapModDependency(json:Dynamic, field:String):Map<String, ModDependency>
+		{
+			var map:Map<String, ModDependency> = new Map<String, ModDependency>();
+			if (json == null || field == '' || field == null)
+				return map;
+			var val = null;
+			if (Reflect.hasField(json, field))
+				val = Reflect.field(json, field);
+			if (val != null)
+			{
+				for (field in Reflect.fields(val))
+				{
+					var fieldVal = Reflect.field(val, field);
+					map.set(field, fieldVal);
+				}
+			}
+			return map;
+		}
 
 	public static function str(json:Dynamic, field:String, defaultValue:String = ''):String
 	{
