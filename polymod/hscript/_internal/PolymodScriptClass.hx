@@ -567,7 +567,7 @@ class PolymodScriptClass
 		var name = "";
 		if (_c.pkg != null)
 		{
-			name += _c.pkg.join(".");
+			name += _c.pkg.join(".") + ".";
 		}
 		name += _c.name;
 		return name;
