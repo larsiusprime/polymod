@@ -1,5 +1,6 @@
 package polymod.hscript._internal;
 
+#if hscript
 import hscript.Expr;
 import polymod.hscript._internal.PolymodExprEx;
 
@@ -558,3 +559,4 @@ class PolymodScriptClass
 	}
 	#end
 }
+#end

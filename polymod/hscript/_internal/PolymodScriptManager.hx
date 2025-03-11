@@ -1,5 +1,6 @@
 package polymod.hscript._internal;
 
+#if hscript
 import hscript.Expr;
 import polymod.hscript._internal.PolymodClassDeclEx;
 
@@ -102,6 +103,7 @@ class PolymodScriptManager
 		}
 	}
 
+	#if lime
 	public function registerScriptClassByPathAsync(path:String):lime.app.Future<Bool>
 	{
 		var promise = new lime.app.Promise<Bool>();
@@ -154,6 +156,7 @@ class PolymodScriptManager
 		// Await the promise
 		return promise.future;
 	}
+	#end
 
 	public function validateImports():Void
 	{
@@ -548,3 +551,4 @@ class PolymodScriptManager
 	}
 	#end
 }
+#end

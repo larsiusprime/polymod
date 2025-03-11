@@ -1,5 +1,6 @@
 package polymod.hscript._internal;
 
+#if hscript
 import EReg;
 import haxe.macro.Context;
 import haxe.macro.Expr;
@@ -84,10 +85,6 @@ class PolymodScriptMacro
 	static var scriptOverrides:Array<Expr> = [];
 	public static function buildScriptImpls(?filters:Array<String>):Void
 	{
-		#if !hscript
-		return;
-		#end
-
 		// if no filters are given
 		// create a scripted implementation
 		// for every class
@@ -588,3 +585,4 @@ class PolymodScriptMacro
 		return scriptOverrides;
 	}
 }
+#end

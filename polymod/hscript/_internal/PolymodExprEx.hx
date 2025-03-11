@@ -1,5 +1,6 @@
 package polymod.hscript._internal;
 
+#if hscript
 #if hscriptPos
 class ErrorEx
 {
@@ -132,3 +133,4 @@ ECustom(msg:String);
 		throw "Unimplemented error type " + err;
 	}
 }
+#end

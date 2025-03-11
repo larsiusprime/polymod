@@ -1,5 +1,6 @@
 package polymod.hscript._internal;
 
+#if hscript
 import hscript.Expr.ClassDecl;
 import hscript.Expr.FieldDecl;
 import polymod.hscript._internal.PolymodScriptClass;
@@ -30,4 +31,4 @@ typedef PolymodClassImport = {
 	@:optional var cls:Class<Dynamic>;
 	@:optional var enm:Enum<Dynamic>;
 }
-
+#end
