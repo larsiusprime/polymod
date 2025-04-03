@@ -1,5 +1,6 @@
 package polymod.fs;
 
+import polymod.util.InsensitiveMap;
 import polymod.fs.ZipFileSystem.ZipFileSystemParams;
 #if !sys
 class SysZipFileSystem extends polymod.fs.StubFileSystem
@@ -33,7 +34,7 @@ class SysZipFileSystem extends SysFileSystem
 	/**
 	 * Specifies the name of the ZIP that contains each file.
 	 */
-	var filesLocations:Map<String, String>;
+	var filesLocations:InsensitiveMap<String>;
 
 	/**
 	 * Specifies the names of available directories within the ZIP files.
@@ -48,7 +49,7 @@ class SysZipFileSystem extends SysFileSystem
 	public function new(params:ZipFileSystemParams)
 	{
 		super(params);
-		filesLocations = new Map<String, String>();
+		filesLocations = new InsensitiveMap();
 		zipParsers = new Map<String, ZipParser>();
 		fileDirectories = [];
 
@@ -137,7 +138,7 @@ class SysZipFileSystem extends SysFileSystem
 		return super.isDirectory(path);
 	}
 
-	public override function readDirectory(path:String)
+	public override function readDirectory(path:String):Array<String>
 	{
 		// Remove trailing slash
 		if (path.endsWith("/"))
@@ -153,14 +154,14 @@ class SysZipFileSystem extends SysFileSystem
 
 			for (file in filesLocations.keys())
 			{
-				if (Path.directory(file) == path)
+				if (Path.directory(file).toLowerCase() == path.toLowerCase())
 				{
 					result.push(Path.withoutDirectory(file));
 				}
 			}
 			for (dir in fileDirectories)
 			{
-				if (Path.directory(dir) == path)
+				if (Path.directory(dir).toLowerCase() == path.toLowerCase())
 				{
 					result.push(Path.withoutDirectory(dir));
 				}
