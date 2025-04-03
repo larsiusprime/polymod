@@ -3,6 +3,7 @@ package polymod.util.zip;
 #if sys
 import haxe.ds.StringMap;
 import haxe.io.Bytes;
+import polymod.util.InsensitiveMap;
 import sys.io.File;
 import sys.io.FileInput;
 
@@ -34,7 +35,7 @@ class ZipParser
 	 * The central directory records, as parsed from the central directory.
 	 * These contain metadata about each file in the archive.
 	 */
-	public var centralDirectoryRecords:StringMap<CentralDirectoryFileHeader>;
+	public var centralDirectoryRecords:InsensitiveMap<CentralDirectoryFileHeader>;
 
 	public function new(fileName:String)
 	{
@@ -68,7 +69,7 @@ class ZipParser
 	 */
 	function getAllCentralDirectoryHeaders():Void
 	{
-		this.centralDirectoryRecords = new StringMap();
+		this.centralDirectoryRecords = new InsensitiveMap();
 		fileHandle.seek(this.endOfCentralDirectoryRecord.cdrOffset, SeekBegin);
 		for (_ in 0...this.endOfCentralDirectoryRecord.cdrsTotal)
 		{
