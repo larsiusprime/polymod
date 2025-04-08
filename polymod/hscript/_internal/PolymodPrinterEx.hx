@@ -1,5 +1,6 @@
 package polymod.hscript._internal;
 
+#if hscript
 import hscript.Printer;
 
 class PolymodPrinterEx extends Printer
@@ -37,3 +38,4 @@ class PolymodPrinterEx extends Printer
 		#end
 	}
 }
+#end
