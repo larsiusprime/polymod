@@ -250,6 +250,12 @@ class PolymodScriptClass
 				return Reflect.callMethod(this, Reflect.field(this, 'castPath'), args);
 			case 'toString':
 				return Reflect.callMethod(this, Reflect.field(this, 'toString'), args);	
+			case 'scriptGet':
+				return Reflect.callMethod(this, Reflect.field(this, 'scriptGet'), args);	
+			case 'scriptSet':
+				return Reflect.callMethod(this, Reflect.field(this, 'scriptSet'), args);	
+			case 'scriptCall':
+				return Reflect.callMethod(this, Reflect.field(this, 'scriptCall'), args);	
 		}
 
 		var r:Dynamic = null;
@@ -558,5 +564,26 @@ class PolymodScriptClass
 		return callFunction(name, [arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7]);
 	}
 	#end
+
+/**
+ * DEPRECATED FUNCTIONS
+ * These functions are deprecated and should not be used.
+ * They exist for backwards compatibility.
+ */
+
+	public function scriptGet(name:String):Dynamic 
+	{
+		return fieldRead(name);
+	}
+
+	public function scriptSet(name:String, value:Dynamic):Dynamic 
+	{
+		return fieldWrite(name, value);
+	}
+
+	public function scriptCall(name:String, ?args:Array<Dynamic>):Dynamic 
+	{
+		return callFunction(name, args);
+	}
 }
 #end
