@@ -1,6 +1,5 @@
 package polymod.fs;
 
-import polymod.util.InsensitiveMap;
 import polymod.fs.ZipFileSystem.ZipFileSystemParams;
 #if !sys
 class SysZipFileSystem extends polymod.fs.StubFileSystem
@@ -12,10 +11,13 @@ class SysZipFileSystem extends polymod.fs.StubFileSystem
 	}
 }
 #else
+import haxe.Constraints.IMap;
+import haxe.ds.StringMap;
 import haxe.io.Bytes;
 import haxe.io.Path;
 import polymod.Polymod.ModMetadata;
 import polymod.util.Util;
+import polymod.util.InsensitiveMap;
 import polymod.util.zip.ZipParser;
 import sys.io.File;
 import thx.semver.VersionRule;
@@ -34,7 +36,7 @@ class SysZipFileSystem extends SysFileSystem
 	/**
 	 * Specifies the name of the ZIP that contains each file.
 	 */
-	var filesLocations:InsensitiveMap<String>;
+	var filesLocations:IMap<String, String>;
 
 	/**
 	 * Specifies the names of available directories within the ZIP files.
@@ -49,7 +51,7 @@ class SysZipFileSystem extends SysFileSystem
 	public function new(params:ZipFileSystemParams)
 	{
 		super(params);
-		filesLocations = new InsensitiveMap();
+		filesLocations = PolymodConfig.caseInsensitiveZipLoading ? new InsensitiveMap() : new StringMap();
 		zipParsers = new Map<String, ZipParser>();
 		fileDirectories = [];
 
@@ -149,19 +151,26 @@ class SysZipFileSystem extends SysFileSystem
 
 		if (fileDirectories.contains(path))
 		{
+			final insensitive:Bool = PolymodConfig.caseInsensitiveZipLoading;
+			if (insensitive)
+				path = path.toLowerCase();
+
 			// We check if directory ==, because
 			// we don't want to read the directory recursively.
-
 			for (file in filesLocations.keys())
 			{
-				if (Path.directory(file).toLowerCase() == path.toLowerCase())
+				var filePath = Path.directory(file);
+				if (insensitive) filePath = filePath.toLowerCase();
+				if (filePath == path)
 				{
 					result.push(Path.withoutDirectory(file));
 				}
 			}
 			for (dir in fileDirectories)
 			{
-				if (Path.directory(dir).toLowerCase() == path.toLowerCase())
+				var dirPath = Path.directory(dir);
+				if (insensitive) dirPath = dirPath.toLowerCase();
+				if (dirPath == path)
 				{
 					result.push(Path.withoutDirectory(dir));
 				}
