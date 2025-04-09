@@ -11,6 +11,7 @@ typedef PolymodClassDeclEx =
 	//@:optional var imports:Map<String, Array<String>>;
 	@:optional var imports:Map<String, PolymodClassImport>;
 	@:optional var pkg:Array<String>;
+	@:optional var usings:Map<String, PolymodClassImport>;
 }
 
 typedef PolymodClassImport = {
