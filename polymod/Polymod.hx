@@ -8,6 +8,7 @@ import polymod.backends.PolymodAssets;
 import polymod.format.JsonHelp;
 import polymod.format.ParseRules;
 import polymod.fs.PolymodFileSystem;
+import polymod.fs.IFileSystem;
 #if hscript
 import polymod.hscript._internal.PolymodScriptClass;
 #end

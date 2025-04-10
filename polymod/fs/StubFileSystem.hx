@@ -1,6 +1,7 @@
 package polymod.fs;
 
-import polymod.fs.PolymodFileSystem;
+import polymod.fs.IFileSystem;
+import polymod.fs.PolymodFileSystem.PolymodFileSystemParams;
 import thx.semver.VersionRule;
 import polymod.Polymod.ModMetadata;
 
@@ -10,9 +11,9 @@ import polymod.Polymod.ModMetadata;
  *
  * Your program won't crash, but mods WILL NOT LOAD if this is used.
  */
-class StubFileSystem implements PolymodFileSystem.IFileSystem
+class StubFileSystem implements IFileSystem
 {
-	public function new(params:PolymodFileSystem.PolymodFileSystemParams)
+	public function new(params:PolymodFileSystemParams)
 	{
 	}
 

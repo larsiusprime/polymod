@@ -8,6 +8,14 @@ using haxe.macro.ComplexTypeTools;
 using haxe.macro.ExprTools;
 using haxe.macro.TypeTools;
 
+#if (haxe_ver >= 5)
+import haxe.macro.Expr.ComplexType;
+#else
+import haxe.macro.ComplexType;
+#end
+
+import polymod.util.MacroUtil;
+
 class HScriptedClassMacro
 {
 	static var secondaryPassInitialized:Bool = false;
@@ -168,7 +176,11 @@ class HScriptedClassMacro
 		var superClsTypeName:String = superCls.pack.join('.') != '' ? '${superCls.pack.join('.')}.${superCls.name}' : superCls.name;
 
 		var constArgs = [for (arg in superConstArgs) macro $i{arg.name}];
-		var typePath:haxe.macro.TypePath = {
+		#if (haxe_ver >= 5)
+		var typePath:haxe.macro.Expr.TypePath
+		#else
+		var typePath:haxe.macro.TypePath
+		#end = {
 			pack: cls.pack,
 			name: cls.name,
 		};
@@ -614,6 +626,11 @@ class HScriptedClassMacro
 	{
 		var resultType:haxe.macro.Type = targetType;
 
+		if (targetParams.count() == 0) {
+			// Context.info('No target params, returning type: ${targetType.toString()}', Context.currentPos());
+			return targetType;
+		}
+
 		switch (targetType)
 		{
 			case TFun(args, ret):
@@ -637,20 +654,27 @@ class HScriptedClassMacro
 
 			case TAbstract(ty, params):
 				// Abstract type. Sometimes used by types like Null<T>.
-
-				var name = ty.toString();
-				var typ = ty.get();
+				var isNull = ty.toString() == 'Null';
 
 				// Check if the Abstract type is a parameter we recognize and can replace.
 				if (targetParams.exists(ty.toString()))
 				{
 					// If so, replace it with the real type.
 					resultType = targetParams.get(ty.toString());
-					// recursive call in case result is a parameter
+					// recursive call in case result is a parameterized type
 					resultType = deparameterizeType(resultType, targetParams);
 				}
-				else if (params.length != 0)
+				// Check if the Abstract type has no parameters (easy skip!).
+				else if (params.length == 0) {
+					// Context.info('No params, returning type: ${targetType.toString()}', Context.currentPos());
+					return targetType;
+				}
+				else
 				{
+					// Otherwise, we need to deparameterize the type,
+					// by scanning the parameters and deparameterizing each one.
+					//
+
 					var oldParams:Array<haxe.macro.Type> = [];
 					var newParams:Array<haxe.macro.Type> = [];
 					for (param in params)
@@ -662,7 +686,7 @@ class HScriptedClassMacro
 							var newParam = deparameterizeType(baseType, targetParams);
 							if (newParam.toString() == "Void")
 							{
-								// Skipping Void...
+								// Explicitly skipping Void...
 							}
 							else
 							{
@@ -674,20 +698,24 @@ class HScriptedClassMacro
 					var baseParams = getBaseParamsOfType(resultType, oldParams);
 					newParams = newParams.slice(0, baseParams.length);
 
+					// NOTE: I don't think this is needed.
 					if (newParams.length > 0)
 					{
-						// Context.info('Building new abstract (${baseParams} + ${newParams})...', Context.currentPos());
-						resultType = resultType.applyTypeParameters(baseParams, newParams);
-						// Context.info('Deparameterized abstract type: ${resultType.toString()}', Context.currentPos());
+						if (isNull || MacroUtil.areTypeArraysEqual(params, newParams)) {
+							// Context.info('No replacement needed, skipping... (${ty.toString()} + ${baseParams} + [${oldParams} == ${newParams}])', Context.currentPos());
+						}
+						else
+						{
+							Context.info('Deparameterizing TAbstract: ${oldParams} != (${newParams})', Context.currentPos());
+							Context.info('Building new abstract (${targetType.toString()} + ${baseParams} + [${oldParams} -> ${newParams}])...', Context.currentPos());
+							try {
+								resultType = resultType.applyTypeParameters(baseParams, oldParams);
+								Context.info('Deparameterized abstract type: ${resultType.toString()}', Context.currentPos());
+							} catch (e:Dynamic) {
+								Context.error('Error deparameterizing abstract type: ${e}', Context.currentPos());
+							}
+						}
 					}
-					else
-					{
-						// Leave the type as is.
-					}
-				}
-				else
-				{
-					// Else, there are no parameters related this type and we don't need to mutate it.
 				}
 			case TInst(ty, params):
 				// Instance type. Used by most variables.
@@ -727,9 +755,16 @@ class HScriptedClassMacro
 
 					if (newParams.length > 0)
 					{
-						// Context.info('Building new abstract (${baseParams} + ${newParams})...', Context.currentPos());
-						resultType = resultType.applyTypeParameters(baseParams, newParams);
-						// Context.info('Deparameterized abstract type: ${resultType.toString()}', Context.currentPos());
+						if (MacroUtil.areTypeArraysEqual(params, newParams)) {
+							// Context.info('No replacement needed, skipping... (${ty.toString()} + ${baseParams} + [${oldParams} == ${newParams}])', Context.currentPos());
+						}
+						else
+						{
+							Context.info('Deparameterizing TInst: ${oldParams} != (${newParams})', Context.currentPos());
+							Context.info('Building new instance (${resultType} + ${baseParams} + [${oldParams} -> ${newParams}])...', Context.currentPos());
+							resultType = resultType.applyTypeParameters(baseParams, newParams);
+							Context.info('Deparameterized instance type: ${resultType.toString()}', Context.currentPos());
+						}
 					}
 					else
 					{
@@ -740,11 +775,58 @@ class HScriptedClassMacro
 				{
 					// Else, there are no parameters related this type and we don't need to mutate it.
 				}
+			case TType(t, params):
+				// Type type.
 
+				// Break out the type, then recurse.
+				var baseType = t.get().type;
+
+				var oldParams:Array<haxe.macro.Type> = [];
+				var newParams:Array<haxe.macro.Type> = [];
+				if (params.length > 0)
+				{
+					// If there are parameters, we need to deparameterize them.
+					for (param in params)
+					{
+						var baseTypes = scanBaseTypes(param);
+						for (baseType in baseTypes)
+						{
+							var newParam = deparameterizeType(baseType, targetParams);
+							if (newParam.toString() == "Void")
+							{
+								// Explicitly skipping Void...
+							}
+							else
+							{
+								oldParams.push(baseType);
+								newParams.push(newParam);
+							}
+						}
+					}
+					var baseParams = getBaseParamsOfType(resultType, oldParams);
+					newParams = newParams.slice(0, baseParams.length);
+
+					if (newParams.length > 0)
+					{
+						// Context.info('Building new typedef (${baseParams} + ${newParams})...', Context.currentPos());
+						resultType = baseType.applyTypeParameters(baseParams, oldParams);
+						// Context.info('Deparameterized typedef: ${resultType.toString()}', Context.currentPos());
+					}
+
+					// Recurse and deparameterize the type.
+					resultType = deparameterizeType(resultType, targetParams);
+				}
+				else
+				{
+					// Recurse and deparameterize the type.
+					resultType = deparameterizeType(baseType, targetParams);
+				}
+
+				Context.info('Parsed typedef: ${t.toString()} -> ${resultType.toString()}', Context.currentPos());
 			default:
 				// Do nothing.
 				// Muted because I haven't actually seen any issues caused by this. Maybe investigate in the future.
-				// Context.warning('You failed to handle this! ${targetType}', Context.currentPos());
+				Context.warning('You failed to handle this! ${targetType}', Context.currentPos());
 		}
 
 		return resultType;
@@ -850,11 +932,19 @@ class HScriptedClassMacro
 							// Whether the argument is optional.
 							var isOptional = (arg.value != null);
 							// The argument's metadata (if any).
+							#if (haxe_ver >= 5)
+							var tfuncMeta:haxe.macro.Expr.Metadata = arg.v.meta.get();
+							#else
 							var tfuncMeta:haxe.macro.Metadata = arg.v.meta.get();
+							#end
 							// The argument's expression/default value (if any).
 							var tfuncExpr:haxe.macro.Expr = arg.value == null ? null : Context.getTypedExpr(arg.value);
 							// The argument type. We have to handle any type parameters, and deparameterizeType does so recursively.
+							#if (haxe_ver >= 5)
+							var tfuncType:haxe.macro.Expr.ComplexType = Context.toComplexType(deparameterizeType(arg.v.t, targetParams));
+							#else
 							var tfuncType:haxe.macro.ComplexType = Context.toComplexType(deparameterizeType(arg.v.t, targetParams));
+							#end
 
 							var tfuncArg:FunctionArg = {
 								name: arg.v.name,
@@ -1006,7 +1096,7 @@ class HScriptedClassMacro
 	 * Create the type corresponding to an array of the given type.
 	 * For example, toComplexTypeArray(String) will return Array<String>.
 	 */
-	static function toComplexTypeArray(inputType:ComplexType):haxe.macro.ComplexType
+	static function toComplexTypeArray(inputType:ComplexType):ComplexType
 	{
 		var typeParams = (inputType != null) ? [TPType(inputType)] : [
 			TPType(TPath({

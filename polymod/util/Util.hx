@@ -11,7 +11,7 @@ import polymod.format.CSV;
 import polymod.format.ParseRules.CSVParseFormat;
 import polymod.format.ParseRules.TextFileFormat;
 import polymod.format.ParseRules;
-import polymod.fs.PolymodFileSystem.IFileSystem;
+import polymod.fs.IFileSystem;
 #if unifill
 import unifill.Unifill;
 #end
