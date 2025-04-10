@@ -25,7 +25,7 @@ class DefineUtil
 	public static function getDefineBoolRaw(key:String, defaultValue:Bool = false):Bool
 	{
 		var value:String = getDefineStringRaw(key);
-		return value == '' ? defaultValue : (value == 'true');
+		return value == '' ? defaultValue : (value == 'true' || value == '1');
 	}
 	#end
 
