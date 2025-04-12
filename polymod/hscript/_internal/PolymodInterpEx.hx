@@ -373,33 +373,30 @@ class PolymodInterpEx extends Interp
 					#else
 					var err = error;
 					#end
-					switch (err) {
-						case EScriptThrow(errValue):
-							// restore vars
-							restore(old);
-							inTry = oldTry;
-							// declare 'v'
-							declared.push({ n : n, old : locals.get(n) });
-							locals.set(n,{ r : errValue });
-							var v : Dynamic = expr(ecatch);
-							restore(old);
-							return v;
-						default:
-							throw err;
-					}
-				} catch( err : Dynamic ) {
-					// I can't handle this error the normal way because Stop is private GRAAAAA
-					if (Type.getEnumName(err) == "hscript.Interp.Stop") {
-						inTry = oldTry;
-						throw err;
-					}
-
 					// restore vars
 					restore(old);
 					inTry = oldTry;
 					// declare 'v'
 					declared.push({ n : n, old : locals.get(n) });
-					locals.set(n,{ r : err });
+					locals.set(n, { r : switch (err) {
+						case EScriptThrow(errValue): errValue;
+						default: error;
+					}});
+					var v : Dynamic = expr(ecatch);
+					restore(old);
+					return v;
+				} catch (error : Dynamic) {
+					var en = Type.getEnum(error);
+					if (en != null && en.getName() == "hscript._Interp.Stop") {
+						inTry = oldTry;
+						throw error;
+					}
+					// restore vars
+					restore(old);
+					inTry = oldTry;
+					// declare 'v'
+					declared.push({ n : n, old : locals.get(n) });
+					locals.set(n, { r : error });
 					var v : Dynamic = expr(ecatch);
 					restore(old);
 					return v;
