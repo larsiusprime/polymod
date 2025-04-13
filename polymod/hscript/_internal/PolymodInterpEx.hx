@@ -232,8 +232,9 @@ class PolymodInterpEx extends Interp
 				locals.set(n, {r: result});
 				return null;
 			case EFunction(params, fexpr, name, _): // Fix to ensure callback functions catch thrown errors.
-				var capturedLocals = duplicate(locals);
-				var me = this;
+				// Using a clone to prevent locals getting wiped out.
+				var clone = this.clone();
+
 				var hasOpt = false, minParams = 0;
 				for (p in params)
 				{
@@ -284,27 +285,24 @@ class PolymodInterpEx extends Interp
 						}
 						args = args2;
 					}
-					var old = me.locals;
-					var depth = me.depth;
-					me.depth++;
-					me.locals = me.duplicate(capturedLocals);
+
+					clone.depth++;
+
 					for (i in 0...params.length)
 					{
-						me.locals.set(params[i].name, {r: args[i]});
+						clone.locals.set(params[i].name, {r: args[i]});
 					}
 					var r = null;
-					var oldDecl = declared.length;
+
 					if (inTry)
 					{
 						// True if the SCRIPT wraps the function in a try/catch block.
 						try
 						{
-							r = me.exprReturn(fexpr);
+							r = clone.exprReturn(fexpr);
 						}
 						catch (e:Dynamic)
 						{
-							me.locals = old;
-							me.depth = depth;
 							#if neko
 							neko.Lib.rethrow(e);
 							#else
@@ -317,7 +315,7 @@ class PolymodInterpEx extends Interp
 						// There is no try/catch block. We can add some custom error handling.
 						try
 						{
-							r = me.exprReturn(fexpr);
+							r = clone.exprReturn(fexpr);
 						}
 						catch (err:PolymodExprEx.ErrorEx)
 						{
@@ -334,9 +332,6 @@ class PolymodInterpEx extends Interp
 							throw err;
 						}
 					}
-					restore(oldDecl);
-					me.locals = old;
-					me.depth = depth;
 					return r;
 				};
 
@@ -354,7 +349,7 @@ class PolymodInterpEx extends Interp
 						declared.push({n: name, old: locals.get(name)});
 						var ref = {r: newFun};
 						locals.set(name, ref);
-						capturedLocals.set(name, ref); // allow self-recursion
+						clone.locals.set(name, ref); // allow self-recursion
 					}
 				}
 				return newFun;
@@ -899,6 +894,27 @@ class PolymodInterpEx extends Interp
 				case DTypedef(_):
 			}
 		}
+	}
+
+	public function clone():PolymodInterpEx
+	{
+		var output = new PolymodInterpEx(this.targetCls, this._proxy);
+
+		// Copy only the non-default values.
+		for (key => value in this.variables)
+			if (!output.variables.exists(key)) output.variables.set(key, value);
+
+		for (key => value in this.locals)
+			if (!output.locals.exists(key)) output.locals.set(key, value);
+
+		for (val in this.declared)
+			if (!output.declared.contains(val)) output.declared.push(val);
+
+		output._nextCallObject = this._nextCallObject;
+		output.depth = this.depth;
+		output.curExpr = this.curExpr;
+		output.inTry = this.inTry;
+		return output;
 	}
 }
 
