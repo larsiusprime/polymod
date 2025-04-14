@@ -899,9 +899,17 @@ class PolymodInterpEx extends Interp
 	public function clone():PolymodInterpEx
 	{
 		var output = new PolymodInterpEx(this.targetCls, this._proxy);
-		output.variables = this.variables.copy();
-		output.locals = this.locals.copy();
-		output.declared = this.declared.copy();
+
+		// Copy only the non-default values.
+		for (key => value in this.variables)
+			if (!output.variables.exists(key)) output.variables.set(key, value);
+
+		for (key => value in this.locals)
+			if (!output.locals.exists(key)) output.locals.set(key, value);
+
+		for (val in this.declared)
+			if (!output.declared.contains(val)) output.declared.push(val);
+
 		output._nextCallObject = this._nextCallObject;
 		output.depth = this.depth;
 		output.curExpr = this.curExpr;
