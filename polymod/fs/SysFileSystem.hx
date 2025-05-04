@@ -172,8 +172,8 @@ class SysFileSystem implements IFileSystem
 		/**
 	 * Returns a path to the existing file similar to the given one.
 	 * (For instance "mod/firelight" and  "Mod/FireLight" are *similar* paths)
-	 * @param path
-	 * @return Null<String>
+	 * @param path The path to find
+	 * @return Null<String> Found path or null if such doesn't exist
 	 */
 	private function getPathLike(path:String):Null<String> {
 
