@@ -186,7 +186,6 @@ class SysFileSystem implements IFileSystem
 		while(!sys.FileSystem.exists(baseParts.join("/")) && baseParts.length != 0)
 			keyParts.insert(0, baseParts.pop());
 
-		trace(keyParts);
 		return findFile(baseParts.join("/"),keyParts);
 	}
 
