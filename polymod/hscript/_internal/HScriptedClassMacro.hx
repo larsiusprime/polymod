@@ -188,19 +188,23 @@ class HScriptedClassMacro
 
 					if (clsRef == null)
 					{
-						polymod.Polymod.error(SCRIPT_RUNTIME_EXCEPTION, 'Could not construct instance of scripted class (${clsName} extends ' + $v{clsTypeName} + ')');
+						polymod.Polymod.error(SCRIPT_RUNTIME_EXCEPTION, 'Could not construct instance of scripted class (${clsName} extends ' + $v{clsTypeName} + ')\nUnknown error building class reference');
 						return null;
 					}
 
-					var result = clsRef.instantiate([$a{constArgs}]);
+					try {
+						var result = clsRef.instantiate([$a{constArgs}]);
+						if (result == null)
+						{
+							polymod.Polymod.error(SCRIPT_RUNTIME_EXCEPTION, 'Could not construct instance of scripted class (${clsName} extends ' + $v{clsTypeName} + '):\nUnknown error instantiating class');
+							return null;
+						}
 
-					if (result == null)
-					{
-						polymod.Polymod.error(SCRIPT_RUNTIME_EXCEPTION, 'Could not construct instance of scripted class (${clsName} extends ' + $v{clsTypeName} + ')');
+						return result;
+					} catch (error) {
+						polymod.Polymod.error(SCRIPT_RUNTIME_EXCEPTION, 'Could not construct instance of scripted class (${clsName} extends ' + $v{clsTypeName} + '):\n${error}');
 						return null;
 					}
-
-					return result;
 				},
 			}),
 		};
