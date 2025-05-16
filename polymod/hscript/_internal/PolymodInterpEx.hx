@@ -62,6 +62,12 @@ class PolymodInterpEx extends Interp
 		var clsRef = PolymodStaticClassReference.tryBuild(cl);
 		if (clsRef != null) return clsRef.instantiate(args);
 
+		if (getClassDecl().imports != null && getClassDecl().imports.exists(cl)) 
+		{
+			var clsRef = PolymodStaticClassReference.tryBuild(getClassDecl().imports.get(cl).fullPath);
+			if (clsRef != null) return clsRef.instantiate(args);
+		}
+
 		if (_proxy != null)
 		{
 			@:privateAccess
@@ -192,6 +198,26 @@ class PolymodInterpEx extends Interp
 	public static function findScriptClassDescriptor(name:String)
 	{
 		return _scriptClassDescriptors.get(name);
+	}
+
+	public static function validateImports()
+	{
+		for (cls in _scriptClassDescriptors)
+		{
+			var clsPath = cls.pkg != null ? (cls.pkg.join(".") + ".") : "";
+			clsPath += cls.name;
+
+			for (key => imp in cls.importsToValidate)
+			{
+				if (_scriptClassDescriptors.exists(imp.fullPath))
+				{
+					cls.imports.set(key, imp);
+					continue;
+				}
+
+				Polymod.error(SCRIPT_CLASS_MODULE_NOT_FOUND, 'Could not import class ${imp.fullPath}', clsPath);
+			}
+		}
 	}
 
 	override function setVar(id:String, v:Dynamic)
@@ -1255,6 +1281,7 @@ class PolymodInterpEx extends Interp
 	{
 		var pkg:Array<String> = null;
 		var imports:Map<String, PolymodClassImport> = [];
+		var importsToValidate:Map<String, PolymodClassImport> = [];
 
 		for (importPath in PolymodScriptClass.defaultImports.keys())
 		{
@@ -1316,7 +1343,8 @@ class PolymodInterpEx extends Interp
 
 						// If the class is still not found, skip this import entirely.
 						if (resultCls == null && resultEnm == null) {
-							Polymod.error(SCRIPT_CLASS_MODULE_NOT_FOUND, 'Could not import class ${importedClass.fullPath}', origin);
+							//Polymod.error(SCRIPT_CLASS_MODULE_NOT_FOUND, 'Could not import class ${importedClass.fullPath}', origin);
+							importsToValidate.set(importedClass.name, importedClass);
 							continue;
 						} else if (resultCls != null) {
 							importedClass.cls = resultCls;
@@ -1372,6 +1400,7 @@ class PolymodInterpEx extends Interp
 
 					var classDecl:PolymodClassDeclEx = {
 						imports: imports,
+						importsToValidate: importsToValidate,
 						pkg: pkg,
 						name: c.name,
 						params: c.params,
