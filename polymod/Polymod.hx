@@ -832,6 +832,34 @@ class Polymod
 		Polymod.warning(PolymodErrorCode.SCRIPT_HSCRIPT_NOT_INSTALLED, 'Scripted classes imports were requested, but hscript is not installed.');
 		#end
 	}
+
+	/**
+	 * When a static field is being called, you can blacklist it from being used.
+	 * @param parentClass The class type with the fields.
+	 * @param fields The static fields you want to blacklist.
+	 */
+	public static function blacklistStaticFields(parentClass:Class<Dynamic>, fields:Array<String>):Void
+	{
+		#if hscript
+		PolymodScriptClass.blacklistedStaticFields.set(parentClass, fields);
+		#else
+		Polymod.warning(PolymodErrorCode.SCRIPT_HSCRIPT_NOT_INSTALLED, 'Scripted classes imports were requested, but hscript is not installed.');
+		#end
+	}
+
+	/**
+	 * When an instance field is being called, you can blacklist it from being used.
+	 * @param parentClass The class type with the fields.
+	 * @param fields The instance fields you want to blacklist.
+	 */
+	public static function blacklistInstanceFields(parentClass:Class<Dynamic>, fields:Array<String>):Void
+	{
+		#if hscript
+		PolymodScriptClass.blacklistedInstanceFields.set(parentClass, fields);
+		#else
+		Polymod.warning(PolymodErrorCode.SCRIPT_HSCRIPT_NOT_INSTALLED, 'Scripted classes imports were requested, but hscript is not installed.');
+		#end
+	}
 }
 
 /**
