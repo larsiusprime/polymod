@@ -186,6 +186,20 @@ class PolymodInterpEx extends Interp
 						return v;
 					}
 				}
+
+				@:privateAccess
+				{
+					if (_proxy != null)
+					{
+						var variable = _proxy.findVar(id);
+						if (variable != null && variable.isfinal && variable.expr != null)
+						{
+							errorEx(EInvalidAccess(id));
+							return null;
+						}
+					}
+				}
+
 			case EField(e0, id):
 				// Make sure setting superclass fields works when using this.
 				// Also ensures property functions are accounted for.
@@ -229,7 +243,12 @@ class PolymodInterpEx extends Interp
 			case EVar(n, _, e): // Fix to ensure local variables are committed properly.
 				declared.push({n: n, old: locals.get(n)});
 				var result = (e == null) ? null : expr(e);
-				locals.set(n, {r: result});
+				locals.set(n, {r: result, isfinal: false});
+				return null;
+			case EFinal(n, _, e): // Fix to ensure local variables are committed properly.
+				declared.push({n: n, old: locals.get(n)});
+				var result = (e == null) ? null : expr(e);
+				locals.set(n, {r: result, isfinal: true});
 				return null;
 			case EFunction(params, fexpr, name, _): // Fix to ensure callback functions catch thrown errors.
 				var capturedLocals = duplicate(locals);
