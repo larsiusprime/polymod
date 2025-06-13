@@ -828,14 +828,14 @@ class HScriptedClassMacro
 						ret: func_ret,
 						expr: macro
 						{
-							var fieldName:String = $v{funcName};
-							if (_asc != null)
+							if (_asc != null && _asc.hasScriptFunction($v{funcName}))
 							{
 								// trace('ASC: Calling $fieldName() in macro-generated function...');
 								$
 								{
-									doesReturnVoid ? (macro _asc.callFunction(fieldName,
-										[$a{func_callArgs}])) : (macro return _asc.callFunction(fieldName, [$a{func_callArgs}]))
+									doesReturnVoid
+										? (macro _asc.callFunction($v{funcName}, [$a{func_callArgs}]))
+										: (macro return _asc.callFunction($v{funcName}, [$a{func_callArgs}]))
 								}
 							}
 							else
@@ -844,7 +844,9 @@ class HScriptedClassMacro
 								// trace('ASC: Fallback to original ${fieldName}');
 								$
 								{
-									doesReturnVoid ? (macro super.$funcName($a{func_callArgs})) : (macro return super.$funcName($a{func_callArgs}))
+									doesReturnVoid
+										? (macro super.$funcName($a{func_callArgs}))
+										: (macro return super.$funcName($a{func_callArgs}))
 								}
 							}
 						},

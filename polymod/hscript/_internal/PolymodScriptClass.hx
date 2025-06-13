@@ -459,18 +459,19 @@ class PolymodScriptClass
 		}
 	}
 
+	static final previousValues:Map<String, Dynamic> = [];
+
 	@:privateAccess(hscript.Interp)
 	public function callFunction(fnName:String, args:Array<Dynamic> = null):Dynamic
 	{
 		var field = findField(fnName);
-		var r:Dynamic = null;
 		var fn = (field != null) ? findFunction(fnName, true) : null;
 
 		if (fn != null)
 		{
 			var fn = findFunction(fnName);
 			// previousValues is used to restore variables after they are shadowed in the local scope.
-			var previousValues:Map<String, Dynamic> = [];
+			previousValues.clear();
 			var i = 0;
 			for (a in fn.args)
 			{
@@ -496,7 +497,7 @@ class PolymodScriptClass
 
 			try
 			{
-				r = _interp.executeEx(fn.expr);
+				return _interp.executeEx(fn.expr);
 			}
 			catch (err:PolymodExprEx.ErrorEx)
 			{
@@ -529,30 +530,40 @@ class PolymodScriptClass
 		}
 		else
 		{
-			var fixedArgs = [];
-			// OVERRIDE CHANGE: Use __super_ when calling superclass
-			var fixedName = '__super_${fnName}';
-			for (a in args)
-			{
-				if (Std.isOfType(a, PolymodScriptClass))
-				{
-					fixedArgs.push(cast(a, PolymodScriptClass).superClass);
-				}
-				else
-				{
-					fixedArgs.push(a);
-				}
-			}
-			var fn = Reflect.field(superClass, fixedName);
+			var fn = findSuperFunction(fnName);
 			if (fn == null)
 			{
 				Polymod.error(SCRIPT_RUNTIME_EXCEPTION,
 					'Error while calling function super.${fnName}(): EInvalidAccess' + '\n' +
 					'InvalidAccess error: Super function "${fnName}" does not exist! Define it or call the correct superclass function.');
 			}
-			r = Reflect.callMethod(superClass, fn, fixedArgs);
+
+			var fixedArgs = (args?.length == 0) ? args : args.map((a) -> {
+				if (Std.isOfType(a, PolymodScriptClass))
+				{
+					return cast(a, PolymodScriptClass).superClass;
+				}
+				else
+				{
+					return a;
+				}
+			});
+
+			return Reflect.callMethod(superClass, fn, fixedArgs);
 		}
-		return r;
+	}
+
+	/**
+	 * Checks if the class has a script function with the given name.
+	 * This is useful for checking whether the game should simply call the superclass function directly.
+	 * @param name The name of the function to check.
+	 * @return `true` if the class has a script function with the given name, `false` otherwise.
+	 */
+	public function hasScriptFunction(name:String):Bool {
+		var field = findField(name);
+		var fn = (field != null) ? findFunction(name, true) : null;
+
+		return fn != null;
 	}
 
 	private var _c:PolymodClassDeclEx;
@@ -642,26 +653,40 @@ class PolymodScriptClass
 	 */
 	private function findFunction(name:String, cacheOnly:Bool = true):Null<FunctionDecl>
 	{
-		if (_cachedFunctionDecls != null)
+		if (_cachedFunctionDecls != null && _cachedFunctionDecls.exists(name))
 		{
 			return _cachedFunctionDecls.get(name);
 		}
 		if (cacheOnly) return null;
 
-		for (f in _c.fields)
+		var fn = findField(name);
+		if (fn == null) return null;
+		switch (fn.kind) {
+			case KFunction(func):
+				_cachedFunctionDecls.set(name, func);
+				return func;
+			default:
+				return null;
+		}
+	}
+
+	/**
+	 * Search for a function field on the superclass with the given name.
+	 */
+	private function findSuperFunction(name:String):Null<Dynamic>
+	{
+		if (_cachedSuperFunctionDecls != null && _cachedSuperFunctionDecls.exists(name))
 		{
-			if (f.name == name)
-			{
-				switch (f.kind)
-				{
-					case KFunction(fn):
-						return fn;
-					case _:
-				}
-			}
+			return _cachedSuperFunctionDecls.get(name);
 		}
 
-		return null;
+		// OVERRIDE CHANGE: Use __super_ when calling superclass
+		var fixedName = '__super_${name}';
+
+		var func = Reflect.field(superClass, fixedName);
+		if (func == null) return null;
+		_cachedSuperFunctionDecls.set(name, func);
+		return func;
 	}
 
 	/**
@@ -684,7 +709,7 @@ class PolymodScriptClass
 	 */
 	private function findVar(name:String, cacheOnly:Bool = false):Null<VarDecl>
 	{
-		if (_cachedVarDecls != null)
+		if (_cachedVarDecls != null && _cachedVarDecls.exists(name))
 		{
 			_cachedVarDecls.get(name);
 		}
@@ -714,7 +739,7 @@ class PolymodScriptClass
 	 */
 	private function findField(name:String, cacheOnly:Bool = true):Null<FieldDecl>
 	{
-		if (_cachedFieldDecls != null)
+		if (_cachedFieldDecls != null && _cachedFieldDecls.exists(name))
 		{
 			return _cachedFieldDecls.get(name);
 		}
@@ -735,15 +760,17 @@ class PolymodScriptClass
 		return _cachedFunctionDecls;
 	}
 
-	private var _cachedFieldDecls:Map<String, FieldDecl> = null;
-	private var _cachedFunctionDecls:Map<String, FunctionDecl> = null;
-	private var _cachedVarDecls:Map<String, VarDecl> = null;
+	private var _cachedFieldDecls:Map<String, FieldDecl> = [];
+	private var _cachedSuperFunctionDecls:Map<String, Dynamic> = [];
+	private var _cachedFunctionDecls:Map<String, FunctionDecl> = [];
+	private var _cachedVarDecls:Map<String, VarDecl> = [];
 
 	private function buildCaches()
 	{
-		_cachedFieldDecls = [];
-		_cachedFunctionDecls = [];
-		_cachedVarDecls = [];
+		_cachedFieldDecls.clear();
+		_cachedSuperFunctionDecls.clear();
+		_cachedFunctionDecls.clear();
+		_cachedVarDecls.clear();
 
 		for (f in _c.fields)
 		{
