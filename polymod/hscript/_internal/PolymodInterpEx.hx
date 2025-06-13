@@ -559,6 +559,32 @@ class PolymodInterpEx extends Interp
 	{
 		if (o == null)
 			errorEx(EInvalidAccess(f));
+
+		// Check if the field is a blacklisted static field.
+		var className:Null<String> = Type.getClassName(o);
+		if (PolymodScriptClass.blacklistedStaticFields.exists(className))
+		{
+			var blacklistedStatics:Array<String> = PolymodScriptClass.blacklistedStaticFields.get(className);
+			if (blacklistedStatics.contains(f))
+			{
+				errorEx(EInvalidAccess(f));
+				return null;
+			}
+		}
+
+		// If not, check if it is a blacklisted instance field.
+		className = Type.getClassName(Type.getClass(o));
+		if (PolymodScriptClass.blacklistedInstanceFields.exists(className))
+		{
+			var blacklistedInstances:Array<String> = PolymodScriptClass.blacklistedInstanceFields.get(className);
+			if (blacklistedInstances.contains(f))
+			{
+				errorEx(EInvalidAccess(f));
+				return null;
+			}
+		}
+
+		// Otherwise, we assume the field is fine to use.
 		if (Std.isOfType(o, PolymodScriptClass))
 		{
 			var proxy:PolymodAbstractScriptClass = cast(o, PolymodScriptClass);
@@ -620,6 +646,32 @@ class PolymodInterpEx extends Interp
 	{
 		if (o == null)
 			errorEx(EInvalidAccess(f));
+
+		// Check if the field is a blacklisted static field.
+		var className:Null<String> = Type.getClassName(o);
+		if (PolymodScriptClass.blacklistedStaticFields.exists(className))
+		{
+			var blacklistedStatics:Array<String> = PolymodScriptClass.blacklistedStaticFields.get(className);
+			if (blacklistedStatics.contains(f))
+			{
+				errorEx(EInvalidAccess(f));
+				return null;
+			}
+		}
+
+		// If not, check if it is a blacklisted instance field.
+		className = Type.getClassName(Type.getClass(o));
+		if (PolymodScriptClass.blacklistedInstanceFields.exists(className))
+		{
+			var blacklistedInstances:Array<String> = PolymodScriptClass.blacklistedInstanceFields.get(className);
+			if (blacklistedInstances.contains(f))
+			{
+				errorEx(EInvalidAccess(f));
+				return null;
+			}
+		}
+
+		// Otherwise, we assume the field is fine to use.
 		if (Std.isOfType(o, PolymodScriptClass))
 		{
 			var proxy:PolymodScriptClass = cast(o, PolymodScriptClass);
