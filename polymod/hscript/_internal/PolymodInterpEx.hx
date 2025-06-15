@@ -248,7 +248,7 @@ class PolymodInterpEx extends Interp
 				}
 
 				// This CREATES a new function in memory, that we call later.
-				var newFun:Dynamic = function(args:Array<Dynamic>)
+				var newFun = function(args:Array<Dynamic>)
 				{
 					if (((args == null) ? 0 : args.length) != params.length)
 					{
@@ -561,11 +561,9 @@ class PolymodInterpEx extends Interp
 			errorEx(EInvalidAccess(f));
 
 		// Check if the field is a blacklisted static field.
-		var className:Null<String> = Type.getClassName(o);
-		if (PolymodScriptClass.blacklistedStaticFields.exists(className))
+		for (cls => flds in PolymodScriptClass.blacklistedStaticFields)
 		{
-			var blacklistedStatics:Array<String> = PolymodScriptClass.blacklistedStaticFields.get(className);
-			if (blacklistedStatics.contains(f))
+			if (o == cls && flds.contains(f))
 			{
 				errorEx(EInvalidAccess(f));
 				return null;
@@ -573,14 +571,23 @@ class PolymodInterpEx extends Interp
 		}
 
 		// If not, check if it is a blacklisted instance field.
-		className = Type.getClassName(Type.getClass(o));
-		if (PolymodScriptClass.blacklistedInstanceFields.exists(className))
+		var oCls:String = switch(Type.typeof(o))
 		{
-			var blacklistedInstances:Array<String> = PolymodScriptClass.blacklistedInstanceFields.get(className);
-			if (blacklistedInstances.contains(f))
+			case TClass(cls):
+				Std.string(cls);
+			default:
+				"";
+		}
+
+		if (oCls.length > 0)
+		{
+			for (cls => flds in PolymodScriptClass.blacklistedInstanceFields)
 			{
-				errorEx(EInvalidAccess(f));
-				return null;
+				if (oCls == Std.string(cls) && flds.contains(f))
+				{
+					errorEx(EInvalidAccess(f));
+					return null;
+				}
 			}
 		}
 
@@ -648,11 +655,9 @@ class PolymodInterpEx extends Interp
 			errorEx(EInvalidAccess(f));
 
 		// Check if the field is a blacklisted static field.
-		var className:Null<String> = Type.getClassName(o);
-		if (PolymodScriptClass.blacklistedStaticFields.exists(className))
+		for (cls => flds in PolymodScriptClass.blacklistedStaticFields)
 		{
-			var blacklistedStatics:Array<String> = PolymodScriptClass.blacklistedStaticFields.get(className);
-			if (blacklistedStatics.contains(f))
+			if (o == cls && flds.contains(f))
 			{
 				errorEx(EInvalidAccess(f));
 				return null;
@@ -660,14 +665,23 @@ class PolymodInterpEx extends Interp
 		}
 
 		// If not, check if it is a blacklisted instance field.
-		className = Type.getClassName(Type.getClass(o));
-		if (PolymodScriptClass.blacklistedInstanceFields.exists(className))
+		var oCls:String = switch(Type.typeof(o))
 		{
-			var blacklistedInstances:Array<String> = PolymodScriptClass.blacklistedInstanceFields.get(className);
-			if (blacklistedInstances.contains(f))
+			case TClass(cls):
+				Std.string(cls);
+			default:
+				"";
+		}
+
+		if (oCls.length > 0)
+		{
+			for (cls => flds in PolymodScriptClass.blacklistedInstanceFields)
 			{
-				errorEx(EInvalidAccess(f));
-				return null;
+				if (oCls == Std.string(cls) && flds.contains(f))
+				{
+					errorEx(EInvalidAccess(f));
+					return null;
+				}
 			}
 		}
 
