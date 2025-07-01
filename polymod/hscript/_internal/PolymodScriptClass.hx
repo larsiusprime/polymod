@@ -738,7 +738,7 @@ class PolymodScriptClass
 		if (fn == null) return null;
 		switch (fn.kind) {
 			case KFunction(func):
-				if (excludeStatic && func.access.contains(AStatic)) continue;
+				if (excludeStatic && fn.access.contains(AStatic)) return null;
 				_cachedFunctionDecls.set(name, func);
 				return func;
 			default:
@@ -799,7 +799,7 @@ class PolymodScriptClass
 				switch (f.kind)
 				{
 					case KVar(v):
-						if (excludeStatic && v.access.contains(AStatic)) continue;
+						if (excludeStatic && f.access.contains(AStatic)) return null;
 						return v;
 					case _:
 				}
