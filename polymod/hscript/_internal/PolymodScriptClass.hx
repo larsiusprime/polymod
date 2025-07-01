@@ -82,7 +82,11 @@ class PolymodScriptClass
 					case EUnexpected(s):
 						Polymod.error(SCRIPT_PARSE_ERROR,
 							'Error while parsing function ${path}#${errLine}: EUnexpected' + '\n' +
-							'Unexpected error: Unexpected token "${s}", is there invalid syntax on this line?');
+							'Unexpected token "${s}", is there invalid syntax on this line?');
+					case EClassUnresolvedSuperclass(cls, reason):
+						Polymod.error(SCRIPT_PARSE_ERROR,
+							'Error while parsing class ${path}#${errLine}: EClassUnresolvedSuperclass' + '\n' +
+							'Unresolved superclass "${cls}", ${reason}');
 					default:
 						Polymod.error(SCRIPT_PARSE_ERROR, 'Error while executing function ${path}#${errLine}: ' + '\n' + 'An unknown error occurred: ${err}');
 				}
@@ -200,20 +204,20 @@ class PolymodScriptClass
 		}
 
 		// Get the super class name.
-		var extendString = (new hscript.Printer()).typeToString(classDecl.extend);
-		// Prepend the package name.
-		if (classDecl.pkg != null && extendString.indexOf('.') == -1)
-		{
-			var extendPkg = classDecl.pkg.join('.');
-			extendString = '$extendPkg.$extendString';
-		}
+		var fullSuperClsName = (new hscript.Printer()).typeToString(classDecl.extend);
+		var baseSuperClsName = switch(classDecl.extend) {
+			case CTPath(pth, params):
+				pth[pth.length - 1];
+			default:
+				fullSuperClsName;
+		};
 
 		// Check if the superclass is a scripted class.
-		var classDescriptor:PolymodClassDeclEx = PolymodInterpEx.findScriptClassDescriptor(extendString);
+		var classDescriptor:PolymodClassDeclEx = PolymodInterpEx.findScriptClassDescriptor(fullSuperClsName);
 
 		if (classDescriptor != null)
 		{
-			var result = [extendString];
+			var result = [fullSuperClsName];
 
 			// Parse the parent scripted class.
 			return result.concat(getSuperClasses(classDescriptor));
@@ -221,16 +225,17 @@ class PolymodScriptClass
 		else
 		{
 			// Templates are ignored completely since there's no type checking in HScript.
-			if (extendString.indexOf('<') != -1)
+			if (fullSuperClsName.indexOf('<') != -1)
 			{
-				extendString = extendString.split('<')[0];
+				fullSuperClsName = fullSuperClsName.split('<')[0];
+				baseSuperClsName = baseSuperClsName.split('<')[0];
 			}
 
 			var superCls:Class<Dynamic> = null;
 
-			if (classDecl.imports.exists(extendString))
+			if (classDecl.imports.exists(baseSuperClsName))
 			{
-				var importedClass:PolymodClassImport = classDecl.imports.get(extendString);
+				var importedClass:PolymodClassImport = classDecl.imports.get(baseSuperClsName);
 				if (importedClass != null && importedClass.cls == null) {
 					// importedClass was defined but `cls` was null. This class must have been blacklisted.
 					var clsName = classDecl.pkg != null ? '${classDecl.pkg.join('.')}.${classDecl.name}' : classDecl.name;
@@ -239,11 +244,6 @@ class PolymodScriptClass
 				} else if (importedClass != null) {
 					superCls = importedClass.cls;
 				}
-			}
-
-			if (superCls == null) {
-				// Check if the superclass is a native class.
-				superCls = Type.resolveClass(extendString);
 			}
 
 			// Check if the superclass was resolved.
@@ -265,7 +265,7 @@ class PolymodScriptClass
 			{
 				// The superclass is not a scripted class or native class. Probably doesn't exist, throw an error.
 				var clsName = classDecl.pkg != null ? '${classDecl.pkg.join('.')}.${classDecl.name}' : classDecl.name;
-				Polymod.error(SCRIPT_PARSE_ERROR, 'Could not parse superclass "$extendString" of scripted class "${clsName}". Are you sure that the superclass exists?');
+				Polymod.error(SCRIPT_PARSE_ERROR, 'Could not parse superclass "$fullSuperClsName" of scripted class "${clsName}". Did you forget to import it?');
 				return [];
 			}
 		}

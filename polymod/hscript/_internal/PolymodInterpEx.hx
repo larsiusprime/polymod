@@ -850,6 +850,7 @@ class PolymodInterpEx extends Interp
 						}
 					}
 
+					Polymod.debug('Imported class ${importedClass.name} from ${importedClass.fullPath}');
 					imports.set(importedClass.name, importedClass);
 				case DClass(c):
 					var extend = c.extend;
