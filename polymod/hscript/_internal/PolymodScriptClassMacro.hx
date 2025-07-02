@@ -100,8 +100,6 @@ class PolymodScriptClassMacro {
     	var polymodScriptClassClassType:ClassType = MacroUtil.getClassType('polymod.hscript._internal.PolymodScriptClassMacro');
     	polymodScriptClassClassType.meta.add('hscriptedClasses', hscriptedClassEntries, Context.currentPos());
 		polymodScriptClassClassType.meta.add('abstractImpls', abstractImplEntries, Context.currentPos());
-
-		polymodScriptClassClassType.meta.add('hello', [macro $v{'world'}], Context.currentPos());
 	}
 	#end
 

@@ -25,8 +25,10 @@ class PolymodInterpEx extends Interp
 	function getClassDecl():PolymodClassDeclEx {
 		if (_classDeclOverride != null) {
 			return _classDeclOverride;
-		} else {
+		} else if (_proxy != null) {
 			return _proxy._c;
+		} else {
+			return null;
 		}
 	}
 
@@ -62,40 +64,37 @@ class PolymodInterpEx extends Interp
 		var clsRef = PolymodStaticClassReference.tryBuild(cl);
 		if (clsRef != null) return clsRef.instantiate(args);
 
-		if (_proxy != null)
+		@:privateAccess
+		if (getClassDecl()?.pkg != null)
 		{
 			@:privateAccess
-			if (getClassDecl().pkg != null)
+			var packagedClass = getClassDecl().pkg.join(".") + "." + cl;
+			if (_scriptClassDescriptors.exists(packagedClass))
 			{
-				@:privateAccess
-				var packagedClass = getClassDecl().pkg.join(".") + "." + cl;
-				if (_scriptClassDescriptors.exists(packagedClass))
-				{
-					// OVERRIDE CHANGE: Create a PolymodScriptClass instead of a hscript.ScriptClass
-					var proxy:PolymodAbstractScriptClass = new PolymodScriptClass(_scriptClassDescriptors.get(packagedClass), args);
-					return proxy;
-				}
+				// OVERRIDE CHANGE: Create a PolymodScriptClass instead of a hscript.ScriptClass
+				var proxy:PolymodAbstractScriptClass = new PolymodScriptClass(_scriptClassDescriptors.get(packagedClass), args);
+				return proxy;
+			}
+		}
+
+		@:privateAccess
+		if (getClassDecl()?.imports != null && getClassDecl().imports.exists(cl))
+		{
+			var importedClass:PolymodClassImport = getClassDecl().imports.get(cl);
+			if (_scriptClassDescriptors.exists(importedClass.fullPath))
+			{
+				// OVERRIDE CHANGE: Create a PolymodScriptClass instead of a hscript.ScriptClass
+				var proxy:PolymodAbstractScriptClass = new PolymodScriptClass(_scriptClassDescriptors.get(importedClass.fullPath), args);
+				return proxy;
 			}
 
-			@:privateAccess
-			if (getClassDecl().imports != null && getClassDecl().imports.exists(cl))
+			// Ignore importedClass.enm as enums cannot be instantiated.
+			var c = importedClass.cls;
+			if (c == null)
 			{
-				var importedClass:PolymodClassImport = getClassDecl().imports.get(cl);
-				if (_scriptClassDescriptors.exists(importedClass.fullPath))
-				{
-					// OVERRIDE CHANGE: Create a PolymodScriptClass instead of a hscript.ScriptClass
-					var proxy:PolymodAbstractScriptClass = new PolymodScriptClass(_scriptClassDescriptors.get(importedClass.fullPath), args);
-					return proxy;
-				}
-
-				// Ignore importedClass.enm as enums cannot be instantiated.
-				var c = importedClass.cls;
-				if (c == null)
-				{
-					errorEx(EBlacklistedModule(importedClass.fullPath));
-				} else {
-					return Type.createInstance(c, args);
-				}
+				errorEx(EBlacklistedModule(importedClass.fullPath));
+			} else {
+				return Type.createInstance(c, args);
 			}
 		}
 
@@ -918,13 +917,15 @@ class PolymodInterpEx extends Interp
 		// OVERRIDE CHANGE: Allow access to modules for calling static functions.
 
 		// Attempt to access an import.
-		if (_proxy != null)
+		if (getClassDecl() != null)
 		{
 			var importedClass:PolymodClassImport = getClassDecl().imports.get(id);
 			if (importedClass != null) {
 				if (importedClass.cls != null) return importedClass.cls;
 				if (importedClass.enm != null) return importedClass.enm;
 			}
+		} else {
+			trace('No proxy, trying to resolve: ${id}');
 		}
 
 		// Allow access to scripted classes for calling static functions.
