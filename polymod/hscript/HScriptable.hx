@@ -284,7 +284,7 @@ class Script
 	public static function buildInterp():polymod.hscript._internal.PolymodInterpEx
 	{
 		// Arguments are only needed in a scripted class context.
-		return new polymod.hscript._internal.PolymodInterpEx(null, null);
+		return new polymod.hscript._internal.PolymodInterpEx(null);
 	}
 
 	public function new(script:String, ?origin:String = null)
