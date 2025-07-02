@@ -548,9 +548,11 @@ class PolymodInterpEx extends Interp
 					restore(old);
 					return v;
 				} catch (error : Dynamic) {
-					// I can't handle this error the normal way because Stop is private GRAAAAA
 					var en = Type.getEnum(error);
-					if (en != null && en.getName() == "hscript._Interp.Stop") {
+					if (en != null && (en.getName() == "hscript._Interp.Stop" || en.getName() == "hscript.Interp.Stop")) {
+						// HScript catches errors specifically of the type Stop, and uses them to handle
+						// `break`, `continue`, and `return` statements without extensive logic to skip subsequent expressions.
+						// This is safe to throw since it won't escalate outside of Polymod.
 						inTry = oldTry;
 						throw error;
 					}
