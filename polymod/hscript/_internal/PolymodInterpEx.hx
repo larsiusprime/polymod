@@ -567,10 +567,9 @@ class PolymodInterpEx extends Interp
 					return v;
 				}
 			case EThrow(e):
-				var str = 'Script Error: ${expr(e)}';
 				// If there is a try/catch block, the error will be caught.
 				// If there is no try/catch block, the error will be reported.
-				errorEx(EScriptThrow(str));
+				errorEx(EScriptThrow('${expr(e)}'));
 			default:
 				// Do nothing.
 		}
