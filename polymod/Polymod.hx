@@ -1353,6 +1353,13 @@ enum abstract PolymodErrorCode(String) from String to String
 	var SCRIPT_CLASS_MODULE_BLACKLISTED:String = 'script_class_module_blacklisted';
 
 	/**
+	 * Your script file attempted to access a blacklisted field.
+	 * - This is a security measure to prevent malicious scripts from accessing sensitive fields.
+	 * - Remove the field access to remove the error.
+	 */
+	 var SCRIPT_CLASS_FIELD_BLACKLISTED:String = 'script_class_field_blacklisted';
+
+	/**
 	 * One or more scripts are about to be parsed.
 	 * - This is an info message. You can log it or ignore it if you like.
 	 */

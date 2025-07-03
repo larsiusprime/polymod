@@ -172,7 +172,7 @@ class PolymodInterpEx extends Interp
 		}
 
 		if (_scriptClassDescriptors.exists(name)) {
-			Polymod.error(SCRIPT_CLASS_ALREADY_REGISTERED, 'A scripted class with the fully qualified name "$name" has already been defined. Please change the class name or the package name to ensure a unique name.');
+			Polymod.error(SCRIPT_CLASS_ALREADY_REGISTERED, 'Scripted class with fully qualified name "$name" has already been defined. Please change the class name or the package name to ensure uniqueness.');
 			return;
 		} else {
 			Polymod.debug('Registering scripted class $name');
@@ -850,20 +850,23 @@ class PolymodInterpEx extends Interp
 	{
 		if (o == null) errorEx(EInvalidAccess(f));
 
-		// Check if the field is a blacklisted static field.
-		if (PolymodScriptClass.blacklistedStaticFields.exists(o) && PolymodScriptClass.blacklistedStaticFields.get(o).contains(f))
-		{
-			errorEx(EInvalidAccess(f));
-			return null;
-		}
-		
 		// If not, check if it is a blacklisted instance field.
 		var oCls:String = switch(Type.typeof(o))
 		{
 			case TClass(cls):
 				Std.string(cls);
+			case TEnum(enm):
+				Std.string(enm);
 			default:
-				"";
+				Std.string(Type.typeof(o));
+		}
+
+		// Check if the field is a blacklisted static field.
+		if (PolymodScriptClass.blacklistedStaticFields.exists(o) && PolymodScriptClass.blacklistedStaticFields.get(o).contains(f))
+		{
+			Polymod.error(SCRIPT_CLASS_FIELD_BLACKLISTED, 'Class field ${oCls}.${f} is blacklisted and cannot be used in scripts.');
+			errorEx(EInvalidAccess(f));
+			return null;
 		}
 
 		if (oCls.length > 0)
@@ -872,7 +875,7 @@ class PolymodInterpEx extends Interp
 			{
 				if (oCls == Std.string(cls) && flds.contains(f))
 				{
-					errorEx(EInvalidAccess(f));
+					Polymod.error(SCRIPT_CLASS_FIELD_BLACKLISTED, 'Class field ${oCls}.${f} is blacklisted and cannot be used in scripts.');
 					return null;
 				}
 			}
@@ -949,29 +952,31 @@ class PolymodInterpEx extends Interp
 		if (o == null)
 			errorEx(EInvalidAccess(f));
 
-		// Check if the field is a blacklisted static field.
-		if (PolymodScriptClass.blacklistedStaticFields.exists(o) && PolymodScriptClass.blacklistedStaticFields.get(o).contains(f))
-		{
-			errorEx(EInvalidAccess(f));
-			return null;
-		}
-
-		// If not, check if it is a blacklisted instance field.
 		var oCls:String = switch(Type.typeof(o))
 		{
 			case TClass(cls):
 				Std.string(cls);
+			case TEnum(enm):
+				Std.string(enm);
 			default:
-				"";
+				Std.string(Type.typeof(o));
 		}
 
+		// Check if the field is a blacklisted static field.
+		if (PolymodScriptClass.blacklistedStaticFields.exists(o) && PolymodScriptClass.blacklistedStaticFields.get(o).contains(f))
+		{
+			Polymod.error(SCRIPT_CLASS_FIELD_BLACKLISTED, 'Class field ${oCls}.${f} is blacklisted and cannot be used in scripts.');
+			return null;
+		}
+
+		// If not, check if it is a blacklisted instance field.
 		if (oCls.length > 0)
 		{
 			for (cls => flds in PolymodScriptClass.blacklistedInstanceFields)
 			{
 				if (oCls == Std.string(cls) && flds.contains(f))
 				{
-					errorEx(EInvalidAccess(f));
+					Polymod.error(SCRIPT_CLASS_FIELD_BLACKLISTED, 'Class field ${oCls}.${f} is blacklisted and cannot be used in scripts.');
 					return null;
 				}
 			}
