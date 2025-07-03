@@ -323,10 +323,10 @@ class PolymodInterpEx extends Interp
 									{
 										if (imp.name != id0) continue;
 										var finals = PolymodFinalMacro.getAllFinals().get(imp.fullPath);
-										for (fin in finals)
+
+										if (finals.contains(id))
 										{
-											if (fin != id) continue;
-											errorEx(EInvalidAccess(fin));
+											errorEx(EInvalidAccess(id));
 											return null;
 										}
 									}
