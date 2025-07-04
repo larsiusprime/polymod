@@ -18,6 +18,7 @@ typedef PolymodClassDeclEx =
 	@:optional var pkg:Array<String>;
 
 	@:optional var staticFields:Array<FieldDecl>;
+	@:optional var usings:Map<String, PolymodClassImport>;
 }
 
 /**

@@ -878,6 +878,7 @@ class PolymodScriptClass
 	private var _cachedSuperFunctionDecls:Map<String, Dynamic> = [];
 	private var _cachedFunctionDecls:Map<String, FunctionDecl> = [];
 	private var _cachedVarDecls:Map<String, VarDecl> = [];
+	private var _cachedUsingFunctions:Map<String, Dynamic> = [];
 
 	private function buildCaches()
 	{
@@ -885,6 +886,24 @@ class PolymodScriptClass
 		_cachedSuperFunctionDecls.clear();
 		_cachedFunctionDecls.clear();
 		_cachedVarDecls.clear();
+		_cachedUsingFunctions.clear();
+
+		for (n => u in _c.usings)
+		{
+			var fields = Type.getClassFields(u.cls);
+			if (fields.length == 0) continue;
+
+			for (fld in fields)
+			{
+				var func:Dynamic = function(params:Array<Dynamic>)
+				{
+					var prop:Dynamic = Reflect.getProperty(u.cls, fld);
+					return Reflect.callMethod(u.cls, prop, params);
+				}
+					
+				_cachedUsingFunctions.set(fld, func);
+			}
+		}
 
 		for (f in _c.fields)
 		{
