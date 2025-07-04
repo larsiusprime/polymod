@@ -141,7 +141,7 @@ private class Header
 		var bytesRead = fileInput.readBytes(tmpBuffer, 0, count);
 		if (bytesRead != count)
 		{
-			trace('[NOTICE] Read fewer bytes than requested ($bytesRead < $count)');
+			Polymod.debug('Read fewer bytes than requested ($bytesRead < $count)');
 		}
 		return tmpBuffer;
 	}

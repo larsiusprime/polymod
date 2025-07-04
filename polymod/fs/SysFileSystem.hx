@@ -6,6 +6,9 @@ import polymod.fs.PolymodFileSystem;
 import polymod.util.Util;
 import polymod.util.VersionUtil;
 import thx.semver.VersionRule;
+#if linux
+using StringTools;
+#end
 
 /**
  * An implementation of IFileSystem which accesses files from folders in the local directory.
@@ -22,11 +25,18 @@ class SysFileSystem implements IFileSystem
 
 	public function exists(path:String)
 	{
+		#if linux
+		return getPathLike(path) != null;
+		#else
 		return sys.FileSystem.exists(path);
+		#end
 	}
 
 	public function isDirectory(path:String)
 	{
+		#if linux
+		path = getPathLike(path);
+		#end
 		return sys.FileSystem.isDirectory(path);
 	}
 
@@ -34,6 +44,9 @@ class SysFileSystem implements IFileSystem
 	{
 		try
 		{
+			#if linux
+			path = getPathLike(path);
+			#end
 			return sys.FileSystem.readDirectory(path);
 		}
 		catch (e)
@@ -45,13 +58,21 @@ class SysFileSystem implements IFileSystem
 
 	public function getFileContent(path:String)
 	{
+		#if linux
+		path = getPathLike(path);
+		#end
 		return getFileBytes(path).toString();
 	}
 
 	public function getFileBytes(path:String)
 	{
+		#if linux
+		path = getPathLike(path);
+		if(path == null) return null;
+		#else
 		if (!exists(path))
 			return null;
+		#end
 		return sys.io.File.getBytes(path);
 	}
 
@@ -137,15 +158,75 @@ class SysFileSystem implements IFileSystem
 		for (i in 0...all.length)
 		{
 			var f = all[i];
-			var stri = Util.uIndexOf(f, path + '/');
+			var prefix = Util.withTrailingSlash(path);
+			var stri = Util.uIndexOf(f, prefix);
 			if (stri == 0)
 			{
-				f = Util.uSubstr(f, Util.uLength(path + '/'), Util.uLength(f));
+				f = Util.uSubstr(f, Util.uLength(prefix), Util.uLength(f));
 				all[i] = f;
 			}
 		}
 		return all;
 	}
+
+	#if linux
+		/**
+	 * Returns a path to the existing file similar to the given one.
+	 * (For instance "mod/firelight" and  "Mod/FireLight" are *similar* paths)
+	 * @param path The path to find
+	 * @return Null<String> Found path or null if such doesn't exist
+	 */
+	private function getPathLike(path:String):Null<String> {
+
+		if(sys.FileSystem.exists(path)) return path;
+
+		var baseParts:Array<String> = path.replace('\\', '/').split('/');
+		var keyParts = [];
+		if (baseParts.length == 0) return null;
+
+		while(!sys.FileSystem.exists(baseParts.join("/")) && baseParts.length != 0)
+			keyParts.insert(0, baseParts.pop());
+
+		return findFile(baseParts.join("/"),keyParts);
+	}
+
+	private function findFile(base_path:String,keys:Array<String>):Null<String> {
+		var nextDir:String = base_path;
+		for (part in keys) {
+			if (part == '') continue;
+
+			var foundNode = findNode(nextDir, part);
+
+			if (foundNode == null) {
+				return null;
+			}
+			nextDir = nextDir+"/"+foundNode;
+		}
+
+		return nextDir;
+	}
+	/**
+	 * Searches a given directory and returns a name of the existing file/directory
+	 * *similar* to the **key**
+	 * @param dir Base directory to search
+	 * @param key The file/directory you want to find
+	 * @return Either a file name, or null if the one doesn't exist
+	 */
+	private function findNode(dir:String, key:String):Null<String> {
+		try {
+			var allFiles:Array<String> = sys.FileSystem.readDirectory(dir);
+			var fileMap:Map<String, String> = new Map();
+
+			for (file in allFiles) {
+				fileMap.set(file.toLowerCase(), file);
+			}
+
+			return fileMap.get(key.toLowerCase());
+		} catch (e:Dynamic) {
+			return null;
+		}
+	}
+	#end
 
 	private function _readDirectoryRecursive(str:String):Array<String>
 	{

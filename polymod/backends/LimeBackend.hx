@@ -249,8 +249,7 @@ class LimeBackend implements IBackend
 	public function exists(id:String):Bool
 	{
 		var symbol = new IdAndLibrary(id, modLibraries);
-		var e = symbol.library.exists(symbol.modId, null);
-		return e;
+		return symbol.exists();
 	}
 
 	public function getBytes(id:String):Bytes
@@ -309,7 +308,18 @@ class LimeBackend implements IBackend
 			// Add the assets to the list.
 			arr = arr.concat(items);
 		}
+
+		// Filter out duplicates.
+		arr = Util.filterUnique(arr);
+
 		return arr;
+	}
+
+	public function listLibraries():Array<String> {
+		if (modLibraries == null)
+			return [];
+
+		return [for (i in modLibraries.keys()) i];
 	}
 
 	public function clearCache()
@@ -397,7 +407,7 @@ class LimeModLibrary extends LimeAssetLibrary
 	#if html5
 	/**
 	 * Preload images on HTML5 to allow images to be loaded synchronously.
-	 * This doesn't break mods because a new
+	 * This doesn't break mods.
 	 */
 	var imageCache:Map<String, lime.graphics.Image>;
 	#end
@@ -411,7 +421,7 @@ class LimeModLibrary extends LimeAssetLibrary
 		this.fallback = fallback;
 		#if html5
 		imageCache = new Map<String, lime.graphics.Image>();
-		preloadImagesToCache();
+		// preloadImagesToCache();
 		#end
 		super();
 	}
@@ -843,7 +853,7 @@ class LimeModLibrary extends LimeAssetLibrary
 		var fallbackList:Array<String> = hasFallback ? fallback.list(requestedType) : [];
 		var limeType:AssetType = requestedType != null ? cast(requestedType, AssetType) : null;
 
-		var items = [];
+		var items:Array<String> = [];
 
 		var addItem = (path:String) ->
 		{
@@ -853,9 +863,13 @@ class LimeModLibrary extends LimeAssetLibrary
 			}
 		};
 
-		var libraryItems = p.typeLibraries.get(libraryId) ?? [];
+		var libraryItems = [for (i in p.type.keys()) i];
 		for (id in libraryItems)
 		{
+			// Skip ignored files.
+			if (p.isAssetExcluded(id)) continue;
+
+			// Skip append/merge files.
 			if (id.startsWith(PolymodConfig.appendFolder) || id.startsWith(PolymodConfig.mergeFolder))
 				continue;
 
@@ -865,14 +879,25 @@ class LimeModLibrary extends LimeAssetLibrary
 				var assetId = Util.stripPathPrefix(id, p.localeAssetPrefix);
 				if (id.startsWith(p.assetPrefix))
 					assetId = p.prependAssetsPrefix(assetId);
-				addItem(assetId);
+				var symbol = new IdAndLibrary(assetId, this);
+				// Skip entries that aren't part of this library.
+				if (!symbol.exists()) {
+					continue;
+				}
+				addItem(symbol.modId);
 			}
 			else
 			#end
 			// p.type(id) == requestedType is quicker than exists()!
 			if (limeType == null || p.type.get(id) == polyType)
 			{
-				addItem(p.prependAssetsPrefix(id));
+				var assetId = p.prependAssetsPrefix(id);
+				var symbol = new IdAndLibrary(assetId, this);
+				// Skip entries that aren't part of this library.
+				if (!symbol.exists()) {
+					continue;
+				}
+				addItem(symbol.modId);
 			}
 		}
 
@@ -898,27 +923,31 @@ class LimeModLibrary extends LimeAssetLibrary
 						var assetId = Util.stripPathPrefix(fallbackId, p.localeAssetPrefix);
 						if (fallbackId.startsWith(p.assetPrefix))
 							assetId = p.prependAssetsPrefix(assetId);
-						addItem(assetId);
+						var symbol = new IdAndLibrary(assetId, this);
+						addItem(symbol.modId);
 					}
 				}
 				else
 				{
 					// Localized FireTongue data file, or asset file in other locale! (example: assets/locales/en-US/data.tsv)
 					var assetId = fallbackId;
+					var symbol = new IdAndLibrary(assetId, this);
 					// The asset in other locales should be added to the list normally.
-					addItem(assetId);
+					addItem(symbol.modId);
 				}
 			}
 			else
 			{
 				// Unlocalized asset. Handle the original path.
 				var assetId = fallbackId;
-				addItem(assetId);
+				var symbol = new IdAndLibrary(assetId, this);
+				addItem(symbol.modId);
 			}
 			#else
 			// Unlocalized asset. Handle the original path.
 			var assetId = fallbackId;
-			addItem(assetId);
+			var symbol = new IdAndLibrary(assetId, this);
+			addItem(symbol.modId);
 			#end
 		}
 
@@ -1059,7 +1088,8 @@ class LimeCoreLibrary extends LimeAssetLibrary {
 	function buildRedirectId(id:String):String {
 		var baseId = if (pathPrefix == '') {
 			if (libraryId != 'default') {
-				Util.pathJoin(libraryId, polymodLibrary.stripAssetsPrefix(id));
+				// Util.pathJoin(libraryId, polymodLibrary.stripAssetsPrefix(id));
+				polymodLibrary.stripAssetsPrefix(id);
 			} else {
 				polymodLibrary.stripAssetsPrefix(id);
 			}
@@ -1169,10 +1199,12 @@ class LimeCoreLibrary extends LimeAssetLibrary {
 	{
 		var redirectId:String = buildRedirectId(id);
 		if (polymodLibrary.fileSystem.exists(redirectId)) {
+			// TODO: What was this line for? This is already the redirect ID.
+			// var filePath = polymodLibrary.file(redirectId);
+
 			// We load the bytes, then load the file, rather than using Image.loadFromFile,
 			// because URLs don't work with MemoryFileSystem.
-			var filePath = polymodLibrary.file(redirectId);
-			var dabytes = polymodLibrary.fileSystem.getFileBytes(filePath);
+			var dabytes = polymodLibrary.fileSystem.getFileBytes(redirectId);
 			var imageFuture = Image.loadFromBytes(dabytes);
 
 			return imageFuture;
@@ -1230,13 +1262,18 @@ class LimeCoreLibrary extends LimeAssetLibrary {
 		// that are excluded in the fallback library.
 		var fileList:Array<String> = polymodLibrary.fileSystem.readDirectoryRecursive(Util.pathJoin(redirectPath, pathPrefix));
 		for (id in fileList) {
-			var basePath = if (libraryId != 'default') {
-				Util.pathJoin(libraryId, polymodLibrary.stripAssetsPrefix(id));
-			} else {
-				polymodLibrary.stripAssetsPrefix(id);
-			}
-			var fullId:String = polymodLibrary.prependAssetsPrefix(basePath);
-			addItem(fullId);
+			var basePath = polymodLibrary.stripAssetsPrefix(id);
+			// if (libraryId != 'default') {
+			// 	Util.pathJoin(libraryId, polymodLibrary.stripAssetsPrefix(id));
+			// } else {
+			// }
+
+			var prefixedId:String = polymodLibrary.prependAssetsPrefix(basePath);
+
+			// Exclude files in the `ignoredFiles` list.
+			if (polymodLibrary.isAssetExcluded(basePath)) continue;
+
+			addItem(prefixedId);
 		}
 
 		return Util.filterUnique(items);
@@ -1265,6 +1302,15 @@ private class IdAndLibrary
 	public var nakedId(default, null):String;
 	public var fallbackId(default, null):String;
 
+	public var fullId(get, never):String;
+
+	function get_fullId():String {
+		if (lib == null || lib == 'default' || lib == '') {
+			return modId;
+		}
+		return '${lib}:$nakedId';
+	}
+
 	public inline function new(id:String, ?libs:Map<String, LimeModLibrary>, ?l:LimeModLibrary)
 	{
 		fallbackId = id;
@@ -1274,6 +1320,10 @@ private class IdAndLibrary
 		if (l != null)
 		{
 			library = l;
+			if (lib == '' || lib == null)
+			{
+				lib = library.libraryId ?? 'default';
+			}
 		}
 		else if (libs != null)
 		{
@@ -1283,11 +1333,11 @@ private class IdAndLibrary
 			}
 			library = libs.get(lib);
 		}
-		if (library != null && library.pathPrefix != null && library.pathPrefix != '')
-		{
-			modId = '${library.pathPrefix}/$nakedId';
-		}
 		modId = nakedId;
+	}
+
+	public function exists():Bool {
+		return this.library.exists(this.modId, null);
 	}
 }
 #end

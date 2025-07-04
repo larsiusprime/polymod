@@ -47,6 +47,15 @@ abstract PolymodAbstractScriptClass(PolymodScriptClass) from PolymodScriptClass
 				{
 					var v = this.findVar(name);
 
+					switch (v.get) {
+						case "get":
+							return this.callFunction('get_$name');
+
+						case "null":
+							throw "Invalid access to field " + name;
+							return null;
+					}
+
 					var varValue:Dynamic = null;
 					if (this._interp.variables.exists(name) == false)
 					{
@@ -63,14 +72,15 @@ abstract PolymodAbstractScriptClass(PolymodScriptClass) from PolymodScriptClass
 					return varValue;
 				}
 				else if (this.superClass == null) {
-					throw "field '" + name + "' does not exist in script class '" + this.className + "'";
+					// @:privateAccess this._interp.error(EInvalidAccess(name));
+					throw 'field "$name" does not exist in script class ${this.fullyQualifiedName}"';
 				} else if (Type.getClass(this.superClass) == null) {
 					// Anonymous structure
 					if (Reflect.hasField(this.superClass, name)) {
 						return Reflect.field(this.superClass, name);
 					} else {
-						throw "field '" + name + "' does not exist in script class '" + this.className + "' or super class '"
-							+ Type.getClassName(Type.getClass(this.superClass)) + "'";
+						// @:privateAccess this._interp.error(EInvalidAccess(name));
+						throw 'field "$name" does not exist in script class ${this.fullyQualifiedName}" or super class "${Type.getClassName(Type.getClass(this.superClass))}"';
 					}
 				} else if (Std.isOfType(this.superClass, PolymodScriptClass)) {
 					// PolymodScriptClass
@@ -88,19 +98,19 @@ abstract PolymodAbstractScriptClass(PolymodScriptClass) from PolymodScriptClass
 					if (fields.contains(name) || fields.contains('get_$name')) {
 						return Reflect.getProperty(this.superClass, name);
 					} else {
-						throw "field '" + name + "' does not exist in script class '" + this.className + "' or super class '"
-							+ Type.getClassName(Type.getClass(this.superClass)) + "'";
+						// @:privateAccess this._interp.error(EInvalidAccess(name));
+						throw "field '" + name + "' does not exist in script class '" + this.fullyQualifiedName + "' or super class '" + Type.getClassName(Type.getClass(this.superClass)) + "'";
 					}
 				}
 		}
 
 		if (this.superClass == null)
 		{
-			throw "field '" + name + "' does not exist in script class '" + this.className + "'";
+			throw "field '" + name + "' does not exist in script class '" + this.fullyQualifiedName + "'";
 		}
 		else
 		{
-			throw "field '" + name + "' does not exist in script class '" + this.className + "' or super class '"
+			throw "field '" + name + "' does not exist in script class '" + this.fullyQualifiedName + "' or super class '"
 				+ Type.getClassName(Type.getClass(this.superClass)) + "'";
 		}
 	}
@@ -117,12 +127,18 @@ abstract PolymodAbstractScriptClass(PolymodScriptClass) from PolymodScriptClass
 			case _:
 				if (this.findVar(name) != null)
 				{
+					var decl = this.findVar(name);
+					switch (decl.set) {
+						case "set":
+							this.callFunction('set_$name', [value]);
+							return value;
+
+						case "never" | "null":
+							throw "Invalid access to field " + name;
+							return value;
+					}
+
 					this._interp.variables.set(name, value);
-					return value;
-				}
-				else if (Reflect.hasField(this.superClass, name))
-				{
-					Reflect.setProperty(this.superClass, name, value);
 					return value;
 				}
 				else if (this.superClass != null && Std.isOfType(this.superClass, PolymodScriptClass))
@@ -136,16 +152,28 @@ abstract PolymodAbstractScriptClass(PolymodScriptClass) from PolymodScriptClass
 					{
 					}
 				}
+				else {
+					// Class object
+					var fields = Type.getInstanceFields(Type.getClass(this.superClass));
+					if (fields.contains(name) || fields.contains('get_$name')) {
+						Reflect.setProperty(this.superClass, name, value);
+						return value;
+					} else {
+						@:privateAccess this._interp.error(EInvalidAccess(name));
+						// throw "field '" + name + "' does not exist in script class '" + this.fullyQualifiedName + "' or super class '" + Type.getClassName(Type.getClass(this.superClass)) + "'";
+					}
+				}
 		}
 
 		if (this.superClass == null)
 		{
-			throw "field '" + name + "' does not exist in script class '" + this.className + "'";
+			@:privateAccess this._interp.error(EInvalidAccess(name));
+			// throw "field '" + name + "' does not exist in script class '" + this.fullyQualifiedName + "'";
 		}
 		else
 		{
-			throw "field '" + name + "' does not exist in script class '" + this.className + "' or super class '"
-				+ Type.getClassName(Type.getClass(this.superClass)) + "'";
+			@:privateAccess this._interp.error(EInvalidAccess(name));
+			// throw "field '" + name + "' does not exist in script class '" + this.fullyQualifiedName + "' or super class '" + Type.getClassName(Type.getClass(this.superClass)) + "'";
 		}
 	}
 }
