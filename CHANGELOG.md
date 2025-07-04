@@ -3,6 +3,23 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+# [1.9.0] - 202?-??-??
+## Added
+- Scripted classes can now access static functions of other modules.
+  - Scripted classes currently can't be imported, but you can statically access any scripted class by name as long as it is defined in the same package.
+  - You should also be able to reliably access scripted classes from the same file.
+- Scripted class instances can now be constructed directly from another script.
+  - For example, if you have declared `class MyScriptedClass extends Stage` in an hxc file, then another hxc file can call `new MyScriptedClass()` rather than having to call `ScriptedStage.init('MyScriptedClass')`.
+- Added a new Polymod warning which gets invoked when a mod is skipped for having an incompatible API version.
+- Added a new Polymod warning which gets invoked when attempting to create two scripted classes with the same qualified name.
+  - This previously silently failed, causing unintended behavior!
+- Added the new function `Polymod.clearAllScriptClasses()` to clear all registered scripted class descriptors.
+## Changed
+## Fixed
+- Fixed a Null Object Reference error that could occur if a scripted class attempts to extend a superclass which hasn't been imported.
+- Fixed an issue where Polymod would not interpret some boolean compilation flags correctly, resulting in enabled flags being ignored.
+- Resolve error "Type not found: T" caused by not properly deparameterizing scripted class types. (via @Geokureli)
+
 # [1.8.0] - 2024-07-26
 The version is the result of resolving practical needs that arose from using Polymod with [Friday Night Funkin'](https://github.com/FunkinCrew/Funkin) over the past year and a half!
 ## Added

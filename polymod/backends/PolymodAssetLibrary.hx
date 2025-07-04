@@ -1,7 +1,6 @@
 package polymod.backends;
 
 import haxe.io.Bytes;
-import openfl.display3D.IndexBuffer3D;
 import polymod.backends.IBackend;
 import polymod.backends.PolymodAssets.PolymodAssetType;
 import polymod.format.ParseRules;
@@ -230,6 +229,10 @@ class PolymodAssetLibrary
 		return backend.list(type);
 	}
 
+	public function listLibraries():Array<String> {
+		return backend.listLibraries();
+	}
+
 	public function listModFiles(type:PolymodAssetType = null):Array<String>
 	{
 		var items = [];
@@ -361,8 +364,8 @@ class PolymodAssetLibrary
 
 	private function _checkExists(id:String):Bool
 	{
-		if (ignoredFiles.length > 0 && ignoredFiles.indexOf(id) != -1)
-			return false;
+		if (isAssetExcluded(id)) return false;
+
 		id = stripAssetsPrefix(id);
 		for (d in dirs)
 		{
@@ -496,6 +499,10 @@ class PolymodAssetLibrary
 
 	@:allow(polymod.backends.LimeCoreLibrary)
 	private function initRedirectPath(libraryId:String, redirectPath:String, pathPrefix:String = '') {
+		if (!typeLibraries.exists(libraryId)) {
+			typeLibraries.set(libraryId, []);
+		}
+
 		if (redirectPath == null || redirectPath == '') return;
 
 		redirectPath = Util.pathJoin(redirectPath, pathPrefix);
@@ -515,10 +522,6 @@ class PolymodAssetLibrary
 		{
 			Polymod.error(MOD_LOAD_FAILED, 'Failed to load core asset redirect $redirectPath : $msg');
 			throw('ModAssetLibrary.initRedirectPath("$redirectPath") failed: $msg');
-		}
-
-		if (!typeLibraries.exists(libraryId)) {
-			typeLibraries.set(libraryId, []);
 		}
 
 		for (f in all) {
@@ -572,5 +575,22 @@ class PolymodAssetLibrary
 			return id;
 		}
 		return '$assetPrefix$id';
+	}
+
+	public function isAssetExcluded(id:String):Bool {
+		if (ignoredFiles.length == 0) return false;
+
+		var idStripped = stripAssetsPrefix(id);
+		var idPrepend = prependAssetsPrefix(idStripped);
+
+		if (ignoredFiles.contains(idStripped) || ignoredFiles.contains(idPrepend)) return true;
+
+		// TODO: This is MASSIVELY SLOW, any other solutions for this?
+		// for (pattern in ignoredFiles) {
+		// 	var regex = new EReg('^${pattern}$', 'i');
+		// 	if (regex.match(idStripped) || regex.match(idPrepend)) return true;
+		// }
+
+		return false;
 	}
 }
