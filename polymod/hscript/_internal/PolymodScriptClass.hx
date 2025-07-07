@@ -532,15 +532,19 @@ class PolymodScriptClass
 					'Error while executing function ${className}.${fnName}()#${errLine}: ' + '\n' + 'Imported module "${m}" has been blacklisted.');
 			case EUnknownVariable(v):
 				Polymod.error(SCRIPT_RUNTIME_EXCEPTION,
-					'Error while executing function ${className}.${fnName}()#${errLine}: EUnknownVariable' + '\n' +
+					'Error while executing function ${className}.${fnName}()#${errLine}:' + '\n' +
 					'Tried to access "${v}", an unknown variable or identifier.');
+			case EInvalidFinalSet(f):
+				Polymod.error(SCRIPT_RUNTIME_EXCEPTION,
+					'Error while executing function ${className}.${fnName}()#${errLine}:' + '\n' +
+					'Could not assign variable "${f}" because it is a final field.');
 			case EInvalidAccess(f):
 				Polymod.error(SCRIPT_RUNTIME_EXCEPTION,
-					'Error while executing function ${className}.${fnName}()#${errLine}: EInvalidAccess' + '\n' +
+					'Error while executing function ${className}.${fnName}()#${errLine}:' + '\n' +
 					'Tried to access "${f}", but it is not a valid field or method. Is the target object null?');
 			case EScriptThrow(v):
 				Polymod.error(SCRIPT_RUNTIME_EXCEPTION,
-					'Error while executing function ${className}.${fnName}()#${errLine}: EScriptThrow' + '\n' +
+					'Error while executing function ${className}.${fnName}()#${errLine}:' + '\n' +
 					'User script threw an error: ${v}');
 			default:
 				Polymod.error(SCRIPT_RUNTIME_EXCEPTION,

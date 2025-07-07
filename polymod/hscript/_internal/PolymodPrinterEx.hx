@@ -23,6 +23,7 @@ class PolymodPrinterEx extends Printer
 			case EInvalidScriptedFnAccess(f): "Invalid function access to scripted class: " + f;
 			case EInvalidScriptedVarGet(v): "Invalid variable retrieval to scripted class: " + v;
 			case EInvalidScriptedVarSet(v): "Invalid variable assignment to scripted class: " + v;
+			case EInvalidFinalSet(f): "Invalid final field assignment: " + f;
 			case EClassSuperNotCalled: "Super constructor not called";
 			case EClassUnresolvedSuperclass(c, r): 'Unresolved superclass $c (reason: $r)';
 			// TODO: Do we need to distinguish these?

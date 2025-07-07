@@ -326,7 +326,7 @@ class PolymodInterpEx extends Interp
 
 										if (finals.contains(id))
 										{
-											errorEx(EInvalidAccess(id));
+											errorEx(EInvalidFinalSet(id));
 											return null;
 										}
 									}
