@@ -58,6 +58,7 @@ class PolymodFinalMacro
       {
         case TInst(t, _):
           var finalMacroClassType:ClassType = t.get();
+          finalMacroClassType.meta.remove('finals');
           finalMacroClassType.meta.add('finals', allFinals, Context.currentPos());
         default:
           throw 'Could not find PolymodFinalMacro type';
