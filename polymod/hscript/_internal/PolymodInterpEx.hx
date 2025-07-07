@@ -1356,8 +1356,8 @@ class PolymodInterpEx extends Interp
 			return result;
 		} else {
 			Polymod.error(SCRIPT_RUNTIME_EXCEPTION,
-				'Error while calling static function ${fnName}(): EInvalidAccess' + '\n' +
-				'InvalidAccess error: Static function "${fnName}" does not exist! Define it or call the correct function.');
+				'Error while calling static function ${clsName}.${fnName}(): EInvalidAccess' + '\n' +
+				'Static function "${fnName}" does not exist! Define it or call the correct function.');
 			return null;
 		}
 	}
@@ -1413,9 +1413,7 @@ class PolymodInterpEx extends Interp
 				return this.variables.get(prefixedName);
 			}
 		} else {
-			Polymod.error(SCRIPT_RUNTIME_EXCEPTION,
-				'Error while retrieving static field ${fieldName}: EInvalidAccess' + '\n' +
-				'Static field "${fieldName}" does not exist! Define it, import it, or access the correct variable.');
+			errorEx(EInvalidAccess(fieldName));
 			return null;
 		}
 	}
@@ -1477,9 +1475,7 @@ class PolymodInterpEx extends Interp
 			this.variables.set(prefixedName, value);
 			return value;
 		} else {
-			Polymod.error(SCRIPT_RUNTIME_EXCEPTION,
-				'Error while modifying static field ${fieldName}: EInvalidAccess' + '\n' +
-				'Static field "${fieldName}" does not exist! Define it or modify the correct variable.');
+			errorEx(EInvalidAccess(fieldName));
 			return null;
 		}
 	}

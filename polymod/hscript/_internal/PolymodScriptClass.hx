@@ -533,11 +533,11 @@ class PolymodScriptClass
 			case EUnknownVariable(v):
 				Polymod.error(SCRIPT_RUNTIME_EXCEPTION,
 					'Error while executing function ${className}.${fnName}()#${errLine}: EUnknownVariable' + '\n' +
-					'UnknownVariable error: Tried to access "${v}", an unknown variable or identifier.');
+					'Tried to access "${v}", an unknown variable or identifier.');
 			case EInvalidAccess(f):
 				Polymod.error(SCRIPT_RUNTIME_EXCEPTION,
 					'Error while executing function ${className}.${fnName}()#${errLine}: EInvalidAccess' + '\n' +
-					'InvalidAccess error: Tried to access "${f}", but it is not a valid field or method. Is the target object null?');
+					'Tried to access "${f}", but it is not a valid field or method. Is the target object null?');
 			case EScriptThrow(v):
 				Polymod.error(SCRIPT_RUNTIME_EXCEPTION,
 					'Error while executing function ${className}.${fnName}()#${errLine}: EScriptThrow' + '\n' +
@@ -625,7 +625,7 @@ class PolymodScriptClass
 			{
 				Polymod.error(SCRIPT_RUNTIME_EXCEPTION,
 					'Error while calling function ${fnName}(): EInvalidAccess' + '\n' +
-					'InvalidAccess error: Script does not have function "${fnName}"! Define it or call the correct script function or superclass function.');
+					'Script does not have function "${fnName}"! Define it or call the correct script function or superclass function.');
 				return null;
 			}
 
