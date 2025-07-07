@@ -1320,7 +1320,7 @@ class PolymodInterpEx extends Interp
 			var result:Dynamic = null;
 			try
 			{
-				result = this.executeEx(fn.expr);
+				result = this.exprReturn(fn.expr);
 			}
 			catch (err:PolymodExprEx.ErrorEx)
 			{
