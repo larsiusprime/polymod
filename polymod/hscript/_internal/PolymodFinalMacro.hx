@@ -42,6 +42,8 @@ class PolymodFinalMacro
               finals.push(field.name);
             }
 
+            if (finals.length == 0) continue;
+
             var entryData = [
               macro $v{classPath},
               macro $v{finals}
