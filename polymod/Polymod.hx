@@ -656,6 +656,9 @@ class Polymod
 		@:privateAccess
 		polymod.hscript._internal.PolymodScriptClass.clearScriptedClasses();
 		polymod.hscript._internal.PolymodEnum.clearScriptedEnums();
+		#if hscript_typer
+		polymod.hscript._internal.PolymodTyperEx.clearAllModules();
+		#end
 		polymod.hscript.HScriptable.ScriptRunner.clearScripts();
 		#else
 		Polymod.warning(SCRIPT_HSCRIPT_NOT_INSTALLED, "Cannot register script classes, HScript is not available.");
@@ -692,6 +695,12 @@ class Polymod
 					polymod.hscript._internal.PolymodScriptClass.registerScriptClassByPath(path);
 				}
 			}
+
+			#if hscript_typer
+			// in the future typed modules might have a use
+			// but for now we just ignore the typed modules that are returned
+			var _ = polymod.hscript._internal.PolymodTyperEx.typeAllModules();
+			#end
 
 			polymod.hscript._internal.PolymodInterpEx.validateImports(); 
 		}
