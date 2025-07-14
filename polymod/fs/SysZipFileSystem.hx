@@ -59,6 +59,18 @@ class SysZipFileSystem extends SysFileSystem
 			addAllZips();
 	}
 
+	#if linux
+	public override function getPathLike(path:String):Null<String> {
+		var filePath = filesLocations.get(path);
+		if (filePath != null) return path;
+
+		var dirIdx = fileDirectories.indexOf(path);
+		if (dirIdx != -1) return fileDirectories[dirIdx];
+
+		return super.getPathLike(path);
+	}
+	#end
+
 	/**
 	 * Retrieve file bytes by pulling them from the ZIP file.
 	 */
