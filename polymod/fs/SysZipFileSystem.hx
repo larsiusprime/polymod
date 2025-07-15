@@ -23,6 +23,7 @@ import sys.io.File;
 import thx.semver.VersionRule;
 
 using StringTools;
+using polymod.util.InsensitiveArrayTools;
 
 /**
  * An implementation of an IFileSystem that can access mod files
@@ -123,7 +124,8 @@ class SysZipFileSystem extends SysFileSystem
 	{
 		if (filesLocations.exists(path))
 			return true;
-		if (fileDirectories.contains(path))
+
+		if (PolymodConfig.caseInsensitiveZipLoading ? fileDirectories.containsInsensitive(path) : fileDirectories.contains(path))
 			return true;
 
 		return super.exists(path);
@@ -131,7 +133,7 @@ class SysZipFileSystem extends SysFileSystem
 
 	public override function isDirectory(path:String)
 	{
-		if (fileDirectories.contains(path))
+		if (PolymodConfig.caseInsensitiveZipLoading ? fileDirectories.containsInsensitive(path) : fileDirectories.contains(path))
 			return true;
 
 		if (filesLocations.exists(path))
@@ -149,7 +151,7 @@ class SysZipFileSystem extends SysFileSystem
 		var result = super.readDirectory(path);
 		result = (result == null) ? [] : result;
 
-		if (fileDirectories.contains(path))
+		if (PolymodConfig.caseInsensitiveZipLoading ? fileDirectories.containsInsensitive(path) : fileDirectories.contains(path))
 		{
 			final insensitive:Bool = PolymodConfig.caseInsensitiveZipLoading;
 			if (insensitive)
@@ -157,10 +159,10 @@ class SysZipFileSystem extends SysFileSystem
 
 			// We check if directory ==, because
 			// we don't want to read the directory recursively.
-			for (file in filesLocations.keys())
+			final keys = insensitive ? (cast filesLocations).keysLowerCase() : filesLocations.keys();
+			for (file in keys)
 			{
 				var filePath = Path.directory(file);
-				if (insensitive) filePath = filePath.toLowerCase();
 				if (filePath == path)
 				{
 					result.push(Path.withoutDirectory(file));
