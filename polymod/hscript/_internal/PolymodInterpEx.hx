@@ -322,7 +322,7 @@ class PolymodInterpEx extends Interp
 									for (imp in _proxy._c.imports)
 									{
 										if (imp.name != id0) continue;
-										var finals = PolymodFinalMacro.getAllFinals().get(imp.fullPath);
+										var finals = PolymodFinalMacro.getAllFinals().get(imp.fullPath) ?? [];
 
 										if (finals.contains(id))
 										{
