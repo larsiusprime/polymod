@@ -125,7 +125,7 @@ class SysZipFileSystem extends SysFileSystem
 		if (filesLocations.exists(path))
 			return true;
 
-		if (PolymodConfig.caseInsensitiveZipLoading ? fileDirectories.containsInsensitive(path) : fileDirectories.contains(path))
+		if (fileDirectories.containsInsens(path))
 			return true;
 
 		return super.exists(path);
@@ -133,7 +133,7 @@ class SysZipFileSystem extends SysFileSystem
 
 	public override function isDirectory(path:String)
 	{
-		if (PolymodConfig.caseInsensitiveZipLoading ? fileDirectories.containsInsensitive(path) : fileDirectories.contains(path))
+		if (fileDirectories.containsInsens(path))
 			return true;
 
 		if (filesLocations.exists(path))
@@ -151,7 +151,7 @@ class SysZipFileSystem extends SysFileSystem
 		var result = super.readDirectory(path);
 		result = (result == null) ? [] : result;
 
-		if (PolymodConfig.caseInsensitiveZipLoading ? fileDirectories.containsInsensitive(path) : fileDirectories.contains(path))
+		if (fileDirectories.containsInsens(path))
 		{
 			final insensitive:Bool = PolymodConfig.caseInsensitiveZipLoading;
 			if (insensitive)
