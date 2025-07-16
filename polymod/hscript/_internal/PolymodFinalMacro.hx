@@ -11,9 +11,10 @@ class PolymodFinalMacro
 
   public static function getAllFinals():Map<String, Array<String>>
   {
-    if (_allFinals == null)
-      _allFinals = PolymodFinalMacro.fetchAllFinals();
-    return _allFinals;
+    // if (_allFinals == null)
+    //   _allFinals = PolymodFinalMacro.fetchAllFinals();
+    // return _allFinals;
+    return [];
   }
 
   public static macro function locateAllFinals():Void
@@ -76,13 +77,13 @@ class PolymodFinalMacro
   {
     var metaData = Meta.getType(PolymodFinalMacro);
 
-    if (metaData.finals != null) 
+    if (metaData.finals != null)
     {
       var result:Map<String, Array<String>> = [];
 
       for (element in metaData.finals)
       {
-        if (element.length != 2) 
+        if (element.length != 2)
           throw 'Malformed element in finals: ' + element;
 
         var classPath:String = element[0];
@@ -92,8 +93,8 @@ class PolymodFinalMacro
       }
 
       return result;
-    } 
-    else 
+    }
+    else
     {
       throw 'No finals found in PolymodFinalMacro';
     }
