@@ -5,18 +5,19 @@ package polymod.util;
  */
 class InsensitiveArrayTools
 {
-    public static function indexOfInsensitive(arr:Array<String>, value:String):Int
+    public static function indexOfInsens(arr:Array<String>, x:String, ?fromIndex:Int, ignoreConfig:Bool = false):Int
     {
-        value = value.toLowerCase();
+        if (!PolymodConfig.caseInsensitiveZipLoading && !ignoreConfig) return arr.indexOf(x, fromIndex);
+        x = x.toLowerCase();
         for (i => s in arr)
         {
-            if (s.toLowerCase() == value) return i;
+            if (s.toLowerCase() == x) return i;
         }
         return -1;
     }
 
-    public inline static function containsInsensitive(arr:Array<String>, value:String):Bool
+    public inline static function containsInsens(arr:Array<String>, x:String, ignoreConfig:Bool = false):Bool
     {
-        return indexOfInsensitive(arr, value) != -1;
+        return indexOfInsens(arr, x, ignoreConfig) != -1;
     }
 }
