@@ -663,8 +663,15 @@ class PolymodInterpEx extends Interp
 						if (name != null && _scriptEnumDescriptors.exists(name))
 						{
 							return new PolymodEnum(_scriptEnumDescriptors.get(name), f, args);
+						} 
+						else 
+						{
+							var obj = expr(e);
+							if( obj == null ) errorEx(EInvalidAccess(f));
+							return fcall(obj,f,args);
 						}
 					default:
+						return call(null,expr(e),args);
 				}
 				case ESwitch(e, cases, def):
 					var val:Dynamic = expr(e);
