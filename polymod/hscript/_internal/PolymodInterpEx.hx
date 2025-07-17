@@ -439,6 +439,8 @@ class PolymodInterpEx extends Interp
 				var result = (expression != null) ? exprWithType(expression, type) : null;
 
 				locals.set(name, {r: result});
+
+				return null;
 			case EIdent(id):
 				// When resolving a variable, check if it is a property with a getter, and call it if necessary.
 				@:privateAccess
