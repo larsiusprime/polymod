@@ -652,16 +652,16 @@ class PolymodInterpEx extends Interp
 					return new PolymodEnum(_scriptEnumDescriptors.get(name), f, []);
 				}
 			case ECall(e,params):
-				var args = new Array();
-				for (p in params)
-					args.push(expr(p));
-
 				switch(Tools.expr(e)) {
 					case EField(e,f):
 						var name = getIdent(e);
 						name = getClassDecl().imports.get(name)?.fullPath ?? name;
 						if (name != null && _scriptEnumDescriptors.exists(name))
 						{
+							var args = new Array();
+							for (p in params)
+								args.push(expr(p));
+							
 							return new PolymodEnum(_scriptEnumDescriptors.get(name), f, args);
 						}
 					default:
