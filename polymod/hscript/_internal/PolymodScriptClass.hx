@@ -589,9 +589,10 @@ class PolymodScriptClass
 
 			// Polymod.debug('Calling scripted class function "${fullyQualifiedName}.${fnName}(${args})"', null);
 
+			var r:Dynamic = null;
 			try
 			{
-				return _interp.executeEx(fn.expr);
+				r = _interp.executeEx(fn.expr);
 			}
 			catch (err:PolymodExprEx.ErrorEx)
 			{
@@ -599,7 +600,6 @@ class PolymodScriptClass
 				// A script error occurred while executing the script function.
 				// Purge the function from the cache so it is not called again.
 				purgeFunction(fnName);
-				return null;
 			}
 			catch (err:hscript.Expr.Error)
 			{
@@ -607,9 +607,9 @@ class PolymodScriptClass
 				// A script error occurred while executing the script function.
 				// Purge the function from the cache so it is not called again.
 				purgeFunction(fnName);
-				return null;
 			}
 
+			// This NEEDS to run regardless of the function succeeding or not, or else the previous values might be lost.
 			for (a in fn.args)
 			{
 				if (previousValues.exists(a.name))
@@ -621,6 +621,8 @@ class PolymodScriptClass
 					_interp.variables.remove(a.name);
 				}
 			}
+
+			return r;
 		}
 		else
 		{
