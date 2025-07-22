@@ -180,7 +180,7 @@ abstract PolymodAbstractScriptClass(PolymodScriptClass) from PolymodScriptClass
 		}
 	}
 
-	private static function resolveClassObjectFields(o:Dynamic, field:String):Array<String>
+	private static function retrieveClassObjectFields(o:Dynamic):Array<String>
 	{
 		final superClassCls = Type.getClass(o);
 		if (superClassCls == null) throw "Provided object isn't a class";
@@ -197,7 +197,7 @@ abstract PolymodAbstractScriptClass(PolymodScriptClass) from PolymodScriptClass
 
 	private static function getClassObjectField(o:Dynamic, field:String):Null<Dynamic>
 	{
-		var fields = resolveClassObjectFields(o, field);
+		var fields = retrieveClassObjectFields(o);
 		if (fields.contains(field) || fields.contains('get_$field'))
 			return Reflect.getProperty(o, field);
 
@@ -206,7 +206,7 @@ abstract PolymodAbstractScriptClass(PolymodScriptClass) from PolymodScriptClass
 
 	private static function setClassObjectField(o:Dynamic, field:String, value:Dynamic):Bool
 	{
-		var fields = resolveClassObjectFields(o, field);
+		var fields = retrieveClassObjectFields(o);
 		if (fields.contains(field) || fields.contains('set_$field'))
 		{
 			Reflect.setProperty(o, field, value);
