@@ -354,10 +354,10 @@ class PolymodInterpEx extends Interp
 						var decl = _proxy.findVar(id);
 						if (decl != null)
 						{
-							var v = switch (decl.get)
+							var v:Dynamic = switch (decl.get)
 							{
 								case "get": _proxy.callFunction('get_$id');
-								default: expr(decl.expr);
+								default: decl.expr != null ? expr(decl.expr) : null;
 							}
 
 							if (prefix)
@@ -1425,9 +1425,12 @@ class PolymodInterpEx extends Interp
 						this.variables.set(prefixedName, result);
 						return result;
 					case KVar(v):
-						var result = this.expr(v.expr);
-						this.variables.set(prefixedName, result);
-						return result;
+						if (v.expr != null) {
+							var result = this.expr(v.expr);
+							this.variables.set(prefixedName, result);
+							return result;
+						}
+						return null;
 					default:
 						throw 'Wuh?';
 				}
