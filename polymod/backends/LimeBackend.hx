@@ -863,7 +863,7 @@ class LimeModLibrary extends LimeAssetLibrary
 			}
 		};
 
-		var libraryItems = [for (i in p.type.keys()) i];
+		var libraryItems = p.typeLibraries.get(libraryId) ?? [];
 		for (id in libraryItems)
 		{
 			// Skip ignored files.
