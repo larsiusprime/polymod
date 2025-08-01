@@ -52,6 +52,9 @@ EInvalidScriptedFnAccess(f:String);
 EInvalidScriptedVarGet(v:String);
 EInvalidScriptedVarSet(v:String);
 EInvalidFinalSet(f:String);
+EInvalidPropGet(p:String);
+EInvalidPropSet(p:String);
+EPropVarNotReal(p:String);
 EInvalidInStaticContext(v:String); // Accessing "this" or "super" in a static function
 EClassSuperNotCalled;
 EClassUnresolvedSuperclass(c:String, r:String); // superclass and reason

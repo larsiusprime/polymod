@@ -542,6 +542,18 @@ class PolymodScriptClass
 				Polymod.error(SCRIPT_RUNTIME_EXCEPTION,
 					'Error while executing function ${className}.${fnName}()#${errLine}:' + '\n' +
 					'Tried to access "${f}", but it is not a valid field or method. Is the target object null?');
+			case EInvalidPropGet(p):
+				Polymod.error(SCRIPT_RUNTIME_EXCEPTION,
+					'Error while executing function ${className}.${fnName}()#${errLine}:' + '\n' +
+					'Property "${p}" is not accessible for reading.');
+			case EInvalidPropSet(p):
+				Polymod.error(SCRIPT_RUNTIME_EXCEPTION,
+					'Error while executing function ${className}.${fnName}()#${errLine}:' + '\n' +
+					'Property "${p}" is not accessible for writing.');
+			case EPropVarNotReal(p):
+				Polymod.error(SCRIPT_RUNTIME_EXCEPTION,
+					'Error while executing function ${className}.${fnName}()#${errLine}:' + '\n' +
+					'Property "${p}" cannot be accessed because it is not a real variable. Add @:isVar to enable it.');
 			case EScriptThrow(v):
 				Polymod.error(SCRIPT_RUNTIME_EXCEPTION,
 					'Error while executing function ${className}.${fnName}()#${errLine}:' + '\n' +

@@ -17,6 +17,9 @@ class PolymodPrinterEx extends Printer
 			case EInvalidIterator(v): "Invalid iterator: " + v;
 			case EInvalidOp(op): "Invalid operator: " + op;
 			case EInvalidAccess(f): "Invalid access to field " + f;
+			case EInvalidPropGet(p): "Cannot access property " + p + " for reading";
+			case EInvalidPropSet(p): "Cannot access property " + p + " for writing";
+			case EPropVarNotReal(p): "Cannot access property " + p + " because it is not a real variable";
 			case EInvalidModule(m): "Invalid module: " + m;
 			case EBlacklistedModule(m): "Blacklisted module: " + m;
 			case EInvalidInStaticContext(v): "Invalid field access from static context: " + v;
