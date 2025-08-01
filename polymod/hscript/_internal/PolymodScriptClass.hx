@@ -809,7 +809,7 @@ class PolymodScriptClass
 	{
 		if (_cachedVarDecls != null && _cachedVarDecls.exists(name))
 		{
-			_cachedVarDecls.get(name);
+			return _cachedVarDecls.get(name);
 		}
 		if (cacheOnly) return null;
 
@@ -821,6 +821,7 @@ class PolymodScriptClass
 				{
 					case KVar(v):
 						if (excludeStatic && f.access.contains(AStatic)) return null;
+						_cachedVarDecls?.set(name, v);
 						return v;
 					case _:
 				}
