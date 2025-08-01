@@ -51,13 +51,22 @@ abstract PolymodAbstractScriptClass(PolymodScriptClass) from PolymodScriptClass
 				{
 					var v = this.findVar(name);
 
+					@:privateAccess
 					switch (v.get) {
 						case "get":
-							return this.callFunction('get_$name');
+							final getName = 'get_$name';
+							if (!this._interp._propTrack.exists(getName)) {
+								this._interp._propTrack.set(getName, true);
+								var r = this.callFunction(getName);
+								this._interp._propTrack.remove(getName);
+								return r;
+							}
+							// Fallback like it's a normal variable.
+							// If it doesn't have a "physical field" and @:isVar isn't set
+							// an error will be thrown so doing this is fine.
 
 						case "null":
-							throw "Invalid access to field " + name;
-							return null;
+							return this._interp.errorEx(EInvalidPropGet(name));
 					}
 
 					var varValue:Dynamic = null;
@@ -133,14 +142,19 @@ abstract PolymodAbstractScriptClass(PolymodScriptClass) from PolymodScriptClass
 				if (this.findVar(name) != null)
 				{
 					var decl = this.findVar(name);
+					@:privateAccess
 					switch (decl.set) {
 						case "set":
-							this.callFunction('set_$name', [value]);
-							return value;
+							final setName = 'set_$name';
+							if (!this._interp._propTrack.exists(setName)) {
+								this._interp._propTrack.set(setName, true);
+								var r = this.callFunction(setName, [value]);
+								this._interp._propTrack.remove(setName);
+								return r;
+							}
 
 						case "never" | "null":
-							throw "Invalid access to field " + name;
-							return value;
+							return this._interp.errorEx(EInvalidPropSet(name));
 					}
 
 					this._interp.variables.set(name, value);
