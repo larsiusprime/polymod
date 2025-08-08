@@ -23,7 +23,7 @@ import sys.io.File;
 import thx.semver.VersionRule;
 
 using StringTools;
-using polymod.util.InsensitiveArrayTools;
+using polymod.util.Util;
 
 /**
  * An implementation of an IFileSystem that can access mod files
@@ -68,7 +68,7 @@ class SysZipFileSystem extends SysFileSystem
 		var filePath = filesLocations.get(path);
 		if (filePath != null) return path;
 
-		var dirIdx = fileDirectories.indexOf(path);
+		var dirIdx = fileDirectories.indexOfInsens(path);
 		if (dirIdx != -1) return fileDirectories[dirIdx];
 
 		return super.getPathLike(path);
