@@ -142,8 +142,11 @@ class PolymodScriptClassMacro {
 		}
 
     	var polymodScriptClassClassType:ClassType = MacroUtil.getClassType('polymod.hscript._internal.PolymodScriptClassMacro');
-    	polymodScriptClassClassType.meta.add('hscriptedClasses', hscriptedClassEntries, Context.currentPos());
+    	polymodScriptClassClassType.meta.remove('hscriptedClasses');
+		polymodScriptClassClassType.meta.add('hscriptedClasses', hscriptedClassEntries, Context.currentPos());
+		polymodScriptClassClassType.meta.remove('abstractImpls');
 		polymodScriptClassClassType.meta.add('abstractImpls', abstractImplEntries, Context.currentPos());
+		polymodScriptClassClassType.meta.remove('abstractStatics');
 		polymodScriptClassClassType.meta.add('abstractStatics', abstractStaticEntries, Context.currentPos());
 	}
 

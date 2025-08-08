@@ -7,6 +7,7 @@ import polymod.format.ParseRules;
 import polymod.fs.PolymodFileSystem.IFileSystem;
 // import polymod.hscript.PolymodScriptClass;
 import polymod.util.Util;
+import polymod.Polymod.FrameworkParams;
 #if firetongue
 import firetongue.FireTongue;
 #end
@@ -50,6 +51,11 @@ typedef PolymodAssetLibraryParams =
 	?assetPrefix:String,
 
 	/**
+	 * (optional) the framework params for the libraries.
+	 */
+	?frameworkParams:FrameworkParams,
+
+	/**
 	 * (optional) a FireTongue instance for Polymod to hook into for localization support
 	 */
 	#if firetongue
@@ -70,6 +76,7 @@ class PolymodAssetLibrary
 	public var ignoredFiles:Array<String> = null;
 
 	private var parseRules:ParseRules = null;
+	private var frameworkParams:FrameworkParams = null;
 	private var extensions:Map<String, PolymodAssetType>;
 
 	public function new(params:PolymodAssetLibraryParams)
@@ -79,6 +86,7 @@ class PolymodAssetLibrary
 		backend.polymodLibrary = this;
 		dirs = params.dirs;
 		parseRules = params.parseRules;
+		frameworkParams = params.frameworkParams;
 		ignoredFiles = params.ignoredFiles != null ? params.ignoredFiles.copy() : [];
 		extensions = params.extensionMap;
 		if (params.assetPrefix != null)
@@ -393,6 +401,16 @@ class PolymodAssetLibrary
 	{
 		type = [];
 		typeLibraries = [ 'default' => [] ];
+
+		// Load libraries from frameworkParams.
+		if (frameworkParams != null && frameworkParams.assetLibraryPaths != null)
+		{
+			for (k in frameworkParams.assetLibraryPaths.keys())
+			{
+				if (!typeLibraries.exists(k)) typeLibraries.set(k, []);
+			}
+		}
+
 		initExtensions();
 		if (parseRules == null)
 			parseRules = ParseRules.getDefault();
@@ -483,8 +501,27 @@ class PolymodAssetLibrary
 			ext = ext.toLowerCase();
 			var assetType = getExtensionType(ext);
 			type.set(f, assetType);
-			// TODO: What about other asset libraries?
-			typeLibraries.get('default').push(f);
+
+			var libi = Util.uIndexOf(f, "/");
+			var lib:String = libi != -1 ? f.substring(0, libi + 1) : '';
+			if (lib != '')
+			{
+				var added = false;
+				for (k => v in (frameworkParams?.assetLibraryPaths ?? []))
+				{
+					if (v == lib)
+					{
+						typeLibraries.get(k).push(f);
+						added = true;
+						break;
+					}
+				}
+				if (!added) typeLibraries.get('default').push(f);
+			}
+			else 
+			{
+				typeLibraries.get('default').push(f);
+			}
 			#if openfl
 			if (assetType == FONT)
 			{

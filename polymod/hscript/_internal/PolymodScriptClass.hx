@@ -532,15 +532,31 @@ class PolymodScriptClass
 					'Error while executing function ${className}.${fnName}()#${errLine}: ' + '\n' + 'Imported module "${m}" has been blacklisted.');
 			case EUnknownVariable(v):
 				Polymod.error(SCRIPT_RUNTIME_EXCEPTION,
-					'Error while executing function ${className}.${fnName}()#${errLine}: EUnknownVariable' + '\n' +
-					'UnknownVariable error: Tried to access "${v}", an unknown variable or identifier.');
+					'Error while executing function ${className}.${fnName}()#${errLine}:' + '\n' +
+					'Tried to access "${v}", an unknown variable or identifier.');
+			case EInvalidFinalSet(f):
+				Polymod.error(SCRIPT_RUNTIME_EXCEPTION,
+					'Error while executing function ${className}.${fnName}()#${errLine}:' + '\n' +
+					'Could not assign variable "${f}" because it is a final field.');
 			case EInvalidAccess(f):
 				Polymod.error(SCRIPT_RUNTIME_EXCEPTION,
-					'Error while executing function ${className}.${fnName}()#${errLine}: EInvalidAccess' + '\n' +
-					'InvalidAccess error: Tried to access "${f}", but it is not a valid field or method. Is the target object null?');
+					'Error while executing function ${className}.${fnName}()#${errLine}:' + '\n' +
+					'Tried to access "${f}", but it is not a valid field or method. Is the target object null?');
+			case EInvalidPropGet(p):
+				Polymod.error(SCRIPT_RUNTIME_EXCEPTION,
+					'Error while executing function ${className}.${fnName}()#${errLine}:' + '\n' +
+					'Property "${p}" is not accessible for reading.');
+			case EInvalidPropSet(p):
+				Polymod.error(SCRIPT_RUNTIME_EXCEPTION,
+					'Error while executing function ${className}.${fnName}()#${errLine}:' + '\n' +
+					'Property "${p}" is not accessible for writing.');
+			case EPropVarNotReal(p):
+				Polymod.error(SCRIPT_RUNTIME_EXCEPTION,
+					'Error while executing function ${className}.${fnName}()#${errLine}:' + '\n' +
+					'Property "${p}" cannot be accessed because it is not a real variable. Add @:isVar to enable it.');
 			case EScriptThrow(v):
 				Polymod.error(SCRIPT_RUNTIME_EXCEPTION,
-					'Error while executing function ${className}.${fnName}()#${errLine}: EScriptThrow' + '\n' +
+					'Error while executing function ${className}.${fnName}()#${errLine}:' + '\n' +
 					'User script threw an error: ${v}');
 			default:
 				Polymod.error(SCRIPT_RUNTIME_EXCEPTION,
@@ -585,9 +601,10 @@ class PolymodScriptClass
 
 			// Polymod.debug('Calling scripted class function "${fullyQualifiedName}.${fnName}(${args})"', null);
 
+			var r:Dynamic = null;
 			try
 			{
-				return _interp.executeEx(fn.expr);
+				r = _interp.executeEx(fn.expr);
 			}
 			catch (err:PolymodExprEx.ErrorEx)
 			{
@@ -595,7 +612,6 @@ class PolymodScriptClass
 				// A script error occurred while executing the script function.
 				// Purge the function from the cache so it is not called again.
 				purgeFunction(fnName);
-				return null;
 			}
 			catch (err:hscript.Expr.Error)
 			{
@@ -603,9 +619,9 @@ class PolymodScriptClass
 				// A script error occurred while executing the script function.
 				// Purge the function from the cache so it is not called again.
 				purgeFunction(fnName);
-				return null;
 			}
 
+			// This NEEDS to run regardless of the function succeeding or not, or else the previous values might be lost.
 			for (a in fn.args)
 			{
 				if (previousValues.exists(a.name))
@@ -617,6 +633,8 @@ class PolymodScriptClass
 					_interp.variables.remove(a.name);
 				}
 			}
+
+			return r;
 		}
 		else
 		{
@@ -625,7 +643,7 @@ class PolymodScriptClass
 			{
 				Polymod.error(SCRIPT_RUNTIME_EXCEPTION,
 					'Error while calling function ${fnName}(): EInvalidAccess' + '\n' +
-					'InvalidAccess error: Script does not have function "${fnName}"! Define it or call the correct script function or superclass function.');
+					'Script does not have function "${fnName}"! Define it or call the correct script function or superclass function.');
 				return null;
 			}
 
@@ -805,7 +823,7 @@ class PolymodScriptClass
 	{
 		if (_cachedVarDecls != null && _cachedVarDecls.exists(name))
 		{
-			_cachedVarDecls.get(name);
+			return _cachedVarDecls.get(name);
 		}
 		if (cacheOnly) return null;
 
@@ -817,6 +835,7 @@ class PolymodScriptClass
 				{
 					case KVar(v):
 						if (excludeStatic && f.access.contains(AStatic)) return null;
+						_cachedVarDecls?.set(name, v);
 						return v;
 					case _:
 				}
@@ -859,6 +878,7 @@ class PolymodScriptClass
 	private var _cachedSuperFunctionDecls:Map<String, Dynamic> = [];
 	private var _cachedFunctionDecls:Map<String, FunctionDecl> = [];
 	private var _cachedVarDecls:Map<String, VarDecl> = [];
+	private var _cachedUsingFunctions:Map<String, Dynamic> = [];
 
 	private function buildCaches()
 	{
@@ -866,6 +886,24 @@ class PolymodScriptClass
 		_cachedSuperFunctionDecls.clear();
 		_cachedFunctionDecls.clear();
 		_cachedVarDecls.clear();
+		_cachedUsingFunctions.clear();
+
+		for (n => u in _c.usings)
+		{
+			var fields = Type.getClassFields(u.cls);
+			if (fields.length == 0) continue;
+
+			for (fld in fields)
+			{
+				var func:Dynamic = function(params:Array<Dynamic>)
+				{
+					var prop:Dynamic = Reflect.getProperty(u.cls, fld);
+					return Reflect.callMethod(u.cls, prop, params);
+				}
+					
+				_cachedUsingFunctions.set(fld, func);
+			}
+		}
 
 		for (f in _c.fields)
 		{
