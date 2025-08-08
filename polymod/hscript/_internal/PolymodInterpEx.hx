@@ -320,6 +320,12 @@ class PolymodInterpEx extends Interp
 								errorEx(EInvalidPropSet(id));
 								return null;
 						}
+
+						if ((decl?.isfinal ?? false) && decl?.expr != null)
+						{
+							errorEx(EInvalidAccess(id));
+							return null;
+						}
 					}
 				}
 			case EField(e0, id):
@@ -476,8 +482,18 @@ class PolymodInterpEx extends Interp
 				// Evaluate the expression before assigning, applying typing if possible.
 				var result = (expression != null) ? exprWithType(expression, type) : null;
 
-				locals.set(name, {r: result});
+				locals.set(name, {r: result, isfinal: false});
+        
+				return null;
+			case EFinal(name, type, expression):
+				// Fix to ensure local variables are committed properly.
+				declared.push({n: name, old: locals.get(name)});
 
+				// Evaluate the expression before assigning, applying typing if possible.
+				var result = (expression != null) ? exprWithType(expression, type) : null;
+
+				locals.set(name, {r: result, isfinal: true});
+	
 				return null;
 			case EIdent(id):
 				// When resolving a variable, check if it is a property with a getter, and call it if necessary.
