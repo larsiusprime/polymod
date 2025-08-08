@@ -403,9 +403,9 @@ class PolymodInterpEx extends Interp
 									final setName = 'set_$id';
 									if (!_propTrack.exists(setName)) {
 										_propTrack.set(setName, true);
-										_proxy.callFunction(setName, [prefix ? v : (v + delta)]);
+										var r = _proxy.callFunction(setName, [prefix ? v : (v + delta)]);
 										_propTrack.remove(setName);
-										return v;
+										return r;
 									}
 								case "never":
 									return errorEx(EInvalidPropSet(id));
@@ -445,9 +445,9 @@ class PolymodInterpEx extends Interp
 									final setName = 'set_$id';
 									if (!_propTrack.exists(setName)) {
 										_propTrack.set(setName, true);
-										_proxy.callFunction(setName, [v]);
+										var r = _proxy.callFunction(setName, [v]);
 										_propTrack.remove(setName);
-									return v;
+										return r;
 									}
 									// Fallback
 								case "never":
