@@ -767,13 +767,14 @@ class ScriptParseFormat implements BaseParseFormat // <String>
 						if (decl2.match(DPackage(_)))
 						{
 							hasPackage = true;
+							Polymod.warning(MERGE, 'Base Script already has a Package. Skipping.');
 							break;
 						}
 					}
 
 					if (!hasPackage) baseDecls.push(decl);
 				case DTypedef(c1):
-					// For Typedefs: if the base script has one with the same name and is an anonymous structure, add the fields from the merged script.
+					// For Typedefs: if the base script has one with the same name, override it with @:mergeOverride metadata.
 					// Otherwise, add it regularly.
 
 					var hasTypedef:Bool = false;
@@ -783,41 +784,24 @@ class ScriptParseFormat implements BaseParseFormat // <String>
 						switch (decl2)
 						{
 							case DTypedef(c2):
-								if (c2.name != c1.name) continue;
-								hasTypedef = true;
-
-								if (!Type.enumEq(c2.t, c1.t))
+								if (c2.name == c1.name)
 								{
-									// If the merge typedef has the @:mergeOverride metadata, override it. Otherwise, don't do anything.
-									var metaNames:Array<String> = [for (m in c1.meta) m.name];
-									if (metaNames.contains(":mergeOverride"))
+									hasTypedef = true;
+
+									if (!Type.enumEq(c2.t, c1.t))
 									{
-										removeDecl = decl2;
-										hasTypedef = false;
-									}
-									break;
-								}
-
-								// Only copy over the fields if the typedef is an anonymous structure.
-								// I wish there was an easier way to do this.
-								switch(c1.t)
-								{
-									case CTAnon(t1):
-										switch(c2.t)
+										// If the merge typedef has the @:mergeOverride metadata, override it.
+										var metaNames:Array<String> = [for (m in c1.meta) m.name];
+										if (metaNames.contains(":mergeOverride"))
 										{
-											case CTAnon(t2):
-												var baseFieldNames:Array<String> = [for (fld in t2) fld.name];
-												for (fld in t1)
-												{
-													if (!baseFieldNames.contains(fld.name)) t2.push(fld);
-												}
-
-											default:
+											removeDecl = decl2;
+											hasTypedef = false;
+											break;
 										}
+									}
 
-									default:
+									Polymod.warning(MERGE, 'Base script already has a typedef ${c1.name}. Skipping.');
 								}
-
 							default:
 						}
 					}
@@ -828,7 +812,7 @@ class ScriptParseFormat implements BaseParseFormat // <String>
 					// For classes, we handle things differently.
 					// If the class doesn't exist, add it.
 					// If the entire merged class has the @:mergeOverride metadata, replace the entire class.
-					// Otherwise add the missing fields, including overriding the fields with @:mergeOverride.
+					// Otherwise add the missing fields with @:mergeAdd, including overriding the fields with @:mergeOverride.
 					// If a function has the @:mergeInsert metadata with an integer parameter, add the function content to the index from the parameter.
 
 					var hasClass:Bool = false;
@@ -855,26 +839,18 @@ class ScriptParseFormat implements BaseParseFormat // <String>
 								var removeFields:Array<FieldDecl> = [];
 								for (fld in c1.fields)
 								{
-									// Add the field if it doesn't exist in the class.
-									if (!fldNames.contains(fld.name))
-									{
-										c2.fields.push(fld);
-										continue;
-									}
-
-									// If the field has the @:mergeOverride metadata, override the class field.
 									var fldMetaNames:Array<String> = [for (m in fld.meta) m.name];
-									if (fldMetaNames.contains(":mergeOverride"))
+
+									// If the field has no metadata, do nothing.
+									if (fldMetaNames.length == 0)
 									{
-										removeFields.push(c2.fields[fldNames.indexOf(fld.name)]);
-										fld.meta.remove(fld.meta[fldMetaNames.indexOf(":mergeOverride")]);
-										c2.fields.push(fld);
+										Polymod.warning(MERGE, 'Field ${fld.name} from the merge class ${c1.name} has no metadata. Skipping.');
 										continue;
 									}
 
 									// If the field contains the @:mergeInsert metadata, insert the function expressions in the index.
 									var metaInsertIndex:Int = fldMetaNames.indexOf(":mergeInsert");
-									if (metaInsertIndex >= 0 && fld.meta[metaInsertIndex].params.length > 0)
+									if (metaInsertIndex >= 0 && (fld.meta[metaInsertIndex].params?.length ?? 0) > 0)
 									{
 										var insertIndex:Int = switch(fld.meta[metaInsertIndex].params[0] #if hscriptPos .e #end)
 										{
@@ -906,10 +882,42 @@ class ScriptParseFormat implements BaseParseFormat // <String>
 																funcExpr = EBlock(exprArray);
 														}
 													default:
+														Polymod.warning(MERGE, 'Field ${fld.name} from the base class ${c2.name} is not a function. Skipping.');
+
 												}
 											default:
+												Polymod.warning(MERGE, 'Field ${fld.name} from the merge class ${c1.name} is not a function. Skipping.');
+
 										}
+										continue;
 									}
+
+									// If the field has the @:mergeOverride metadata, override the class field.
+									if (fldMetaNames.contains(":mergeOverride"))
+									{
+										removeFields.push(c2.fields[fldNames.indexOf(fld.name)]);
+										fld.meta.remove(fld.meta[fldMetaNames.indexOf(":mergeOverride")]);
+										c2.fields.push(fld);
+										continue;
+									}
+
+									// If the field has the @:mergeAdd metadata, add it to the class if it doesn't already exist.
+									if (fldMetaNames.contains(":mergeAdd"))
+									{
+										if (!fldNames.contains(fld.name))
+										{
+											c2.fields.push(fld);
+										}
+										else
+										{
+											Polymod.warning(MERGE, 'Field ${fld.name} from the merge class ${c1.name} already exists in the base class. Skipping.');
+										}
+
+										continue;
+									}
+
+									// Otherwise, throw a warning.
+									Polymod.warning(MERGE, 'Field ${fld.name} from the merge class ${c1.name} doesn\'t have any merge metadata. Skipping.');
 								}
 
 								for (fld in removeFields)
@@ -924,8 +932,8 @@ class ScriptParseFormat implements BaseParseFormat // <String>
 					if (removeDecl != null) baseDecls.remove(removeDecl);
 					if (!hasClass) baseDecls.push(decl);
 				case DEnum(e1):
-					// For Enums: if the base script has one with the same name, add the fields from the merged script. Otherwise, add it regularly.
-					// Logic is similar to the one for Typedefs, just without the metadata stuff considering enums don't support them.
+					// For Enums: if the base script has an enum with the same name, throw a warning.
+					// Otherwise, add it to the base script.
 
 					var hasEnum:Bool = false;
 					for (decl2 in baseDecls)
@@ -933,14 +941,11 @@ class ScriptParseFormat implements BaseParseFormat // <String>
 						switch (decl2)
 						{
 							case DEnum(e2):
-								if (e1.name != e2.name) continue;
-								hasEnum = true;
-
-								// Enums don't support metadata, so we're skipping over the logic for @:mergeOverride.
-								var fldNames:Array<String> = [for (e in e2.fields) e.name];
-								for (fld in e1.fields)
+								if (e1.name == e2.name)
 								{
-									if (!fldNames.contains(fld.name)) e2.fields.push(fld);
+									hasEnum = true;
+									Polymod.error(MERGE, 'Script merge error: Base Script already has an Enum ' + e1.name + ". Skipping.");
+									continue;
 								}
 
 							default:

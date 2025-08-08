@@ -82,7 +82,10 @@ class PolymodPrinterEx extends Printer
 					output += " ";
 
 					if (c.extend != null) output += "extends " + this.typeToString(c.extend) + " ";
-					if (c.implement.length > 0) output += "implements " + c.implement.join(", ");
+					for (imp in c.implement)
+					{
+						output += "implements " + imp + " ";
+					}
 
 					output += "\n{";
 					output += classFieldsToString(c.fields);
