@@ -331,6 +331,7 @@ class Polymod
 		if (params.useScriptedClasses)
 		{
 			Polymod.notice(PolymodErrorCode.SCRIPT_PARSING, 'Parsing script classes...');
+			Polymod.clearScripts();
 
 			if (params.loadScriptsAsync) {
 				Polymod.registerAllScriptClassesAsync();
