@@ -51,10 +51,6 @@ class InsensitiveMap<T> implements IMap<String, T> {
       return originalKeys.iterator();
     }
 
-    public inline function keysLowerCase():Iterator<String> {
-      return data.keys();
-    }
-
     public function keyValueIterator() {
       return {
         final it = originalKeys.keys();
