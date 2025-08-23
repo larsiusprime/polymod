@@ -159,20 +159,16 @@ class SysZipFileSystem extends SysFileSystem
 
 			// We check if directory ==, because
 			// we don't want to read the directory recursively.
-			final keys = insensitive ? (cast filesLocations).keysLowerCase() : filesLocations.keys();
-			for (file in keys)
+			for (file in filesLocations.keys())
 			{
-				var filePath = Path.directory(file);
-				if (filePath == path)
+				if (Path.directory(insensitive ? file.toLowerCase() : file) == path)
 				{
 					result.push(Path.withoutDirectory(file));
 				}
 			}
 			for (dir in fileDirectories)
 			{
-				var dirPath = Path.directory(dir);
-				if (insensitive) dirPath = dirPath.toLowerCase();
-				if (dirPath == path)
+				if (Path.directory(insensitive ? dir.toLowerCase() : dir) == path)
 				{
 					result.push(Path.withoutDirectory(dir));
 				}
