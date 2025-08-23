@@ -950,6 +950,7 @@ class PolymodInterpEx extends Interp
 
 	override function makeIterator(v:Dynamic):Iterator<Dynamic>
 	{
+		if (v == null) errorEx(EInvalidIterator(v));
 		if (v.iterator != null)
 		{
 			try
