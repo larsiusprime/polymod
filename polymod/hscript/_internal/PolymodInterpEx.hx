@@ -159,12 +159,14 @@ class PolymodInterpEx extends Interp
 			func = get(o, "includes");
 		}
 
+		#if html5
 		// For web: remove is inlined so we have to use something else.
 		if (func == null && f == "remove")
 		{
 			@:privateAccess
 			return HxOverrides.remove(cast o, args[0]);
 		}
+		#end
 
 		if (func == null)
 		{
