@@ -1098,7 +1098,8 @@ class PolymodInterpEx extends Interp
 
 	override function get(o:Dynamic, f:String):Dynamic
 	{
-		if (o == null) errorEx(EInvalidAccess(f));
+		if (o == null)
+			errorEx(EInvalidAccess(f));
 		if (Std.isOfType(o, PolymodStaticClassReference)) {
 			var ref:PolymodStaticClassReference = cast(o, PolymodStaticClassReference);
 
