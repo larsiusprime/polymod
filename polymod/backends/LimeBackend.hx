@@ -870,7 +870,7 @@ class LimeModLibrary extends LimeAssetLibrary
 			if (p.isAssetExcluded(id)) continue;
 
 			// Skip append/merge files.
-			if (id.startsWith(PolymodConfig.appendFolder) || id.startsWith(PolymodConfig.mergeFolder))
+			if (Util.isMergeOrAppend(id))
 				continue;
 
 			#if firetongue
