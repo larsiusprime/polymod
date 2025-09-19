@@ -1287,6 +1287,10 @@ class PolymodInterpEx extends Interp
 			if (importedClass != null) {
 				if (importedClass.cls != null) return importedClass.cls;
 				if (importedClass.enm != null) return importedClass.enm;
+
+				// Resolve imported scripted classes.
+				var result = PolymodStaticClassReference.tryBuild(importedClass.fullPath);
+				if (result != null) return result;
 			}
 		} else {
 			trace('No proxy, trying to resolve: ${id}');
