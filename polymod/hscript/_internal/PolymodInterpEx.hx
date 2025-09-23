@@ -37,6 +37,16 @@ class PolymodInterpEx extends Interp
 		}
 	}
 
+	function getClassFullyQualifiedName():Null<String> {
+		if (_proxy == null)
+		{
+			var clsDecl = getClassDecl() ?? return null;
+			return PolymodStaticClassReference.tryBuild(clsDecl.name)?.getFullyQualifiedName();
+		}
+
+		return _proxy.fullyQualifiedName;
+	}
+
 	public function new(targetCls:Class<Dynamic>, proxy:PolymodAbstractScriptClass)
 	{
 		super();
@@ -625,12 +635,12 @@ class PolymodInterpEx extends Interp
 						}
 						catch (err:PolymodExprEx.ErrorEx)
 						{
-							PolymodScriptClass.reportErrorEx(err, _proxy?.fullyQualifiedName, name);
+							PolymodScriptClass.reportErrorEx(err, getClassFullyQualifiedName(), name);
 							r = null;
 						}
 						catch (err:hscript.Expr.Error)
 						{
-							PolymodScriptClass.reportError(err, _proxy?.fullyQualifiedName, name);
+							PolymodScriptClass.reportError(err, getClassFullyQualifiedName(), name);
 							r = null;
 						}
 						catch (err:Dynamic)
@@ -1076,12 +1086,12 @@ class PolymodInterpEx extends Interp
 		}
 		catch (err:PolymodExprEx.ErrorEx)
 		{
-			PolymodScriptClass.reportErrorEx(err, _proxy?.fullyQualifiedName);
+			PolymodScriptClass.reportErrorEx(err, getClassFullyQualifiedName());
 			return null;
 		}
 		catch (err:hscript.Expr.Error)
 		{
-			PolymodScriptClass.reportError(err, _proxy?.fullyQualifiedName);
+			PolymodScriptClass.reportError(err, getClassFullyQualifiedName());
 			return null;
 		}
 		catch (err:Dynamic)
