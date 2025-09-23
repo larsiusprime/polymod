@@ -625,12 +625,12 @@ class PolymodInterpEx extends Interp
 						}
 						catch (err:PolymodExprEx.ErrorEx)
 						{
-							PolymodScriptClass.reportErrorEx(err, 'anonymous');
+							PolymodScriptClass.reportErrorEx(err, _proxy?.fullyQualifiedName, name);
 							r = null;
 						}
 						catch (err:hscript.Expr.Error)
 						{
-							PolymodScriptClass.reportError(err, 'anonymous');
+							PolymodScriptClass.reportError(err, _proxy?.fullyQualifiedName, name);
 							r = null;
 						}
 						catch (err:Dynamic)
@@ -1076,12 +1076,12 @@ class PolymodInterpEx extends Interp
 		}
 		catch (err:PolymodExprEx.ErrorEx)
 		{
-			PolymodScriptClass.reportErrorEx(err, 'anonymous');
+			PolymodScriptClass.reportErrorEx(err, _proxy?.fullyQualifiedName);
 			return null;
 		}
 		catch (err:hscript.Expr.Error)
 		{
-			PolymodScriptClass.reportError(err, 'anonymous');
+			PolymodScriptClass.reportError(err, _proxy?.fullyQualifiedName);
 			return null;
 		}
 		catch (err:Dynamic)
