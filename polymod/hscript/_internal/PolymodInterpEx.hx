@@ -10,6 +10,11 @@ import polymod.hscript._internal.PolymodClassDeclEx.PolymodStaticClassReference;
 
 using StringTools;
 
+enum StopEx
+{
+	SPropertyFallback;
+}
+
 /**
  * Based on code by Ian Harrigan
  * @see https://github.com/ianharrigan/hscript-ex
@@ -275,6 +280,82 @@ class PolymodInterpEx extends Interp
 		}
 	}
 
+	inline function callProp(propFunc:String, ?args:Array<Dynamic>):Null<Dynamic>
+	{
+		if (!_propTrack.exists(propFunc))
+		{
+			var capturedLocals = this.duplicate(locals);
+			var capturedDeclared = this.declared;
+			var capturedDepth = this.depth;
+
+			_propTrack.set(propFunc, true);
+			var out = _proxy.callFunction(propFunc, args);
+			_propTrack.remove(propFunc);
+
+			this.locals = capturedLocals;
+			this.declared = capturedDeclared;
+			this.depth = capturedDepth;
+
+			return (args?.length ?? 0) > 0 ? (out ?? args[0]) : out;
+		}
+
+		throw SPropertyFallback;
+	}
+
+	function getProp(id:String, varDecl:VarDecl):Null<Dynamic>
+	{
+		try
+		{
+			return callProp('get_$id');
+		}
+		catch (_:StopEx) {}
+
+		if (varDecl.set == 'set' || varDecl.set == 'never')
+		{
+			checkIfPropReal(id);
+		}
+
+		// We're already inside the property's getter, throw a specific error
+		// to let it know we want super.expr to handle it
+		throw SPropertyFallback;
+	}
+
+	function setProp(id:String, v:Dynamic, varDecl:VarDecl):Null<Dynamic>
+	{
+		try
+		{
+			return callProp('set_$id', [v]);
+		}
+		catch (_:StopEx) {}
+
+		if (varDecl.get == 'get' || varDecl.get == 'never')
+		{
+			checkIfPropReal(id);
+		}
+
+		// We're already inside the property's setter, throw a specific error
+		// to let it know we want super.expr to handle it
+		throw SPropertyFallback;
+	}
+
+	function checkIfPropReal(id:String)
+	{
+		var fieldDecl = _proxy.findField(id);
+		var hasIsVar = false;
+		if (fieldDecl != null && fieldDecl.meta.length > 0)
+		{
+			for (m in fieldDecl.meta)
+			{
+				if (m.name == ':isVar')
+				{
+					hasIsVar = true;
+					break;
+				}
+			}
+		}
+		if (!hasIsVar) errorEx(EPropVarNotReal(id));
+	}
+
 	override function setVar(id:String, v:Dynamic)
 	{
 		if (_proxy != null && _proxy.superClass != null)
@@ -312,28 +393,28 @@ class PolymodInterpEx extends Interp
 				{
 					if (_proxy != null)
 					{
-						var decl = _proxy.findVar(id);
-						switch (decl?.set)
+						var decl = _proxy.findVar(id, true);
+						if (decl != null)
 						{
-							case "set":
-								final setName = 'set_$id';
-								if (!_propTrack.exists(setName)) {
-									var v = expr(e2);
-									_propTrack.set(setName, true);
-									var out = _proxy.callFunction(setName, [v]);
-									_propTrack.remove(setName);
-									return (out == null) ? v : out;
+							switch (decl.set)
+							{
+								case "set":
+									try
+									{
+										return setProp(id, expr(e2), decl);
+									}
+									catch (_:StopEx) {}
+
+								case "never":
+									errorEx(EInvalidPropSet(id));
+									return null;
 							}
 
-							case "never":
-								errorEx(EInvalidPropSet(id));
+							if ((decl.isfinal ?? false) && decl.expr != null)
+							{
+								errorEx(EInvalidAccess(id));
 								return null;
-						}
-
-						if ((decl?.isfinal ?? false) && decl?.expr != null)
-						{
-							errorEx(EInvalidAccess(id));
-							return null;
+							}
 						}
 					}
 				}
@@ -394,7 +475,7 @@ class PolymodInterpEx extends Interp
 				{
 					if (_proxy != null)
 					{
-						var decl = _proxy.findVar(id);
+						var decl = _proxy.findVar(id, true);
 						if (decl != null)
 						{
 							var v = switch (decl.get)
@@ -409,13 +490,11 @@ class PolymodInterpEx extends Interp
 							switch(decl.set)
 							{
 								case "set":
-									final setName = 'set_$id';
-									if (!_propTrack.exists(setName)) {
-										_propTrack.set(setName, true);
-										var r = _proxy.callFunction(setName, [prefix ? v : (v + delta)]);
-										_propTrack.remove(setName);
-										return r;
+									try
+									{
+										return setProp(id, prefix ? v : (v + delta), decl);
 									}
+									catch (_:StopEx) {}
 								case "never":
 									return errorEx(EInvalidPropSet(id));
 							}
@@ -437,7 +516,7 @@ class PolymodInterpEx extends Interp
 				{
 					if (_proxy != null)
 					{
-						var decl = _proxy.findVar(id);
+						var decl = _proxy.findVar(id, true);
 						if (decl != null)
 						{
 							var value = switch (decl.get)
@@ -446,22 +525,17 @@ class PolymodInterpEx extends Interp
 								default: expr(e1);
 							}
 
-							var v = fop(value,expr(e2));
-
 							switch(decl.set)
 							{
 								case "set":
-									final setName = 'set_$id';
-									if (!_propTrack.exists(setName)) {
-										_propTrack.set(setName, true);
-										var r = _proxy.callFunction(setName, [v]);
-										_propTrack.remove(setName);
-										return r;
+									try
+									{
+										return setProp(id, fop(value,expr(e2)), decl);
 									}
-									// Fallback
+									catch (_:StopEx) {}
 								case "never":
 									errorEx(EInvalidPropSet(id));
-									return v;
+									return null;
 							}
 						}
 					}
@@ -510,27 +584,15 @@ class PolymodInterpEx extends Interp
 				{
 					if (_proxy != null)
 					{
-						var decl = _proxy.findVar(id);
+						var decl = _proxy.findVar(id, true);
 						switch (decl?.get)
 						{
 							case "get":
-								final getName = 'get_$id';
-								if (_propTrack.exists(getName)) {
-									switch (decl.set) {
-											case 'set', 'never':
-												var field = _proxy.findField(id);
-												var hasIsVar = false;
-												for (m in field?.meta ?? []) if (m.name == ':isVar') { hasIsVar = true; break; }
-												if (!hasIsVar) return errorEx(EPropVarNotReal(id));
-											default:
-									}
+								try
+								{
+									return getProp(id, decl);
 								}
-								else {
-									_propTrack.set(getName, true);
-									var result = _proxy.callFunction(getName);
-									_propTrack.remove(getName);
-									return result;
-								}
+								catch (_:StopEx) {}
 						}
 					}
 				}

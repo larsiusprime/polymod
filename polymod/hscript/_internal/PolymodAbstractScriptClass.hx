@@ -54,18 +54,13 @@ abstract PolymodAbstractScriptClass(PolymodScriptClass) from PolymodScriptClass
 					@:privateAccess
 					switch (v.get) {
 						case "get":
-							final getName = 'get_$name';
-							if (!this._interp._propTrack.exists(getName)) {
-								this._interp._propTrack.set(getName, true);
-								var r = this.callFunction(getName);
-								this._interp._propTrack.remove(getName);
-								return r;
+							try
+							{
+								return this._interp.getProp(name, v);
 							}
-							// Fallback like it's a normal variable.
-							// If it doesn't have a "physical field" and @:isVar isn't set
-							// an error will be thrown so doing this is fine.
+							catch (_:PolymodInterpEx.StopEx) {}
 
-						case "null":
+						case "never" | "null":
 							return this._interp.errorEx(EInvalidPropGet(name));
 					}
 
@@ -139,25 +134,23 @@ abstract PolymodAbstractScriptClass(PolymodScriptClass) from PolymodScriptClass
 		switch (name)
 		{
 			case _:
-				if (this.findVar(name) != null)
+				var decl = this.findVar(name);
+				if (decl != null)
 				{
-					if (this.findVar(name).isfinal && this.findVar(name).expr != null) // The variable already exists and has a set value.
+					if (decl.isfinal && decl.expr != null) // The variable already exists and has a set value.
 					{
 						throw "Invalid access to field " + name;
 						return null;
 					}
 
-					var decl = this.findVar(name);
 					@:privateAccess
 					switch (decl.set) {
 						case "set":
-							final setName = 'set_$name';
-							if (!this._interp._propTrack.exists(setName)) {
-								this._interp._propTrack.set(setName, true);
-								var r = this.callFunction(setName, [value]);
-								this._interp._propTrack.remove(setName);
-								return r;
+							try
+							{
+								return this._interp.setProp(name, value, decl);
 							}
+							catch (e:PolymodInterpEx.StopEx) {}
 
 						case "never" | "null":
 							return this._interp.errorEx(EInvalidPropSet(name));
