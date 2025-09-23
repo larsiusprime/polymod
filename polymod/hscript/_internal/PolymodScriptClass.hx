@@ -599,6 +599,9 @@ class PolymodScriptClass
 
 			// Polymod.debug('Calling scripted class function "${fullyQualifiedName}.${fnName}(${args})"', null);
 
+			// Copy the locals and store them for later.
+			var localsCopy:Map<String, {r:Dynamic, ?isfinal:Null<Bool>}> = _interp.locals.copy();
+
 			var r:Dynamic = null;
 			try
 			{
@@ -631,6 +634,9 @@ class PolymodScriptClass
 					_interp.variables.remove(a.name);
 				}
 			}
+
+			// Restore the locals.
+			_interp.locals = localsCopy;
 
 			return r;
 		}
