@@ -479,12 +479,15 @@ class PolymodScriptClass
 	public static function reportError(err:hscript.Expr.Error, className:String = null, fnName:String = null)
 	{
 		var errEx = PolymodExprEx.ErrorExUtil.toErrorEx(err);
-		reportErrorEx(errEx, fnName);
+		reportErrorEx(errEx, className, fnName);
 	}
 
 	public static function reportErrorEx(err:PolymodExprEx.ErrorEx, className:String = null, fnName:String = null):Void
 	{
 		var errLine:String = #if hscriptPos '${err.line}' #else "#???" #end;
+
+		className ??= '???';
+		fnName ??= 'anonymous';
 
 		#if hscriptPos
 		switch (err.e)
