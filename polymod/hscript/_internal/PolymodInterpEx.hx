@@ -41,8 +41,8 @@ class PolymodInterpEx extends Interp
 	{
 		super();
 		_proxy = proxy;
-		variables.set("Math", Math);
-		variables.set("Std", Std);
+		variables.set("Math", #if hl HLWrapperMacro.HLMath #else Math #end);
+		variables.set("Std", #if hl HLWrapperMacro.HLStd #else Std #end);
 		this.targetCls = targetCls;
 	}
 
@@ -1152,7 +1152,7 @@ class PolymodInterpEx extends Interp
 			// return result;
 		}
 
-		var abstractKey:String = Type.getClassName(o) + '.' + f;
+		var abstractKey:String = #if hl untyped o.__name__ #else Type.getClassName(o) #end + '.' + f;
 		if (PolymodScriptClass.abstractClassStatics.exists(abstractKey)) {
 			return Reflect.getProperty(PolymodScriptClass.abstractClassStatics[abstractKey], abstractKey.replace('.', '_'));
 		}
