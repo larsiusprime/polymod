@@ -1151,6 +1151,18 @@ class PolymodInterpEx extends Interp
 			// #end
 			// return result;
 		}
+		#if hl
+		else if (Std.isOfType(o, Enum))
+		{
+			try {
+				return (o:Enum<Dynamic>).createByName(f);
+			}
+			catch (e)
+			{
+				return null;
+			}
+		}
+		#end
 
 		var abstractKey:String = #if hl untyped o.__name__ #else Type.getClassName(o) #end + '.' + f;
 		if (PolymodScriptClass.abstractClassStatics.exists(abstractKey)) {
