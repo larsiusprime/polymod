@@ -1169,7 +1169,7 @@ class PolymodInterpEx extends Interp
 			}
 			catch (e)
 			{
-				return null;
+				errorEx(EInvalidAccess(f));
 			}
 		}
 		#end
