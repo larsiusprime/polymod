@@ -74,6 +74,7 @@ class PolymodAssetLibrary
 	public var assetPrefix(default, null):String = "assets/";
 	public var dirs:Array<String> = null;
 	public var ignoredFiles:Array<String> = null;
+	public var loadedFiles(default, null):Array<String> = [];
 
 	private var parseRules:ParseRules = null;
 	private var frameworkParams:FrameworkParams = null;
@@ -292,12 +293,12 @@ class PolymodAssetLibrary
 		id = stripAssetsPrefix(id);
 		if (dir == null || dir == '')
 		{
-			return fileSystem.exists(id);
+			return loadedFiles.contains(id);
 		}
 		else
 		{
 			var thePath = Util.uCombine([dir, Util.sl(), id]);
-			if (fileSystem.exists(thePath))
+			if (loadedFiles.contains(thePath))
 			{
 				return true;
 			}
@@ -320,35 +321,29 @@ class PolymodAssetLibrary
 			return Util.pathJoin(theDir, idStripped);
 		}
 
-		var result = '';
-		var resultLocalized = false;
-		for (modDir in dirs)
+		var reverseDirs = dirs.copy();
+		reverseDirs.reverse();
+		for (modDir in reverseDirs)
 		{
 			#if firetongue
 			if (localeAssetPrefix != null)
 			{
 				var localePath = Util.pathJoin(modDir, Util.pathJoin(localeAssetPrefix, idStripped));
-				if (fileSystem.exists(localePath))
+				if (loadedFiles.contains(localePath))
 				{
-					result = localePath;
-					resultLocalized = true;
+					return localePath;
 				}
 			}
 			// Else, FireTongue not enabled.
 			#end
 
-			if (resultLocalized) continue;
+			// If we have an asset prefix
 
-			if (!resultLocalized)
-			{
-				// If we have an asset prefix
-
-				var filePath = Util.pathJoin(modDir, idStripped);
-				if (fileSystem.exists(filePath))
-					result = filePath;
-			}
+			var filePath = Util.pathJoin(modDir, idStripped);
+			if (loadedFiles.contains(filePath))
+				return filePath;
 		}
-		return result;
+		return '';
 	}
 
 	/**
@@ -381,14 +376,14 @@ class PolymodAssetLibrary
 			if (localeAssetPrefix != null)
 			{
 				var localePath = Util.pathJoin(d, Util.pathJoin(localeAssetPrefix, id));
-				if (fileSystem.exists(localePath))
+				if (loadedFiles.contains(localePath))
 					return true;
 			}
 			// Else, FireTongue not enabled.
 			#end
 
 			var filePath = Util.pathJoin(d, id);
-			if (fileSystem.exists(filePath))
+			if (loadedFiles.contains(filePath))
 			{
 				return true;
 			}
@@ -400,6 +395,7 @@ class PolymodAssetLibrary
 	private function init()
 	{
 		type = [];
+		loadedFiles = [];
 		typeLibraries = [ 'default' => [] ];
 
 		// Load libraries from frameworkParams.
@@ -502,6 +498,9 @@ class PolymodAssetLibrary
 			var assetType = getExtensionType(ext);
 			type.set(f, assetType);
 
+			var fileToLoad:String = Util.pathJoin(d, f);
+			if (!loadedFiles.contains(fileToLoad)) loadedFiles.push(fileToLoad);
+
 			var kruePath:String = f;
 			for (folder in [PolymodConfig.mergeFolder, PolymodConfig.appendFolder])
 			{
@@ -523,7 +522,7 @@ class PolymodAssetLibrary
 				}
 				if (!added) typeLibraries.get('default').push(f);
 			}
-			else 
+			else
 			{
 				typeLibraries.get('default').push(f);
 			}
