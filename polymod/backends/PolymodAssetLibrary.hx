@@ -516,7 +516,7 @@ class PolymodAssetLibrary
 		_allFilesCache = [];
 		for (id in type.keys())
 		{
-			if (id.indexOf(PolymodConfig.appendFolder) == 0 || id.indexOf(PolymodConfig.mergeFolder) == 0)
+			if (Util.isMergeOrAppend(id))
 				continue;
 			_allFilesCache.push(id);
 		}
