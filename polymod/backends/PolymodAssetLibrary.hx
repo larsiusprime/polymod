@@ -183,7 +183,7 @@ class PolymodAssetLibrary
 
 	public function mergeAndAppendText(id:String, modText:String):String
 	{
-		var cacheKey = 'merge_' + id;
+		var cacheKey = PolymodConfig.mergeFolder + id;
 		if (_textCache.exists(cacheKey))
 		{
 			return _textCache.get(cacheKey);
@@ -516,7 +516,7 @@ class PolymodAssetLibrary
 		_allFilesCache = [];
 		for (id in type.keys())
 		{
-			if (id.indexOf('_append') == 0 || id.indexOf('_merge') == 0)
+			if (id.indexOf(PolymodConfig.appendFolder) == 0 || id.indexOf(PolymodConfig.mergeFolder) == 0)
 				continue;
 			_allFilesCache.push(id);
 		}
