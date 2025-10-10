@@ -974,7 +974,12 @@ class PolymodInterpEx extends Interp
 		{
 			try
 			{
+				#if hl
+				// HL is a bit weird with iterators with arguments
+				v = Reflect.callMethod(v, v.iterator, []);
+				#else
 				v = v.iterator();
+				#end
 			}
 			catch (e:Dynamic)
 			{
@@ -1161,10 +1166,11 @@ class PolymodInterpEx extends Interp
 			// #end
 			// return result;
 		}
-		#if hl
+		#if (hl && haxe < "5")
 		else if (Std.isOfType(o, Enum))
 		{
-			try {
+			try
+			{
 				return (o:Enum<Dynamic>).createByName(f);
 			}
 			catch (e)
@@ -1181,7 +1187,12 @@ class PolymodInterpEx extends Interp
 
 		// Default behavior
 		if (Reflect.hasField(o, f)) {
+			#if hl
+			// On HL, hasField on properties returns true but Reflect.field might return null
+			return Reflect.getProperty(o, f);
+			#else
 			return Reflect.field(o, f);
+			#end
 		} else {
 			try {
 				return Reflect.getProperty(o, f);
