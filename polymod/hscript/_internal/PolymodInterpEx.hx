@@ -51,8 +51,8 @@ class PolymodInterpEx extends Interp
 	{
 		super();
 		_proxy = proxy;
-		variables.set("Math", Math);
-		variables.set("Std", Std);
+		variables.set("Math", #if hl HLWrapperMacro.HLMath #else Math #end);
+		variables.set("Std", #if hl HLWrapperMacro.HLStd #else Std #end);
 		this.targetCls = targetCls;
 	}
 
@@ -157,19 +157,19 @@ class PolymodInterpEx extends Interp
 
 		@:privateAccess
 		{
-			if (_proxy != null && _proxy._cachedUsingFunctions.exists(f))
+			if (func == null && _proxy != null && _proxy._cachedUsingFunctions.exists(f))
 			{
 				return _proxy._cachedUsingFunctions[f]([o].concat(args));
 			}
 		}
 
+		#if html5
 		// Workaround for an HTML5-specific issue.
 		// https://github.com/HaxeFoundation/haxe/issues/11298
 		if (func == null && f == "contains") {
 			func = get(o, "includes");
 		}
 
-		#if html5
 		// For web: remove is inlined so we have to use something else.
 		if (func == null && f == "remove")
 		{
@@ -974,7 +974,12 @@ class PolymodInterpEx extends Interp
 		{
 			try
 			{
+				#if hl
+				// HL is a bit weird with iterators with arguments
+				v = Reflect.callMethod(v, v.iterator, []);
+				#else
 				v = v.iterator();
+				#end
 			}
 			catch (e:Dynamic)
 			{
@@ -1161,15 +1166,33 @@ class PolymodInterpEx extends Interp
 			// #end
 			// return result;
 		}
+		#if (hl && haxe < "5")
+		else if (Std.isOfType(o, Enum))
+		{
+			try
+			{
+				return (o:Enum<Dynamic>).createByName(f);
+			}
+			catch (e)
+			{
+				errorEx(EInvalidAccess(f));
+			}
+		}
+		#end
 
-		var abstractKey:String = Type.getClassName(o) + '.' + f;
+		var abstractKey:String = #if hl untyped o.__name__ #else Type.getClassName(o) #end + '.' + f;
 		if (PolymodScriptClass.abstractClassStatics.exists(abstractKey)) {
 			return Reflect.getProperty(PolymodScriptClass.abstractClassStatics[abstractKey], abstractKey.replace('.', '_'));
 		}
 
 		// Default behavior
 		if (Reflect.hasField(o, f)) {
+			#if hl
+			// On HL, hasField on properties returns true but Reflect.field might return null
+			return Reflect.getProperty(o, f);
+			#else
 			return Reflect.field(o, f);
+			#end
 		} else {
 			try {
 				return Reflect.getProperty(o, f);
