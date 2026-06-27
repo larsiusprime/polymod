@@ -47,7 +47,7 @@ class SysZipFileSystem extends SysFileSystem
   {
     super(params);
     filesLocations = PolymodConfig.caseInsensitiveZipLoading ? new InsensitiveMap() : new StringMap();
-    zipParsers = new Map<String, ZipParser>();
+    zipParsers = [];
     fileDirectories = [];
 
     if (params.autoScan == null) params.autoScan = true;
@@ -86,6 +86,14 @@ class SysZipFileSystem extends SysFileSystem
       // Determine which zip the target file is in.
       var zipPath = filesLocations.get(path);
       var zipParser = zipParsers.get(zipPath);
+
+      // Check that the ZIP is valid.
+      if (zipParser == null || !zipParser.isValid()) {
+        trace('Removing invalid ZipParser: $zipPath');
+        zipParsers.remove(zipPath);
+        return null;
+      }
+
       var modId = Path.withoutExtension(Path.withoutDirectory(zipPath));
 
       var innerPath = path;
@@ -313,6 +321,9 @@ class SysZipFileSystem extends SysFileSystem
     var modId = Path.withoutExtension(Path.withoutDirectory(zipPath));
 
     var zipParser = new ZipParser(zipPath);
+
+    // NOTE: If creating and freeing the file handle is too expensive,
+    // you can set persistFileHandle to `true`.
 
     // SysZipFileSystem doesn't actually use the internal `files` map.
     // We populate it here simply so we know the files are there.
