@@ -1,10 +1,12 @@
 package polymod.fs;
 
+
+#if sys
 import polymod.util.VersionUtil;
 import polymod.Polymod;
 import polymod.fs.ZipFileSystem.ZipFileSystemParams;
-
-#if sys
+import polymod.fs.PolymodFileSystem.IFileSystem;
+import polymod.fs.PolymodFileSystem.PolymodFileSystemParams;
 import haxe.Constraints.IMap;
 import haxe.ds.StringMap;
 import haxe.io.Bytes;
@@ -168,7 +170,7 @@ class SysZipFileSystem extends SysFileSystem
         continue;
       }
 
-      var meta:ModMetadata = this.getMetadataByDir(baseDir, PolymodErrorOrigin.SCAN);
+      var meta:ModMetadata = this.getMetadataByModDir(baseDir, PolymodErrorOrigin.SCAN);
       if (meta == null)
       {
         // Unparsable mod metadata there.
@@ -192,8 +194,12 @@ class SysZipFileSystem extends SysFileSystem
     return result;
   }
 
-  override function scanModDirectoriesForId(modId:String, ?origin:PolymodErrorOrigin):Null<ModMetadata>
+  override public function scanModDirectoriesForId(modId:String, ?origin:PolymodErrorOrigin):Null<String>
   {
+    // Get the directory that the mod metadata is in from cache.
+    var knownDirectory:Null<String> = modMetadataLocations.get(modId);
+    if (knownDirectory != null) return knownDirectory;
+
     // Scan ALL ZIP directories for mod metadata with the matching location.
     for (dir in fileDirectories)
     {
@@ -235,7 +241,7 @@ class SysZipFileSystem extends SysFileSystem
           meta.iconPath = iconFile;
         }
 
-        return meta;
+        return dir;
       }
     }
 
