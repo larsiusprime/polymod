@@ -66,6 +66,70 @@ class SysZipFileSystem extends SysFileSystem
   }
   #end
 
+  public override function onLoadMod(modId:String):Void {
+    if (!PolymodConfig.fileLock) return;
+
+    var modDir:Null<String> = scanModDirectoriesForId(modId);
+    if (modDir == null)
+    {
+      Polymod.debug('Could not find mod dir for ID $modId');
+      return;
+    }
+
+    var zipPath:Null<String> = filesLocations.get(Util.pathJoin(modRoot, modDir));
+    if (zipPath == null)
+    {
+      // The mod is a folder mod. Establish a file lock on the metadata file.
+      super.onLoadMod(modId);
+      return;
+    }
+
+    var zipParser:Null<ZipParser> = (zipPath != null) ? zipParsers.get(zipPath) : null;
+
+    if (zipParser != null)
+    {
+      // The mod is a ZIP mod. Establish a file lock.
+      zipParser.persistFileHandle = true;
+    }
+    else
+    {
+      Polymod.debug('Issue with zip parser?');
+      return;
+    }
+  }
+
+  public override function onUnloadMod(modId:String):Void {
+    if (!PolymodConfig.fileLock) return;
+
+    var modDir:Null<String> = scanModDirectoriesForId(modId);
+    if (modDir == null)
+    {
+      Polymod.debug('Could not find mod dir for ID $modId');
+      return;
+    }
+
+    var zipPath:Null<String> = filesLocations.get(modDir);
+    var zipParser:Null<ZipParser> = (zipPath != null) ? zipParsers.get(zipPath) : null;
+
+    if (zipParser != null)
+    {
+      // The mod is a ZIP mod. Clear the file lock.
+      zipParser.persistFileHandle = false;
+    }
+    else
+    {
+      // The mod is a folder mod. Clear a file lock on the metadata file.
+      super.onUnloadMod(modId);
+    }
+  }
+
+  function isModDirInZip(dirName:String):Bool {
+    var modPath = Util.pathJoin(modRoot, dirName);
+    if (!exists(modPath)) return false;
+
+    return fileDirectories.contains(modPath);
+  }
+
   /**
    * Retrieve file bytes by pulling them from the ZIP file.
    */

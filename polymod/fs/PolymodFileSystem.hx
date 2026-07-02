@@ -101,6 +101,18 @@ interface IFileSystem
   public function isDirectory(path:String):Bool;
 
   /**
+   * Called when Polymod commands that a mod with the given ID is loaded.
+   * @param id The ID of the mod that was loaded.
+   */
+  public function onLoadMod(id:String):Void;
+
+  /**
+   * Called when Polymod commands that a mod with the given ID is unloaded.
+   * @param id The ID of the mod that was unloaded.
+   */
+  public function onUnloadMod(id:String):Void;
+
+  /**
    * Returns a list of files and folders contained within the provided directory path.
    * Does not return files in subfolders, use readDirectoryRecursive for that.
    *

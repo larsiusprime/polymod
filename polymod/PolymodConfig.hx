@@ -254,4 +254,24 @@ class PolymodConfig
     if (enableTextCache == null) enableTextCache = DefineUtil.getDefineBool('POLYMOD_ENABLE_TEXT_CACHE', false);
     return enableTextCache;
   }
+
+  /**
+   * Whether to deliberately lock file access for enabled mods.
+   * If enabled, ZIP mod files will be locked to prevent moving or deleting them while they are loaded.
+   * For folder mods, the metadata file will be locked, which should prevent moving the folder.
+   * If disabled, files will only be locked for the duration they are actively read from,
+   * meaning
+   *
+   * Disable this option by setting the `POLYMOD_FILE_LOCK` Haxe define at compile time,
+   * or by setting this value in your code.
+   *
+   * @default `true`
+   */
+  public static var fileLock(get, default):Null<Bool>;
+
+  static function get_fileLock():Null<Bool>
+  {
+    if (fileLock == null) fileLock = DefineUtil.getDefineBool('POLYMOD_FILE_LOCK', true);
+    return fileLock;
+  }
 }
