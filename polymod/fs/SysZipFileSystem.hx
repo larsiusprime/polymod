@@ -241,7 +241,7 @@ class SysZipFileSystem extends SysFileSystem
         continue;
       }
 
-      if (!VersionUtil.match(meta.apiVersion, apiVersionRule))
+      if (!meta.isCompatible(apiVersionRule))
       {
         // Incompatible mod metadata there.
         Polymod.warning(MOD_API_VERSION_MISMATCH,

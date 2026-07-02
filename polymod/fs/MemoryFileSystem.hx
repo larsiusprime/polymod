@@ -239,7 +239,7 @@ class MemoryFileSystem implements IFileSystem
 
       if (meta == null) continue;
 
-      if (!VersionUtil.match(meta.apiVersion, apiVersionRule)) continue;
+      if (!meta.isCompatible(apiVersionRule)) continue;
 
       result.push(meta);
     }
