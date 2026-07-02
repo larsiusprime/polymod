@@ -48,6 +48,10 @@ class StubFileSystem implements IFileSystem
     return null;
   }
 
+  public function onLoadMod(id:String):Void {}
+
+  public function onUnloadMod(id:String):Void {}
+
   public inline function getFileBytesByModId(path:String, modId:String):Null<haxe.io.Bytes>
   {
     return null;
