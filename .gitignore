@@ -1,9 +1,8 @@
 *.hl
 docs/Gemfile.lock
 samples/*/.haxelib/
-samples/*/export/
+samples/*/[Ee]xport/
 samples/*/bin/
 samples/*/dump/
-samples/nme/Export/
 samples/openfl_hscript/pages/
 .DS_STORE

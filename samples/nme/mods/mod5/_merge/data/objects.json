@@ -1,8 +1,7 @@
-{
-  "merge": [
-    {
-      "target": "nested.object.array",
-      "payload": ["a", "b", "c", "d"]
-    }
-  ]
-}
+[
+  {
+    "op": "replace",
+    "path": "/nested/object/array",
+    "value": ["a", "b", "c", "d"]
+  }
+]

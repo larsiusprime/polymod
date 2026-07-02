@@ -24,9 +24,4 @@
 	<haxedef name="POLYMOD_SCRIPT_LIBRARY" value="default" />
 	<haxedef name="POLYMOD_USE_NAMESPACE" value="true" />
 	<haxedef name="POLYMOD_ROOT_PATH" value="data/scripts/" />
-	<!--
-    There is a work in process function to make classes work in scripts.
-    To use classes in scripts, enable this option.
-  -->
-	<haxedef name="POLYMOD_USE_HSCRIPTEX" value="true" />
 </project>
