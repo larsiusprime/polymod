@@ -7,6 +7,7 @@ import polymod.fs.PolymodFileSystem.PolymodFileSystemParams;
 import polymod.util.Util;
 import polymod.util.VersionUtil;
 import thx.semver.VersionRule;
+import sys.io.FileInput;
 
 #if (!windows)
 using StringTools;
@@ -27,6 +28,14 @@ class SysFileSystem implements IFileSystem
    * A cache of the directories containing mod metadata, indexed by mod ID.
    */
   var modMetadataLocations:Map<String, String> = [];
+
+  /**
+   * By establishing and maintaining a file handle to the mod metadata,
+   * we can stop other applications from trying to delete mods that are in use!
+   *
+   * Disable this with `PolymodConfig.fileLock = false;`.
+   */
+  var fileHandles:Map<String, FileInput> = [];
 
   public function new(params:PolymodFileSystemParams)
   {
@@ -119,6 +128,7 @@ class SysFileSystem implements IFileSystem
     #if (!windows)
     path = getPathLike(path);
     #end
+
     return getFileBytes(path)?.toString();
   }
 
@@ -136,7 +146,49 @@ class SysFileSystem implements IFileSystem
     #else
     if (!exists(path)) return null;
     #end
+
+    var fileHandle:Null<FileInput> = fileHandles.get(path);
+    if (fileHandle != null)
+    {
+      fileHandle.seek(0, SeekBegin);
+      return fileHandle.readAll();
+    }
+
     return sys.io.File.getBytes(path);
+  }
+
+  public function onLoadMod(modId:String):Void
+  {
+    if (!PolymodConfig.fileLock) return;
+
+    var modDir:Null<String> = scanModDirectoriesForId(modId);
+    var modPath:Null<String> = Util.pathJoin(modRoot, modDir);
+    var metaFile:Null<String> = Util.pathJoin(modPath, PolymodConfig.modMetadataFile);
+
+    if (metaFile == null || !exists(metaFile))
+    {
+      Polymod.debug('Could not find mod metadata file for $modId');
+      return;
+    }
+
+    fileHandles.set(metaFile, sys.io.File.read(metaFile));
+  }
+
+  public function onUnloadMod(modId:String):Void
+  {
+    if (!PolymodConfig.fileLock) return;
+
+    var modDir:Null<String> = scanModDirectoriesForId(modId);
+    var modPath:Null<String> = Util.pathJoin(modRoot, modDir);
+    var metaFile:Null<String> = Util.pathJoin(modPath, PolymodConfig.modMetadataFile);
+
+    if (metaFile == null)
+    {
+      Polymod.debug('Could not find mod metadata file for $modId');
+      return;
+    }
+
+    fileHandles.remove(metaFile);
   }
 
   /**

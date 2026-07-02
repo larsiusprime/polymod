@@ -245,6 +245,8 @@ class Polymod
    */
   public static function init(params:PolymodParams):Array<ModMetadata>
   {
+    if (assetLibrary != null) cleanupAssetLibrary();
+
     if (params.errorCallback != null) onError = params.errorCallback;
 
     var modRoot = params.modRoot;
@@ -400,7 +402,27 @@ class Polymod
     // Store the mods for the later `init()` calls.
     prevModsLoaded = sortedModsToLoad.copy();
 
+    for (mod in sortedModIds)
+    {
+      fileSystem.onLoadMod(mod);
+    }
+
     return sortedModsToLoad;
+  }
+
+  static function cleanupAssetLibrary():Void {
+    if (assetLibrary == null) return;
+
+    var fileSystem = assetLibrary.fileSystem;
+    var sortedModIds = assetLibrary.modIds;
+
+    for (mod in sortedModIds)
+    {
+      fileSystem.onUnloadMod(mod);
+    }
+
+    assetLibrary.destroy();
+    assetLibrary = null;
   }
 
   public static function getLoadedModDirs():Array<String>

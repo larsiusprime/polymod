@@ -951,7 +951,7 @@ class PolymodAssetLibrary
 
         if (font == null)
         {
-          font = Font.fromBytes(fileSystem.getFileBytesByModId(file, modDir));
+          font = Font.fromBytes(fileSystem.getFileBytes(this.file(file, modDir)));
         }
 
         if (font != null)

@@ -32,7 +32,24 @@ class ZipParser
    * Enable this to hold onto the file handle for as long as the ZIP parser is in use.
    * Disable this to re-open the file handle every time you want to access the ZIP contents.
    */
-  public var persistFileHandle:Bool = false;
+  public var persistFileHandle(default, set):Bool = false;
+
+  function set_persistFileHandle(value:Bool):Bool {
+    this.persistFileHandle = value;
+
+    if (persistFileHandle)
+    {
+      // Establish a persistent file handle if it isn't already there.
+      buildFileHandle();
+    }
+    else
+    {
+      // Destroy a persistent file handle if it is already there.
+      cleanupFileHandle();
+    }
+
+    return value;
+  }
 
   /**
    * The end-of-central-directory record, as parsed from the end of the ZIP file.
@@ -58,7 +75,8 @@ class ZipParser
    */
   function findEndOfCentralDirectoryRecord():Void
   {
-    if (fileHandle == null) fileHandle = File.read(this.fileName);
+    buildFileHandle();
+    if (fileHandle == null) throw 'Failed to read ZIP file!';
 
     fileHandle.seek(-22, SeekEnd); // 22 is the smallest the eocd can be, so we start here
     var tmpbuf = Bytes.alloc(4);
@@ -80,7 +98,8 @@ class ZipParser
    */
   function getAllCentralDirectoryHeaders():Void
   {
-    if (fileHandle == null) fileHandle = File.read(this.fileName);
+    buildFileHandle();
+    if (fileHandle == null) throw 'Failed to read ZIP file!';
 
     this.centralDirectoryRecords = (PolymodConfig.caseInsensitiveZipLoading ?? true) ? new InsensitiveMap() : new StringMap();
 
@@ -108,12 +127,15 @@ class ZipParser
    */
   public function getLocalFileHeaderOf(localFileName:String):Null<LocalFileHeader>
   {
-    if (fileHandle == null) fileHandle = File.read(this.fileName);
+    buildFileHandle();
+    if (fileHandle == null) throw 'Failed to read ZIP file!';
 
     var cdfh = centralDirectoryRecords.get(localFileName);
     if (cdfh == null)
     {
       Polymod.warning(ASSET_MISSING_FILE, 'The file $localFileName was not found in the zip: $fileName');
+
+      cleanupFileHandle();
       return null;
     }
 
@@ -122,7 +144,6 @@ class ZipParser
     lfh.dataOffset = fileHandle.tell();
 
     cleanupFileHandle();
-
     return lfh;
   }
 
@@ -141,7 +162,6 @@ class ZipParser
   function buildFileHandle() {
     if (fileHandle != null) return;
     if (!isValid()) throw 'Invalid ZIP file: $fileName';
-
     fileHandle = File.read(this.fileName);
   }
 
