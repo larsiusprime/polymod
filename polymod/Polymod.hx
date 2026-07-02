@@ -5,6 +5,7 @@ import haxe.io.Bytes;
 import polymod.backends.IBackend;
 import polymod.backends.PolymodAssetLibrary;
 import polymod.PolymodAssets;
+import thx.semver.VersionRule;
 import polymod.format.JsonHelp;
 import polymod.format.ParseRules;
 import polymod.fs.PolymodFileSystem;
@@ -283,7 +284,7 @@ class Polymod
 
         if (meta != null)
         {
-          if (!VersionUtil.match(meta.apiVersion, params.apiVersionRule))
+          if (!meta.isCompatible(params.apiVersionRule))
           {
             error(MOD_API_VERSION_MISMATCH,
               'Mod "${modId}" was built for incompatible API version ${meta.apiVersion.toString()}, expected "${params.apiVersionRule.toString()}"', INIT);
@@ -303,7 +304,7 @@ class Polymod
 
         if (meta != null)
         {
-          if (!VersionUtil.match(meta.apiVersion, params.apiVersionRule))
+          if (!meta.isCompatible(params.apiVersionRule))
           {
             error(MOD_API_VERSION_MISMATCH,
               'Mod "${modDir}" was built for incompatible API version ${meta.apiVersion.toString()}, expected "${params.apiVersionRule.toString()}"', INIT);
@@ -1207,6 +1208,17 @@ class ModMetadata
   public function new()
   {
     // No-op constructor.
+  }
+
+  /**
+   * Determine whether this mod is compatible with the provided API version rule.
+   *
+   * @param apiVersionRule The API version rule to check compatibility against.
+   * @return Whether this mod is compatible with the provided API version rule.
+   */
+  public function isCompatible(apiVersionRule:VersionRule):Bool
+  {
+    return VersionUtil.match(apiVersion, apiVersionRule);
   }
 
   /**

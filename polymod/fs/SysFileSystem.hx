@@ -236,7 +236,7 @@ class SysFileSystem implements IFileSystem
         continue;
       }
 
-      if (!VersionUtil.match(meta.apiVersion, apiVersionRule))
+      if (!meta.isCompatible(apiVersionRule))
       {
         // Remove locations whose metadata is no longer compatible with the current API version.
         Polymod.warning(MOD_API_VERSION_MISMATCH,
@@ -274,7 +274,7 @@ class SysFileSystem implements IFileSystem
         continue;
       }
 
-      if (!VersionUtil.match(meta.apiVersion, apiVersionRule))
+      if (!meta.isCompatible(apiVersionRule))
       {
         // Incompatible mod metadata there.
         Polymod.warning(MOD_API_VERSION_MISMATCH,
