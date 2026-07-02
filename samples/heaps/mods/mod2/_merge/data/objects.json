@@ -1,8 +1,1 @@
-{
-  "merge": [
-    {
-      "target": "object_1",
-      "payload": { "value": "sunflower" }
-    }
-  ]
-}
+[{ "op": "replace", "path": "/object_1/value", "value": "sunflower" }]
