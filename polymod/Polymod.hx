@@ -265,6 +265,7 @@ class Polymod
 
     params.modIds ??= [];
     params.dirs ??= [];
+    params.ignoredFiles ??= [];
 
     if (params.fileSystemParams == null) params.fileSystemParams = {modRoot: modRoot};
     if (params.fileSystemParams.modRoot == null) params.fileSystemParams.modRoot = modRoot;
