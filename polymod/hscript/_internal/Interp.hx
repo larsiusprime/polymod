@@ -2550,7 +2550,7 @@ class Interp
           // Polymod.debug('Imported class ${importedClass.name} from ${importedClass.fullPath}');
           imports.set(importedClass.name, importedClass);
         case DUsing(path):
-          var clsName = path[path.length - 1];
+          var clsName = path.join('.');
 
           if (usings.exists(clsName))
           {
