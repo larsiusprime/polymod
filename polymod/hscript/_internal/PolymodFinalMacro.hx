@@ -5,7 +5,6 @@ import haxe.macro.Context;
 import haxe.macro.Expr;
 import haxe.macro.Type;
 #end
-import polymod.util.Util;
 
 @:nullSafety
 class PolymodFinalMacro
@@ -15,6 +14,7 @@ class PolymodFinalMacro
    */
   static inline final METADATA_RESOURCE_NAME:String = 'PolymodFinalMacro_METADATA';
 
+  #if !macro
   public static inline function getFinals(fullPath:String):Array<String> {
     return getAllFinals().get(fullPath) ?? [];
   }
@@ -22,7 +22,7 @@ class PolymodFinalMacro
   public static inline function getFinalsOf(obj:Dynamic):Array<String> {
     while (Std.isOfType(obj, PolymodScriptClass)) obj = obj.superClass;
 
-    var typeName:String = Util.getTypeNameOf(obj);
+    var typeName:String = polymod.util.Util.getTypeNameOf(obj);
     var result = getFinals(typeName);
     return result;
   }
@@ -34,7 +34,7 @@ class PolymodFinalMacro
   public static inline function getPrivatePropertiesOf(obj:Dynamic):Array<String> {
     while (Std.isOfType(obj, PolymodScriptClass)) obj = obj.superClass;
 
-    var typeName:String = Util.getTypeNameOf(obj);
+    var typeName:String = polymod.util.Util.getTypeNameOf(obj);
     var result = getPrivateProperties(typeName);
     return result;
   }
@@ -54,6 +54,7 @@ class PolymodFinalMacro
     if (_allPrivates == null) _allPrivates = PolymodFinalMacro.fetchAllPrivateProperties();
     return _allPrivates;
   }
+  #end
 
   public static macro function locateAllFinals():Void
   {
