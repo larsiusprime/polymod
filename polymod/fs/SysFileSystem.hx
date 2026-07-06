@@ -590,12 +590,14 @@ class SysFileSystem implements IFileSystem
 #end
 
 #if !sys
+import polymod.fs.PolymodFileSystem.PolymodFileSystemParams;
+
 /**
- * Fallback used when the `sys` packages required by `SysZipFileSystem` are not available.
+ * Fallback used when the `sys` packages required by `SysFileSystem` are not available.
  */
-class SysZipFileSystem extends polymod.fs.StubFileSystem
+class SysFileSystem extends polymod.fs.StubFileSystem
 {
-  public function new(params:ZipFileSystemParams)
+  public function new(params:PolymodFileSystemParams)
   {
     super(params);
     Polymod.error(POLYMOD_FUNCTIONALITY_NOT_IMPLEMENTED, 'This file system not supported for this platform, and is only intended for use on sys targets', INIT);
