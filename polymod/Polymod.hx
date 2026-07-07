@@ -370,20 +370,6 @@ class Polymod
     // Do scripted class initialization now that the assetLibrary is loaded.
     if (params.useScriptedClasses)
     {
-      Polymod.info(SCRIPT_PARSE_START, 'Parsing script classes...');
-      Polymod.clearScripts();
-
-      // Add the loaded mods to the Parser's preprocessor values.
-      for (mod in prevModsLoaded)
-      {
-        Parser.preprocessorValues.remove(mod.id);
-      }
-
-      for (mod in sortedModsToLoad)
-      {
-        Parser.preprocessorValues.set(mod.id, mod.modVersion.toString());
-      }
-
       if (params.loadScriptsAsync)
       {
         #if lime
@@ -845,12 +831,31 @@ class Polymod
     polymod.hscript.HScriptable.ScriptRunner.clearScripts();
   }
 
+  static function prepareRegisterScriptedClasses():Void
+  {
+    Polymod.clearScripts();
+    Parser.resetPreprocessorValues();
+
+    // Add the loaded mods to the Parser's preprocessor values.
+    for (mod in prevModsLoaded)
+    {
+      Parser.preprocessorValues.set(mod.id, mod.modVersion.toString());
+    }
+  }
+
   /**
    * Get a list of all the available scripted classes (`.hxc` files), interpret them, and register any classes.
+   *
+   * @return A map of script class paths to whether they were successfully parsed and registered.
    */
-  public static function registerAllScriptClasses():Void
+  public static function registerAllScriptClasses():Map<String, Bool>
   {
+    Polymod.info(SCRIPT_PARSE_START, 'Parsing script classes...');
+    prepareRegisterScriptedClasses();
+
     @:privateAccess {
+      var results:Map<String, Bool> = [];
+
       // Go through each script and parse any classes in them.
       var potentialScripts:Array<String> = Polymod.assetLibrary.list(TEXT);
       var libraryIds:Array<String> = Polymod.assetLibrary.listLibraries();
@@ -870,10 +875,14 @@ class Polymod
                 break;
               }
             }
-            if (!Polymod.assetLibrary.exists(path)) throw 'Couldn\'t find file "$textPath"';
+            if (!Polymod.assetLibrary.exists(path)) {
+              Polymod.error(SCRIPT_NOT_FOUND, 'Could not find file "$textPath"');
+              results.set(path, false);
+            }
           }
           Polymod.debug('Registering scripted class "$path"');
-          polymod.hscript._internal.PolymodScriptClass.registerScriptClassByPath(path);
+          var result = polymod.hscript._internal.PolymodScriptClass.registerScriptClassByPath(path);
+          results.set(path, result);
         }
       }
 
@@ -882,18 +891,24 @@ class Polymod
       // but for now we just ignore the typed modules that are returned
       var _ = polymod.hscript._internal.PolymodTyperEx.typeAllModules();
       #end
-
       polymod.hscript._internal.Interp.validateImports();
+
+      return results;
     }
   }
 
+  #if lime
   /**
    * Get a list of all the available scripted classes (`.hxc` files), interpret them asynchronously, and register any classes.
    * Called on platforms that don't support synchronous file access.
+   *
+   * @return A list of futures for each script class being registered, providing `true` for success or an error if failed.
    */
-  #if lime
-  public static function registerAllScriptClassesAsync():Array<lime.app.Future<Bool>>
+  public static function registerAllScriptClassesAsync():lime.app.Future<Array<lime.app.Future<Bool>>>
   {
+    Polymod.info(SCRIPT_PARSE_START, 'Parsing script classes asynchronously...');
+    prepareRegisterScriptedClasses();
+
     // Go through each script and parse any classes in them.
     var potentialScripts:Array<String> = Polymod.assetLibrary.list(TEXT);
     var libraryIds:Array<String> = Polymod.assetLibrary.listLibraries();
@@ -916,15 +931,17 @@ class Polymod
           }
           if (!Polymod.assetLibrary.exists(path)) throw 'Couldn\'t find file "$textPath" (tried libraries ${libraryIds})';
         }
-        Polymod.debug('Fetching scripted class "$path"');
         var future = polymod.hscript._internal.PolymodScriptClass.registerScriptClassByPathAsync(path);
         if (future != null) futures.push(future);
       }
     }
 
-    polymod.hscript._internal.Interp.validateImports();
+    return lime.app.Promises.allSettled(futures).then((results) -> {
+      // Once all scripts have been registered, THEN validate the imports.
+      polymod.hscript._internal.Interp.validateImports();
 
-    return futures;
+      return lime.app.Future.withValue(results);
+    });
   }
   #end
 

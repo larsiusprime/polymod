@@ -2626,4 +2626,9 @@ class Parser
     if (preprocessorValues == null) preprocessorValues = DefineUtil.getDefines();
     return preprocessorValues;
   }
+
+  public static function resetPreprocessorValues():Void
+  {
+    preprocessorValues = null;
+  }
 }
