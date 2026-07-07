@@ -1,9 +1,7 @@
 package polymod.backends;
 
 import haxe.io.Bytes;
-import polymod.backends.IBackend;
-import polymod.Polymod.Framework;
-import polymod.PolymodAssets;
+import polymod.Polymod.Framework as PolymodFramework;
 import polymod.PolymodAssets.PolymodAssetType;
 import polymod.format.ParseRules;
 import polymod.fs.PolymodFileSystem.IFileSystem;
@@ -123,10 +121,10 @@ class PolymodAssetLibrary
    */
   public static function build(params:PolymodAssetLibraryParams):Null<PolymodAssetLibrary>
   {
-    var framework:polymod.Framework = params.framework;
+    var framework:Null<PolymodFramework> = params.framework;
     if (framework == null)
     {
-      framework = polymod.PolymodAssets.autoDetectFramework();
+      framework = PolymodAssets.autoDetectFramework();
       Polymod.info(FRAMEWORK_INIT, 'Framework: Autodetect, going with $framework');
     }
     else
@@ -168,14 +166,15 @@ class PolymodAssetLibrary
     #if firetongue
     if (params.firetongue != null)
     {
-      if (framework == polymod.Framework.NME
-        || framework == polymod.Framework.HEAPS
-        || framework == polymod.Framework.KHA
-        || framework == polymod.Framework.CERAMIC
-        || framework == polymod.Framework.CASTLE)
+      switch (framework)
       {
-        Polymod.error(POLYMOD_FUNCTIONALITY_NOT_IMPLEMENTED,
-          'Polymod currently does not support FireTongue localization for ${framework}! Nag us on GitHub about it.', INIT);
+        case NME | HEAPS | KHA | CERAMIC | CASTLE:
+          Polymod.error(
+            POLYMOD_FUNCTIONALITY_NOT_IMPLEMENTED,
+            'Polymod currently does not support FireTongue localization for ${framework}! Nag us on GitHub about it.',
+            INIT
+          );
+        default:
       }
     }
     #end
@@ -1104,8 +1103,9 @@ typedef PolymodAssetLibraryParams =
 {
   /**
    * the Haxe framework you're using (OpenFL, HEAPS, Kha, NME, etc..)
+   * If not specified, it will be auto-detected.
    */
-  framework:Framework,
+  ?framework:PolymodFramework,
 
   /**
    * the file system to use to access mod assets from storage

@@ -1,19 +1,6 @@
 package polymod;
 
-import openfl.media.Sound;
-import haxe.io.Bytes;
 import polymod.Polymod.Framework;
-import polymod.Polymod.FrameworkParams;
-import polymod.Polymod.PolymodErrorCode;
-import polymod.backends.IBackend;
-import polymod.backends.PolymodAssetLibrary;
-import polymod.format.ParseRules;
-import polymod.fs.PolymodFileSystem.IFileSystem;
-import polymod.fs.StubFileSystem;
-import polymod.fs.SysFileSystem;
-#if firetongue
-import firetongue.FireTongue;
-#end
 
 /**
  * Provides static utility functions for working with assets.
