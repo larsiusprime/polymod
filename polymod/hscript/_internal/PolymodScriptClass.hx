@@ -147,22 +147,25 @@ class PolymodScriptClass
 
   /**
    * Register a scripted class by retrieving the script from the given path.
+   *
+   * @return `true` if the script was registered successfully, otherwise `false`.
    */
-  static function registerScriptClassByPath(path:String):Void
+  static function registerScriptClassByPath(path:String):Bool
   {
     var scriptBody = Polymod.assetLibrary.getText(path);
     if (scriptBody == null)
     {
       Polymod.error(SCRIPT_PARSE_FAILED, 'Error while loading script "${path}", could not retrieve script contents!', SCRIPT_RUNTIME);
-      return;
+      return false;
     }
     try
     {
       registerScriptClassByString(scriptBody, path);
+      return true;
     }
     catch (err:Expr.Error)
     {
-      var errLine:String = #if hscriptPos '${err.line}' #else "#???" #end;
+      var errLine:String = #if hscriptPos '${err.line}' #else '#???' #end;
       #if hscriptPos
       switch (err.e)
       #else
@@ -173,11 +176,14 @@ class PolymodScriptClass
           Polymod.error(SCRIPT_PARSE_FAILED,
             'Error while parsing function ${path}#${errLine}: EUnexpected' + '\n' + 'Unexpected token "${s}", is there invalid syntax on this line?',
             SCRIPT_RUNTIME);
+          return false;
         case EClassUnresolvedSuperclass(cls, reason):
           Polymod.error(SCRIPT_PARSE_FAILED,
             'Error while parsing class ${path}#${errLine}: EClassUnresolvedSuperclass' + '\n' + 'Unresolved superclass "${cls}", ${reason}', SCRIPT_RUNTIME);
+          return false;
         default:
           Polymod.error(SCRIPT_PARSE_FAILED, 'Error while parsing script ${path}#${errLine}: ' + '\n' + 'An unknown error occurred: ${err}', SCRIPT_RUNTIME);
+          return false;
       }
     }
   }
@@ -219,7 +225,7 @@ class PolymodScriptClass
         promise.error(err);
       }
     }).onError((err) -> {
-      if (err == "404")
+      if (err == '404')
       {
         Polymod.error(SCRIPT_PARSE_FAILED, 'Error while loading script "${path}", could not retrieve script contents (404 error)!', SCRIPT_RUNTIME);
       }
