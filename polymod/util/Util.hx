@@ -666,20 +666,45 @@ class Util
     return output;
   }
 
-  public static function indexOfInsens(arr:Array<String>, x:String, ?fromIndex:Int, ignoreConfig:Bool = false):Int
+  /**
+   * Traverses an `Array<String>` while ignoring case, returning the first occurrence of `x`.
+   * This function respects the value of `PolymodConfig.caseInsensitiveZipLoading`, unless `ignoreConfig` is true,
+   * where it will always act like `indexOf` instead.
+   * @param arr The string array to traverse.
+   * @param x The string to search for, disregarding case.
+   * @param fromIndex If specified, the search will begin from that index. See the base array equivalent for more details.
+   * @return An `Int`, representing the first occurrence of `x` in the array. Will be -1 if not found.
+   */
+  public static function indexOfInsens(arr:Array<String>, x:String, ?fromIndex:Int):Int
   {
-    if (!PolymodConfig.caseInsensitiveZipLoading && !ignoreConfig) return arr.indexOf(x, fromIndex);
-    x = x.toLowerCase();
-    for (i => s in arr)
+    if (arr.length == 0) return -1;
+    if (!PolymodConfig.caseInsensitiveZipLoading) return arr.indexOf(x, fromIndex);
+
+    var i:Int = fromIndex ?? 0;
+    if (i < 0)
     {
-      if (s.toLowerCase() == x) return i;
+      i += arr.length;
+      if (i < 0) i = 0;
+    }
+    x = x.toLowerCase();
+    while (i < arr.length)
+    {
+      if (arr[i].toLowerCase() == x) return i;
+      i++;
     }
     return -1;
   }
 
-  public static inline function containsInsens(arr:Array<String>, x:String, ignoreConfig:Bool = false):Bool
+  /**
+   * A shortcut for `indexOfInsens(...) != -1`, acting as an case-insensitive string existence check.
+   * @param arr The string array to traverse.
+   * @param x The string to search, disregarding case.
+   * @param ignoreConfig Whether to ignore the value of `Polymod.caseInsensitiveZipLoading`.
+   * @return A `Bool`, representing whether `x` is present in the array.
+   */
+  public static inline function containsInsens(arr:Array<String>, x:String):Bool
   {
-    return indexOfInsens(arr, x, ignoreConfig) != -1;
+    return indexOfInsens(arr, x) != -1;
   }
 
   public static function fetchCallStack(exception:Bool = true):String {
