@@ -313,12 +313,12 @@ class HScriptedClassMacro
         kind: FFun(
           {
             args: [
-              {name: 'clsName', type: macro :String}, {name: 'funcName', type: macro :String},],
+              {name: 'clsName', type: macro :String}, {name: 'funcName', type: macro :String}, {name: 'args', type: macro :...Dynamic}],
             params: null,
             ret: macro :Dynamic,
             expr: macro
             {
-              return polymod.hscript._internal.PolymodScriptClass.callScriptClassStaticFunction(clsName, funcName);
+              return polymod.hscript._internal.PolymodScriptClass.callScriptClassStaticFunction(clsName, funcName, args);
             }
           })
       };
@@ -376,19 +376,42 @@ class HScriptedClassMacro
       {
         name: 'scriptStaticHas',
         doc: 'Determines if a static field of a scripted class exists or not.',
-        access: [APublic],
+        access: [APublic, AStatic],
         meta: null,
         pos: cls.pos,
         kind: FFun(
           {
             args: [
-              {name: 'fieldName', type: macro :String}],
+              {name: 'clsName', type: macro :String},
+              {name: 'fieldName', type: macro :String}
+            ],
             params: null,
             ret: macro :Bool,
             expr: macro
             {
-              @:privateAccess
-              return _asc._interp.getScriptClassStaticFieldDecl(_asc.fullyQualifiedName, fieldName) != null;
+              return polymod.hscript._internal.PolymodScriptClass.hasScriptClassStaticField(clsName, fieldName);
+            },
+          }),
+      };
+
+      var function_scriptStaticHasFunc:Field =
+      {
+        name: 'scriptStaticHasFunc',
+        doc: 'Determines if a static function of a scripted class exists or not.',
+        access: [APublic, AStatic],
+        meta: null,
+        pos: cls.pos,
+        kind: FFun(
+          {
+            args: [
+              {name: 'clsName', type: macro :String},
+              {name: 'fieldName', type: macro :String}
+            ],
+            params: null,
+            ret: macro :Bool,
+            expr: macro
+            {
+              return polymod.hscript._internal.PolymodScriptClass.hasScriptClassStaticFunction(clsName, fieldName);
             },
           }),
       };
@@ -404,7 +427,8 @@ class HScriptedClassMacro
       function_scriptStaticCall,
       function_scriptStaticGet,
       function_scriptStaticSet,
-      function_scriptStaticHas
+      function_scriptStaticHas,
+      function_scriptStaticHasFunc
     ];
   }
 
