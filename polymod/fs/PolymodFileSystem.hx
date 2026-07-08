@@ -81,6 +81,7 @@ typedef PolymodFileSystemParams =
 interface IFileSystem
 {
   public final modRoot:String;
+
   /**
    * Returns whether the file or directory at the given path exists.
    *
@@ -136,6 +137,13 @@ interface IFileSystem
    */
   public function readDirectoryRecursive(path:String):Array<String>;
 
+  /**
+   * Returns a list of files contained within the provided mod directory path.
+   *
+   * @param modDir The mod path to check.
+   * @param recursive Whether to check all subfolder recursively. Returns only files.
+   * @return An array of file paths.
+   */
   public function readModDirectory(modDir:String, recursive:Bool = true):Array<String>;
 
   /**

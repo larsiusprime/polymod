@@ -319,7 +319,7 @@ class OpenFLNodeModLibrary extends LimeModLibrary
     {
       return checkIfAssetIsCached(id, type);
     }
-    else if (hasFallback)
+    else if (fallback != null)
     {
       return fallback.isLocal(id, type);
     }
@@ -335,7 +335,7 @@ class OpenFLNodeModLibrary extends LimeModLibrary
     {
       modText = cachedText.get(id);
     }
-    else if (hasFallback)
+    else if (fallback != null)
     {
       var path:String = fallback.paths.get(id);
       // check the file name for '?' and remove anything after it

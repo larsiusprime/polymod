@@ -1,13 +1,13 @@
 package polymod.fs;
 
-
 #if sys
-import polymod.Polymod;
-import polymod.fs.ZipFileSystem.ZipFileSystemParams;
 import haxe.Constraints.IMap;
 import haxe.ds.StringMap;
 import haxe.io.Bytes;
 import haxe.io.Path;
+import polymod.Polymod;
+import polymod.fs.ZipFileSystem.ZipFileSystemParams;
+import polymod.util.Util;
 import polymod.util.InsensitiveMap;
 import polymod.util.zip.ZipParser;
 import thx.semver.VersionRule;
@@ -146,8 +146,8 @@ class SysZipFileSystem extends SysFileSystem
       // we go directly to the zip file and extract the individual file.
 
       // Determine which zip the target file is in.
-      var zipPath = filesLocations.get(path);
-      var zipParser = zipParsers.get(zipPath);
+      var zipPath:Null<String> = filesLocations.get(path);
+      var zipParser:Null<ZipParser> = zipPath != null ? zipParsers.get(zipPath) : null;
 
       // Check that the ZIP is valid.
       if (zipParser == null || !zipParser.isValid())
@@ -156,9 +156,9 @@ class SysZipFileSystem extends SysFileSystem
         return null;
       }
 
-      var modId = Path.withoutExtension(Path.withoutDirectory(zipPath));
+      var modId:String = Path.withoutExtension(Path.withoutDirectory(zipPath));
 
-      var innerPath = path;
+      var innerPath:String = path;
       // Remove mod root from path
       if (innerPath.startsWith(modRoot))
       {

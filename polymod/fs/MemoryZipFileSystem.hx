@@ -6,8 +6,6 @@ import polymod.util.Util;
 import haxe.io.Bytes;
 import haxe.io.BytesInput;
 import haxe.io.Path;
-import polymod.fs.PolymodFileSystem.IFileSystem;
-import polymod.fs.PolymodFileSystem.PolymodFileSystemParams;
 
 #if !html5
 /**

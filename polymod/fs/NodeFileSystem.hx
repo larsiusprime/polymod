@@ -5,33 +5,15 @@ import haxe.io.UInt8Array;
 import js.Browser;
 import js.html.ScriptElement;
 import js.Lib;
-import polymod.Polymod;
-import polymod.PolymodConfig;
-import polymod.fs.PolymodFileSystem.IFileSystem;
-import polymod.util.Util;
-import polymod.util.VersionUtil;
-import thx.semver.VersionRule;
-import polymod.fs.PolymodFileSystem.IFileSystem;
-import polymod.fs.PolymodFileSystem.PolymodFileSystemParams;
 
 /**
  * An implementation of IFileSystem which accesses files from the local directory,
  * when running in Node.js via Electron.
  */
-class NodeFileSystem implements IFileSystem
+class NodeFileSystem extends BaseFileSystem
 {
   // hack to make sure NodeUtils.injectJSCode is called
   static var _jsCodeInjected:Bool = injectJSCode();
-
-  /**
-   * The directory relative to the application path where mods are located.
-   */
-  public final modRoot:String;
-
-  public function new(params:polymod.fs.PolymodFileSystem.PolymodFileSystemParams)
-  {
-    this.modRoot = params.modRoot;
-  }
 
   /**
    * Injects JS code needed to interact with Node's file system into the head element of the HTML document.
@@ -73,7 +55,7 @@ class NodeFileSystem implements IFileSystem
     jsCode.push('function exists(path) { return _nodefs.existsSync(path); }');
     jsCode.push('function getStats(path) { return exists(path) ? _nodefs.statSync(path) : null; }');
     jsCode.push('function isDirectory(path) { var stats = getStats(path); return stats != null && stats.isDirectory(); }');
-    jsCode.push('function getFileContent(path) { return exists(path) ? _nodefs.readFileSync(path, {encoding:'utf8', flag:'r'}) : ''; }');
+    jsCode.push('function getFileContent(path) { return exists(path) ? _nodefs.readFileSync(path, {encoding:\' utf8 \', flag:\' r \'}) : \' \'; }');
     jsCode.push('function getFileBytes(path) { return exists(path) ? Uint8Array.from( _nodefs.readFileSync(path) ) : null; }');
     jsCode.push('function readDirectory(path) { return getDirectoryContents(path, false, []) }');
     jsCode.push('function readDirectoryRecursive(path) { return getDirectoryContents(path, true, []) }');
@@ -95,7 +77,7 @@ class NodeFileSystem implements IFileSystem
    * @param	arg
    * @return
    */
-  function callFunc(functionName:String, arg:Dynamic = null):Dynamic
+  function callFunc(functionName:String, ?arg:Dynamic):Dynamic
   {
     if (!~/^\(.+\)$/.match(functionName))
     {
@@ -142,22 +124,6 @@ class NodeFileSystem implements IFileSystem
   }
 
   /**
-   * Return whether the file or directory exists in a specific mod.
-   *
-   * @param path The path to check.
-   * @param modId A specific mod ID to check within.
-   * @return Whether the file or directory exists in that mod.
-   */
-  public function existsByModId(path:String, modId:String):Bool
-  {
-    var modDir:Null<String> = scanModDirectoriesForId(modId);
-    if (modDir == null) return false;
-    var relativeDir = Util.pathJoin(modRoot, modDir);
-
-    return exists(Util.pathJoin(relativeDir, path));
-  }
-
-  /**
    * Returns whether the provided path is a directory.
    *
    * @param path The path to check.
@@ -188,7 +154,7 @@ class NodeFileSystem implements IFileSystem
    * @param path The file to read.
    * @return The text content of the file, or `null` if the file can't be found.
    */
-  public inline function getFileContent(path:String):Null<String>
+  public override inline function getFileContent(path:String):Null<String>
   {
     return callFunc('getFileContent', path);
   }
@@ -206,22 +172,6 @@ class NodeFileSystem implements IFileSystem
   }
 
   /**
-   * Get the byte data for a file from a specific mod.
-   *
-   * @param path The path to retrieve byte data from, relative to the asset root.
-   * @param modId A specific mod ID to retrieve an asset from.
-   * @return The file bytes, or `null` if it couldn't be fetched.
-   */
-  public function getFileBytesByModId(path:String, modId:String):Null<haxe.io.Bytes>
-  {
-    var modDir:Null<String> = scanModDirectoriesForId(modId);
-    if (modDir == null) return null;
-    var relativeDir = Util.pathJoin(modRoot, modDir);
-
-    return getFileBytes(Util.pathJoin(relativeDir, path));
-  }
-
-  /**
    * Returns a list of files contained within the provided directory path.
    * Checks all subfolders recursively. Returns only files.
    *
@@ -233,122 +183,5 @@ class NodeFileSystem implements IFileSystem
     var arr:Array<String> = callFunc('readDirectoryRecursive', path);
     sanitizePaths(path, arr);
     return arr;
-  }
-
-  /**
-   * Provide a list of valid mods for this file system to load.
-   *
-   * @param apiVersionRule (optional) A version query to match against the mod's API version.
-   * @return An array of matching mods.
-   */
-  public function scanMods(?apiVersionRule:VersionRule):Array<ModMetadata>
-  {
-    if (apiVersionRule == null) apiVersionRule = VersionUtil.DEFAULT_VERSION_RULE;
-
-    var dirs = readDirectory(modRoot);
-    var result:Array<ModMetadata> = [];
-    for (dir in dirs)
-    {
-      var testDir = Util.pathJoin(modRoot, dir);
-
-      if (!exists(testDir)) continue;
-
-      if (!isDirectory(testDir)) continue;
-
-      var meta:ModMetadata = this.getMetadataByModDir(dir, PolymodErrorOrigin.SCAN);
-
-      if (meta == null) continue;
-
-      if (!meta.isCompatible(apiVersionRule)) continue;
-
-      result.push(meta);
-    }
-
-    return result;
-  }
-
-  /**
-   * Get the metadata for a given mod.
-   * This function is DEPRECATED, use `getMetadataByModDir` for the same result.
-   *
-   * @param dirName The directory name of the mod.
-   * @param origin The error reporting origin.
-   * @return The mod metadata, or `null` if not found.
-   */
-  @:deprecated('getMetadata is deprecated, use getMetadataByModDir')
-  public function getMetadata(dirName:String, ?origin:PolymodErrorOrigin):Null<ModMetadata>
-  {
-    return getMetadataByModDir(dirName, origin);
-  }
-
-  /**
-   * Get the metadata for a given mod.
-   * This function is DEPRECATED, use `getMetadataByModId` for the same result.
-   *
-   * @param modId The ID of the mod as defined in the metadata.
-   * @param origin The error reporting origin.
-   * @return The mod metadata, or `null` if not found.
-   */
-  public function getMetadataById(modId:String, ?origin:PolymodErrorOrigin):Null<ModMetadata>
-  {
-    return getMetadataByModId(modId, origin);
-  }
-
-  /**
-   * Provides the metadata for a given mod by its directory.
-   *
-   * @param dir The directory of the mod.
-   * @param origin The context the error occurred in (while scanning for mods, while initializing mods, etc.).
-   *   Used for error reporting.
-   * @return The mod metadata, or `null` if the mod does not exist.
-   */
-  public function getMetadataByModDir(dir:String, ?origin:PolymodErrorOrigin):Null<ModMetadata>
-  {
-    if (exists(dir))
-    {
-      var meta:ModMetadata = null;
-
-      var metaFile = Util.pathJoin(dir, PolymodConfig.modMetadataFile);
-      var iconFile = Util.pathJoin(dir, PolymodConfig.modIconFile);
-
-      if (!exists(metaFile))
-      {
-        Polymod.warning(MOD_MISSING_METADATA, 'Could not find mod metadata file: $metaFile', origin);
-      }
-      else
-      {
-        var metaText = getFileContent(metaFile);
-        meta = ModMetadata.fromJsonStr(metaText, origin);
-      }
-      if (!exists(iconFile))
-      {
-        Polymod.warning(MOD_MISSING_ICON, 'Could not find mod icon file: $iconFile', origin);
-      }
-      else
-      {
-        var iconBytes = getFileBytes(iconFile);
-        meta.icon = iconBytes;
-        meta.iconPath = iconFile;
-      }
-      return meta;
-    }
-    else
-    {
-      Polymod.error(MOD_MISSING_DIRECTORY, 'Could not find mod directory: "$dir"', origin);
-    }
-    return null;
-  }
-
-  /**
-   * Provides the metadata for a given mod by its ID.
-   *
-   * @param modId The ID of the mod.
-   * @param origin The context the error occurred in (while scanning for mods, while initializing mods, etc.).
-   *   Used for error reporting.
-   * @return The mod metadata, or `null` if the mod does not exist.
-   */
-  public function getMetadataByModId(modId:String, ?origin:PolymodErrorOrigin):Null<ModMetadata>
-  {
-    return null;
   }
 }
