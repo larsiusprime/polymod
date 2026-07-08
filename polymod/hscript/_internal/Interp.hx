@@ -2808,6 +2808,37 @@ class Interp
     });
   }
 
+  public function hasScriptClassStaticField(clsName:String, fieldName:String):Bool
+  {
+    // Every scripted class has these functions, so we force the check to return true.
+    if (['scriptInit', 'listScriptClasses'].contains(fieldName)) return true;
+
+    var imports:Map<String, ClassImport> = [];
+
+    var cls:Null<ClassDecl> = _scriptClassDescriptors.get(clsName);
+    if (cls != null)
+    {
+      imports = cls.imports;
+
+      // TODO: Optimize with a cache?
+      for (f in cls.staticFields)
+      {
+        if (f.name == fieldName)
+        {
+          // ALWAYS true regardless if it's a function.
+          return true;
+        }
+      }
+    }
+    else
+    {
+      Polymod.error(SCRIPTED_CLASS_NOT_REGISTERED, 'Scripted class $clsName has not been defined.', SCRIPT_RUNTIME);
+      return false;
+    }
+
+    return false;
+  }
+
   public function hasScriptClassStaticFunction(clsName:String, fnName:String):Bool
   {
     // Every scripted class has these functions, so we force the check to return true.

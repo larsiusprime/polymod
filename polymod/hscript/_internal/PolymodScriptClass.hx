@@ -384,6 +384,11 @@ class PolymodScriptClass
     return scriptInterp.callScriptClassStaticFunction(clsName, funcName, args);
   }
 
+  public static function hasScriptClassStaticField(clsName:String, funcName:String):Bool
+  {
+    return scriptInterp.hasScriptClassStaticField(clsName, funcName);
+  }
+
   public static function hasScriptClassStaticFunction(clsName:String, funcName:String):Bool
   {
     return scriptInterp.hasScriptClassStaticFunction(clsName, funcName);
