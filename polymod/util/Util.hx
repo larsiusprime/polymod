@@ -767,6 +767,10 @@ class Util
    */
   public static function getFullClassName(clsDecl:ClassDecl):String
   {
-    return (clsDecl.pkg != null ? (clsDecl.pkg.join(".") + ".") : "") + clsDecl.name;
+    if (clsDecl.pkg != null && clsDecl.pkg.length > 0)
+    {
+      return clsDecl.pkg.join('.') + '.' + clsDecl.name;
+    }
+    return clsDecl.name;
   }
 }

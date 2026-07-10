@@ -1,6 +1,7 @@
 package polymod.hscript._internal;
 
 import polymod.hscript._internal.Expr;
+import polymod.util.Util;
 
 using StringTools;
 
@@ -118,11 +119,7 @@ class PolymodStaticClassReference
    */
   public function getFullyQualifiedName():String
   {
-    if (this.cls.pkg != null && this.cls.pkg.length > 0)
-    {
-      return this.cls.pkg.join(".") + "." + this.cls.name;
-    }
-    return this.cls.name;
+    return Util.getFullClassName(cls);
   }
 
   public function toString():String
