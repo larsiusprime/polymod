@@ -74,14 +74,18 @@ class PolymodFinalMacro
             var classPath:String = t.toString();
             if (classType.isInterface) continue;
 
-            var finals:Array<String> = listFinalsOfClassType(classType);
-            if (finals.length > 0) {
+            var fields:Array<ClassField> = listAllFieldsOfClassType(classType);
+
+            var finals:Array<String> = listFinalFields(fields);
+            if (finals.length > 0)
+            {
               var entryData:Array<Dynamic> = [classPath, finals];
               allFinals.push(entryData);
             }
 
-            var privates:Array<String> = listPrivatesOfClassType(classType);
-            if (privates.length > 0) {
+            var privates:Array<String> = listPrivateFields(fields);
+            if (privates.length > 0)
+            {
               var entryData:Array<Dynamic> = [classPath, privates];
               allPrivates.push(entryData);
             }
@@ -112,81 +116,70 @@ class PolymodFinalMacro
   }
 
   #if macro
-  static function listFinalsOfClassType(classType:Null<ClassType>):Array<String> {
+  static function listAllFieldsOfClassType(classType:Null<ClassType>):Array<ClassField>
+  {
     if (classType == null) return [];
 
-    var result:Array<String> = [];
-
-    for (field in classType.fields.get())
+    static final classCache:Map<String, Array<ClassField>> = [];
+    final clsFullName:String = classType.pack.concat([classType.name]).join('.');
+    if (classCache.exists(clsFullName))
     {
-      // Add final variables.
-      if (field.isFinal) result.push(field.name);
-
-      // Add properties with `never` accessors.
-      switch (field.kind) {
-        case FVar(read, write):
-          switch (write) {
-            case AccNever:
-              result.push(field.name);
-            default: // Do nothing
-          }
-        default: // Do nothing
-      }
+      return classCache.get(clsFullName);
     }
 
-    for (field in classType.statics.get())
-    {
-      // Add final variables.
-      if (field.isFinal) result.push(field.name);
+    var result:Array<ClassField> = [];
 
-      // Add properties with `never` accessors.
-      switch (field.kind) {
-        case FVar(read, write):
-          switch (write) {
-            case AccNever:
-              result.push(field.name);
-            default: // Do nothing
-          }
-        default: // Do nothing
-      }
-    }
+    result = result.concat(classType.fields.get());
+    result = result.concat(classType.statics.get());
+    result = result.concat(listAllFieldsOfClassType(classType.superClass?.t.get()));
 
-    return result.concat(listFinalsOfClassType(classType?.superClass?.t?.get()));
+    classCache.set(clsFullName, result);
+
+    return result;
   }
 
-  static function listPrivatesOfClassType(classType:Null<ClassType>):Array<String> {
-    if (classType == null) return [];
-
+  static function listFinalFields(fields:Array<ClassField>):Array<String>
+  {
     var result:Array<String> = [];
 
-    for (field in classType.fields.get()) {
-      // Add properties with `null` accessors.
-      switch (field.kind) {
-        case FVar(read, write):
-          switch (write) {
-            case AccNo:
-              result.push(field.name);
-            default: // Do nothing
-          }
+    for (field in fields)
+    {
+      // Add final variables.
+      if (field.isFinal)
+      {
+        result.push(field.name);
+        // Move on to the next one; a final can't have accessors like a property does.
+        continue;
+      }
+
+      // Add properties with `never` accessors.
+      switch (field.kind)
+      {
+        case FVar(_, AccNever):
+          result.push(field.name);
         default: // Do nothing
       }
     }
 
-    for (field in classType.statics.get())
+    return result;
+  }
+
+  static function listPrivateFields(fields:Array<ClassField>):Array<String>
+  {
+    var result:Array<String> = [];
+
+    for (field in fields)
     {
       // Add properties with `null` accessors.
-      switch (field.kind) {
-        case FVar(read, write):
-          switch (write) {
-            case AccNo:
-              result.push(field.name);
-            default: // Do nothing
-          }
+      switch (field.kind)
+      {
+        case FVar(_, AccNo):
+          result.push(field.name);
         default: // Do nothing
       }
     }
 
-    return result.concat(listPrivatesOfClassType(classType?.superClass?.t?.get()));
+    return result;
   }
 
   static var calledBefore:Bool = false;
