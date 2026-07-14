@@ -824,29 +824,27 @@ class Interp
             }
             else
             {
+              // Check if we are setting a final. If so, throw an error.
               @:privateAccess
+              if (_proxy != null && _proxy._c != null)
               {
-                // Check if we are setting a final. If so, throw an error.
-                if (_proxy != null && _proxy._c != null)
+                if (_proxy._c.imports.exists(id0))
                 {
-                  for (imp in _proxy._c.imports)
+                  var imp:ClassImport = _proxy._c.imports.get(id0);
+                  var finals:Array<String> = PolymodFinalMacro.getFinals(imp.fullPath);
+
+                  if (finals.contains(id))
                   {
-                    if (imp.name != id0) continue;
-                    var finals = PolymodFinalMacro.getFinals(imp.fullPath);
+                    error(EInvalidFinalSet(id));
+                    return null;
+                  }
 
-                    if (finals.contains(id))
-                    {
-                      error(EInvalidFinalSet(id));
-                      return null;
-                    }
+                  var privates:Array<String> = PolymodFinalMacro.getPrivateProperties(imp.fullPath);
 
-                    var privates = PolymodFinalMacro.getPrivateProperties(imp.fullPath);
-
-                    if (privates.contains(id))
-                    {
-                      error(EInvalidPropSet(id));
-                      return null;
-                    }
+                  if (privates.contains(id))
+                  {
+                    error(EInvalidPropSet(id));
+                    return null;
                   }
                 }
               }
