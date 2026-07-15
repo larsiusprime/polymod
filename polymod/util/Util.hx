@@ -11,6 +11,8 @@ import polymod.hscript._internal.Expr;
 import unifill.Unifill;
 #end
 
+using StringTools;
+
 class Util
 {
   /**
@@ -93,12 +95,7 @@ class Util
     id = stripPrefix(id);
     var mergeFile = PolymodConfig.mergeFolder + sl() + id;
     // try the path first
-    var format:BaseParseFormat = parseRules.get(id);
-    if (format == null)
-    {
-      // try the extension then
-      format = parseRules.get(extension);
-    }
+    var format:BaseParseFormat = parseRules.get(id) ?? parseRules.get(extension);
     if (format != null)
     {
       var mergeText = getModText(mergeFile, modId);
@@ -117,12 +114,7 @@ class Util
     var extension = uExtension(id, true);
     id = stripPrefix(id);
     // try the path first
-    var format:BaseParseFormat = parseRules.get(id);
-    if (format == null)
-    {
-      // try the extension then
-      format = parseRules.get(extension);
-    }
+    var format:BaseParseFormat = parseRules.get(id) ?? parseRules.get(extension);
     if (format != null)
     {
       var appendText = getModText(Util.pathJoin(PolymodConfig.appendFolder, id), modId);
@@ -294,21 +286,30 @@ class Util
 
   public static inline function pathMerge(id:String, theDir:String = ''):String
   {
-    return pathSpecial(id, PolymodConfig.mergeFolder, theDir);
+    return appendPrefix(pathSpecial(id, PolymodConfig.mergeFolder, theDir), withTrailingSlash(Path.normalize(Polymod.modRoot)));
   }
 
   private static inline function pathAppend(id:String, theDir:String = ''):String
   {
-    return pathSpecial(id, PolymodConfig.appendFolder, theDir);
+    return appendPrefix(pathSpecial(id, PolymodConfig.appendFolder, theDir), withTrailingSlash(Path.normalize(Polymod.modRoot)));
   }
 
   public static inline function stripPrefix(id:String, prefix:String = 'assets/'):String
   {
-    if (uIndexOf(id, prefix) == 0)
+    if (id.startsWith(prefix))
     {
-      id = uSubstring(id, 7);
+      return uSubstr(id, prefix.length);
     }
     return id;
+  }
+
+  public static inline function appendPrefix(id:String, prefix:String = 'assets/'):String
+  {
+    if (id.startsWith(prefix))
+    {
+      return id;
+    }
+    return prefix + id;
   }
 
   public static function pathSpecial(id:String, special:String = '', theDir:String = ''):String
@@ -363,6 +364,7 @@ class Util
     return '/';
   }
 
+  @:access(haxe.xml.Xml)
   public static inline function copyXml(data:Xml, parent:Xml = null):Xml
   {
     var c:Xml = null;
@@ -491,8 +493,7 @@ class Util
 
   public static function uExtension(str:String, lowerCase:Bool = false):String
   {
-    var i = uLastIndexOf(str, '.');
-    var extension = uSubstr(str, i + 1, uLength(str) - (i + 1));
+    var extension = Path.extension(str);
     if (lowerCase)
     {
       extension = extension.toLowerCase();

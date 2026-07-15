@@ -202,7 +202,7 @@ class PolymodScriptClass
     Polymod.assetLibrary.loadText(path).onComplete((text) -> {
       try
       {
-        registerScriptClassByString(text);
+        registerScriptClassByString(text, path);
         promise.complete(true);
       }
       catch (err:Expr.Error)

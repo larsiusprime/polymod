@@ -100,7 +100,7 @@ class MemoryZipFileSystem extends MemoryFileSystem
   {
     var compressedBytes = super.getFileBytes(path);
 
-    if (pathIsCompressed.get(path) != null && pathIsCompressed.get(path)) return Util.unzipBytes(compressedBytes);
+    if (pathIsCompressed.exists(path) && pathIsCompressed.get(path)) return Util.unzipBytes(compressedBytes);
 
     return compressedBytes; // if it wasn't actually compressed
   }
