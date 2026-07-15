@@ -25,7 +25,7 @@ class MemoryFileSystem implements IFileSystem
 {
   var files:Map<String, Bytes> = new Map<String, Bytes>();
   var directories:Array<String> = [];
-  var modRoot:String = '';
+  public final modRoot:String = '';
 
   /**
    * A cache of the directories containing mod metadata, indexed by mod ID.

@@ -1,5 +1,6 @@
 package polymod.backends;
 
+import haxe.io.Path;
 import haxe.io.Bytes;
 import polymod.Polymod.Framework as PolymodFramework;
 import polymod.PolymodAssets.PolymodAssetType;
@@ -594,7 +595,7 @@ class PolymodAssetLibrary
 
       if (type == null) return true;
 
-      var assetType = getAssetType(haxe.io.Path.extension(id));
+      var assetType = getAssetType(Path.extension(id));
       if (assetType != type) return false;
       return true;
     });
@@ -911,9 +912,7 @@ class PolymodAssetLibrary
 
     for (file in all)
     {
-      var doti = Util.uLastIndexOf(file, '.');
-      var ext:String = doti != -1 ? file.substring(doti + 1) : '';
-      ext = ext.toLowerCase();
+      var ext:String = Path.extension(file).toLowerCase();
       var assetType = getAssetType(ext);
       assetTypes.set(file, assetType);
 
@@ -1011,9 +1010,7 @@ class PolymodAssetLibrary
 
     for (f in all)
     {
-      var doti = Util.uLastIndexOf(f, '.');
-      var ext:String = doti != -1 ? f.substring(doti + 1) : '';
-      ext = ext.toLowerCase();
+      var ext:String = Path.extension(f).toLowerCase();
       var assetType = getAssetType(ext);
       assetTypes.set(f, assetType);
       if (!typeLibraries.exists(libraryId)) typeLibraries.set(libraryId, []);
@@ -1030,7 +1027,6 @@ class PolymodAssetLibrary
 
         if (font != null)
         {
-          // Check if font is already registered before registering
           @:privateAccess
           if (!Font.__fontByName.exists(font.fontName))
           {
@@ -1055,9 +1051,9 @@ class PolymodAssetLibrary
    */
   public function stripAssetsPrefix(id:String):String
   {
-    if (Util.uIndexOf(id, assetPrefix) == 0)
+    if (id.startsWith(assetPrefix))
     {
-      id = Util.uSubstring(id, assetPrefix.length);
+      return Util.uSubstr(id, assetPrefix.length);
     }
     return id;
   }
@@ -1071,7 +1067,7 @@ class PolymodAssetLibrary
    */
   public function prependAssetsPrefix(id:String):String
   {
-    if (Util.uIndexOf(id, assetPrefix) == 0)
+    if (id.startsWith(assetPrefix))
     {
       return id;
     }

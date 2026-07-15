@@ -50,9 +50,11 @@ class PolymodFileSystem
     #elseif nodefs
     // Node file system.
     return new polymod.fs.NodeFileSystem(params);
+    #elseif html5
+    // If you're on HTML5, you should use MemoryFileSystem or MemoryZipFileSystem.
+    return new polymod.fs.MemoryFileSystem(params);
     #else
     // No compatible file system.
-    // If you're on HTML5, you should use MemoryFileSystem or ZipFileSystem.
     return new polymod.fs.StubFileSystem(params);
     #end
   }
@@ -75,6 +77,7 @@ typedef PolymodFileSystemParams =
  */
 interface IFileSystem
 {
+  public final modRoot:String;
   /**
    * Returns whether the file or directory at the given path exists.
    *

@@ -16,6 +16,7 @@ import polymod.fs.PolymodFileSystem.PolymodFileSystemParams;
 @SuppressWarnings('checkstyle:FieldDocComment')
 class StubFileSystem implements IFileSystem
 {
+  public final modRoot:String;
   public function new(params:PolymodFileSystemParams) {}
 
   public inline function exists(path:String):Bool
