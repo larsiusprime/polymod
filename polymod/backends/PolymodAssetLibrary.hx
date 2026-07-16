@@ -13,8 +13,11 @@ import firetongue.FireTongue;
 #if openfl
 import openfl.text.Font;
 #end
+import polymod.util.ThreadSafety.SafeMap;
 
 using StringTools;
+
+
 
 /**
  * Initialized when Polymod mods are loaded, and handles retrieving assets from currently loading mods.
@@ -39,17 +42,17 @@ class PolymodAssetLibrary
   var extensions:Map<String, PolymodAssetType>;
 
   // Cache for directory listings to avoid repeated file system scans
-  var dirCache:Map<String, Array<String>> = [];
+  var dirCache:SafeMap<Array<String>>;
   // Fast lookup for ignored files using Map instead of array searches
-  var ignoredFilesCache:Map<String, Bool> = [];
+  var ignoredFilesCache:SafeMap<Bool>;
   // Cache for file existence checks
-  var fileExistsCache:Map<String, Bool> = [];
+  var fileExistsCache:SafeMap<Bool>;
   // Cache for asset types to avoid repeated extension parsing
-  var assetTypeCache:Map<String, PolymodAssetType> = [];
+  var assetTypeCache:SafeMap<PolymodAssetType>;
   // Pre-built list of all available files across all mods
   var allFilesCache:Null<Array<String>> = null;
   // Cache for processed text files
-  var textCache:Map<String, String> = [];
+  var textCache:SafeMap<String>;
 
   #if firetongue
   private var tongue:FireTongue = null;
@@ -86,6 +89,12 @@ class PolymodAssetLibrary
     #end
     )
   {
+    dirCache = new SafeMap<Array<String>>();
+    ignoredFilesCache = new SafeMap<Bool>();
+    fileExistsCache = new SafeMap<Bool>();
+    assetTypeCache = new SafeMap<PolymodAssetType>();
+    textCache = new SafeMap<String>();
+
     this.backend = backend;
 
     this.fileSystem = fileSystem;
@@ -231,12 +240,12 @@ class PolymodAssetLibrary
 
   function clearCaches():Void
   {
-    dirCache = [];
-    ignoredFilesCache = [];
-    fileExistsCache = [];
-    assetTypeCache = [];
+    dirCache.clear();
+    ignoredFilesCache.clear();
+    fileExistsCache.clear();
+    assetTypeCache.clear();
     allFilesCache = null;
-    textCache = [];
+    textCache.clear();
   }
 
   /**

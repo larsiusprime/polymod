@@ -8,6 +8,7 @@ import polymod.PolymodAssets.PolymodAssetType;
 import polymod.fs.PolymodFileSystem;
 import polymod.Polymod;
 import polymod.util.Util;
+import polymod.util.ThreadSafety.SafeMap;
 
 using StringTools;
 
@@ -34,6 +35,7 @@ import lime.Assets.AssetType;
 import lime.audio.AudioBuffer;
 #end
 #end
+
 #if (!lime || nme)
 class LimeBackend extends StubBackend
 {
@@ -53,7 +55,8 @@ class LimeBackend extends StubBackend
 class LimeBackend implements IBackend
 {
   // STATIC:
-  private static var defaultAssetLibraries:Map<String, LimeAssetLibrary>;
+
+  static var defaultAssetLibraries:SafeMap<LimeAssetLibrary> = null;
 
   /**
    * Find all the registered access libraries and store keyed references to them
@@ -62,7 +65,7 @@ class LimeBackend implements IBackend
   {
     if (defaultAssetLibraries == null)
     {
-      defaultAssetLibraries = new Map<String, LimeAssetLibrary>();
+      defaultAssetLibraries = new SafeMap<LimeAssetLibrary>();
 
       // I don't like having to do this but there's no other way, hope the internals don't change!
       var libraries = @:privateAccess lime.utils.Assets.libraries;
