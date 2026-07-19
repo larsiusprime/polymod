@@ -65,7 +65,7 @@ class DependencyUtil
           currentModMissingDep = true;
           break;
         } else {
-          if (depMod.isCompatible(depVersionRule)) {
+          if (depMod.isModCompatible(depVersionRule)) {
             // The dependency is met!
             continue;
           } else {
@@ -113,7 +113,7 @@ class DependencyUtil
       {
         Polymod.error(MOD_DEPENDENCY_UNMET, 'Dependency "${depModId}" not found.', INIT);
         return false;
-      } else if (depMod.isCompatible(depRule))
+      } else if (depMod.isModCompatible(depRule))
       {
         // If the dependency is found, validate the version rule.
         continue;

@@ -1253,6 +1253,17 @@ class ModMetadata
   }
 
   /**
+   * Determine whether this mod is compatible with the provided mod version rule.
+   *
+   * @param modVersionRule The mod version rule to check compatibility against.
+   * @return Whether this mod is compatible with the provided mod version rule.
+   */
+  public function isModCompatible(modVersionRule:VersionRule):Bool
+  {
+    return VersionUtil.match(modVersion, modVersionRule);
+  }
+
+  /**
    * Converts a ModMetadata object to a JSON string.
    * @return The JSON string.
    */
