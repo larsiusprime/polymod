@@ -47,11 +47,13 @@ class Util
 
     for (modId in modIds)
     {
-      if (fileSystem.exists(pathMerge(id, modId)))
+      var modDir = fileSystem.scanModDirectoriesForId(modId);
+
+      if (fileSystem.exists(pathMerge(id, modDir)))
       {
         text = mergeText(text, id, modId, getModText, parseRules);
       }
-      if (fileSystem.exists(pathAppend(id, modId)))
+      if (fileSystem.exists(pathAppend(id, modDir)))
       {
         text = appendText(text, id, modId, getModText, parseRules);
       }
@@ -284,14 +286,14 @@ class Util
     return txt;
   }
 
-  public static inline function pathMerge(id:String, theDir:String = ''):String
+  public static inline function pathMerge(id:String, modDir:String = ''):String
   {
-    return appendPrefix(pathSpecial(id, PolymodConfig.mergeFolder, theDir), withTrailingSlash(Path.normalize(Polymod.modRoot)));
+    return appendPrefix(pathSpecial(id, PolymodConfig.mergeFolder, modDir), withTrailingSlash(Path.normalize(Polymod.modRoot)));
   }
 
-  private static inline function pathAppend(id:String, theDir:String = ''):String
+  private static inline function pathAppend(id:String, modDir:String = ''):String
   {
-    return appendPrefix(pathSpecial(id, PolymodConfig.appendFolder, theDir), withTrailingSlash(Path.normalize(Polymod.modRoot)));
+    return appendPrefix(pathSpecial(id, PolymodConfig.appendFolder, modDir), withTrailingSlash(Path.normalize(Polymod.modRoot)));
   }
 
   public static inline function stripPrefix(id:String, prefix:String = 'assets/'):String
