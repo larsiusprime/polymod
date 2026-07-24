@@ -3,7 +3,6 @@ package polymod.hscript;
 /**
  * This interface triggers the execution of a macro which redirects all function calls to a scripted class.
  */
-@:autoBuild(polymod.hscript._internal.HScriptedClassMacro.build())
 interface HScriptedClass
 {
   // The following functions ARE REAL, and are generated and applied to any class that implements this interface.

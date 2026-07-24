@@ -254,7 +254,7 @@ class Interp
     if (_proxy != null && o == _proxy.superClass && !Std.isOfType(o, PolymodScriptClass))
     {
       // Force call super function.
-      return call(o, get(o, '__super_${f}'), args);
+      return o.scriptCallSuper(f, args);
     }
     else if (Std.isOfType(o, PolymodStaticAbstractReference))
     {
