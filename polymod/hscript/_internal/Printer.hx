@@ -642,7 +642,8 @@ class Printer
           {
             var arg:Argument = f.args[i];
             if (arg.opt ?? false) output += "?";
-            output += arg.name + ":" + this.typeToString(arg.t);
+            output += arg.name;
+            if (arg.t != null) output += ":" + this.typeToString(arg.t);
             if (arg.value != null) output += " = " + this.exprToString(arg.value);
 
             if (i < f.args.length - 1) output += ", ";
