@@ -745,7 +745,8 @@ class PolymodScriptClass
         }
       });
 
-      return Reflect.callMethod(superClass, fn, fixedArgs);
+      // OVERRIDE CHANGE: Make sure to call the `scriptCallSuper` function instead of using Reflect to prevent recursion.
+      return this.superClass.scriptCallSuper(fnName, fixedArgs);
     }
   }
 
@@ -842,10 +843,7 @@ class PolymodScriptClass
       return func;
     }
 
-    // OVERRIDE CHANGE: Use __super_ when calling superclass
-    var fixedName = '__super_${name}';
-
-    var func = Reflect.field(superClass, fixedName);
+    var func = Reflect.field(superClass, name);
     if (func == null) return null;
     _cachedSuperFunctionDecls.set(name, func);
     return func;
