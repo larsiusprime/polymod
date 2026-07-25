@@ -23,4 +23,4 @@ This sample demonstrates the use of Polymod with the OpenFL framework and Electr
 
 ## openfl_hscript
 
-This sample demonstrates the use of Polymod with the OpenFL framework. It additionally demonstrates scripted functions which mods can override to programically add functionality.
+This sample demonstrates the use of Polymod with the OpenFL framework. It additionally demonstrates scripted functions which mods can override to programmatically add functionality.

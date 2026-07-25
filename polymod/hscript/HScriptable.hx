@@ -7,7 +7,7 @@ import polymod.util.Util;
 
 /**
  * This interface triggers the execution of a macro on any elements which use the `@:hscript` annotation.
- * Adding the annotation to the function will cause the associate script to be executed.
+ * Adding the annotation to the function will cause the associated script to be executed.
  * Adding the annotation to the class will allow specification of additional parameters which apply to all annotated functions.
  */
 @:autoBuild(polymod.hscript._internal.HScriptableMacro.build())

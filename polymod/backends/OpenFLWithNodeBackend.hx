@@ -369,7 +369,7 @@ class OpenFLNodeModLibrary extends LimeModLibrary
 
   /**
    * Checks if the specified asset has already been loaded.
-   * Copied from the origina isLocal function in lime.utils.AssetLibrary
+   * Copied from the original isLocal function in lime.utils.AssetLibrary
    * @param	id
    * @param	type
    * @return
