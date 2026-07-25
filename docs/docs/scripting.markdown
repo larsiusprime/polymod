@@ -271,7 +271,7 @@ The script simply composes a string, and the function takes the result and updat
 What makes this work is that the macro automatically injects the script logic at the beginning of the `@:hscript`-tagged function, before any other code in the function body. Then it defines three new local variables: `script_result`, `script_variables`, and `script_error`. `script_result` and `script_error` are both `Dynamic`, while `script_variables` is a `Map<String, Dynamic>`.
 
 - `script_result` is a `Dynamic` value that returns the output variable of the script.
-- `script_error` is a `Dynamic` value that contains the error which occured during execution, if any.
+- `script_error` is a `Dynamic` value that contains the error which occurred during execution, if any.
     - See the [Handling errors](#handling-errors) section for more info.
 - `script_variables` is a `Map<String, Dynamic> ` which contains each variable within the local scope of the script, by name.
     - See the [Retrieving multiple variables from a script](#retrieving multiple-variables-from-a-script) section for an example on how to use this.
@@ -425,7 +425,7 @@ In the above example, the script which is called for each function is *dynamic*,
 
 ### Retrieving multiple variables from a script
 
-Utilizing the `script_variables` value which is passed to the function, you can retrieve any variables from the local context. This allows you to calcualte multiple values with one script.
+Utilizing the `script_variables` value which is passed to the function, you can retrieve any variables from the local context. This allows you to calculate multiple values with one script.
 
 User script:
 

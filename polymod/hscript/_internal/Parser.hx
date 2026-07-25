@@ -69,7 +69,7 @@ class Parser
   public var opRightAssoc:Map<String, Bool>;
 
   /**
-    allows to check for #if / #else in code
+    allows checking for #if / #else in code
   **/
   public static var preprocessorValues(get, default):Map<String, Dynamic>;
 

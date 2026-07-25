@@ -1242,7 +1242,7 @@ class Interp
     }
 
     // We are calling a LOCAL function from the same module.
-    // We first check if any of the child classes has overriden the scripted function
+    // We first check if any of the child classes has overridden the scripted function
     if (_proxy != null && _proxy.topASC?.hasScriptFunction(id) ?? false)
     {
       _nextCallObject = _proxy.topASC;

@@ -115,7 +115,7 @@ The version is the result of resolving practical needs that arose from using Pol
 - Fixed an issue with loading custom fonts (via @gamerbross)
 
 ## [1.7.0] - 2023-01-16
-This version has been postposed a while, but adds several powerful features. A dependency system, support for zipped mods (on both desktop and HTML5!), reworks to versioning functions, and more.
+This version has been postponed for a while, but adds several powerful features. A dependency system, support for zipped mods (on both desktop and HTML5!), reworks to versioning functions, and more.
 ## Added
 - Added the `dependencies` key to the ModMetadata format.
   - Example: `{"modA": "1.0.0", "modB": "3.*", "modC": "1.9.0 - 2.3.0"}`
@@ -156,7 +156,7 @@ This version has been postposed a while, but adds several powerful features. A d
   - Added a button to showcase the difference when `skipDependencyErrors` changes.
 - `Polymod.scan()` has been refactored.
   - `scan()` now has two modes; the first, used when a parameter object is provided, uses the modRoot and fileSystem given.
-    - This will supercede the modRoot and fileSystem that was used for `Polymod.init()`.
+    - This will supersede the modRoot and fileSystem that was used for `Polymod.init()`.
   - The second mode, used when a parameter object is not provided, utilizes the filesystem created in `Polymod.init()`.
     - If you want to scan the modlist before loading mods, you can initialize Polymod with an empty modlist before scanning, then use `loadMods()` to reinitialize with additional mods.
     - If no parameters are provided but `init()` has not been called yet, an error will be thrown.
@@ -363,7 +363,7 @@ This release marks the migration of the project documentation to [polymod.io](ht
 - Changed the `openfl_hscript` sample to demonstrate retrieving and calling one or more functions from a single script file.
 - Cleaned up samples by removing unnecessary project configuration.
 ### Fixed
-- Fixed a crash bug which occured when LimeBackend was used without a `frameworkParams` argument.
+- Fixed a crash bug which occurred when LimeBackend was used without a `frameworkParams` argument.
 - Fixed a bug where `MOD_LOAD_PREPARE` and `MOD_LOAD_DONE` were showing as errors rather than notices.
 
 
