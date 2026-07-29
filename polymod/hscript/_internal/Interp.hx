@@ -1703,7 +1703,10 @@ class Interp
       case EArray(e, index):
         var arr:Dynamic = expr(e);
         var index:Dynamic = expr(index);
+
+        if (arr == null) error(ENullObjectReference('array[$index]'));
         if (isMap(arr)) return getMapValue(arr, index);
+
         return arr[index];
       case ENew(cl, params):
         var a = new Array();
