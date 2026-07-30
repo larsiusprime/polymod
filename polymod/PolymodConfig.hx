@@ -149,24 +149,6 @@ class PolymodConfig
   }
 
   /**
-   * The file where Polymod checks for modpack definitions.
-   *
-   * Set this option by setting the `POLYMOD_MOD_PACK_FILE` Haxe define at compile time,
-   * or by setting this value in your code.
-   *
-   * @default `_polymod_pack.txt`
-   */
-  // @:deprecated("Functionality removed, new implementation pending")
-  public static var modPackFile(get, default):String;
-
-  static function get_modPackFile():String
-  {
-    // If the value is null, retrieve the value as a Haxe define.
-    if (modPackFile == null) modPackFile = DefineUtil.getDefineString('POLYMOD_MOD_PACK_FILE', '_polymod_pack.txt');
-    return modPackFile;
-  }
-
-  /**
    * The file where Polymod checks for mod metadata.
    *
    * Set this option by setting the `POLYMOD_MOD_METADATA_FILE` Haxe define at compile time,
