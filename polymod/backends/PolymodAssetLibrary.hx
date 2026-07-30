@@ -11,6 +11,9 @@ import polymod.Polymod.FrameworkParams;
 #if firetongue
 import firetongue.FireTongue;
 #end
+#if lime
+import lime.app.Future;
+#end
 #if openfl
 import openfl.text.Font;
 #end
@@ -457,9 +460,37 @@ class PolymodAssetLibrary
    * @param id The asset ID to query existance of.
    * @return The byte data for the file
    */
-  public function loadBytes(id:String):lime.app.Future<Bytes>
+  public function loadBytes(id:String):Future<Bytes>
   {
     return backend.loadBytes(id);
+  }
+
+  /**
+   * Asynchronously fetch bytes directly from the file system.
+   * Ignores any modded asset replacements, and ignores merging and appending.
+   *
+   * @param id The asset ID of the file.
+   * @param modId A specific mod ID to fetch from.
+   * @return The bytes of the modded asset, or `null` if the asset couldn't be fetched.
+   */
+  public function loadBytesDirectly(id:String, modId:String = ''):Future<haxe.io.Bytes>
+  {
+    if (modId != '')
+    {
+      if (checkDirectly(id, modId))
+      {
+        var idStripped = stripAssetsPrefix(id);
+        return fileSystem.loadFileBytesByModId(idStripped, modId);
+      }
+      else
+      {
+        return null;
+      }
+    }
+    else
+    {
+      return fileSystem.loadFileBytes(id);
+    }
   }
 
   /**
@@ -469,9 +500,24 @@ class PolymodAssetLibrary
    * @param id The asset ID to load.
    * @return A Future, which provides the string text for the file when asset loading completes.
    */
-  public function loadText(id:String):lime.app.Future<String>
+  public function loadText(id:String):Future<String>
   {
     return backend.loadText(id);
+  }
+
+  /**
+   * Asynchronously fetch string text directly from the file system.
+   * Ignores any modded asset replacements, and ignores merging and appending.
+   *
+   * @param id The asset ID of the file.
+   * @param modId A specific mod ID to fetch from.
+   * @return A Future, which provides the string text for the file when asset loading completes.
+   */
+  public function loadTextDirectly(id:String, modId:String = ''):Future<String>
+  {
+    return loadBytesDirectly(id, modId).then((bytes:Bytes) -> {
+      return Future.withValue(bytes.getString(0, bytes.length));
+    });
   }
 
   #if openfl
@@ -494,9 +540,30 @@ class PolymodAssetLibrary
    * @param id The asset ID to load.
    * @return A Future, which provides the bitmap data for the file when asset loading completes.
    */
-  public function loadBitmapData(id:String):lime.app.Future<openfl.display.BitmapData>
+  public function loadBitmapData(id:String):Future<openfl.display.BitmapData>
   {
     return backend.loadBitmapData(id);
+  }
+
+  /**
+   * Asynchronously fetch bitmap data directly from the file system.
+   * Ignores any modded asset replacements, and ignores merging and appending.
+   *
+   * @param id The asset ID of the file.
+   * @param modId A specific mod ID to fetch from.
+   * @return A Future, which provides the bitmap data for the file when asset loading completes.
+   */
+  public function loadBitmapDataDirectly(id:String, modId:String = ''):Future<openfl.display.BitmapData>
+  {
+    var bytesFuture = loadBytesDirectly(id, modId);
+    var imageFuture = bytesFuture.then((bytes:Bytes) -> {
+      return lime.graphics.Image.loadFromBytes(bytes);
+    });
+    var bitmapDataFuture = imageFuture.then((image:lime.graphics.Image) -> {
+      return Future.withValue(openfl.display.BitmapData.fromImage(image));
+    });
+
+    return bitmapDataFuture;
   }
 
   /**
@@ -512,15 +579,36 @@ class PolymodAssetLibrary
   }
 
   /**
-   * Attempts to load an asset asynchronously, as bitmap data.
+   * Attempts to load an asset asynchronously, as sound data.
    * Fetches from both base assets and all loaded mods.
    *
    * @param id The asset ID to load.
-   * @return A Future, which provides the bitmap data for the file when asset loading completes.
+   * @return A Future, which provides the sound data for the file when asset loading completes.
    */
-  public function loadSound(id:String):lime.app.Future<openfl.media.Sound>
+  public function loadSound(id:String):Future<openfl.media.Sound>
   {
     return backend.loadSound(id);
+  }
+
+    /**
+   * Asynchronously fetch sound data directly from the file system.
+   * Ignores any modded asset replacements, and ignores merging and appending.
+   *
+   * @param id The asset ID of the file.
+   * @param modId A specific mod ID to fetch from.
+   * @return A Future, which provides the sound data for the file when asset loading completes.
+   */
+  public function loadSoundDirectly(id:String, modId:String = ''):Future<openfl.media.Sound>
+  {
+    var bytesFuture = loadBytesDirectly(id, modId);
+    var audioBufferFuture = bytesFuture.then((bytes:Bytes) -> {
+      return Future.withValue(lime.media.AudioBuffer.fromBytes(bytes));
+    });
+    var soundFuture = audioBufferFuture.then((audioBuffer:lime.media.AudioBuffer) -> {
+      return Future.withValue(openfl.media.Sound.fromAudioBuffer(audioBuffer));
+    });
+
+    return soundFuture;
   }
   #end
 

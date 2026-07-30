@@ -3,6 +3,9 @@ package polymod.fs;
 import polymod.Polymod;
 import thx.semver.VersionRule;
 import haxe.io.Bytes;
+#if lime
+import lime.app.Future;
+#end
 
 /**
  * Provides factory and utility functions for instantiating an IFileSystem.
@@ -197,4 +200,23 @@ interface IFileSystem
    * @return The mod metadata, or `null` if the mod does not exist.
    */
   public function getMetadataByModId(modId:String, ?origin:PolymodErrorOrigin):Null<ModMetadata>;
+
+  #if lime
+  /**
+   * Load the byte data for a file asynchronously.
+   *
+   * @param path The path to retrieve byte data from.
+   * @return A future which returns the file bytes.
+   */
+  public function loadFileBytes(path:String):Future<haxe.io.Bytes>;
+
+  /**
+   * Load the byte data for a file from a specific mod, asynchronously.
+   *
+   * @param path The path to retrieve byte data from, relative to the asset root.
+   * @param modId A specific mod ID to retrieve an asset from.
+   * @return A future which returns the file bytes.
+   */
+  public function loadFileBytesByModId(path:String, modId:String):Future<haxe.io.Bytes>;
+  #end
 }

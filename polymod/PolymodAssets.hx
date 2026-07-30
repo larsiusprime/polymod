@@ -81,8 +81,7 @@ class PolymodAssets
    */
   public static function getBytesFromMod(id:String, modId:String):Null<haxe.io.Bytes>
   {
-    var modDir = Polymod.assetLibrary.getModDirectory(modId);
-    return Polymod.assetLibrary.getBytesDirectly(id, modDir);
+    return Polymod.assetLibrary.getBytesDirectly(id, modId);
   }
 
   /**
@@ -120,8 +119,7 @@ class PolymodAssets
    */
   public static function getTextFromMod(id:String, modId:String):Null<String>
   {
-    var modDir = Polymod.assetLibrary.getModDirectory(modId);
-    return Polymod.assetLibrary.getTextDirectly(id, modDir);
+    return Polymod.assetLibrary.getTextDirectly(id, modId);
   }
 
   #if lime
@@ -138,6 +136,30 @@ class PolymodAssets
   }
 
   /**
+   * Attempt to load an asset asynchronously, as byte data.
+   * Fetches from base assets, ignoring mods even if they are loaded.
+   *
+   * @param id The asset ID to query existance of.
+   * @return The byte data for the file
+   */
+  public static function loadBytesDirectly(id:String):lime.app.Future<haxe.io.Bytes>
+  {
+    return Polymod.assetLibrary.loadBytesDirectly(id, '');
+  }
+
+  /**
+   * Attempt to load an asset asynchronously, as byte data.
+   * Fetches directly from a given mod by ID.
+   *
+   * @param id The asset ID to query existance of.
+   * @return The byte data for the file
+   */
+  public static function loadBytesFromMod(id:String, modId:String):lime.app.Future<haxe.io.Bytes>
+  {
+    return Polymod.assetLibrary.loadBytesDirectly(id, modId);
+  }
+
+  /**
    * Attempts to load an asset asynchronously, as string text.
    * Fetches from both base assets and all loaded mods.
    *
@@ -147,6 +169,30 @@ class PolymodAssets
   public static function loadText(id:String):lime.app.Future<String>
   {
     return Polymod.assetLibrary.loadText(id);
+  }
+
+  /**
+   * Attempt to load an asset asynchronously, as byte data.
+   * Fetches from base assets, ignoring mods even if they are loaded.
+   *
+   * @param id The asset ID to query existance of.
+   * @return The byte data for the file
+   */
+  public static function loadTextDirectly(id:String):lime.app.Future<String>
+  {
+    return Polymod.assetLibrary.loadTextDirectly(id);
+  }
+
+  /**
+   * Attempt to load an asset asynchronously, as byte data.
+   * Fetches directly from a given mod by ID.
+   *
+   * @param id The asset ID to query existance of.
+   * @return The byte data for the file
+   */
+  public static function loadTextFromMod(id:String, modId:String):lime.app.Future<String>
+  {
+    return Polymod.assetLibrary.loadTextDirectly(id, modId);
   }
 
   #if openfl
@@ -185,8 +231,7 @@ class PolymodAssets
    */
   public static function getBitmapDataFromMod(id:String, modId:String):Null<openfl.display.BitmapData>
   {
-    var modDir = Polymod.assetLibrary.getModDirectory(modId);
-    return Polymod.assetLibrary.getBitmapDataDirectly(id, modDir);
+    return Polymod.assetLibrary.getBitmapDataDirectly(id, modId);
   }
 
   /**
@@ -199,6 +244,30 @@ class PolymodAssets
   public static function loadBitmapData(id:String):lime.app.Future<openfl.display.BitmapData>
   {
     return Polymod.assetLibrary.loadBitmapData(id);
+  }
+
+  /**
+   * Attempt to load an asset asynchronously, as bitmap data.
+   * Fetches from base assets, ignoring mods even if they are loaded.
+   *
+   * @param id The asset ID to query existance of.
+   * @return A Future, which provides the bitmap data for the file when asset loading completes.
+   */
+  public static function loadBitmapDataDirectly(id:String):lime.app.Future<openfl.display.BitmapData>
+  {
+    return Polymod.assetLibrary.loadBitmapDataDirectly(id, '');
+  }
+
+    /**
+   * Attempt to load an asset asynchronously, as bitmap data.
+   * Fetches directly from a given mod by ID.
+   *
+   * @param id The asset ID to query existance of.
+   * @return A Future, which provides the bitmap data for the file when asset loading completes.
+   */
+  public static function loadBitmapDataFromMod(id:String, modId:String):lime.app.Future<openfl.display.BitmapData>
+  {
+    return Polymod.assetLibrary.loadBitmapDataDirectly(id, modId);
   }
 
   /**
@@ -236,8 +305,7 @@ class PolymodAssets
    */
   public static function getSoundFromMod(id:String, modId:String):Null<openfl.media.Sound>
   {
-    var modDir = Polymod.assetLibrary.getModDirectory(modId);
-    return Polymod.assetLibrary.getSoundDirectly(id, modDir);
+    return Polymod.assetLibrary.getSoundDirectly(id, modId);
   }
 
   /**
@@ -250,6 +318,30 @@ class PolymodAssets
   public static function loadSound(id:String):lime.app.Future<openfl.media.Sound>
   {
     return Polymod.assetLibrary.loadSound(id);
+  }
+
+  /**
+   * Attempt to load an asset asynchronously, as sound data.
+   * Fetches from base assets, ignoring mods even if they are loaded.
+   *
+   * @param id The asset ID to query existance of.
+   * @return A Future, which provides the sound data for the file when asset loading completes.
+   */
+  public static function loadSoundDirectly(id:String):lime.app.Future<openfl.media.Sound>
+  {
+    return Polymod.assetLibrary.loadSoundDirectly(id);
+  }
+
+  /**
+   * Attempt to load an asset asynchronously, as sound data.
+   * Fetches directly from a given mod by ID.
+   *
+   * @param id The asset ID to query existance of.
+   * @return A Future, which provides the sound data for the file when asset loading completes.
+   */
+  public static function loadSoundFromMod(id:String, modId:String):lime.app.Future<openfl.media.Sound>
+  {
+    return Polymod.assetLibrary.loadSoundDirectly(id, modId);
   }
   #end
 

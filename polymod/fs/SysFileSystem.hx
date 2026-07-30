@@ -9,6 +9,10 @@ import polymod.util.VersionUtil;
 import thx.semver.VersionRule;
 import sys.io.FileInput;
 
+#if lime
+import lime.app.Future;
+#end
+
 #if (!windows)
 using StringTools;
 #end
@@ -157,6 +161,28 @@ class SysFileSystem implements IFileSystem
     return sys.io.File.getBytes(path);
   }
 
+  #if lime
+  /**
+   * Load the byte data for a file asynchronously.
+   *
+   * @param path The path to retrieve byte data from.
+   * @return A future which returns the file bytes.
+   */
+  public function loadFileBytes(path:String):Future<haxe.io.Bytes>
+  {
+    var performWork:Void->haxe.io.Bytes = () -> {
+      var result = getFileBytes(path);
+      if (result == null)
+      {
+        throw 'Could not load file bytes $path';
+      }
+      return result;
+    };
+
+    return new Future(performWork, true);
+  }
+  #end
+
   public function onLoadMod(modId:String):Void
   {
     if (!PolymodConfig.fileLock) return;
@@ -206,6 +232,24 @@ class SysFileSystem implements IFileSystem
 
     return getFileBytes(Util.pathJoin(relativeDir, path));
   }
+
+  #if lime
+  /**
+   * Load the byte data for a file from a specific mod, asynchronously.
+   *
+   * @param path The path to retrieve byte data from, relative to the asset root.
+   * @param modId A specific mod ID to retrieve an asset from.
+   * @return A future which returns the file bytes.
+   */
+  public function loadFileBytesByModId(path:String, modId:String):Future<haxe.io.Bytes>
+  {
+    var modDir:Null<String> = scanModDirectoriesForId(modId);
+    if (modDir == null) return null;
+    var relativeDir = Util.pathJoin(modRoot, modDir);
+
+    return loadFileBytes(Util.pathJoin(relativeDir, path));
+  }
+  #end
 
   /**
    * Retrieve a list of ModMetadata for each installed mod.

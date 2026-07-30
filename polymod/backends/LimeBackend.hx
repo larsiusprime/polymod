@@ -1501,15 +1501,11 @@ class LimeCoreLibrary extends LimeAssetLibrary
     var redirectId:String = buildRedirectId(id);
     if (polymodLibrary.fileSystem.exists(redirectId))
     {
-      #if (js && html5)
-      // We load the bytes, then load the file, rather than using Image.loadFromFile,
-      // because URLs don't work with MemoryFileSystem.
-      var dabytes = polymodLibrary.fileSystem.getFileBytes(redirectId);
-      var imageFuture = Image.loadFromBytes(dabytes);
+      var bytesFuture = polymodLibrary.fileSystem.loadFileBytes(redirectId);
+      var imageFuture = bytesFuture.then((bytes:Bytes) -> {
+        return Image.loadFromBytes(bytes);
+      });
       return imageFuture;
-      #else
-      return Image.loadFromFile(redirectId);
-      #end
     }
 
     return fallback.loadImage(id);
@@ -1520,7 +1516,11 @@ class LimeCoreLibrary extends LimeAssetLibrary
     var redirectId:String = buildRedirectId(id);
     if (polymodLibrary.fileSystem.exists(redirectId))
     {
-      return AudioBuffer.loadFromFile(redirectId);
+      var bytesFuture = polymodLibrary.fileSystem.loadFileBytes(redirectId);
+      var audioBufferFuture = bytesFuture.then((bytes:Bytes) -> {
+        return Future.withValue(AudioBuffer.fromBytes(bytes));
+      });
+      return audioBufferFuture;
     }
 
     return fallback.loadAudioBuffer(id);
