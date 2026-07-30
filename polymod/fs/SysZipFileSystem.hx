@@ -353,7 +353,7 @@ class SysZipFileSystem extends SysFileSystem
    */
   public function addAllZips():Void
   {
-    Polymod.debug('Searching for ZIP files in ' + modRoot);
+    Polymod.debug('Searching for archives (${PolymodConfig.archiveModExt}) in $modRoot');
     // Use SUPER because we don't want to add in files within the ZIPs.
     var modRootContents = super.readDirectory(modRoot);
 
@@ -365,15 +365,17 @@ class SysZipFileSystem extends SysFileSystem
       if (isDirectory(filePath)) continue;
 
       // Only process ZIP files.
-      if (StringTools.endsWith(filePath, '.zip'))
-      {
-        Polymod.debug('- $filePath');
-        addZipFile(filePath);
+      for (archiveExt in PolymodConfig.archiveModExt) {
+        if (StringTools.endsWith(filePath, archiveExt))
+        {
+          Polymod.debug('- $filePath');
+          addZipFile(filePath);
+        }
       }
     }
 
     var zipCount = [for (x in zipParsers.keys()) x].length;
-    Polymod.debug('Loaded ${zipCount} ZIP files containing ${fileDirectories.length} directories.');
+    Polymod.debug('Loaded ${zipCount} archives files containing ${fileDirectories.length} directories.');
   }
 
   /**

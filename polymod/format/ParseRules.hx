@@ -54,7 +54,6 @@ class ParseRules
     rules.addFormat('json', new JSONParseFormat());
     rules.addFormat('txt', new PlainTextParseFormat());
 
-    rules.addFormat("hxc", new ScriptParseFormat());
     for (ext in PolymodConfig.scriptClassExt)
     {
       rules.addFormat(ext, new ScriptParseFormat());
