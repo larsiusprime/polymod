@@ -1530,7 +1530,7 @@ enum abstract PolymodErrorCode(String) from String to String
    * - Make sure the archive is not corrupted.
    * - Use 7-Zip to create the archive and avoid other programs (like WinRAR and the Windows built-in ZIP tool) because they suck.
    */
-  public var MOD_ARCHIVE_READ_FAILED:String = 'mod_metadata_parse_failed';
+  public var MOD_ARCHIVE_READ_FAILED:String = 'mod_archive_read_failed';
 
   //
   // Mod Loading Errors

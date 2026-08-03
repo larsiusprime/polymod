@@ -184,7 +184,7 @@ class SysZipFileSystem extends SysFileSystem
       catch (e)
       {
         // An error occurred while reading the file from the ZIP.
-        Polymod.error(MOD_ARCHIVE_READ_FAILED, 'Failed to read file bytes from $path: ${e}', INIT);
+        Polymod.error(MOD_ARCHIVE_READ_FAILED, 'Failed to read file bytes from archive, is it corrupt?\n$path\n${e}');
         return null;
       }
     }
