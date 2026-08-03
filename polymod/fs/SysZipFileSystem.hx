@@ -177,8 +177,16 @@ class SysZipFileSystem extends SysFileSystem
         Polymod.debug('Could not access file $innerPath from ZIP ${zipParser.fileName}.');
         return null;
       }
-      var fileBytes = fileHeader.readData();
-      return fileBytes;
+      try {
+        var fileBytes = fileHeader.readData();
+        return fileBytes;
+      }
+      catch (e)
+      {
+        // An error occurred while reading the file from the ZIP.
+        Polymod.error(MOD_ARCHIVE_READ_FAILED, 'Failed to read file bytes from $path: ${e}', INIT);
+        return null;
+      }
     }
   }
 

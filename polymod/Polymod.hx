@@ -1525,6 +1525,13 @@ enum abstract PolymodErrorCode(String) from String to String
    */
   public var MOD_MISSING_ICON:String = 'mod_missing_icon';
 
+  /**
+   * File data from an archived mod (like a ZIP mod) could not be read.
+   * - Make sure the archive is not corrupted.
+   * - Use 7-Zip to create the archive and avoid other programs (like WinRAR and the Windows built-in ZIP tool) because they suck.
+   */
+  public var MOD_ARCHIVE_READ_FAILED:String = 'mod_metadata_parse_failed';
+
   //
   // Mod Loading Errors
   //
