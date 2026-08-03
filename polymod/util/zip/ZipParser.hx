@@ -397,7 +397,11 @@ class LocalFileHeader extends Header
    */
   public function isValid()
   {
-    return signature.getInt32(0) == HEADER_SIGNATURE; // Std.parseInt(HEADER_SIGNATURE);
+    if (fileInput == null) return false;
+    if (compressedSize == 0) return false;
+    if (signature.getInt32(0) != HEADER_SIGNATURE) return false;
+
+    return true;
   }
 
   public function toString()

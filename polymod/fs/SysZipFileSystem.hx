@@ -2,16 +2,12 @@ package polymod.fs;
 
 
 #if sys
-import polymod.util.VersionUtil;
 import polymod.Polymod;
 import polymod.fs.ZipFileSystem.ZipFileSystemParams;
-import polymod.fs.PolymodFileSystem.IFileSystem;
-import polymod.fs.PolymodFileSystem.PolymodFileSystemParams;
 import haxe.Constraints.IMap;
 import haxe.ds.StringMap;
 import haxe.io.Bytes;
 import haxe.io.Path;
-import polymod.util.Util;
 import polymod.util.InsensitiveMap;
 import polymod.util.zip.ZipParser;
 import thx.semver.VersionRule;
@@ -66,7 +62,8 @@ class SysZipFileSystem extends SysFileSystem
   }
   #end
 
-  public override function onLoadMod(modId:String):Void {
+  public override function onLoadMod(modId:String):Void
+  {
     if (!PolymodConfig.fileLock) return;
 
     var modDir:Null<String> = scanModDirectoriesForId(modId);
@@ -98,7 +95,8 @@ class SysZipFileSystem extends SysFileSystem
     }
   }
 
-  public override function onUnloadMod(modId:String):Void {
+  public override function onUnloadMod(modId:String):Void
+  {
     if (!PolymodConfig.fileLock) return;
 
     var modDir:Null<String> = scanModDirectoriesForId(modId);
@@ -123,7 +121,8 @@ class SysZipFileSystem extends SysFileSystem
     }
   }
 
-  function isModDirInZip(dirName:String):Bool {
+  function isModDirInZip(dirName:String):Bool
+  {
     var modPath = Util.pathJoin(modRoot, dirName);
     if (!exists(modPath)) return false;
 
@@ -151,7 +150,8 @@ class SysZipFileSystem extends SysFileSystem
       var zipParser = zipParsers.get(zipPath);
 
       // Check that the ZIP is valid.
-      if (zipParser == null || !zipParser.isValid()) {
+      if (zipParser == null || !zipParser.isValid())
+      {
         purgeZipPath(zipPath);
         return null;
       }
@@ -177,7 +177,9 @@ class SysZipFileSystem extends SysFileSystem
         Polymod.debug('Could not access file $innerPath from ZIP ${zipParser.fileName}.');
         return null;
       }
-      try {
+
+      try
+      {
         var fileBytes = fileHeader.readData();
         return fileBytes;
       }
@@ -373,7 +375,8 @@ class SysZipFileSystem extends SysFileSystem
       if (isDirectory(filePath)) continue;
 
       // Only process ZIP files.
-      for (archiveExt in PolymodConfig.archiveModExt) {
+      for (archiveExt in PolymodConfig.archiveModExt)
+      {
         if (StringTools.endsWith(filePath, archiveExt))
         {
           Polymod.debug('- $filePath');
@@ -432,7 +435,8 @@ class SysZipFileSystem extends SysFileSystem
     zipParsers.set(zipPath, zipParser);
   }
 
-  function validateZipCache():Void {
+  function validateZipCache():Void
+  {
     for (zipPath => zipParser in zipParsers)
     {
       // Check that the associated ZIP is still valid.
@@ -449,14 +453,16 @@ class SysZipFileSystem extends SysFileSystem
    *
    * @param zipPath
    */
-  function purgeZipPath(zipPath:String):Void {
+  function purgeZipPath(zipPath:String):Void
+  {
     Polymod.debug('Purging invalid ZIP: ${zipPath}');
 
     zipParsers.remove(zipPath);
 
     for (filePath => fileZipPath in filesLocations)
     {
-      if (fileZipPath == zipPath) {
+      if (fileZipPath == zipPath)
+      {
         Polymod.debug('  - ${filePath}');
         filesLocations.remove(filePath);
         if (fileDirectories.contains(filePath)) fileDirectories.remove(filePath);
