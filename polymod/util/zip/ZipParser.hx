@@ -2,6 +2,7 @@ package polymod.util.zip;
 
 #if sys
 import haxe.Constraints.IMap;
+import haxe.EnumFlags;
 import haxe.ds.StringMap;
 import haxe.io.Bytes;
 import polymod.util.InsensitiveMap;
@@ -143,6 +144,16 @@ class ZipParser
     var lfh = new LocalFileHeader(fileHandle);
     lfh.dataOffset = fileHandle.tell();
 
+    // Headers with this flag have its relevant data set to zero.
+    // We populate it with the data from the central directory header instead.
+    // Ideally, we would get it from the data descriptor, but this is way easier.
+    if (lfh.generalPurposeBitFlag.has(DATA_DESCRIPTOR))
+    {
+      lfh.crc32code = cdfh.crc32code.sub(0, lfh.crc32code.length);
+      lfh.compressedSize = cdfh.compressedSize;
+      lfh.uncompressedSize = cdfh.uncompressedSize;
+    }
+
     cleanupFileHandle();
     return lfh;
   }
@@ -180,6 +191,32 @@ enum CompressionMethod
 {
   NONE;
   DEFLATE;
+}
+
+/**
+ * The flags in the general purpose bit field of a ZIP file header.
+ * See section 4.4.4 of the ZIP file format specification for details.
+ *
+ * Note that not all of them are included since they are not relevant to this implementation.
+ */
+enum GeneralPurposeFlags
+{
+  ENCRYPTED;
+  /**
+   * Bit used for IMPLODE, DEFLATE, and LZMA compression methods.
+   * Check the specification for details on how this bit is used for each compression method.
+   */
+  COMPRESSION_OPTION_1;
+  /**
+   * Bit used for IMPLODE, DEFLATE, and LZMA compression methods.
+   * Check the specification for details on how this bit is used for each compression method.
+   */
+  COMPRESSION_OPTION_2;
+  /**
+   * If this bit is set, the fields CRC-32, compressed size and uncompressed size
+   * are set to zero in the data descriptor immediately following the compressed data.
+   */
+  DATA_DESCRIPTOR;
 }
 
 /**
@@ -280,7 +317,7 @@ class LocalFileHeader extends Header
   /**
    * General purpose bit flag
    */
-  public var generalPurposeBitFlag:Bytes = Bytes.alloc(0);
+  public var generalPurposeBitFlag:EnumFlags<GeneralPurposeFlags> = new EnumFlags(0);
 
   /**
    * Compression method; e.g. none = 0, DEFLATE = 8 (or "\0x08\0x00")
@@ -339,7 +376,7 @@ class LocalFileHeader extends Header
     signature = getBytesFromFile(4);
 
     minVersionForExtraction = getBytesFromFile(2).getUInt16(0);
-    generalPurposeBitFlag = getBytesFromFile(2);
+    generalPurposeBitFlag = new EnumFlags(getBytesFromFile(2).getUInt16(0));
     compressionMethod = (getBytesFromFile(2).getUInt16(0) == 0) ? NONE : DEFLATE;
 
     var lastModifiedTime = getBytesFromFile(2);
@@ -409,7 +446,7 @@ class LocalFileHeader extends Header
     return '
         signature: ${signature.toHex()}
         minimum version to extract: $minVersionForExtraction
-        general purpose bit flags: ${generalPurposeBitFlag.toHex()}
+        general purpose bit flags: $generalPurposeBitFlag
         compression method: $compressionMethod
         last modified date: $lastModifiedDateTime
         crc32: $crc32code
@@ -446,7 +483,7 @@ class CentralDirectoryFileHeader extends Header
   /**
    * General purpose bit flag
    */
-  private var generalPurposeBitFlag:Bytes = Bytes.alloc(0);
+  public var generalPurposeBitFlag:EnumFlags<GeneralPurposeFlags> = new EnumFlags(0);
 
   /**
    * Compression method (none or deflate)
@@ -461,7 +498,7 @@ class CentralDirectoryFileHeader extends Header
   /**
    * CRC-32 of uncompressed data
    */
-  private var crc32code:Bytes = Bytes.alloc(0);
+  public var crc32code:Bytes = Bytes.alloc(0);
 
   /**
    * Compressed size (or 0xffffffff for ZIP64)
@@ -541,7 +578,7 @@ class CentralDirectoryFileHeader extends Header
     signature = getBytesFromFile(4);
     versionMadeBy = getBytesFromFile(2).getUInt16(0);
     versionToExtract = getBytesFromFile(2).getUInt16(0);
-    generalPurposeBitFlag = getBytesFromFile(2);
+    generalPurposeBitFlag = new EnumFlags(getBytesFromFile(2).getUInt16(0));
     compressionMethod = (getBytesFromFile(2).getUInt16(0) == 0) ? NONE : DEFLATE;
 
     var lastModifiedTime = getBytesFromFile(2);
@@ -584,7 +621,7 @@ class CentralDirectoryFileHeader extends Header
     return '
         version made by: $versionMadeBy
         version to extract: $versionToExtract
-        general purpose bit flags: ${generalPurposeBitFlag.toHex()}
+        general purpose bit flags: $generalPurposeBitFlag
         compression method: $compressionMethod
         last modified date: $lastModifiedDateTime
         crc32: ${crc32code.toHex()}
