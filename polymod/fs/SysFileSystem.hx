@@ -349,6 +349,19 @@ class SysFileSystem implements IFileSystem
     return getMetadataByModDir(dirName, origin);
   }
 
+  /**
+   * Get the metadata for a given mod.
+   * This function is DEPRECATED, use `getMetadataByModId` for the same result.
+   *
+   * @param modId The ID of the mod as defined in the metadata.
+   * @param origin The error reporting origin.
+   * @return The mod metadata, or `null` if not found.
+   */
+  public function getMetadataById(modId:String, ?origin:PolymodErrorOrigin):Null<ModMetadata>
+  {
+    return getMetadataByModId(modId, origin);
+  }
+
   function hasMetadataFile(dirName:String):Bool
   {
     var modPath = Util.pathJoin(modRoot, dirName);

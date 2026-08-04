@@ -409,6 +409,19 @@ class MemoryFileSystem implements IFileSystem
   }
 
   /**
+   * Get the metadata for a given mod.
+   * This function is DEPRECATED, use `getMetadataByModId` for the same result.
+   *
+   * @param modId The ID of the mod as defined in the metadata.
+   * @param origin The error reporting origin.
+   * @return The mod metadata, or `null` if not found.
+   */
+  public function getMetadataById(modId:String, ?origin:PolymodErrorOrigin):Null<ModMetadata>
+  {
+    return getMetadataByModId(modId, origin);
+  }
+
+  /**
    * Provides the metadata for a given mod by its directory.
    *
    * @param dirName The directory of the mod.
