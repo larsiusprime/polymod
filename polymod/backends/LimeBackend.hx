@@ -1046,14 +1046,11 @@ class LimeModLibrary extends LimeAssetLibrary
     else if ((fallback != null))
     {
       var localePath:Null<String> = p.fileLocale(id);
-      if (localePath != null && fallbackExists(localePath))
-      {
-        return fallback.loadText(localePath);
-      }
-      else
-      {
-        return fallback.loadText(id);
-      }
+      
+      var base:Future<String> = (localePath != null && fallbackExists(localePath)) ? fallback.loadText(localePath) : fallback.loadText(id);
+      return base.then((text) -> {
+        return Future.withValue(p.mergeAndAppendText(id, text ?? ''));
+      });
     }
     var request = new HTTPRequest<String>();
     return request.load('');
