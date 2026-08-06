@@ -412,6 +412,20 @@ abstract class BaseFileSystem implements IFileSystem
     return null;
   }
 
+  /**
+   * Get the metadata for a given mod.
+   * This function is DEPRECATED, use `getMetadataByModId` for the same result.
+   *
+   * @param modId The ID of the mod as defined in the metadata.
+   * @param origin The error reporting origin.
+   * @return The mod metadata, or `null` if not found.
+   */
+  @:deprecated('This function is DEPRECATED, use `getMetadataByModId` for the same result.')
+  public function getMetadataById(modId:String, ?origin:PolymodErrorOrigin):Null<ModMetadata>
+  {
+    return getMetadataByModId(modId, origin);
+  }
+
   function hasMetadataFile(dirName:String):Bool
   {
     var modPath:String = Util.pathJoin(modRoot, dirName);
