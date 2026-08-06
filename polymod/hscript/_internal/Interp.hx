@@ -177,11 +177,8 @@ class Interp
       error(EBlacklistedModule(importedClass.fullPath));
     }
 
-    // Attempt to resolve the class without overrides.
-    var cls = Type.resolveClass(cl);
-    if (cls == null) cls = resolve(cl);
-    if (cls == null) error(EInvalidModule(cl));
-    return Type.createInstance(cls, args);
+    // Don't try to resolve classes without a valid import.
+    error(EInvalidModule(cl));
   }
 
   private var _nextCallObject:Dynamic = null;
