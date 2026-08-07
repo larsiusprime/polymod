@@ -18,6 +18,7 @@ import thx.semver.VersionRule;
 
 using Lambda;
 using StringTools;
+using polymod.util.PromiseUtil;
 
 #if firetongue
 import firetongue.FireTongue;
@@ -947,7 +948,7 @@ class Polymod
       }
     }
 
-    return lime.app.Promises.allSettled(futures).then((results) -> {
+    return lime.app.Promise.allSettled(futures).then((results) -> {
       // Once all scripts have been registered, THEN validate the imports.
       polymod.hscript._internal.Interp.validateImports();
 
