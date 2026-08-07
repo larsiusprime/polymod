@@ -1,5 +1,6 @@
 package polymod.util;
 
+#if lime
 import lime.app.Promise;
 import lime.app.Future;
 
@@ -132,3 +133,4 @@ class PromiseUtil
     return promise.future;
   }
 }
+#end

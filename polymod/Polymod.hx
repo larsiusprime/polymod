@@ -18,7 +18,9 @@ import thx.semver.VersionRule;
 
 using Lambda;
 using StringTools;
+#if lime
 using polymod.util.PromiseUtil;
+#end
 
 #if firetongue
 import firetongue.FireTongue;
