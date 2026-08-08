@@ -129,19 +129,16 @@ class ZipParser
    */
   public function getLocalFileHeaderOf(localFileName:String):Null<LocalFileHeader>
   {
-    buildFileHandle();
-    if (fileHandle == null) throw 'Failed to read ZIP file!';
+    if (!isValid()) throw 'Failed to read ZIP file!';
 
     var cdfh = centralDirectoryRecords.get(localFileName);
     if (cdfh == null)
     {
       Polymod.warning(ASSET_MISSING_FILE, 'The file $localFileName was not found in the zip: $fileName');
-
-      cleanupFileHandle();
       return null;
     }
 
-    // This will always open a new handle, since it may be accessed in a different thread.
+    // This will always open a new handle, since it may be accessed by a different thread.
     var localFileHandle:FileInput = File.read(this.fileName);
     localFileHandle.seek(cdfh.localFileHeaderOffset, SeekBegin);
     var lfh = new LocalFileHeader(localFileHandle);
@@ -149,7 +146,6 @@ class ZipParser
     {
       Polymod.warning(ASSET_MISSING_FILE, 'Could not parse entry for $localFileName, it might be corrupted.');
 
-      cleanupFileHandle();
       return null;
     }
 
@@ -165,7 +161,6 @@ class ZipParser
       lfh.uncompressedSize = cdfh.uncompressedSize;
     }
 
-    cleanupFileHandle();
     return lfh;
   }
 
@@ -175,10 +170,8 @@ class ZipParser
    *
    * @return Whether this Zip Parser is still valid.
    */
-  public function isValid():Bool {
-    if (!sys.FileSystem.exists(fileName)) return false;
-
-    return true;
+  public inline function isValid():Bool {
+    return sys.FileSystem.exists(fileName);
   }
 
   function buildFileHandle() {
