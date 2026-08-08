@@ -178,17 +178,18 @@ class SysZipFileSystem extends SysFileSystem
         return null;
       }
 
+      var fileBytes:Null<Bytes> = null;
       try
       {
-        var fileBytes = fileHeader.readData();
-        return fileBytes;
+        fileBytes = fileHeader.readData();
       }
       catch (e)
       {
         // An error occurred while reading the file from the ZIP.
         Polymod.error(MOD_ARCHIVE_READ_FAILED, 'Failed to read file bytes from archive, is it corrupt?\n$path\n${e}');
-        return null;
       }
+      fileHeader.cleanupFileHandle();
+      return fileBytes;
     }
   }
 

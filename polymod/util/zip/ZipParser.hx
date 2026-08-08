@@ -120,8 +120,9 @@ class ZipParser
   }
 
   /**
-   * Read the centeral directory header for a specific file,
-   * and generate a LocalFileHeader.
+   * Read the central directory header for a specific file, and generate a LocalFileHeader.
+   * This opens a new file handle to the ZIP file independent of `persistFileHandle`,
+   * so make sure to close it with `LocalFileHeader.closeFileHandle()` when done using it.
    *
    * @param localFileName A filename relative to the root of the ZIP file.
    * @return A LocalFileHeader for the specified file, or `null` if the file was not found.
@@ -140,9 +141,19 @@ class ZipParser
       return null;
     }
 
-    fileHandle.seek(cdfh.localFileHeaderOffset, SeekBegin);
-    var lfh = new LocalFileHeader(fileHandle);
-    lfh.dataOffset = fileHandle.tell();
+    // This will always open a new handle, since it may be accessed in a different thread.
+    var localFileHandle:FileInput = File.read(this.fileName);
+    localFileHandle.seek(cdfh.localFileHeaderOffset, SeekBegin);
+    var lfh = new LocalFileHeader(localFileHandle);
+    if (!lfh.isValid())
+    {
+      Polymod.warning(ASSET_MISSING_FILE, 'Could not parse entry for $localFileName, it might be corrupted.');
+
+      cleanupFileHandle();
+      return null;
+    }
+
+    lfh.dataOffset = localFileHandle.tell();
 
     // Headers with this flag have its relevant data set to zero.
     // We populate it with the data from the central directory header instead.
@@ -307,7 +318,7 @@ class LocalFileHeader extends Header
   /**
    * Local file header signature = 0x04034b50 (PK♥♦ or "PK\3\4")
    */
-  public static final HEADER_SIGNATURE = 0x04034B50;
+  public static inline final HEADER_SIGNATURE:Int = 0x04034B50;
 
   /**
    * Version needed to extract (minimum)
@@ -423,10 +434,24 @@ class LocalFileHeader extends Header
         bytesRead += fileInput.readBytes(bytesToReturn, 0, compressedSize - bytesRead);
         bytesBuf.addBytes(bytesToReturn, 0, compressedSize - bytesRead);
       }
-      return (this.compressionMethod == DEFLATE) ? Util.unzipBytes(bytesBuf.getBytes()) : bytesBuf.getBytes();
+      bytesToReturn = bytesBuf.getBytes();
     }
 
     return (this.compressionMethod == DEFLATE) ? Util.unzipBytes(bytesToReturn) : bytesToReturn;
+  }
+
+  /**
+   * Closes the file handle for this header, if it exists.
+   * Note that this will render the header invalid for reading data,
+   * so it should only be called when it is no longer needed.
+   */
+  public function cleanupFileHandle()
+  {
+    if (fileInput != null)
+    {
+      fileInput.close();
+      fileInput = null;
+    }
   }
 
   /**
@@ -435,7 +460,7 @@ class LocalFileHeader extends Header
   public function isValid()
   {
     if (fileInput == null) return false;
-    if (compressedSize == 0) return false;
+    if (compressedSize + uncompressedSize == 0 && !generalPurposeBitFlag.has(DATA_DESCRIPTOR)) return false;
     if (signature.getInt32(0) != HEADER_SIGNATURE) return false;
 
     return true;
@@ -449,7 +474,7 @@ class LocalFileHeader extends Header
         general purpose bit flags: $generalPurposeBitFlag
         compression method: $compressionMethod
         last modified date: $lastModifiedDateTime
-        crc32: $crc32code
+        crc32: ${crc32code.toHex()}
         compressed size: $compressedSize
         uncompressed size: $uncompressedSize
         file name: $fileName
@@ -468,7 +493,7 @@ class CentralDirectoryFileHeader extends Header
   /**
    * Central directory file header signature = 0x02014b50
    */
-  public static final HEADER_SIGNATURE = 0x02014B50;
+  public static inline final HEADER_SIGNATURE:Int = 0x02014B50;
 
   /**
    * Version made by
@@ -651,7 +676,7 @@ class EndOfCentralDirectoryRecord extends Header
   /**
    * End of central directory signature = 0x06054b50
    */
-  public static final SIGNATURE = 0x06054B50;
+  public static inline final SIGNATURE:Int = 0x06054B50;
 
   /**
    * Number of this disk (or 0xffff for ZIP64)
