@@ -244,6 +244,12 @@ class Interp
    */
   function fcall(o:Dynamic, f:String, args:Array<Dynamic>):Dynamic
   {
+    // Override Std.isOfType to call our own function.
+    if (o != null && (o == 'Std' && f == 'isOfType'))
+    {
+      return PolymodScriptClass.isOfType(args[0], args[1]);
+    }
+
     // OVERRIDE CHANGE: Custom logic to handle super calls to prevent infinite recursion
     if (_proxy != null && o == _proxy.superClass && !Std.isOfType(o, PolymodScriptClass))
     {
@@ -656,7 +662,7 @@ class Interp
     binops.set("&&", function(e1, e2) return me.expr(e1) == true && me.expr(e2) == true);
     binops.set("=", assign);
     binops.set("...", function(e1, e2) return new IntIterator(me.expr(e1), me.expr(e2)));
-    binops.set("is", function(e1, e2) return #if (haxe_ver >= 4.2) Std.isOfType #else Std.is #end (me.expr(e1), me.expr(e2)));
+    binops.set("is", function(e1, e2) return PolymodScriptClass.isOfType(me.expr(e1), me.expr(e2))); // We use a special Std.isOfType to fix scripted classes.
     binops.set("??", function(e1, e2) return me.expr(e1) ?? me.expr(e2));
     assignOp("+=", function(v1:Dynamic, v2:Dynamic) return v1 + v2);
     assignOp("-=", function(v1:Float, v2:Float) return v1 - v2);
