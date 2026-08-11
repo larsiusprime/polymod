@@ -404,6 +404,64 @@ class PolymodScriptClass
     return scriptInterp.setScriptClassStaticField(clsName, fieldName, fieldValue);
   }
 
+  // Override version of Std.isOfType so we're able to test for scripted classes.
+  public static function isOfType(v:Dynamic, t:Dynamic):Bool
+  {
+    var typeClassDecl:ClassDecl = null;
+    var typeFullName:String = '';
+    if (t is PolymodStaticClassReference)
+    {
+      var o = cast(t, PolymodStaticClassReference);
+      typeClassDecl = o.cls;
+      typeFullName = Util.getFullClassName(typeClassDecl);
+    }
+    else
+    {
+      typeFullName = Util.getTypeNameOf(t);
+    }
+
+    // Check again for a class descriptor just in case.
+    // We check for the full package name in case the scripted class was packaged.
+    if (typeClassDecl == null)
+    {
+      var typeNameSplit:Array<String> = typeFullName.split('.');
+      var typeName:String = typeNameSplit.length < 1 ? typeFullName : typeNameSplit[typeNameSplit.length - 1];
+
+      typeClassDecl = Interp.findScriptClassDescriptor(typeFullName) ?? Interp.findScriptClassDescriptor(typeName) ?? null;
+      if (typeClassDecl != null)
+      {
+        // Re-assign full package.
+        typeFullName = Util.getFullClassName(typeClassDecl);
+      }
+    }
+
+    // `v` can be a PolymodScriptClass if you call `this` from a scripted class.
+    if (v is HScriptedClass || v is PolymodStaticClassReference || v is PolymodScriptClass)
+    {
+      var proxy:PolymodAbstractScriptClass = switch (v)
+      {
+        case (_ is HScriptedClass) => true: v._asc;
+        case (_ is PolymodStaticClassReference) => true: v.cls;
+        default: cast v;
+      }
+      var allPackages:Array<String> = [proxy.fullyQualifiedName].concat(getSuperClasses(proxy._c));
+
+      // Check whether the base class or any super classes are the same type as the type class.
+      return allPackages.indexOf(typeFullName) != -1;
+    }
+
+    // If we're on this line then it means `v` isn't a scripted class and `t` is instead.
+    // We can safely return false since source classes won't be able to extend scripted classes anyway.
+    if (typeClassDecl != null)
+    {
+      return false;
+    }
+
+    // Fallback to using the regular Std.isOfType
+    return #if (haxe_ver >= 4.2) Std.isOfType #else Std.is #end (v, t);
+  }
+
+
   /**
    * INSTANCE METHODS
    */
