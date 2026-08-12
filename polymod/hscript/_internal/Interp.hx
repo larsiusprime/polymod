@@ -112,6 +112,11 @@ class Interp
 
   function cnew(cl:String, args:Array<Dynamic>):Dynamic
   {
+    if (defaultVariables.exists(cl))
+    {
+      return Type.createInstance(defaultVariables.get(cl), args);
+    }
+
     // Try to retrieve a scripted class with this name in the same package.
     if (getClassDecl().pkg != null && getClassDecl().pkg.length > 0)
     {
