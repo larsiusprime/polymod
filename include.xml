@@ -3,6 +3,5 @@
   <!-- These values are added to the project XML when you include this library. -->
   <haxelib name="thx.semver" />
 
-  <haxeflag name="--macro" value="polymod.hscript._internal.HScriptRedirectDefines.run()" if="POLYMOD_REDIRECT_HSCRIPT" />
   <haxeflag name="--macro" value="polymod.hscript._internal.PolymodFinalMacro.locateAllFinals()" />
 </project>
