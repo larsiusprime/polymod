@@ -2048,7 +2048,7 @@ class Parser
               // Unlike readString, we don't care if we find a nested interpolated string
               // we just assume parseString will recursively take care of it instead.
               var e:Expr = parseString(b.toString() #if hscriptPos, origin, p1 + i - b.length #end);
-              if (expr(e).match(EBinop(_, _, _)))
+              if (!(expr(e).match(EIdent(_)) || expr(e).match(EParent(_))))
               {
                 e = mk(EParent(e), pmin(e), pmax(e));
               }
