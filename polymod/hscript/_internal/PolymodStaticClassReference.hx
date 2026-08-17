@@ -12,9 +12,9 @@ using StringTools;
  */
 class PolymodStaticClassReference
 {
-  public var cls:ClassDecl;
+  public var cls:Null<ClassDecl>;
 
-  public function new(cls:ClassDecl)
+  public function new(?cls:ClassDecl)
   {
     this.cls = cls;
   }
@@ -26,6 +26,12 @@ class PolymodStaticClassReference
    */
   public static function tryBuild(clsName:String):Null<PolymodStaticClassReference>
   {
+    #if POLYMOD_CPPIA
+    // cppia are first always before hscript
+    var cppia = PolymodCppiaClassReference.tryBuildCppia(clsName);
+    if (cppia != null) return cppia;
+    #end
+
     @:privateAccess {
       if (Interp._scriptClassDescriptors.exists(clsName))
       {

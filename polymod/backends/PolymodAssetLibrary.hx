@@ -953,6 +953,8 @@ class PolymodAssetLibrary
     extensionSet('vdf', TEXT);
     extensionSet('xml', TEXT);
 
+    extensionSet('cppia', BYTES);
+
     extensionSet('avi', VIDEO);
     extensionSet('mkv', VIDEO);
     extensionSet('mov', VIDEO);

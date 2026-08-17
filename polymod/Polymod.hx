@@ -843,6 +843,9 @@ class Polymod
   {
     @:privateAccess
     polymod.hscript._internal.PolymodScriptClass.clearScriptedClasses();
+    #if POLYMOD_CPPIA
+    polymod.hscript._internal.PolymodCppiaClassReference.clearCppiaClasses();
+    #end
     polymod.hscript._internal.PolymodEnum.clearScriptedEnums();
     #if hscript_typer
     polymod.hscript._internal.PolymodTyperEx.clearAllModules();
@@ -861,12 +864,64 @@ class Polymod
       Parser.preprocessorValues.set(mod.id, mod.modVersion.toString());
     }
   }
-
   /**
-   * Get a list of all the available scripted classes (`.hxc` files), interpret them, and register any classes.
-   *
-   * @return A map of script class paths to whether they were successfully parsed and registered.
+   * Loads all compiled scripts (`.cppia` files) and registers any classes they provide.
    */
+  static function registerAllCppiaClasses(?results:Map<String, Bool>):Void
+  {
+    if (results == null) results = [];
+
+    #if POLYMOD_CPPIA
+    @:privateAccess {
+      var libraryIds:Array<String> = Polymod.assetLibrary.listLibraries();
+
+      for (binaryPath in Polymod.assetLibrary.list(BYTES))
+      {
+        if (!PolymodConfig.cppiaClassExt.exists(ext -> binaryPath.endsWith(ext))) continue;
+
+        var path = binaryPath;
+        if (!Polymod.assetLibrary.exists(path))
+        {
+          for (libraryId in libraryIds)
+          {
+            if (Polymod.assetLibrary.exists('$libraryId:$binaryPath'))
+            {
+              path = '$libraryId:$binaryPath';
+              break;
+            }
+          }
+          if (!Polymod.assetLibrary.exists(path))
+          {
+            Polymod.error(SCRIPT_NOT_FOUND, 'Could not find file "$binaryPath"');
+            results.set(path, false);
+            continue;
+          }
+        }
+
+        var data:haxe.io.Bytes = null;
+        try
+        {
+          data = Polymod.assetLibrary.getBytes(path);
+        }
+        catch (e:Dynamic)
+        {
+          Polymod.error(SCRIPT_NOT_FOUND, 'Could not read compiled script "$path": $e');
+          results.set(path, false);
+          continue;
+        }
+
+        var registered = polymod.hscript._internal.PolymodCppiaClassReference.registerModule(data, path);
+        results.set(path, registered.length > 0);
+
+        if (registered.length > 0)
+        {
+          Polymod.info(SCRIPT_PARSE_DONE, 'Loaded compiled script "$path" providing ${registered.join(", ")}');
+        }
+      }
+    }
+    #end
+  }
+
   public static function registerAllScriptClasses():Map<String, Bool>
   {
     Polymod.info(SCRIPT_PARSE_START, 'Parsing script classes...');
@@ -905,6 +960,8 @@ class Polymod
         }
       }
 
+      registerAllCppiaClasses(results);
+
       #if hscript_typer
       // in the future typed modules might have a use
       // but for now we just ignore the typed modules that are returned
@@ -928,6 +985,8 @@ class Polymod
   {
     Polymod.info(SCRIPT_PARSE_START, 'Parsing script classes asynchronously...');
     prepareRegisterScriptedClasses();
+
+    registerAllCppiaClasses();
 
     // Go through each script and parse any classes in them.
     var potentialScripts:Array<String> = Polymod.assetLibrary.list(TEXT);

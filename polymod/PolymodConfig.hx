@@ -97,6 +97,22 @@ class PolymodConfig
   }
 
   /**
+   * The file extension for compiled (cppia) scripted class files.
+   *
+   * Set this option by setting the `POLYMOD_CPPIA_CLASS_EXT` Haxe define at compile time,
+   * or by setting this value in your code. You can provide multiple values by separating them with commas.
+   *
+   * @default `.cppia`
+   */
+  public static var cppiaClassExt(get, default):Array<String>;
+
+  static function get_cppiaClassExt():Array<String>
+  {
+    if (cppiaClassExt == null) cppiaClassExt = DefineUtil.getDefineStringArray('POLYMOD_CPPIA_CLASS_EXT', ['.cppia']);
+    return cppiaClassExt;
+  }
+
+  /**
    * The asset library to use for loading scripts.
    * Only relevant for Lime/OpenFL projects which use multiple asset libraries.
    *
