@@ -271,9 +271,20 @@ class PolymodScriptClass
   public static function listScriptClassesExtending(clsPath:String):Array<String>
   {
     var result = [];
+
+    #if POLYMOD_CPPIA
+    // Do CPPIA first!
+    for (key in PolymodCppiaClassReference.listCppiaClassesExtending(clsPath))
+    {
+      result.push(key);
+    }
+    #end
+
     @:privateAccess
     for (key => value in Interp._scriptClassDescriptors)
     {
+      if (result.indexOf(key) != -1) continue;
+
       var superClasses = getSuperClasses(value);
       if (superClasses.indexOf(clsPath) != -1)
       {
