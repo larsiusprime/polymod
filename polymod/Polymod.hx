@@ -864,6 +864,7 @@ class Polymod
       Parser.preprocessorValues.set(mod.id, mod.modVersion.toString());
     }
   }
+
   /**
    * Loads all compiled scripts (`.cppia` files) and registers any classes they provide.
    */
@@ -922,6 +923,9 @@ class Polymod
     #end
   }
 
+  /**
+   * Loads all script classes (`.hxc` files) and registers any classes they provide.
+   */
   public static function registerAllScriptClasses():Map<String, Bool>
   {
     Polymod.info(SCRIPT_PARSE_START, 'Parsing script classes...');
