@@ -2823,11 +2823,16 @@ class Interp
           continue;
         }
 
-        Polymod.error(
-          SCRIPTED_CLASS_UNRESOLVED_IMPORT,
-          'Could not import ${imp.fullPath}. Check to ensure the module exists and is spelled correctly.',
-          SCRIPT_RUNTIME
-        );
+        #if POLYMOD_CPPIA
+        // A compiled class has no descriptor, so check the cppia registry too.
+        if (PolymodCppiaClassReference.hasCppiaClass(imp.fullPath))
+        {
+          cls.imports.set(key, imp);
+          continue;
+        }
+        #end
+
+        Polymod.error(SCRIPTED_CLASS_UNRESOLVED_IMPORT, 'Could not import ${imp.fullPath}. Check to ensure the module exists and is spelled correctly.', SCRIPT_RUNTIME);
       }
 
       // Check if the scripted classes extend the right type.
