@@ -876,7 +876,9 @@ class Polymod
     @:privateAccess {
       var libraryIds:Array<String> = Polymod.assetLibrary.listLibraries();
 
-      for (binaryPath in Polymod.assetLibrary.list(BYTES))
+      var allBytes:Array<String> = Polymod.assetLibrary.list(BYTES);
+
+      for (binaryPath in allBytes)
       {
         if (!PolymodConfig.cppiaClassExt.exists(ext -> binaryPath.endsWith(ext))) continue;
 
@@ -914,11 +916,13 @@ class Polymod
         var registered = polymod.hscript._internal.PolymodCppiaClassReference.registerModule(data, path);
         results.set(path, registered.length > 0);
 
-        if (registered.length > 0)
+        if (registered.length == 0)
         {
-          Polymod.info(SCRIPT_PARSE_DONE, 'Loaded compiled script "$path" providing ${registered.join(", ")}');
+          Polymod.warning(SCRIPT_PARSE_FAILED,
+            'Compiled script "$path" registered no classes, so nothing in it can be used.', SCRIPT_RUNTIME);
         }
       }
+      polymod.hscript._internal.PolymodCppiaClassReference.unloadInactiveModules();
     }
     #end
   }
