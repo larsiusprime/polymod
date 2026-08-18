@@ -136,6 +136,68 @@ class PolymodCppiaClassReference extends PolymodStaticClassReference
     return result;
   }
 
+  /**
+   * The names a compiled script may not reference.
+   */
+  static function deniedNames():Map<String, Bool>
+  {
+    var result:Map<String, Bool> = new Map<String, Bool>();
+
+    for (name => alias in PolymodScriptClass.importOverrides)
+    {
+      if (alias == null || Type.getClassName(alias) != name) result.set(name, true);
+    }
+
+    return result;
+  }
+
+  /**
+   * Which denied name a type resolves to, if any.
+   */
+  static function deniedNameFor(type:String, denied:Map<String, Bool>):Null<String>
+  {
+    if (denied.exists(type)) return type;
+
+    var parts:Array<String> = type.split('.');
+    for (i in 1...parts.length)
+    {
+      var suffix:String = parts.slice(i).join('.');
+      if (denied.exists(suffix)) return suffix;
+    }
+
+    return null;
+  }
+
+  /**
+   * Check a compiled script against the blacklist before any of it runs.
+   * @return The denied names it references, or null if the file could not be read at all.
+   */
+  static function scanDenied(data:haxe.io.Bytes, path:String):Null<Array<String>>
+  {
+    var types:Array<String> = null;
+
+    try
+    {
+      types = PolymodCppiaScanner.readTypes(data);
+    }
+    catch (e:Dynamic)
+    {
+      Polymod.error(SCRIPT_PARSE_FAILED, 'Could not read the header of compiled script "$path": $e', SCRIPT_RUNTIME);
+      return null;
+    }
+
+    var denied:Map<String, Bool> = deniedNames();
+    var found:Array<String> = [];
+
+    for (type in types)
+    {
+      var name:Null<String> = deniedNameFor(type, denied);
+      if (name != null && !found.contains(name)) found.push(name);
+    }
+
+    return found;
+  }
+
   public static function tryBuildCppia(clsName:String):Null<PolymodCppiaClassReference>
   {
     var cls = registry.get(clsName);
@@ -179,6 +241,17 @@ class PolymodCppiaClassReference extends PolymodStaticClassReference
 
       unloadModule(previous, path);
       loadedModules.remove(path);
+    }
+
+    var denied:Null<Array<String>> = scanDenied(data, path);
+    if (denied == null) return [];
+
+    if (denied.length > 0)
+    {
+      Polymod.error(SCRIPT_PARSE_FAILED,
+        'Compiled script "$path" references ${denied.length == 1 ? "a class" : "classes"} that mods are not allowed to use: ${denied.join(", ")}. It will not be loaded.',
+        SCRIPT_RUNTIME);
+      return [];
     }
 
     var module:cpp.cppia.Module = null;
