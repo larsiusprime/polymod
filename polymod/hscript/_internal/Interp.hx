@@ -1378,6 +1378,9 @@ class Interp
       else
       {
         var resultCls:Class<Dynamic> = Type.resolveClass(fullPath);
+        #if POLYMOD_CPPIA
+        if (resultCls != null && PolymodCppiaClassReference.isInactiveCppiaClass(fullPath)) resultCls = null;
+        #end
         if (resultCls != null)
         {
           importedClass.cls = resultCls;
