@@ -64,7 +64,8 @@ class PolymodBaseClassMacro
         case TInst(_.get() => classType, params):
           switch (classType.kind)
           {
-            case KTypeParameter(c) if (c.length == 0): return fields;
+            case KTypeParameter(c) if (c.length == 0):
+              return fields;
             default:
           }
         default:
@@ -85,19 +86,42 @@ class PolymodBaseClassMacro
 
     // Check if a class already has one of the fields needed for the scripts before attempting to build fields.
     // We only need to check (and add) instance fields if a class doesn't extend anything, considering extending classes inherit them.
-    var neededStaticFields:Array<String> = ['scriptInit', 'listScriptClasses', 'scriptStaticCall', 'scriptStaticGet', 'scriptStaticSet', 'scriptStaticHas', 'scriptStaticHasFunc', '_isHScriptedClass'];
-    var neededInstFields:Array<String> = ['_asc', '_skipAscFrom', 'scriptCallSuper', 'scriptCall', 'scriptGet', 'scriptSet', 'scriptHas'];
+    var neededStaticFields:Array<String> = [
+      'scriptInit',
+      'listScriptClasses',
+      'scriptStaticCall',
+      'scriptStaticGet',
+      'scriptStaticSet',
+      'scriptStaticHas',
+      'scriptStaticHasFunc',
+      '_isHScriptedClass'
+    ];
+    var neededInstFields:Array<String> = [
+      '_asc',
+      '_skipAscFrom',
+      'scriptCallSuper',
+      'scriptCall',
+      'scriptGet',
+      'scriptSet',
+      'scriptHas'
+    ];
 
     for (fld in fields)
     {
       if (fld.access.contains(AStatic) && neededStaticFields.contains(fld.name))
       {
-        Context.info('PolymodBaseClassMacro: Couldn\'t build hscript fields for the class $fullClsName since it already has the static field ${fld.name}.', pos);
+        Context.info(
+          'PolymodBaseClassMacro: Couldn\'t build hscript fields for the class $fullClsName since it already has the static field ${fld.name}.',
+          pos
+        );
         return fields;
       }
       else if (cls.superClass == null && neededInstFields.contains(fld.name))
       {
-        Context.info('PolymodBaseClassMacro: Couldn\'t build hscript fields for the class $fullClsName since it already has the instance field ${fld.name}.', pos);
+        Context.info(
+          'PolymodBaseClassMacro: Couldn\'t build hscript fields for the class $fullClsName since it already has the instance field ${fld.name}.',
+          pos
+        );
         return fields;
       }
     }
@@ -167,13 +191,20 @@ class PolymodBaseClassMacro
             {
               return switch (expr?.expr)
               {
-                case EReturn(e) if (e != null): expr;
-                case EIf(_, e1, e2): findValidReturn(e1) ?? findValidReturn(e2); // It's possible for a function to end with `if/else`, each with a return.
-                case EMeta(_, e): findValidReturn(e);
-                case EBlock(exprs) if (exprs?.length > 0): exprs.filter((e) -> findValidReturn(e) != null)[0];
-                case ESwitch(_, cases, ret): findValidReturn(ret) ?? cases.filter((c) -> findValidReturn(c?.expr) != null)[0]?.expr;
-                case ETry(expr, catches): findValidReturn(expr) ?? catches.filter((c) -> findValidReturn(c?.expr) != null)[0]?.expr;
-                default: null;
+                case EReturn(e) if (e != null):
+                  expr;
+                case EIf(_, e1, e2):
+                  findValidReturn(e1) ?? findValidReturn(e2); // It's possible for a function to end with `if/else`, each with a return.
+                case EMeta(_, e):
+                  findValidReturn(e);
+                case EBlock(exprs) if (exprs?.length > 0):
+                  exprs.filter((e) -> findValidReturn(e) != null)[0];
+                case ESwitch(_, cases, ret):
+                  findValidReturn(ret) ?? cases.filter((c) -> findValidReturn(c?.expr) != null)[0]?.expr;
+                case ETry(expr, catches):
+                  findValidReturn(expr) ?? catches.filter((c) -> findValidReturn(c?.expr) != null)[0]?.expr;
+                default:
+                  null;
               }
             }
 
@@ -184,27 +215,30 @@ class PolymodBaseClassMacro
             doesReturnVoid = (f.ret.toString() == 'Void');
           }
 
-          f.expr = macro {
-            if (_asc != null && !_skipAscFrom.contains($v{fields[i].name}))
+          f.expr = macro
             {
-              var cls:Dynamic = _asc;
-              while (cls != null && cls is polymod.hscript._internal.PolymodScriptClass)
+              if (_asc != null && !_skipAscFrom.contains($v{fields[i].name}))
               {
-                var scriptCls = (cls : polymod.hscript._internal.PolymodScriptClass);
-                if (scriptCls.hasScriptFunction($v{fields[i].name}))
-                  ${doesReturnVoid ? (macro
-                    {
-                      scriptCls.callFunction($v{fields[i].name}, [$a{argExprs}]);
-                      return;
-                    }) : (macro return cast scriptCls.callFunction($v{fields[i].name}, [$a{argExprs}]))}
+                var cls:Dynamic = _asc;
+                while (cls != null && cls is polymod.hscript._internal.PolymodScriptClass)
+                {
+                  var scriptCls = (cls : polymod.hscript._internal.PolymodScriptClass);
+                  if (scriptCls.hasScriptFunction($v{fields[i].name})) $
+                  {
+                    doesReturnVoid ? (macro
+                      {
+                        scriptCls.callFunction($v{fields[i].name}, [$a{argExprs}]);
+                        return;
+                      }) : (macro return cast scriptCls.callFunction($v{fields[i].name}, [$a{argExprs}]))
+                  }
 
-                cls = cls.superClass;
+                  cls = cls.superClass;
+                }
               }
-            }
 
-            // Fallback, call the original function.
-            ${f.expr}
-          };
+              // Fallback, call the original function.
+              ${f.expr}
+            };
 
         default:
           // Do nothing.
@@ -225,7 +259,16 @@ class PolymodBaseClassMacro
       name: '_asc',
       doc: 'The AbstractScriptClass instance which any variable or function calls are redirected to internally.',
       access: [APrivate], // Private instance variable
-      meta: [{name: ':noCompletion', pos: cls.pos}, {name: ':jignored', pos: cls.pos}],
+      meta: [
+        {
+          name: ':noCompletion',
+          pos: cls.pos
+        },
+        {
+          name: ':jignored',
+          pos: cls.pos
+        }
+      ],
       kind: FieldType.FVar(macro :Null<polymod.hscript._internal.PolymodAbstractScriptClass>),
       pos: cls.pos,
     };
@@ -234,7 +277,16 @@ class PolymodBaseClassMacro
       name: '_skipAscFrom',
       doc: 'An array of functions from which to skip passing down to the abstract script class. Used the best in combination with `scriptCallSuper`.',
       access: [APrivate], // Private instance variable
-      meta: [{name: ':noCompletion', pos: cls.pos}, {name: ':jignored', pos: cls.pos}],
+      meta: [
+        {
+          name: ':noCompletion',
+          pos: cls.pos
+        },
+        {
+          name: ':jignored',
+          pos: cls.pos
+        }
+      ],
       kind: FieldType.FVar(macro :Array<String>, macro []),
       pos: cls.pos,
     };
@@ -245,11 +297,14 @@ class PolymodBaseClassMacro
       access: [APublic],
       pos: cls.pos,
       meta: null,
-      kind: FFun(
-      {
-        args: [{name: 'varName', type: macro :String}],
+      kind: FFun({
+        args: [{
+          name: 'varName',
+          type: macro :String
+        }],
         ret: macro :Dynamic,
-        expr: macro {
+        expr: macro
+        {
           return _asc?.fieldRead(varName);
         },
       }),
@@ -261,14 +316,21 @@ class PolymodBaseClassMacro
       access: [APublic],
       pos: cls.pos,
       meta: null,
-      kind: FFun(
-      {
+      kind: FFun({
         args: [
-          {name: 'varName', type: macro :String},
-          {name: 'varValue', type: macro :Dynamic, value: macro null}
+          {
+            name: 'varName',
+            type: macro :String
+          },
+          {
+            name: 'varValue',
+            type: macro :Dynamic,
+            value: macro null
+          }
         ],
         ret: macro :Dynamic,
-        expr: macro {
+        expr: macro
+        {
           return _asc?.fieldWrite(varName, varValue);
         },
       })
@@ -280,11 +342,14 @@ class PolymodBaseClassMacro
       access: [APublic],
       pos: cls.pos,
       meta: null,
-      kind: FFun(
-      {
-        args: [{name: 'fieldName', type: macro :String}],
+      kind: FFun({
+        args: [{
+          name: 'fieldName',
+          type: macro :String
+        }],
         ret: macro :Bool,
-        expr: macro {
+        expr: macro
+        {
           return _asc?.fieldExists(fieldName) ?? false;
         },
       }),
@@ -296,14 +361,21 @@ class PolymodBaseClassMacro
       access: [APublic],
       pos: cls.pos,
       meta: null,
-      kind: FFun(
-      {
+      kind: FFun({
         args: [
-          {name: 'funcName', type: macro :String},
-          {name: 'funcArgs', type: macro :Array<Dynamic>, opt: true}
+          {
+            name: 'funcName',
+            type: macro :String
+          },
+          {
+            name: 'funcArgs',
+            type: macro :Array<Dynamic>,
+            opt: true
+          }
         ],
         ret: macro :Dynamic,
-        expr: macro {
+        expr: macro
+        {
           return _asc?.callFunction(funcName, funcArgs ?? []);
         },
       }),
@@ -315,14 +387,21 @@ class PolymodBaseClassMacro
       access: [APublic],
       pos: cls.pos,
       meta: null,
-      kind: FFun(
-      {
+      kind: FFun({
         args: [
-          {name: 'funcName', type: macro :String},
-          {name: 'funcArgs', type: macro :Array<Dynamic>, opt: true}
+          {
+            name: 'funcName',
+            type: macro :String
+          },
+          {
+            name: 'funcArgs',
+            type: macro :Array<Dynamic>,
+            opt: true
+          }
         ],
         ret: macro :Dynamic,
-        expr: macro {
+        expr: macro
+        {
           _skipAscFrom.push(funcName);
 
           var output:Dynamic = Reflect.callMethod(this, Reflect.field(this, funcName), funcArgs ?? []);
@@ -333,7 +412,15 @@ class PolymodBaseClassMacro
       }),
     }
 
-    return [ascField, skipASCField, getField, setField, hasField, callField, callSuperField];
+    return [
+      ascField,
+      skipASCField,
+      getField,
+      setField,
+      hasField,
+      callField,
+      callSuperField
+    ];
   }
 
   /**
@@ -357,7 +444,16 @@ class PolymodBaseClassMacro
       name: '_isHScriptedClass',
       doc: 'Field used to identify a HScriptedClass.',
       access: [APrivate, AStatic],
-      meta: [{name: ':noCompletion', pos: cls.pos}, {name: ':jignored', pos: cls.pos}],
+      meta: [
+        {
+          name: ':noCompletion',
+          pos: cls.pos
+        },
+        {
+          name: ':jignored',
+          pos: cls.pos
+        }
+      ],
       pos: cls.pos,
       kind: FieldType.FVar(macro :Bool, macro true)
     };
@@ -368,11 +464,11 @@ class PolymodBaseClassMacro
       access: [APublic, AStatic],
       pos: cls.pos,
       meta: null,
-      kind: FFun(
-      {
+      kind: FFun({
         args: [],
         ret: macro :Array<String>,
-        expr: macro {
+        expr: macro
+        {
           return polymod.hscript._internal.PolymodScriptClass.listScriptClassesExtending($v{underlyingClass});
         },
       }),
@@ -384,18 +480,30 @@ class PolymodBaseClassMacro
       access: [APublic, AStatic],
       pos: cls.pos,
       meta: null,
-      kind: FFun(
-      {
-        args: [{name: 'clsName', type: macro :String}, {name: 'args', type: macro :...Dynamic}],
+      kind: FFun({
+        args: [
+          {
+            name: 'clsName',
+            type: macro :String
+          },
+          {
+            name: 'args',
+            type: macro :...
+            Dynamic
+          }
+        ],
         ret: macro :Null<$complexType>,
-        expr: macro {
+        expr: macro
+        {
           var clsRef = polymod.hscript._internal.PolymodStaticClassReference.tryBuild(clsName);
 
           if (clsRef == null)
           {
-            polymod.Polymod.error(SCRIPT_RUNTIME_EXCEPTION,
+            polymod.Polymod.error(
+              SCRIPT_RUNTIME_EXCEPTION,
               'Could not construct instance of scripted class (${clsName} extends ' + $v{underlyingClass} + ')\nUnknown error building class reference',
-              SCRIPT_RUNTIME);
+              SCRIPT_RUNTIME
+            );
             return null;
           }
 
@@ -404,9 +512,11 @@ class PolymodBaseClassMacro
             var result = clsRef.instantiate((cast args) ?? []);
             if (result == null)
             {
-              polymod.Polymod.error(SCRIPT_RUNTIME_EXCEPTION,
+              polymod.Polymod.error(
+                SCRIPT_RUNTIME_EXCEPTION,
                 'Could not construct instance of scripted class (${clsName} extends ' + $v{underlyingClass} + '):\nUnknown error instantiating class',
-                SCRIPT_RUNTIME);
+                SCRIPT_RUNTIME
+              );
               return null;
             }
 
@@ -414,8 +524,11 @@ class PolymodBaseClassMacro
           }
           catch (error)
           {
-            polymod.Polymod.error(SCRIPT_RUNTIME_EXCEPTION,
-              'Could not construct instance of scripted class (${clsName} extends ' + $v{underlyingClass} + '):\n${error}', SCRIPT_RUNTIME);
+            polymod.Polymod.error(
+              SCRIPT_RUNTIME_EXCEPTION,
+              'Could not construct instance of scripted class (${clsName} extends ' + $v{underlyingClass} + '):\n${error}',
+              SCRIPT_RUNTIME
+            );
             return null;
           }
         },
@@ -428,14 +541,20 @@ class PolymodBaseClassMacro
       access: [APublic, AStatic],
       pos: cls.pos,
       meta: null,
-      kind: FFun(
-      {
+      kind: FFun({
         args: [
-          {name: 'clsName', type: macro :String},
-          {name: 'fieldName', type: macro :String},
+          {
+            name: 'clsName',
+            type: macro :String
+          },
+          {
+            name: 'fieldName',
+            type: macro :String
+          },
         ],
         ret: macro :Dynamic,
-        expr: macro {
+        expr: macro
+        {
           return polymod.hscript._internal.PolymodScriptClass.getScriptClassStaticField(clsName, fieldName);
         }
       })
@@ -447,15 +566,25 @@ class PolymodBaseClassMacro
       access: [APublic, AStatic],
       pos: cls.pos,
       meta: null,
-      kind: FFun(
-      {
+      kind: FFun({
         args: [
-          {name: 'clsName', type: macro :String},
-          {name: 'fieldName', type: macro :String},
-          {name: 'fieldValue', type: macro :Dynamic, value: macro null},
+          {
+            name: 'clsName',
+            type: macro :String
+          },
+          {
+            name: 'fieldName',
+            type: macro :String
+          },
+          {
+            name: 'fieldValue',
+            type: macro :Dynamic,
+            value: macro null
+          },
         ],
         ret: macro :Dynamic,
-        expr: macro {
+        expr: macro
+        {
           return polymod.hscript._internal.PolymodScriptClass.setScriptClassStaticField(clsName, fieldName, fieldValue);
         }
       })
@@ -467,14 +596,20 @@ class PolymodBaseClassMacro
       access: [APublic, AStatic],
       meta: null,
       pos: cls.pos,
-      kind: FFun(
-      {
+      kind: FFun({
         args: [
-          {name: 'clsName', type: macro :String},
-          {name: 'fieldName', type: macro :String}
+          {
+            name: 'clsName',
+            type: macro :String
+          },
+          {
+            name: 'fieldName',
+            type: macro :String
+          }
         ],
         ret: macro :Bool,
-        expr: macro {
+        expr: macro
+        {
           return polymod.hscript._internal.PolymodScriptClass.hasScriptClassStaticField(clsName, fieldName);
         },
       }),
@@ -486,14 +621,20 @@ class PolymodBaseClassMacro
       access: [APublic, AStatic],
       meta: null,
       pos: cls.pos,
-      kind: FFun(
-      {
+      kind: FFun({
         args: [
-          {name: 'clsName', type: macro :String},
-          {name: 'fieldName', type: macro :String}
+          {
+            name: 'clsName',
+            type: macro :String
+          },
+          {
+            name: 'fieldName',
+            type: macro :String
+          }
         ],
         ret: macro :Bool,
-        expr: macro {
+        expr: macro
+        {
           return polymod.hscript._internal.PolymodScriptClass.hasScriptClassStaticFunction(clsName, fieldName);
         },
       }),
@@ -505,21 +646,40 @@ class PolymodBaseClassMacro
       access: [APublic, AStatic],
       pos: cls.pos,
       meta: null,
-      kind: FFun(
-      {
+      kind: FFun({
         args: [
-          {name: 'clsName', type: macro :String},
-          {name: 'funcName', type: macro :String},
-          {name: 'funcArgs', type: macro :Array<Dynamic>, opt: true}
+          {
+            name: 'clsName',
+            type: macro :String
+          },
+          {
+            name: 'funcName',
+            type: macro :String
+          },
+          {
+            name: 'funcArgs',
+            type: macro :Array<Dynamic>,
+            opt: true
+          }
         ],
         ret: macro :Dynamic,
-        expr: macro {
+        expr: macro
+        {
           return polymod.hscript._internal.PolymodScriptClass.callScriptClassStaticFunction(clsName, funcName, funcArgs ?? []);
         }
       })
     };
 
-    return [isClassField, listClassesField, initField, staticGetField, staticSetField, staticHasField, staticHasFunc, staticCallField];
+    return [
+      isClassField,
+      listClassesField,
+      initField,
+      staticGetField,
+      staticSetField,
+      staticHasField,
+      staticHasFunc,
+      staticCallField
+    ];
   }
 
   /**
@@ -534,10 +694,12 @@ class PolymodBaseClassMacro
 
     function removeInlines(expr:Expr):Expr
     {
-      return switch(expr.expr)
+      return switch (expr.expr)
       {
-        case EMeta(s, e) if (s.name == ':inline'): e;
-        default: expr.map(removeInlines);
+        case EMeta(s, e) if (s.name == ':inline'):
+          e;
+        default:
+          expr.map(removeInlines);
       }
     }
 
@@ -545,7 +707,8 @@ class PolymodBaseClassMacro
     {
       switch (fld.kind)
       {
-        case FFun(f) if (f.expr != null): f.expr = f.expr.map(removeInlines);
+        case FFun(f) if (f.expr != null):
+          f.expr = f.expr.map(removeInlines);
         default: // Do nothing.
       }
     }
@@ -563,27 +726,31 @@ class PolymodBaseClassMacro
     function relocateParameters(type:Type)
     {
       if (type == null) return type;
-      return switch(type)
+      return switch (type)
       {
         case TInst(_.get() => classType, p):
           var paramIndex:Int = [for (p in cls.params) p.name].indexOf(classType.name);
           (paramIndex >= 0 ? params[paramIndex] : type.map(relocateParameters));
 
-        default: type.map(relocateParameters);
+        default:
+          type.map(relocateParameters);
       }
     }
 
     for (p in cls.params)
     {
-      var type:Type = switch(p.t)
+      var type:Type = switch (p.t)
       {
-        case (TInst(_.get() => classType, _)):
-          switch(classType.kind)
+        case(TInst(_.get() => classType, _)):
+          switch (classType.kind)
           {
-            case KTypeParameter(c): (c.length > 1 ? Type.TDynamic(null) : c[0]); // With multiple types, using only one results in a compilation error.
-            default: p.t;
+            case KTypeParameter(c):
+              (c.length > 1 ? Type.TDynamic(null) : c[0]); // With multiple types, using only one results in a compilation error.
+            default:
+              p.t;
           }
-        default: p.t;
+        default:
+          p.t;
       }
 
       params.push(type);

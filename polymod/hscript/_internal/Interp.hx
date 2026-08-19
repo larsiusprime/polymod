@@ -57,16 +57,18 @@ class Interp
   var _propTrack:Map<String, Bool> = [];
 
   static var defaultVariables:Map<String, Dynamic>;
+
   public var variables:Map<String, Dynamic>;
 
-  var locals:Map<String, {r:Dynamic, ?isfinal:Bool}>;
+  var locals:Map<String,
+    {r:Dynamic, ?isfinal:Bool}>;
   var binops:Map<String, Expr->Expr->Dynamic>;
-
   var depth:Int;
   var inTry:Bool;
-  var declared:Array<{n:String, old:{r:Dynamic, ?isfinal:Bool}}>;
+  var declared:Array<
+    {n:String, old:
+      {r:Dynamic, ?isfinal:Bool}}>;
   var returnValue:Dynamic;
-
   #if hscriptPos
   var curExpr:Expr;
   #end
@@ -98,7 +100,8 @@ class Interp
     return _proxy.fullyQualifiedName;
   }
 
-  public function new(targetCls:Class<Dynamic>, proxy:PolymodAbstractScriptClass)
+  public function new(targetCls:Class<Dynamic>,
+    proxy:PolymodAbstractScriptClass)
   {
     locals = new Map();
     declared = [];
@@ -413,8 +416,10 @@ class Interp
 
       if (clsRef == null)
       {
-        Polymod.error(SCRIPT_RUNTIME_EXCEPTION,
-        'Could not construct instance of scripted class ($clsToInit extends ' + clsName + ')\nUnknown error building class reference');
+        Polymod.error(
+          SCRIPT_RUNTIME_EXCEPTION,
+          'Could not construct instance of scripted class ($clsToInit extends ' + clsName + ')\nUnknown error building class reference'
+        );
         return null;
       }
 
@@ -423,8 +428,10 @@ class Interp
         var result = clsRef.instantiate(args);
         if (result == null)
         {
-          Polymod.error(SCRIPT_RUNTIME_EXCEPTION,
-          'Could not construct instance of scripted class ($clsToInit extends ' + clsName + '):\nUnknown error instantiating class');
+          Polymod.error(
+            SCRIPT_RUNTIME_EXCEPTION,
+            'Could not construct instance of scripted class ($clsToInit extends ' + clsName + '):\nUnknown error instantiating class'
+          );
           return null;
         }
 
@@ -434,9 +441,11 @@ class Interp
       {
         var callStack:String = polymod.util.Util.fetchCallStack();
 
-        Polymod.error(SCRIPT_RUNTIME_EXCEPTION,
+        Polymod.error(
+          SCRIPT_RUNTIME_EXCEPTION,
           'An uncaught exception was thrown while constructing an instance of scripted class ($clsToInit extends ' + clsName + '):\n$error\n$callStack',
-          SCRIPT_RUNTIME);
+          SCRIPT_RUNTIME
+        );
         return null;
       }
     }
@@ -479,7 +488,8 @@ class Interp
 
       this._classDeclOverride = cls;
 
-      var localsCopy:Map<String, {r:Dynamic, ?isfinal:Null<Bool>}> = this.locals.copy();
+      var localsCopy:Map<String,
+        {r:Dynamic, ?isfinal:Null<Bool>}> = this.locals.copy();
       var result:Dynamic = null;
       try
       {
@@ -513,9 +523,11 @@ class Interp
     }
     else
     {
-      Polymod.error(SCRIPT_RUNTIME_EXCEPTION,
-      'Error while calling static function ${clsName}.${fnName}(): EInvalidAccess' + '\n' +
-      'Static function "${fnName}" does not exist! Define it or call the correct function.', SCRIPT_RUNTIME);
+      Polymod.error(
+        SCRIPT_RUNTIME_EXCEPTION,
+        'Error while calling static function ${clsName}.${fnName}(): EInvalidAccess' + '\n' + 'Static function "${fnName}" does not exist! Define it or call the correct function.',
+        SCRIPT_RUNTIME
+      );
       return null;
     }
   }
@@ -526,9 +538,11 @@ class Interp
 
     if (_scriptClassDescriptors.exists(name))
     {
-      Polymod.error(SCRIPTED_CLASS_ALREADY_REGISTERED,
-      'Scripted class with fully qualified name "$name" has already been defined. Please change the class name or the package name to ensure uniqueness.',
-      SCRIPT_RUNTIME);
+      Polymod.error(
+        SCRIPTED_CLASS_ALREADY_REGISTERED,
+        'Scripted class with fully qualified name "$name" has already been defined. Please change the class name or the package name to ensure uniqueness.',
+        SCRIPT_RUNTIME
+      );
       return;
     }
     else
@@ -548,9 +562,11 @@ class Interp
 
     if (_scriptEnumDescriptors.exists(name))
     {
-      Polymod.error(SCRIPTED_CLASS_ALREADY_REGISTERED,
-      'An enum with the fully qualified name "$name" has already been defined. Please change the enum name to ensure a unique name.',
-      SCRIPT_RUNTIME);
+      Polymod.error(
+        SCRIPTED_CLASS_ALREADY_REGISTERED,
+        'An enum with the fully qualified name "$name" has already been defined. Please change the enum name to ensure a unique name.',
+        SCRIPT_RUNTIME
+      );
       return;
     }
     else
@@ -584,7 +600,8 @@ class Interp
     variables.set("null", null);
     variables.set("true", true);
     variables.set("false", false);
-    variables.set("trace", Reflect.makeVarArgs(function(el) {
+    variables.set("trace", Reflect.makeVarArgs(function(el)
+    {
       var inf = posInfos();
       var v = el.shift();
       if (el.length > 0) inf.customParams = el;
@@ -632,9 +649,15 @@ class Interp
   public function posInfos():PosInfos
   {
     #if hscriptPos
-    if (curExpr != null) return cast {fileName: curExpr.origin, lineNumber: curExpr.line};
+    if (curExpr != null) return cast {
+      fileName: curExpr.origin,
+      lineNumber: curExpr.line
+    };
     #end
-    return cast {fileName: "hscript", lineNumber: 0};
+    return cast {
+      fileName: "hscript",
+      lineNumber: 0
+    };
   }
 
   function initOps()
@@ -686,7 +709,9 @@ class Interp
       {
         var superClass:PolymodAbstractScriptClass = cast(_proxy.superClass, PolymodScriptClass);
         return superClass.fieldWrite(id, v);
-      } else {
+      }
+      else
+      {
         set(_proxy.superClass, id, v);
         return v;
       }
@@ -744,7 +769,9 @@ class Interp
     return assignValue(e1, expr(e2));
   }
 
-  function assignValue(e1:Expr, v:Dynamic, _abstractInlineAssign:Bool = false):Null<Dynamic>
+  function assignValue(e1:Expr,
+    v:Dynamic,
+    _abstractInlineAssign:Bool = false):Null<Dynamic>
   {
     switch (Tools.expr(e1))
     {
@@ -802,7 +829,8 @@ class Interp
         }
 
         var l = locals.get(id);
-        if (l != null && l.isfinal && l.r != null) {
+        if (l != null && l.isfinal && l.r != null)
+        {
           return error(EInvalidAccess(id));
         }
         if (l == null) setVar(id, v);
@@ -858,7 +886,7 @@ class Interp
               }
             }
           default:
-          // Do nothing
+            // Do nothing
         }
 
         // Fallback to field set
@@ -906,8 +934,10 @@ class Interp
             {
               var value = switch (decl.get)
               {
-                case "never": error(EInvalidPropGet(id));
-                default: expr(e1);
+                case "never":
+                  error(EInvalidPropGet(id));
+                default:
+                  expr(e1);
               }
 
               v = fop(value, expr(e2));
@@ -935,7 +965,8 @@ class Interp
         // Fallback to local variable
         var l = locals.get(id);
         v = fop(expr(e1), expr(e2));
-        if (l != null && l.isfinal && l.r != null) {
+        if (l != null && l.isfinal && l.r != null)
+        {
           return error(EInvalidAccess(id));
         }
         if (l == null) setVar(id, v)
@@ -982,8 +1013,10 @@ class Interp
             {
               var v = switch (decl.get)
               {
-                case "never": error(EInvalidPropGet(id));
-                default: expr(e);
+                case "never":
+                  error(EInvalidPropGet(id));
+                default:
+                  expr(e);
               }
 
               if (prefix) v += delta;
@@ -1130,8 +1163,7 @@ class Interp
   function duplicate<T>(h:Map<String, T>)
   {
     var h2 = new Map();
-    for (k in h.keys())
-      h2.set(k, h.get(k));
+    for (k in h.keys()) h2.set(k, h.get(k));
     return h2;
   }
 
@@ -1144,7 +1176,8 @@ class Interp
     }
   }
 
-  public inline function error(e:#if hscriptPos ErrorDef #else Error #end, rethrow = false):Null<Dynamic>
+  public inline function error(e:#if hscriptPos ErrorDef #else Error #end,
+    rethrow = false):Null<Dynamic>
   {
     #if hscriptPos var e = new Error(e, curExpr?.pmin ?? 0, curExpr?.pmax ?? 0, curExpr?.origin ?? 'unknown', curExpr?.line ?? 0); #end
     if (rethrow) this.rethrow(e)
@@ -1372,9 +1405,12 @@ class Interp
       case EConst(c):
         switch (c)
         {
-          case CInt(v): return v;
-          case CFloat(f): return f;
-          case CString(s): return s;
+          case CInt(v):
+            return v;
+          case CFloat(f):
+            return f;
+          case CString(s):
+            return s;
         }
       case EIdent(id):
         // When resolving a variable, check if it is a property with a getter, and call it if necessary.
@@ -1394,12 +1430,11 @@ class Interp
                     case 'set', 'never':
                       var field = _proxy.findField(id);
                       var hasIsVar = false;
-                      for (m in field?.meta ?? [])
-                        if (m.name == ':isVar')
-                        {
-                          hasIsVar = true;
-                          break;
-                        }
+                      for (m in field?.meta ?? []) if (m.name == ':isVar')
+                      {
+                        hasIsVar = true;
+                        break;
+                      }
                       if (!hasIsVar) return error(EPropVarNotReal(id));
                     default:
                   }
@@ -1419,21 +1454,33 @@ class Interp
         if (l != null) return l.r;
         return resolve(id);
       case EVar(name, type, expression):
-        declared.push({n: name, old: locals.get(name)});
+        declared.push({
+          n: name,
+          old: locals.get(name)
+        });
 
         // Evaluate the expression before assigning, applying typing if possible.
         var result = (expression != null) ? exprWithType(expression, type) : null;
 
-        locals.set(name, {r: result, isfinal: false});
+        locals.set(name, {
+          r: result,
+          isfinal: false
+        });
 
         return null;
       case EFinal(name, type, expression):
-        declared.push({n: name, old: locals.get(name)});
+        declared.push({
+          n: name,
+          old: locals.get(name)
+        });
 
         // Evaluate the expression before assigning, applying typing if possible.
         var result = (expression != null) ? exprWithType(expression, type) : null;
 
-        locals.set(name, {r: result, isfinal: true});
+        locals.set(name, {
+          r: result,
+          isfinal: true
+        });
 
         return null;
       case EParent(e0):
@@ -1441,8 +1488,7 @@ class Interp
       case EBlock(exprs):
         var old = declared.length;
         var v = null;
-        for (e in exprs)
-          v = expr(e);
+        for (e in exprs) v = expr(e);
         restore(old);
         return v;
       case EField(e, f):
@@ -1486,16 +1532,14 @@ class Interp
                 if (_scriptEnumDescriptors.exists(imp.fullPath))
                 {
                   var args = new Array();
-                  for (p in params)
-                    args.push(expr(p));
+                  for (p in params) args.push(expr(p));
 
                   return new PolymodEnum(_scriptEnumDescriptors.get(imp.fullPath), f, args);
                 }
                 else if (imp.abs != null && imp.abs.hasInlineFunction(f))
                 {
                   var args = new Array();
-                  for (p in params)
-                    args.push(expr(p));
+                  for (p in params) args.push(expr(p));
 
                   return imp.abs.callInlineFunction(this, params[0], f, args);
                 }
@@ -1505,8 +1549,7 @@ class Interp
         }
 
         var args = new Array();
-        for (p in params)
-          args.push(expr(p));
+        for (p in params) args.push(expr(p));
 
         switch (Tools.expr(e))
         {
@@ -1529,7 +1572,8 @@ class Interp
         forLoop(v, it, e);
         return null;
       case EForGen(it, e):
-        Tools.getKeyIterator(it, function(vk, vv, it) {
+        Tools.getKeyIterator(it, function(vk, vv, it)
+        {
           if (vk == null)
           {
             #if hscriptPos
@@ -1567,7 +1611,8 @@ class Interp
         }
 
         // This CREATES a new function in memory, that we call later.
-        var newFun:Dynamic = function(args:Array<Dynamic>) {
+        var newFun:Dynamic = function(args:Array<Dynamic>)
+        {
           if (args == null) args = [];
 
           validateArgumentCount(params, args, name);
@@ -1625,7 +1670,9 @@ class Interp
 
           for (i in 0...params.length)
           {
-            me.locals.set(params[i].name, {r: args[i]});
+            me.locals.set(params[i].name, {
+              r: args[i]
+            });
           }
           var oldDecl = declared.length;
           var r = null;
@@ -1689,8 +1736,13 @@ class Interp
         if (name != null)
         {
           // function-in-function is a local function
-          declared.push({n: name, old: locals.get(name)});
-          var ref = {r: newFun};
+          declared.push({
+            n: name,
+            old: locals.get(name)
+          });
+          var ref = {
+            r: newFun
+          };
           locals.set(name, ref);
           capturedLocals.set(name, ref); // allow self-recursion
         }
@@ -1718,8 +1770,7 @@ class Interp
         return arr[index];
       case ENew(cl, params):
         var a = new Array();
-        for (e in params)
-          a.push(expr(e));
+        for (e in params) a.push(expr(e));
         return cnew(cl, a);
       case EThrow(e):
         // If there is a try/catch block, the error will be caught.
@@ -1747,13 +1798,17 @@ class Interp
           restore(old);
           inTry = oldTry;
           // declare 'v'
-          declared.push({n: n, old: locals.get(n)});
-          locals.set(n,
-          {
+          declared.push({
+            n: n,
+            old: locals.get(n)
+          });
+          locals.set(n, {
             r: switch (err)
             {
-              case EScriptThrow(errValue): errValue;
-              default: error;
+              case EScriptThrow(errValue):
+                errValue;
+              default:
+                error;
             }
           });
           var v:Dynamic = expr(ecatch);
@@ -1772,16 +1827,20 @@ class Interp
           restore(old);
           inTry = oldTry;
           // declare 'v'
-          declared.push({n: n, old: locals.get(n)});
-          locals.set(n, {r: error});
+          declared.push({
+            n: n,
+            old: locals.get(n)
+          });
+          locals.set(n, {
+            r: error
+          });
           var v:Dynamic = expr(ecatch);
           restore(old);
           return v;
         }
       case EObject(fl):
         var o = {};
-        for (f in fl)
-          set(o, f.name, expr(f.e));
+        for (f in fl) set(o, f.name, expr(f.e));
         return o;
       case ETernary(econd, e1, e2):
         return if (expr(econd) == true) expr(e1) else expr(e2);
@@ -1809,12 +1868,15 @@ class Interp
                           switch (Tools.expr(p))
                           {
                             case EIdent(n):
-                              declared.push(
-                                {
-                                  n: n,
-                                  old: {r: locals.get(n)}
-                                });
-                              locals.set(n, {r: val._args[i]});
+                              declared.push({
+                                n: n,
+                                old: {
+                                  r: locals.get(n)
+                                }
+                              });
+                              locals.set(n, {
+                                r: val._args[i]
+                              });
                             default:
                           }
                         }
@@ -1869,12 +1931,15 @@ class Interp
                           switch (Tools.expr(p))
                           {
                             case EIdent(n):
-                              declared.push(
-                                {
-                                  n: n,
-                                  old: {r: locals.get(n)}
-                                });
-                              locals.set(n, {r: valParams[i]});
+                              declared.push({
+                                n: n,
+                                old: {
+                                  r: locals.get(n)
+                                }
+                              });
+                              locals.set(n, {
+                                r: valParams[i]
+                              });
                             default:
                           }
                         }
@@ -1905,7 +1970,6 @@ class Interp
         return expr(e);
       case ECheckType(e, _):
         return expr(e);
-
     }
     return null;
   }
@@ -1989,11 +2053,11 @@ class Interp
               }
             }
           default:
-          // Whatever.
+            // Whatever.
         }
 
       default:
-      // Whatever.
+        // Whatever.
     }
 
     // Fallthrough.
@@ -2044,7 +2108,8 @@ class Interp
               return new Map<String, Dynamic>();
             default:
               // TODO: Properly handle distinguishing Enum maps from Object maps.
-              return new Map<{}, Dynamic>();
+              return new Map<
+                {}, Dynamic>();
           }
         }
       default:
@@ -2058,8 +2123,7 @@ class Interp
   {
     // Create an Array<Dynamic>
     var a = new Array();
-    for (e in entries)
-      a.push(expr(e));
+    for (e in entries) a.push(expr(e));
     return a;
   }
 
@@ -2080,8 +2144,7 @@ class Interp
     do
     {
       if (!loopRun(() -> expr(e))) break;
-    }
-    while (expr(econd) == true);
+    } while (expr(econd) == true);
     restore(old);
   }
 
@@ -2109,7 +2172,9 @@ class Interp
         v = v.iterator();
         #end
       }
-      catch (e:Dynamic) {};
+      catch (e:Dynamic)
+      {
+      };
     }
     if (Std.isOfType(v, Array))
     {
@@ -2131,7 +2196,9 @@ class Interp
     #else
     try
       v = v.keyValueIterator()
-    catch (e:Dynamic) {};
+    catch (e:Dynamic)
+    {
+    };
     #end
     if (v.hasNext == null || v.next == null) error(EInvalidIterator(v));
     return v;
@@ -2140,11 +2207,16 @@ class Interp
   function forLoop(n, it, e)
   {
     var old = declared.length;
-    declared.push({n: n, old: locals.get(n)});
+    declared.push({
+      n: n,
+      old: locals.get(n)
+    });
     var it = makeIterator(expr(it));
     while (it.hasNext())
     {
-      locals.set(n, {r: it.next()});
+      locals.set(n, {
+        r: it.next()
+      });
       if (!loopRun(() -> expr(e))) break;
     }
     restore(old);
@@ -2153,14 +2225,24 @@ class Interp
   function forKeyValueLoop(vk, vv, it, e)
   {
     var old = declared.length;
-    declared.push({n: vk, old: locals.get(vk)});
-    declared.push({n: vv, old: locals.get(vv)});
+    declared.push({
+      n: vk,
+      old: locals.get(vk)
+    });
+    declared.push({
+      n: vv,
+      old: locals.get(vv)
+    });
     var it = makeKeyValueIterator(expr(it));
     while (it.hasNext())
     {
       var v = it.next();
-      locals.set(vk, {r: v.key});
-      locals.set(vv, {r: v.value});
+      locals.set(vk, {
+        r: v.key
+      });
+      locals.set(vv, {
+        r: v.value
+      });
       if (!loopRun(() -> expr(e))) break;
     }
     restore(old);
@@ -2218,29 +2300,26 @@ class Interp
     if (isAllInt)
     {
       var m = new Map<Int, Dynamic>();
-      for (i => key in keys)
-        m.set(key, values[i]);
+      for (i => key in keys) m.set(key, values[i]);
       return m;
     }
     if (isAllString)
     {
       var m = new Map<String, Dynamic>();
-      for (i => key in keys)
-        m.set(key, values[i]);
+      for (i => key in keys) m.set(key, values[i]);
       return m;
     }
     if (isAllEnum)
     {
       var m = new haxe.ds.EnumValueMap<Dynamic, Dynamic>();
-      for (i => key in keys)
-        m.set(key, values[i]);
+      for (i => key in keys) m.set(key, values[i]);
       return m;
     }
     if (isAllObject)
     {
-      var m = new Map<{}, Dynamic>();
-      for (i => key in keys)
-        m.set(key, values[i]);
+      var m = new Map<
+        {}, Dynamic>();
+      for (i => key in keys) m.set(key, values[i]);
       return m;
     }
     error(ECustom("Invalid map keys " + keys));
@@ -2315,7 +2394,9 @@ class Interp
         {
           return proxy.resolveField(f);
         }
-        catch (e:Dynamic) {}
+        catch (e:Dynamic)
+        {
+        }
 
         // If we're here, the field doesn't exist on the proxy.
         error(EUnknownVariable(f));
@@ -2459,11 +2540,16 @@ class Interp
     }
     catch (e)
     {
-      if (e.message.startsWith('Cannot set final ')){
+      if (e.message.startsWith('Cannot set final '))
+      {
         error(EInvalidFinalSet(f));
-      } else if (e.message.startsWith('Cannot set private ')) {
+      }
+      else if (e.message.startsWith('Cannot set private '))
+      {
         error(EInvalidPropSet(f));
-      } else {
+      }
+      else
+      {
         error(EInvalidAccess(f));
       }
     }
@@ -2487,8 +2573,7 @@ class Interp
         var splitPath = importPath.split(".");
         var clsName = splitPath[splitPath.length - 1];
 
-        imports.set(clsName,
-        {
+        imports.set(clsName, {
           name: clsName,
           pkg: splitPath.slice(0, splitPath.length - 1),
           fullPath: importPath,
@@ -2519,8 +2604,7 @@ class Interp
             continue;
           }
 
-          var importedClass:ClassImport =
-          {
+          var importedClass:ClassImport = {
             name: clsName,
             pkg: path.slice(0, path.length - 1),
             fullPath: path.join("."),
@@ -2574,8 +2658,7 @@ class Interp
             continue;
           }
 
-          var importedClass:ClassImport =
-          {
+          var importedClass:ClassImport = {
             name: clsName,
             pkg: path.slice(0, path.length - 1),
             fullPath: path.join("."),
@@ -2616,8 +2699,7 @@ class Interp
             }
           }
 
-          var classDecl:ClassDecl =
-          {
+          var classDecl:ClassDecl = {
             imports: imports,
             importsToValidate: importsToValidate,
             usings: usings,
@@ -2638,8 +2720,7 @@ class Interp
 
           if (pkg != null)
           {
-            imports.set(e.name,
-            {
+            imports.set(e.name, {
               name: e.name,
               pkg: pkg,
               fullPath: pkg.join(".") + "." + e.name,
@@ -2648,8 +2729,7 @@ class Interp
             });
           }
 
-          var enumDecl:EnumDecl =
-          {
+          var enumDecl:EnumDecl = {
             pkg: pkg,
             name: e.name,
             meta: e.meta,
@@ -2683,8 +2763,7 @@ class Interp
       {
         if (cls == imp) continue;
 
-        var classImport =
-        {
+        var classImport = {
           name: imp.name,
           pkg: imp.pkg,
           fullPath: Util.getFullClassName(imp)
@@ -2711,16 +2790,14 @@ class Interp
       {
         if (!pkg.startsWith(key) && key.length != 0) continue;
 
-        for (imp in imps)
-          cls.imports.set(imp.name, imp);
+        for (imp in imps) cls.imports.set(imp.name, imp);
       }
 
       for (key => imps in _scriptClassUsings)
       {
         if (!pkg.startsWith(key) && key.length != 0) continue;
 
-        for (imp in imps)
-          cls.usings.set(imp.name, imp);
+        for (imp in imps) cls.usings.set(imp.name, imp);
       }
 
       // Add the scripted imports.
@@ -2738,7 +2815,11 @@ class Interp
           continue;
         }
 
-        Polymod.error(SCRIPTED_CLASS_UNRESOLVED_IMPORT, 'Could not import ${imp.fullPath}. Check to ensure the module exists and is spelled correctly.', SCRIPT_RUNTIME);
+        Polymod.error(
+          SCRIPTED_CLASS_UNRESOLVED_IMPORT,
+          'Could not import ${imp.fullPath}. Check to ensure the module exists and is spelled correctly.',
+          SCRIPT_RUNTIME
+        );
       }
 
       // Check if the scripted classes extend the right type.
@@ -2752,11 +2833,15 @@ class Interp
           case CTPath(path, params):
             if (params != null && params.length > 0)
             {
-              Polymod.error(SCRIPTED_CLASS_UNRESOLVED_IMPORT, 'Could not extend ${superClassPath}, do not include type parameters in super class name.', SCRIPT_RUNTIME);
+              Polymod.error(
+                SCRIPTED_CLASS_UNRESOLVED_IMPORT,
+                'Could not extend ${superClassPath}, do not include type parameters in super class name.',
+                SCRIPT_RUNTIME
+              );
             }
 
           default:
-          // Other error handling?
+            // Other error handling?
         }
 
         // Default
@@ -2789,7 +2874,7 @@ class Interp
     if (args == null) return;
 
     var minParams = 0;
-//    var maxAllowed = params.length;
+    //    var maxAllowed = params.length;
 
     for (i in 0...params.length)
     {
@@ -2802,17 +2887,18 @@ class Interp
     {
       error(EInvalidArgCount(funcName, minParams, args.length));
     }
-//    else if (args.length > maxAllowed)
-//    {
-//      // Manual return for `new` as parameter count shouldn't matter here
-//      if (name == "new") return;
-//      error(EExceedArgsCount(funcName, maxAllowed, args.length));
-//    }
+    //    else if (args.length > maxAllowed)
+    //    {
+    //      // Manual return for `new` as parameter count shouldn't matter here
+    //      if (name == "new") return;
+    //      error(EExceedArgsCount(funcName, maxAllowed, args.length));
+    //    }
   }
 
   private inline function buildScriptClassStaticFunction(clsName:String, fieldName:String):Dynamic
   {
-    return Reflect.makeVarArgs(function(args:Array<Dynamic>):Dynamic {
+    return Reflect.makeVarArgs(function(args:Array<Dynamic>):Dynamic
+    {
       return callScriptClassStaticFunction(clsName, fieldName, args);
     });
   }
@@ -2958,7 +3044,8 @@ class Interp
         case KFunction(_fn):
           throw 'Cannot override function ${prefixedName}';
         case KVar(v):
-          if (v.isfinal) {
+          if (v.isfinal)
+          {
             throw 'Cannot override final static field ${prefixedName}';
           }
           if (v.set != null)
