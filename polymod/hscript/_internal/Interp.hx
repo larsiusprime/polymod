@@ -66,8 +66,11 @@ class Interp
   var depth:Int;
   var inTry:Bool;
   var declared:Array<
-    {n:String, old:
-      {r:Dynamic, ?isfinal:Bool}}>;
+    {
+      n:String,
+      old:
+        {r:Dynamic, ?isfinal:Bool}
+    }>;
   var returnValue:Dynamic;
   #if hscriptPos
   var curExpr:Expr;
@@ -323,7 +326,7 @@ class Interp
       });
     }
 
-    if (Std.isOfType(o, HScriptedClass))
+    if (isHScriptedClass(o))
     {
       // This is a scripted class!
       // We should try to call the function on the scripted class.
@@ -2331,7 +2334,7 @@ class Interp
     if (o == null) error(ENullObjectReference(f));
 
     // Backwards compatibility for scripts using HScriptedClass.init
-    // Std.isOfType(o, HScriptedClass) only works with class instances
+    // isHScriptedClass(o) only works with class instances
     // so we look for a specific field to double-check the type
     if ((f == 'init' || f == 'scriptInit') && o._isHScriptedClass)
     {
@@ -2402,7 +2405,7 @@ class Interp
         error(EUnknownVariable(f));
       }
     }
-    else if (Std.isOfType(o, HScriptedClass))
+    else if (isHScriptedClass(o))
     {
       if (o.scriptGet != null)
       {
@@ -2524,7 +2527,7 @@ class Interp
       }
       return v;
     }
-    else if (Std.isOfType(o, HScriptedClass))
+    else if (isHScriptedClass(o))
     {
       if (o.scriptSet != null)
       {
@@ -2554,6 +2557,11 @@ class Interp
       }
     }
     return v;
+  }
+
+  inline function isHScriptedClass(o:Dynamic):Bool
+  {
+    return Std.isOfType(o, HScriptedClass) || (o != null && o._asc != null);
   }
 
   public function registerModules(module:Array<ModuleDecl>, ?origin:String = "hscript"):Void
