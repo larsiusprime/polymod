@@ -20,6 +20,27 @@ class PolymodCppiaClassReference extends PolymodStaticClassReference
   static final everProvided:Map<String, Bool> = new Map<String, Bool>();
 
   /**
+   * Every class a compiled script declared, including the ones it did not put in its manifest.
+   */
+  static final declared:Map<String, Class<Dynamic>> = new Map<String, Class<Dynamic>>();
+
+  /**
+   * Whether this class name came out of a compiled script rather than the game.
+   */
+  public static function isScriptClass(clsName:String):Bool
+  {
+    return declared.exists(clsName);
+  }
+
+  /**
+   * The class a compiled script declared under this name, if any.
+   */
+  public static function resolveScriptClass(clsName:String):Null<Class<Dynamic>>
+  {
+    return declared.get(clsName);
+  }
+
+  /**
    * The version a cppia must be stamped with to be accepted.
    */
   public static var expectedVersion:Null<String> = null;
@@ -172,20 +193,8 @@ class PolymodCppiaClassReference extends PolymodStaticClassReference
    * Check a compiled script against the blacklist before any of it runs.
    * @return The denied names it references, or null if the file could not be read at all.
    */
-  static function scanDenied(data:haxe.io.Bytes, path:String):Null<Array<String>>
+  static function scanDenied(types:Array<String>):Array<String>
   {
-    var types:Array<String> = null;
-
-    try
-    {
-      types = PolymodCppiaScanner.readTypes(data);
-    }
-    catch (e:Dynamic)
-    {
-      Polymod.error(SCRIPT_PARSE_FAILED, 'Could not read the header of compiled script "$path": $e', SCRIPT_RUNTIME);
-      return null;
-    }
-
     var denied:Map<String, Bool> = deniedNames();
     var found:Array<String> = [];
 
@@ -243,8 +252,19 @@ class PolymodCppiaClassReference extends PolymodStaticClassReference
       loadedModules.remove(path);
     }
 
-    var denied:Null<Array<String>> = scanDenied(data, path);
-    if (denied == null) return [];
+    var types:Array<String> = null;
+
+    try
+    {
+      types = PolymodCppiaScanner.readTypes(data);
+    }
+    catch (e:Dynamic)
+    {
+      Polymod.error(SCRIPT_PARSE_FAILED, 'Could not read the header of compiled script "$path": $e', SCRIPT_RUNTIME);
+      return [];
+    }
+
+    var denied:Array<String> = scanDenied(types);
 
     if (denied.length > 0)
     {
@@ -284,6 +304,24 @@ class PolymodCppiaClassReference extends PolymodStaticClassReference
     {
       Polymod.error(SCRIPT_PARSE_FAILED, 'Failed to boot compiled script "$path": $e', SCRIPT_RUNTIME);
       return [];
+    }
+
+    var moduleClasses:Array<String> = [];
+
+    for (type in types)
+    {
+      var cls:Null<Class<Dynamic>> = null;
+
+      try
+      {
+        cls = module.resolveClass(type);
+      }
+      catch (e:Dynamic) {}
+
+      if (cls == null) continue;
+
+      declared.set(type, cls);
+      moduleClasses.push(type);
     }
 
     var manifest:Class<Dynamic> = null;
@@ -358,7 +396,7 @@ class PolymodCppiaClassReference extends PolymodStaticClassReference
 
     loadedModules.set(path, new LoadedCppiaModule(signature, registered, registeredRefs, module));
 
-    trace('[cppia] loaded "$path" providing ${registered.join(", ")}');
+    trace('[cppia] loaded "$path" providing ${registered.join(", ")}, declaring ${moduleClasses.join(", ")}');
 
     return registered;
     #else
