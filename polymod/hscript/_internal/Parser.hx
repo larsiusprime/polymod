@@ -2497,7 +2497,7 @@ class Parser
         {
           preprocStack[preprocStack.length - 1].r = false;
           skipTokens();
-          return token();
+          return id == 'else' ? token() : preprocess('if');
         }
         else if (id == "else")
         {
