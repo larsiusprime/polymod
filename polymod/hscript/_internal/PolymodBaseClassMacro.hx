@@ -84,6 +84,8 @@ class PolymodBaseClassMacro
     var fullClsName:String = formatClassString(cls);
     if (fullClsName.indexOf('polymod.') == 0) return fields; // Disallow extending polymod classes.
 
+    if (Context.defined('cppia') && !isHostClass(fullClsName)) return fields;
+
     // Check if a class already has one of the fields needed for the scripts before attempting to build fields.
     // We only need to check (and add) instance fields if a class doesn't extend anything, considering extending classes inherit them.
     var neededStaticFields:Array<String> = [
@@ -694,6 +696,35 @@ class PolymodBaseClassMacro
    * to only have a single return, however due to how script extending works, this is no longer a guarantee.
    * @param fields  The fields whose function expressions to check and modify.
    */
+  /**
+   * The classes the host binary already carries, read from the `dll_import` file hxcpp is given.
+   */
+  static var hostClasses:Null<Map<String, Bool>> = null;
+
+  /**
+   * Whether this class lives in the host rather than in the module being compiled.
+   */
+  static function isHostClass(clsName:String):Bool
+  {
+    if (hostClasses == null)
+    {
+      hostClasses = new Map<String, Bool>();
+
+      var path:Null<String> = Context.definedValue('dll_import');
+
+      if (path != null && sys.FileSystem.exists(path))
+      {
+        for (line in sys.io.File.getContent(path).split('\n'))
+        {
+          var trimmed:String = StringTools.trim(line);
+          if (StringTools.startsWith(trimmed, 'class ')) hostClasses.set(StringTools.trim(trimmed.substr(6)), true);
+        }
+      }
+    }
+
+    return hostClasses.exists(clsName);
+  }
+
   static function removeInlinedFunctionCalls(fields:Array<Field>):Void
   {
     // This is a heavy operation and isn't needed to be done during code completion.
