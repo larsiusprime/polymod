@@ -878,10 +878,12 @@ class Polymod
 
       var allBytes:Array<String> = Polymod.assetLibrary.list(BYTES);
 
-      for (binaryPath in allBytes)
-      {
-        if (!PolymodConfig.cppiaClassExt.exists(ext -> binaryPath.endsWith(ext))) continue;
+      var cppiaPaths:Array<String> = allBytes.filter(path -> PolymodConfig.cppiaClassExt.exists(ext -> path.endsWith(ext)));
 
+      cppiaPaths = polymod.hscript._internal.PolymodCppiaTarget.select(cppiaPaths);
+
+      for (binaryPath in cppiaPaths)
+      {
         var path = binaryPath;
         if (!Polymod.assetLibrary.exists(path))
         {
