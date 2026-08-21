@@ -7,7 +7,7 @@ package polymod.hscript._internal;
  *
  * Also falls back to regular .cppia files when no platform-specific one is available.
  */
-class PolymodCppiaTarget
+class PolymodCPPIATarget
 {
   /**
    * Every tag that names a platform rather than being part of a file name.
