@@ -874,7 +874,7 @@ class Polymod
 
       var cppiaPaths:Array<String> = allBytes.filter(path -> PolymodConfig.cppiaClassExt.exists(ext -> path.endsWith(ext)));
 
-      cppiaPaths = polymod.hscript._internal.PolymodCppiaTarget.select(cppiaPaths);
+      cppiaPaths = polymod.hscript._internal.PolymodCPPIATarget.select(cppiaPaths);
 
       for (binaryPath in cppiaPaths)
       {
