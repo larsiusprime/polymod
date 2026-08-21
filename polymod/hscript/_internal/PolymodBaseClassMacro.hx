@@ -215,6 +215,7 @@ class PolymodBaseClassMacro
             doesReturnVoid = (f.ret.toString() == 'Void');
           }
 
+          var oldPos:haxe.macro.Expr.Position = f.expr.pos;
           f.expr = macro
             {
               if (_asc != null && !_skipAscFrom.contains($v{fields[i].name}))
@@ -239,6 +240,8 @@ class PolymodBaseClassMacro
               // Fallback, call the original function.
               ${f.expr}
             };
+
+          f.expr.pos = oldPos;
 
         default:
           // Do nothing.
