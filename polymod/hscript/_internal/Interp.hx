@@ -2572,6 +2572,7 @@ class Interp
     var imports:Map<String, ClassImport> = [];
     var importsToValidate:Map<String, ClassImport> = [];
     var usings:Map<String, ClassImport> = [];
+    var usingsToValidate:Map<String, ClassImport> = [];
 
     // Don't add the default imports to import.hx since they're added to other script classes anyway.
     if (!isImportFile)
@@ -2675,13 +2676,20 @@ class Interp
             abs: null
           };
 
-          if (_scriptEnumDescriptors.exists(importedClass.fullPath))
+          if (!_scriptEnumDescriptors.exists(importedClass.fullPath))
           {
-            // do nothing
-          }
-          else
-          {
-            if (!resolveImportedClass(importedClass, true) || importedClass.cls == null && importedClass.enm == null && importedClass.abs == null) continue;
+            if (resolveImportedClass(importedClass, true) && importedClass.cls == null && importedClass.enm == null && importedClass.abs == null)
+            {
+              if (isImportFile)
+              {
+                registerImportForPackage(pkg, importedClass, true);
+                continue;
+              }
+
+              // this could be a scripted class that hasn't been registered yet
+              usingsToValidate.set(importedClass.name, importedClass);
+              continue;
+            }
           }
 
           if (isImportFile)
@@ -2689,6 +2697,7 @@ class Interp
             registerImportForPackage(pkg, importedClass, true);
             continue;
           }
+
           usings.set(importedClass.name, importedClass);
         case DClass(c):
           if (isImportFile) continue;
@@ -2711,6 +2720,7 @@ class Interp
             imports: imports,
             importsToValidate: importsToValidate,
             usings: usings,
+            usingsToValidate: usingsToValidate,
             pkg: pkg,
             name: c.name,
             params: c.params,
@@ -2801,11 +2811,11 @@ class Interp
         for (imp in imps) cls.imports.set(imp.name, imp);
       }
 
-      for (key => imps in _scriptClassUsings)
+      for (key => uses in _scriptClassUsings)
       {
         if (!pkg.startsWith(key) && key.length != 0) continue;
 
-        for (imp in imps) cls.usings.set(imp.name, imp);
+        for (use in uses) cls.usings.set(use.name, use);
       }
 
       // Add the scripted imports.
@@ -2826,6 +2836,22 @@ class Interp
         Polymod.error(
           SCRIPTED_CLASS_UNRESOLVED_IMPORT,
           'Could not import ${imp.fullPath}. Check to ensure the module exists and is spelled correctly.',
+          SCRIPT_RUNTIME
+        );
+      }
+
+      // Add the scripted usings.
+      for (key => use in cls.usingsToValidate)
+      {
+        if (_scriptClassDescriptors.exists(use.fullPath))
+        {
+          cls.usings.set(key, use);
+          continue;
+        }
+
+        Polymod.error(
+          SCRIPTED_CLASS_UNRESOLVED_IMPORT,
+          'Could not use ${use.fullPath}. Check to ensure the module exists and is spelled correctly.',
           SCRIPT_RUNTIME
         );
       }
