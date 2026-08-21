@@ -259,6 +259,14 @@ typedef ClassDecl =
    * so imports have to be done in two passes.
    */
   var importsToValidate:Map<String, ClassImport>;
+
+  /**
+   * A list of usings that have yet to be validated
+   *
+   * Scripted classes that use other scripted classes might be parsed before the class they use,
+   * so usings have to be done in two passes.
+   */
+  var usingsToValidate:Map<String, ClassImport>;
 }
 
 /**
