@@ -68,6 +68,14 @@ class PolymodCppiaClassReference extends PolymodStaticClassReference
   }
 
   /**
+   * The class a loaded compiled script is providing under this name, if any.
+   */
+  public static function getCppiaClass(clsName:String):Null<Class<Dynamic>>
+  {
+    return registry.get(clsName);
+  }
+
+  /**
    * Whether this name belongs to a compiled script that is no longer loaded.
    *
    * The class object still exists, because hxcpp cannot unload it, but nothing should resolve to it.
