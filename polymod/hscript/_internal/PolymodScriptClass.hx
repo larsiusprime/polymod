@@ -534,6 +534,7 @@ class PolymodScriptClass
     {
       createSuperClass(args);
     }
+    _constructorArgs = args;
   }
 
   var __superClassFieldList:Array<String> = null;
@@ -564,6 +565,11 @@ class PolymodScriptClass
       __superClassFieldList = __superClassFieldList.concat(Type.getInstanceFields(Type.getClass(_superClass)));
     }
     return __superClassFieldList.indexOf(name) != -1;
+  }
+
+  public function getConstructorArgs():Array<Dynamic>
+  {
+    return _constructorArgs;
   }
 
   private function createSuperClass(args:Array<Dynamic> = null)
@@ -927,6 +933,8 @@ class PolymodScriptClass
   {
     return _cachedFunctionDecls;
   }
+
+  private final _constructorArgs:Array<Dynamic>;
 
   private var _cachedFieldDecls:Map<String, FieldDecl> = [];
   private var _cachedSuperFunctionDecls:Map<String, Dynamic> = [];
