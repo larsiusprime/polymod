@@ -743,7 +743,7 @@ class Polymod
    */
   public static function getDefaultIgnoreList():Array<String>
   {
-    return PolymodConfig.modIgnoreFiles.concat([PolymodConfig.modMetadataFile, PolymodConfig.modIconFile]);
+    return PolymodConfig.modIgnoreFiles.concat([PolymodConfig.modMetadataFile, PolymodConfig.modIconFile, PolymodConfig.modIconDataFile]);
   }
 
   /**
@@ -1161,10 +1161,16 @@ class ModMetadata
   public var license:String;
 
   /**
-   * Binary data containing information on the mod's icon file, if it exists.
+   * Binary data containing information on the mod's icon image file, if it exists.
    * This is useful when you want to display the mod's icon in your application's mod menu.
    */
   public var icon:Bytes = null;
+
+  /**
+   * Binary data containing information on the mod's icon data file, if it exists.
+   * This is useful when you want to animate the mod's icon in your application's mod menu.
+   */
+  public var iconData:Bytes = null;
 
   /**
    * The path on the filesystem to the mod's icon file.

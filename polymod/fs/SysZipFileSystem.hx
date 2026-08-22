@@ -285,6 +285,7 @@ class SysZipFileSystem extends SysFileSystem
 
         var metaFile = Util.pathJoin(modPath, PolymodConfig.modMetadataFile);
         var iconFile = Util.pathJoin(modPath, PolymodConfig.modIconFile);
+        var iconDataFile = Util.pathJoin(modPath, PolymodConfig.modIconDataFile);
 
         if (!exists(metaFile))
         {
@@ -314,6 +315,12 @@ class SysZipFileSystem extends SysFileSystem
           var iconBytes = getFileBytes(iconFile);
           meta.icon = iconBytes;
           meta.iconPath = iconFile;
+        }
+
+        if(exists(iconDataFile))
+        {
+          var iconDataBytes = getFileBytes(iconDataFile);
+          meta.iconData = iconDataBytes;
         }
 
         return dir;

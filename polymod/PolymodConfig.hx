@@ -166,7 +166,7 @@ class PolymodConfig
   }
 
   /**
-   * The file where Polymod checks for mod metadata.
+   * The mods icon image path.
    *
    * Set this option by setting the `POLYMOD_MOD_ICON_FILE` Haxe define at compile time,
    * or by setting this value in your code.
@@ -180,6 +180,26 @@ class PolymodConfig
     // If the value is null, retrieve the value as a Haxe define.
     if (modIconFile == null) modIconFile = DefineUtil.getDefineString('POLYMOD_MOD_ICON_FILE', '_polymod_icon.png');
     return modIconFile;
+  }
+
+  /**
+   * The mods icon data path.
+   *
+   * Set this option by setting the `POLYMOD_MOD_ICON_FILE` Haxe define at compile time,
+   * or by setting this value in your code.
+   *
+   * @default `_polymod_icon.xml`
+   */
+  public static var modIconDataFile(get, default):String;
+
+  static function get_modIconDataFile():String
+  {
+    // If the value is null, retrieve the value as a Haxe define.
+    if (modIconDataFile == null){
+      modIconDataFile = DefineUtil.getDefineString('POLYMOD_MOD_ICON_FILE', '_polymod_icon.png');
+      modIconDataFile = modIconDataFile.substr(0,modIconDataFile.length-3)+'xml';
+    }
+    return modIconDataFile;
   }
 
   /**

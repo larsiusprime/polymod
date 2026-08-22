@@ -251,6 +251,7 @@ abstract class BaseFileSystem implements IFileSystem
 
         var metaFile = Util.pathJoin(modPath, PolymodConfig.modMetadataFile);
         var iconFile = Util.pathJoin(modPath, PolymodConfig.modIconFile);
+        var iconDataFile = Util.pathJoin(modPath, PolymodConfig.modIconDataFile);
 
         if (!exists(metaFile))
         {
@@ -293,6 +294,13 @@ abstract class BaseFileSystem implements IFileSystem
           }
         }
 
+        if(exists(iconDataFile))
+        {
+          var iconDataBytes:Null<Bytes> = getFileBytes(iconDataFile);
+          if(iconDataBytes != null)
+            meta.iconData = iconDataBytes;
+        }
+
         return dir;
       }
     }
@@ -331,6 +339,7 @@ abstract class BaseFileSystem implements IFileSystem
 
       var metaFile:String = Util.pathJoin(modPath, PolymodConfig.modMetadataFile);
       var iconFile:String = Util.pathJoin(modPath, PolymodConfig.modIconFile);
+      var iconDataFile:String = Util.pathJoin(modPath, PolymodConfig.modIconDataFile);
 
       if (!exists(metaFile))
       {
@@ -375,6 +384,14 @@ abstract class BaseFileSystem implements IFileSystem
           meta.iconPath = iconFile;
         }
       }
+
+      if(exists(iconDataFile))
+      {
+        var iconDataBytes:Null<Bytes> = getFileBytes(iconDataFile);
+        if(iconDataBytes != null)
+          meta.iconData = iconDataBytes;
+      }
+
       return meta;
     }
     else
