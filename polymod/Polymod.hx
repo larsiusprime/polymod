@@ -836,6 +836,47 @@ class Polymod
   }
 
   /**
+   * Whether an object came from a script rather than from the game.
+   * @param target The object to check. Null is not scripted.
+   */
+  public static function isScriptedClass(target:Dynamic):Bool
+  {
+    if (target == null) return false;
+
+    if (Std.isOfType(target, polymod.hscript.HScriptedClass)) return true;
+
+    try
+    {
+      if (Reflect.field(target, '_asc') != null) return true;
+    }
+    catch (_:Dynamic) {}
+
+    return isCompiledScriptClass(target);
+  }
+
+  /**
+   * Whether an object's class was declared by a compiled (cppia) script.
+   *
+   * @param target The object to check. Null is not scripted.
+   */
+  public static function isCompiledScriptClass(target:Dynamic):Bool
+  {
+    #if (hxcpp && POLYMOD_CPPIA)
+    if (target == null) return false;
+
+    var cls:Null<Class<Dynamic>> = Type.getClass(target);
+    if (cls == null) return false;
+
+    var name:Null<String> = Type.getClassName(cls);
+    if (name == null) return false;
+
+    return polymod.hscript._internal.PolymodCppiaClassReference.isScriptClass(name);
+    #else
+    return false;
+    #end
+  }
+
+  /**
    * Clears all scripted functions and any registered scripted classes from the cache.
    * This is useful if you want to reload the scripts later.
    */
