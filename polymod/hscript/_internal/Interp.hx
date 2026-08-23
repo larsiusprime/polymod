@@ -915,7 +915,7 @@ class Interp
         }
 
         // Fallback to field set
-        v = set(expr(e0), id, v);
+        v = set(fieldTarget(e0), id, v);
       case EArray(e, index):
         var arr:Dynamic = expr(e);
         var index:Dynamic = expr(index);
@@ -998,7 +998,7 @@ class Interp
         else
           l.r = v;
       case EField(e, f):
-        var obj = expr(e);
+        var obj = fieldTarget(e);
         v = fop(get(obj, f), expr(e2));
         v = set(obj, f, v);
       case EArray(e, index):
@@ -1079,7 +1079,7 @@ class Interp
           l.r = v + delta;
         return v;
       case EField(e, f):
-        var obj = expr(e);
+        var obj = fieldTarget(e);
         var v:Dynamic = get(obj, f);
         if (prefix)
         {
@@ -1537,7 +1537,8 @@ class Interp
         {
           return new PolymodEnum(_scriptEnumDescriptors.get(name), f, []);
         }
-        return get(expr(e), f);
+
+        return get(fieldTarget(e), f);
       case EBinop(op, e1, e2):
         var fop = binops.get(op);
         if (fop == null) error(EInvalidOp(op));
@@ -1593,7 +1594,7 @@ class Interp
         switch (Tools.expr(e))
         {
           case EField(e, f):
-            var obj = expr(e);
+            var obj = fieldTarget(e);
             if (obj == null) error(ENullObjectReference(f));
             return fcall(obj, f, args);
           default:
@@ -2164,6 +2165,72 @@ class Interp
     var a = new Array();
     for (e in entries) a.push(expr(e));
     return a;
+  }
+
+  /**
+   * The dotted path an expression spells out, if it is nothing but identifiers.
+   */
+  function dottedPath(e:Expr):Null<String>
+  {
+    switch (Tools.expr(e))
+    {
+      case EIdent(id):
+        return id;
+      case EField(sub, field):
+        var head:Null<String> = dottedPath(sub);
+        return head == null ? null : '$head.$field';
+      default:
+        return null;
+    }
+  }
+
+  /**
+   * The object a field access reads from, allowing for a type written out in full.
+   */
+  function fieldTarget(e:Expr):Dynamic
+  {
+    try
+    {
+      return expr(e);
+    }
+    catch (err:Expr.Error)
+    {
+      var path:Null<String> = dottedPath(e);
+      if (path == null) throw err;
+
+      var type:Null<Dynamic> = resolveDottedPath(path);
+      if (type == null) throw err;
+
+      return type;
+    }
+  }
+
+  /**
+   * A type named by its full path rather than imported first.
+   * The blacklist applies exactly as it does to an import.
+   */
+  function resolveDottedPath(path:String):Null<Dynamic>
+  {
+    if (PolymodScriptClass.importOverrides.exists(path))
+    {
+      var alias:Null<Class<Dynamic>> = PolymodScriptClass.importOverrides.get(path);
+      if (alias == null) error(EBlacklistedModule(path));
+      return alias;
+    }
+
+    if (PolymodScriptClass.abstractClassImpls.exists(path)) return PolymodScriptClass.abstractClassImpls.get(path);
+    if (PolymodScriptClass.typedefs.exists(path)) return PolymodScriptClass.typedefs.get(path);
+
+    var scripted = PolymodStaticClassReference.tryBuild(path);
+    if (scripted != null) return scripted;
+
+    var cls:Null<Class<Dynamic>> = Type.resolveClass(path);
+    #if POLYMOD_CPPIA
+    if (cls != null && PolymodCppiaClassReference.isInactiveCppiaClass(path)) cls = null;
+    #end
+    if (cls != null) return cls;
+
+    return Type.resolveEnum(path);
   }
 
   function getIdent(e:Expr):Null<String>
