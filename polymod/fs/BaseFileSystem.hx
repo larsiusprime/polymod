@@ -250,7 +250,6 @@ abstract class BaseFileSystem implements IFileSystem
         var meta:Null<ModMetadata> = null;
 
         var metaFile = Util.pathJoin(modPath, PolymodConfig.modMetadataFile);
-        var iconFile = Util.pathJoin(modPath, PolymodConfig.modIconFile);
 
         if (!exists(metaFile))
         {
@@ -275,28 +274,38 @@ abstract class BaseFileSystem implements IFileSystem
         meta.dirName = dir;
         meta.modPath = modPath;
 
-        if (!exists(iconFile))
+        var iconFile = getModIconPath(modPath, origin);
+        var iconBytes:Null<Bytes> = getFileBytes(iconFile);
+        if (iconBytes == null)
         {
-          Polymod.warning(MOD_MISSING_ICON, 'Could not find mod icon file: $iconFile', origin);
+          Polymod.warning(MOD_MISSING_ICON, 'Could not obtain mod icon data from file: $iconFile', origin);
         }
         else
         {
-          var iconBytes:Null<Bytes> = getFileBytes(iconFile);
-          if (iconBytes == null)
-          {
-            Polymod.warning(MOD_MISSING_ICON, 'Could not obtain mod icon for icon file : $iconFile', origin);
-          }
-          else
-          {
-            meta.icon = iconBytes;
-            meta.iconPath = iconFile;
-          }
+          meta.icon = iconBytes;
+          meta.iconPath = iconFile;
         }
 
         return dir;
       }
     }
     Polymod.error(MOD_MISSING_ID, 'Could not find mod with ID: $modId', origin);
+    return null;
+  }
+
+  function getModIconPath(modPath:String, ?origin:PolymodErrorOrigin):Null<String>
+  {
+    var foundIcon = false;
+    for (iconBasePath in PolymodConfig.modIconFile)
+    {
+      var iconFile = Util.pathJoin(modPath, iconBasePath);
+
+      if (!exists(iconFile)) continue;
+
+      return iconFile;
+    }
+
+    Polymod.warning(MOD_MISSING_ICON, 'Could not find any mod icons for mod: $modPath', origin);
     return null;
   }
 
@@ -330,7 +339,6 @@ abstract class BaseFileSystem implements IFileSystem
       var meta:Null<ModMetadata> = null;
 
       var metaFile:String = Util.pathJoin(modPath, PolymodConfig.modMetadataFile);
-      var iconFile:String = Util.pathJoin(modPath, PolymodConfig.modIconFile);
 
       if (!exists(metaFile))
       {
@@ -358,23 +366,18 @@ abstract class BaseFileSystem implements IFileSystem
       meta.dirName = dirName;
       meta.modPath = modPath;
 
-      if (!exists(iconFile))
+      var iconFile = getModIconPath(modPath, origin);
+      var iconBytes:Null<Bytes> = getFileBytes(iconFile);
+      if (iconBytes == null)
       {
-        Polymod.warning(MOD_MISSING_ICON, 'Could not find mod icon file: $iconFile', origin);
+        Polymod.warning(MOD_MISSING_ICON, 'Could not obtain mod icon data from file: $iconFile', origin);
       }
       else
       {
-        var iconBytes:Null<Bytes> = getFileBytes(iconFile);
-        if (iconBytes == null)
-        {
-          Polymod.warning(MOD_MISSING_ICON, 'Could not obtain mod icon for icon file : $iconFile', origin);
-        }
-        else
-        {
-          meta.icon = iconBytes;
-          meta.iconPath = iconFile;
-        }
+        meta.icon = iconBytes;
+        meta.iconPath = iconFile;
       }
+
       return meta;
     }
     else

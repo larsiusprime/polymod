@@ -743,7 +743,13 @@ class Polymod
    */
   public static function getDefaultIgnoreList():Array<String>
   {
-    return PolymodConfig.modIgnoreFiles.concat([PolymodConfig.modMetadataFile, PolymodConfig.modIconFile]);
+    var results:Array<String> = [];
+
+    results = results.concat(PolymodConfig.modIgnoreFiles);
+    results = results.concat(PolymodConfig.modIconFile);
+    results.push(PolymodConfig.modMetadataFile);
+
+    return results;
   }
 
   /**
