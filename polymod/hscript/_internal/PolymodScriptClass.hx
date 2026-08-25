@@ -1,6 +1,7 @@
 package polymod.hscript._internal;
 
 import haxe.ds.ObjectMap;
+import polymod.hscript._internal.Expr.EnumDecl;
 import polymod.hscript._internal.Expr.ClassDecl;
 import polymod.hscript._internal.Expr.ClassImport;
 import polymod.hscript._internal.Expr.FieldDecl;
@@ -407,6 +408,17 @@ class PolymodScriptClass
   // Override version of Std.isOfType so we're able to test for scripted classes.
   public static function isOfType(v:Dynamic, t:Dynamic):Bool
   {
+    if (t is String && Interp._scriptEnumDescriptors.exists(t))
+    {
+      if (v is PolymodEnum)
+      {
+        var enumDecl:EnumDecl = v._e;
+
+        return Util.getFullEnumClass(enumDecl) == t;
+      }
+      return false;
+    }
+
     var typeClassDecl:ClassDecl = null;
     var typeFullName:String = '';
     if (t is PolymodStaticClassReference)

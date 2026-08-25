@@ -1271,6 +1271,9 @@ class Interp
         if (importedClass.enm != null) return importedClass.enm;
         if (importedClass.abs != null) return importedClass.abs;
 
+        var enumResult:Null<String> = PolymodEnum.tryResolve(importedClass.fullPath);
+        if (enumResult != null) return enumResult;
+
         // Resolve imported scripted classes.
         var result = PolymodStaticClassReference.tryBuild(importedClass.fullPath);
         if (result != null) return result;
@@ -1294,9 +1297,16 @@ class Interp
       if (getClassDecl().pkg != null && getClassDecl().pkg.length > 0)
       {
         var localClassId = getClassDecl().pkg.join('.') + "." + id;
+
+        var enumResult:Null<String> = PolymodEnum.tryResolve(localClassId);
+        if (enumResult != null) return enumResult;
+
         var result = PolymodStaticClassReference.tryBuild(localClassId);
         if (result != null) return result;
       }
+
+      var enumResult:Null<String> = PolymodEnum.tryResolve(id);
+      if (enumResult != null) return enumResult;
 
       // Try to retrieve a scripted class with this name in the base package.
       var result = PolymodStaticClassReference.tryBuild(id);
