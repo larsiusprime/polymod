@@ -776,4 +776,14 @@ class Util
     }
     return clsDecl.name;
   }
+
+  /**
+   * Retrieves the full qualified name for a scripted enum declaration.
+   * @param enumDecl The enum declaration.
+   * @return String
+   */
+  public static function getFullEnumClass(enumDecl:EnumDecl):String
+  {
+    return enumDecl.pkg != null ? '${enumDecl.pkg.join('.')}.${enumDecl}' : enumDecl.name;
+  }
 }
