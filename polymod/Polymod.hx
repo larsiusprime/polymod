@@ -1256,8 +1256,10 @@ class ModMetadata
    * @param apiVersionRule The API version rule to check compatibility against.
    * @return Whether this mod is compatible with the provided API version rule.
    */
-  public function isCompatible(apiVersionRule:VersionRule):Bool
+  public function isCompatible(?apiVersionRule:VersionRule):Bool
   {
+    if (apiVersionRule == null) return true;
+
     return VersionUtil.match(apiVersion, apiVersionRule);
   }
 
@@ -1267,8 +1269,10 @@ class ModMetadata
    * @param modVersionRule The mod version rule to check compatibility against.
    * @return Whether this mod is compatible with the provided mod version rule.
    */
-  public function isModCompatible(modVersionRule:VersionRule):Bool
+  public function isModCompatible(?modVersionRule:VersionRule):Bool
   {
+    if (modVersionRule == null) return true;
+
     return VersionUtil.match(modVersion, modVersionRule);
   }
 
