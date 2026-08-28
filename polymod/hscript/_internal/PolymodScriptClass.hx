@@ -145,6 +145,58 @@ class PolymodScriptClass
     return _typedefs;
   }
 
+  static var _baseClassesByPackage:Map<String, Array<String>>;
+
+  /**
+   * Defines a list of classes that each package contains.
+   * Compiled at runtime through a macro to then be stored here.
+   */
+  public static var baseClassesByPackage(get, never):Map<String, Array<String>>;
+
+  static function get_baseClassesByPackage():Map<String, Array<String>>
+  {
+    if (_baseClassesByPackage == null)
+    {
+      _baseClassesByPackage = new Map<String, Array<String>>();
+      for (pkg => cls in PolymodScriptClassMacro.listPackagesList())
+      {
+        _baseClassesByPackage.set(pkg, cls);
+      }
+    }
+    return _baseClassesByPackage;
+  }
+
+  static var _scriptClassesByPackage:Map<String, Array<String>>;
+
+  /**
+   * Defines a list of scripted classes that each package contains.
+   * Reset everytime scripts are re-registered.
+   */
+  public static var scriptClassesByPackage(get, never):Map<String, Array<String>>;
+
+  static function get_scriptClassesByPackage():Map<String, Array<String>>
+  {
+    if (_scriptClassesByPackage == null)
+    {
+      _scriptClassesByPackage = new Map<String, Array<String>>();
+
+      for (cls in Interp._scriptClassDescriptors)
+      {
+        if (cls.pkg == null || cls.pkg.length == 0) continue;
+
+        var pack:String = cls.pkg.join('.');
+        var list:Array<String> = _scriptClassesByPackage.get(pack) ?? [];
+        var fullPath:String = Util.getFullClassName(cls);
+
+        if (!list.contains(fullPath))
+          list.push(fullPath);
+
+        _scriptClassesByPackage.set(cls.pkg.join('.'), list);
+      }
+    }
+    return _scriptClassesByPackage;
+  }
+
   /**
    * Register a scripted class by retrieving the script from the given path.
    *
