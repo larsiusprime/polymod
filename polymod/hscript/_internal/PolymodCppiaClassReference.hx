@@ -477,11 +477,7 @@ class PolymodCppiaClassReference extends PolymodStaticClassReference
 
     if (previous != null)
     {
-      Polymod.info(SCRIPT_PARSE_START,
-        'Compiled script "$path" changed since it was loaded, unloading the previous copy.', SCRIPT_RUNTIME);
-
-      unloadModule(previous, path);
-      loadedModules.remove(path);
+      Polymod.info(SCRIPT_PARSE_START, 'Compiled script "$path" changed since it was loaded, it will be replaced.', SCRIPT_RUNTIME);
     }
 
     var scan:CppiaScan = null;
@@ -668,6 +664,12 @@ class PolymodCppiaClassReference extends PolymodStaticClassReference
       everProvided.set(name, true);
       registered.push(name);
       registeredRefs.push(cls);
+    }
+
+    if (previous != null)
+    {
+      unloadModule(previous, path);
+      loadedModules.remove(path);
     }
 
     loadedModules.set(path, new LoadedCppiaModule(signature, registered, registeredRefs, module));
