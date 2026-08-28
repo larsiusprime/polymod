@@ -73,12 +73,29 @@ class PolymodScriptClassMacro
     return macro polymod.hscript._internal.PolymodScriptClassMacro.fetchTypedefs();
   }
 
+  /**
+   * @return An expression containing a mapping of each package to what classes are in said package.
+   */
+  public static macro function listPackagesList():ExprOf<Map<String, Array<String>>>
+  {
+    if (!onGenerateCallbackRegistered)
+    {
+      onGenerateCallbackRegistered = true;
+      haxe.macro.Context.onGenerate(onGenerate);
+    }
+
+    return macro polymod.hscript._internal.PolymodScriptClassMacro.fetchPackagesList();
+  }
+
   #if macro
   static var onGenerateCallbackRegistered:Bool = false;
   static var onAfterTypingCallbackRegistered:Bool = false;
+  static var packageEntries:Map<String, Array<String>> = [];
 
   static function onGenerate(allTypes:Array<haxe.macro.Type>)
   {
+    packageEntries.clear();
+
     // Reset these, since onGenerate persists across multiple builds.
     var hscriptedClassType:ClassType = MacroUtil.getClassType('polymod.hscript.HScriptedClass');
 
@@ -96,7 +113,8 @@ class PolymodScriptClassMacro
           // Parse classes to check if they are `HScriptedClass` implementations, for processing later.
 
           var classType:ClassType = t.get();
-          var classPath:String = '${classType.pack.concat([classType.name]).join(".")}';
+          var classPack:String = classType.pack.join('.');
+          var classPath:String = t.toString();
 
           if (classType.isInterface)
           {
@@ -113,6 +131,7 @@ class PolymodScriptClassMacro
             hscriptedClassEntries.push(entryData);
           }
 
+          addPackageClass(classPack, classPath);
         case TType(t, _params):
           var typedefPath:String = t.toString();
           var typedefTarget:Type = Context.followWithAbstracts(type);
@@ -135,7 +154,7 @@ class PolymodScriptClassMacro
               var entryData = [typedefPath, targetPath];
 
               typedefEntries.push(entryData);
-
+              addPackageClass(t.get().pack.join('.'), targetPath);
             case TEnum(t, _params):
               var targetEnum:EnumType = t.get();
               var targetEnumPath:String = '${targetEnum.pack.concat([targetEnum.name]).join(".")}';
@@ -143,7 +162,7 @@ class PolymodScriptClassMacro
               var entryData = [typedefPath, targetEnumPath];
 
               typedefEntries.push(entryData);
-
+              addPackageClass(targetEnum.pack.join('.'), targetEnumPath);
             case TInst(t, _params):
               var targetClass:ClassType = t.get();
               var targetClassPath:String = '${targetClass.pack.concat([targetClass.name]).join(".")}';
@@ -151,7 +170,7 @@ class PolymodScriptClassMacro
               var entryData = [typedefPath, targetClassPath];
 
               typedefEntries.push(entryData);
-
+              addPackageClass(targetClass.pack.join('.'), targetClassPath);
             default:
               // Unknown typedef target type?
               trace('TYPEDEF: ${typedefPath} -> ${typedefTarget}');
@@ -162,6 +181,7 @@ class PolymodScriptClassMacro
 
           var abstractPath:String = t.toString();
           var abstractType = t.get();
+          var abstractPack:String = abstractType.pack.join('.');
           var abstractImpl = abstractType.impl?.get();
 
           if (abstractImpl == null)
@@ -189,6 +209,7 @@ class PolymodScriptClassMacro
           ];
 
           abstractImplEntries.push(entryData);
+          addPackageClass(abstractPack, abstractPath);
         default:
           continue;
       }
@@ -197,7 +218,8 @@ class PolymodScriptClassMacro
     var metaData = {
       hscriptedClasses: hscriptedClassEntries,
       abstractImpls: abstractImplEntries,
-      typedefs: typedefEntries
+      typedefs: typedefEntries,
+      packages: packageEntries
     };
 
     var metaDataHXSF = haxe.Serializer.run(metaData);
@@ -465,6 +487,20 @@ class PolymodScriptClassMacro
       Context.info('PolymodScriptClassMacro: Created ${count} custom abstract implementations in ${duration} sec.', Context.currentPos());
     }
   }
+
+  static function addPackageClass(pack:String, cls:String):Void
+  {
+    if (pack.indexOf('.') == -1) return; // Don't store classes without a package.
+    if (pack.startsWith('polymod.')) return; // Exclude polymod classes.
+    if (cls.endsWith('_Impl_')) return; // Exclude implementation classes.
+
+    var list:Array<String> = packageEntries.get(pack) ?? [];
+    if (!list.contains(cls))
+    {
+      list.push(cls);
+      packageEntries.set(pack, list);
+    }
+  }
   #end
 
   public static function fetchHScriptedClasses():Map<String, Class<Dynamic>>
@@ -584,6 +620,17 @@ class PolymodScriptClassMacro
     {
       throw 'No typedefs found in PolymodScriptClassMacro!';
     }
+  }
+
+  public static function fetchPackagesList():Map<String, Array<String>>
+  {
+    var metaData = fetchMetadata();
+
+    if (metaData.packages != null)
+    {
+      return metaData.packages;
+    }
+    return [];
   }
 
   static var _metadata:Dynamic = null;

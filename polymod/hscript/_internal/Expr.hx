@@ -307,6 +307,11 @@ typedef ClassImport =
    * Will be `null` if this is not an abstract class.
    */
   var ?abs:PolymodStaticAbstractReference;
+
+  /**
+   * Whether this import is a wildcard and we need to validate it for later.
+   */
+  var ?wildcard:Bool;
 }
 
 typedef EnumDecl =

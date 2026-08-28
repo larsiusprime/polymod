@@ -632,6 +632,10 @@ class Interp
     // Clear the script class descriptors.
     _scriptClassDescriptors.clear();
 
+    // We clear this field so it later re-generates when validating imports.
+    @:privateAccess
+    PolymodScriptClass._scriptClassesByPackage = null;
+
     // Also clear the imports from the import.hx files.
     _scriptClassImports.clear();
     _scriptClassUsings.clear();
@@ -1379,7 +1383,7 @@ class Interp
    * @param ignoreEnums Whether to skip resolving enums. Used when resolving a `using` import.
    * @return `false` if this import was blacklisted, otherwise always `true`.
    */
-  function resolveImportedClass(importedClass:ClassImport, ignoreEnums:Bool = false):Bool
+  static function resolveImportedClass(importedClass:ClassImport, ignoreEnums:Bool = false):Bool
   {
     // The path without the possibly included module name, which resolve methods disregard.
     final modulelessPath:String = importedClass.pkg.slice(0, -1).concat([importedClass.name]).join('.');
@@ -2626,60 +2630,83 @@ class Interp
       {
         case DPackage(path):
           pkg = path;
-        case DImport(path, _, name):
-          var clsName:String = name != null ? name : path[path.length - 1];
-
-          if (imports.exists(clsName))
+        case DImport(path, star, name):
+          if (star)
           {
-            if (imports.get(clsName) == null)
-            {
-              Polymod.error(SCRIPTED_CLASS_BLACKLISTED_MODULE, 'Scripted class ${clsName} is blacklisted and cannot be used in scripts.', SCRIPT_RUNTIME);
-            }
-            else
-            {
-              Polymod.warning(SCRIPTED_CLASS_REDUNDANT_IMPORT, 'Scripted class ${clsName} has already been imported.', SCRIPT_RUNTIME);
-            }
-            continue;
-          }
+            if (path.length == 0) continue; // Disallow wildcards imports with no package.
+            if ((importsToValidate.get(path.join('.'))?.wildcard) ?? false) continue; // Don't add duplicate wildcards.
 
-          var importedClass:ClassImport = {
-            name: clsName,
-            pkg: path.slice(0, path.length - 1),
-            fullPath: path.join("."),
-            cls: null,
-            enm: null,
-            abs: null
-          };
+            var wildcardImport:ClassImport =
+            {
+              name: null,
+              pkg: null,
+              fullPath: path.join('.'),
+              wildcard: star
+            }
 
-          if (_scriptEnumDescriptors.exists(importedClass.fullPath))
-          {
-            // do nothing
+            if (isImportFile)
+            {
+              registerImportForPackage(pkg, wildcardImport);
+              continue;
+            }
+
+            // We'll leave this as an import to be validated later.
+            importsToValidate.set(wildcardImport.fullPath, wildcardImport);
           }
           else
           {
-            if (resolveImportedClass(importedClass) && importedClass.cls == null && importedClass.enm == null && importedClass.abs == null)
-            {
-              if (isImportFile)
-              {
-                registerImportForPackage(pkg, importedClass);
-                continue;
-              }
+            var clsName:String = name != null ? name : path[path.length - 1];
 
-              // Polymod.error(SCRIPT_CLASS_MODULE_NOT_FOUND, 'Could not import class ${importedClass.fullPath}', SCRIPT_RUNTIME);
-              // this could be a scripted class or enum that hasn't been registered yet
-              importsToValidate.set(importedClass.name, importedClass);
+            if (imports.exists(clsName))
+            {
+              if (imports.get(clsName) == null)
+              {
+                Polymod.error(SCRIPTED_CLASS_BLACKLISTED_MODULE, 'Scripted class ${clsName} is blacklisted and cannot be used in scripts.', SCRIPT_RUNTIME);
+              }
+              else
+              {
+                Polymod.warning(SCRIPTED_CLASS_REDUNDANT_IMPORT, 'Scripted class ${clsName} has already been imported.', SCRIPT_RUNTIME);
+              }
               continue;
             }
-          }
 
-          if (isImportFile)
-          {
-            registerImportForPackage(pkg, importedClass);
-            continue;
-          }
+            var importedClass:ClassImport =
+            {
+              name: clsName,
+              pkg: path.slice(0, path.length - 1),
+              fullPath: path.join(".")
+            };
 
-          // Polymod.debug('Imported class ${importedClass.name} from ${importedClass.fullPath}');
-          imports.set(importedClass.name, importedClass);
+            if (_scriptEnumDescriptors.exists(importedClass.fullPath))
+            {
+              // do nothing
+            }
+            else
+            {
+              if (resolveImportedClass(importedClass) && importedClass.cls == null && importedClass.enm == null && importedClass.abs == null)
+              {
+                if (isImportFile)
+                {
+                  registerImportForPackage(pkg, importedClass);
+                  continue;
+                }
+
+                // Polymod.error(SCRIPT_CLASS_MODULE_NOT_FOUND, 'Could not import class ${importedClass.fullPath}', SCRIPT_RUNTIME);
+                // this could be a scripted class or enum that hasn't been registered yet
+                importsToValidate.set(importedClass.name, importedClass);
+                continue;
+              }
+            }
+
+            if (isImportFile)
+            {
+              registerImportForPackage(pkg, importedClass);
+              continue;
+            }
+
+            // Polymod.debug('Imported class ${importedClass.name} from ${importedClass.fullPath}');
+            imports.set(importedClass.name, importedClass);
+          }
         case DUsing(path):
           var clsName = path.join('.');
 
@@ -2837,7 +2864,13 @@ class Interp
       {
         if (!pkg.startsWith(key) && key.length != 0) continue;
 
-        for (imp in imps) cls.imports.set(imp.name, imp);
+        for (imp in imps)
+        {
+          if (imp.wildcard)
+            importWildcard(cls, imp);
+          else
+            cls.imports.set(imp.name, imp);
+        }
       }
 
       for (key => uses in _scriptClassUsings)
@@ -2850,6 +2883,12 @@ class Interp
       // Add the scripted imports.
       for (key => imp in cls.importsToValidate)
       {
+        if (imp.wildcard)
+        {
+          importWildcard(cls, imp);
+          continue;
+        }
+
         if (_scriptClassDescriptors.exists(imp.fullPath))
         {
           cls.imports.set(key, imp);
@@ -2919,6 +2958,59 @@ class Interp
           case _:
         }
       }
+    }
+  }
+
+  static function importWildcard(cls:ClassDecl, wildcardImport:ClassImport):Void
+  {
+    var pack:String = wildcardImport.fullPath;
+    var classesToImport:Array<String> = [];
+
+    if (PolymodScriptClass.baseClassesByPackage.exists(pack))
+      classesToImport = classesToImport.concat(PolymodScriptClass.baseClassesByPackage.get(pack));
+
+    if (PolymodScriptClass.scriptClassesByPackage.exists(pack))
+      classesToImport = classesToImport.concat(PolymodScriptClass.scriptClassesByPackage.get(pack));
+
+    if (classesToImport.length == 0)
+      return;
+
+    for (clsName in classesToImport)
+    {
+      var name:String = clsName.substr(pack.length + 1);
+
+      if (cls.imports.exists(name))
+      {
+        if (cls.imports.get(name) == null)
+        {
+          Polymod.error(SCRIPTED_CLASS_BLACKLISTED_MODULE, 'Scripted class ${name} is blacklisted and cannot be used in scripts.', SCRIPT_RUNTIME);
+        }
+        else
+        {
+          Polymod.warning(SCRIPTED_CLASS_REDUNDANT_IMPORT, 'Scripted class ${name} has already been imported.', SCRIPT_RUNTIME);
+        }
+        continue;
+      }
+
+      var classImport:ClassImport = {
+        name: name,
+        pkg: pack.split('.'),
+        fullPath: clsName,
+        cls: null,
+        abs: null,
+        enm: null,
+      }
+
+      if (resolveImportedClass(classImport) && classImport.cls == null && classImport.enm == null && classImport.abs == null)
+      {
+        // Check if this is a scripted class.
+        if (_scriptClassDescriptors.exists(classImport.fullPath) || _scriptEnumDescriptors.exists(classImport.fullPath))
+        {
+          cls.imports.set(classImport.name, classImport);
+          continue;
+        }
+      }
+      cls.imports.set(classImport.name, classImport);
     }
   }
 
