@@ -187,14 +187,16 @@ class PolymodConfig
    * Set this option by setting the `POLYMOD_MOD_ICON_FILE` Haxe define at compile time,
    * or by setting this value in your code.
    *
+   * NOTE: You can specify multiple files to check separated with commas. If multiple exist, the first one in the list takes priority.
+   *
    * @default `_polymod_icon.png`
    */
-  public static var modIconFile(get, default):String;
+  public static var modIconFile(get, default):Array<String>;
 
-  static function get_modIconFile():String
+  static function get_modIconFile():Array<String>
   {
     // If the value is null, retrieve the value as a Haxe define.
-    if (modIconFile == null) modIconFile = DefineUtil.getDefineString('POLYMOD_MOD_ICON_FILE', '_polymod_icon.png');
+    if (modIconFile == null) modIconFile = DefineUtil.getDefineStringArray('POLYMOD_MOD_ICON_FILE', ['_polymod_icon.png']);
     return modIconFile;
   }
 

@@ -1046,7 +1046,7 @@ class LimeModLibrary extends LimeAssetLibrary
     else if ((fallback != null))
     {
       var localePath:Null<String> = p.fileLocale(id);
-      
+
       var base:Future<String> = (localePath != null && fallbackExists(localePath)) ? fallback.loadText(localePath) : fallback.loadText(id);
       return base.then((text) -> {
         return Future.withValue(p.mergeAndAppendText(id, text ?? ''));
@@ -1484,9 +1484,9 @@ class LimeCoreLibrary extends LimeAssetLibrary
     if (polymodLibrary.fileSystem.exists(redirectId))
     {
       #if (js && html5)
-      return Font.loadFromName(getPath(redirectId));
+      return Font.loadFromName(redirectId);
       #else
-      return Font.loadFromFile(getPath(redirectId));
+      return Font.loadFromFile(redirectId);
       #end
     }
 

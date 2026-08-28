@@ -781,52 +781,57 @@ class Interp
       case EIdent(id):
         // Make sure setting superclass fields directly works.
         // Also ensures property functions are accounted for.
-        if (_proxy != null && _proxy.superHasField(id))
+        if (_proxy != null)
         {
-          if (Std.isOfType(_proxy.superClass, PolymodScriptClass))
+          if (_proxy.superHasField(id))
           {
-            var superClass:PolymodAbstractScriptClass = cast(_proxy.superClass, PolymodScriptClass);
-            return superClass.fieldWrite(id, v);
-          }
-
-          // Directly assign the value.
-          // This is needed because `assignValue` may sometimes be called from the constructor.
-          PolymodAbstractScriptClass.setClassObjectField(_proxy.superClass, id, v);
-          return v;
-        }
-
-        @:privateAccess
-        {
-          if (_proxy != null)
-          {
-            var decl = _proxy.findVar(id);
-            switch (decl?.set)
+            if (Std.isOfType(_proxy.superClass, PolymodScriptClass))
             {
-              case "set":
-                // Allow assigning to "null" only for local fields.
-                final setName = 'set_$id';
-                if (!_propTrack.exists(setName))
-                {
-                  _propTrack.set(setName, true);
-                  var out = _proxy.callFunction(setName, [v]);
-                  _propTrack.remove(setName);
-                  return (out == null) ? v : out;
-                }
-
-              case "never":
-                error(EInvalidPropSet(id));
-                return null;
-
-              case "null":
-                // If the property setter is "null", it can only be assigned on local fields.
-                // Thankfully, this is a local field!
-                // So we can just fallthrough to the default case.
+              var superClass:PolymodAbstractScriptClass = cast(_proxy.superClass, PolymodScriptClass);
+              return superClass.fieldWrite(id, v);
             }
 
-            if ((decl?.isfinal ?? false) && decl?.expr != null)
+            // Directly assign the value.
+            // This is needed because `assignValue` may sometimes be called from the constructor.
+            PolymodAbstractScriptClass.setClassObjectField(_proxy.superClass, id, v);
+            return v;
+          }
+          else
+          {
+            @:privateAccess
             {
-              error(EInvalidFinalSet(id));
-              return null;
+              var decl = _proxy.findVar(id);
+              if (decl != null)
+              {
+                switch (decl.set)
+                {
+                  case "set":
+                    // Allow assigning to "null" only for local fields.
+                    final setName = 'set_$id';
+                    if (!_propTrack.exists(setName))
+                    {
+                      _propTrack.set(setName, true);
+                      var out = _proxy.callFunction(setName, [v]);
+                      _propTrack.remove(setName);
+                      return (out == null) ? v : out;
+                    }
+
+                  case "never":
+                    error(EInvalidPropSet(id));
+                    return null;
+
+                  case "null":
+                    // If the property setter is "null", it can only be assigned on local fields.
+                    // Thankfully, this is a local field!
+                    // So we can just fallthrough to the default case.
+                }
+
+                if ((decl.isfinal ?? false) && decl.expr != null)
+                {
+                  error(EInvalidFinalSet(id));
+                  return null;
+                }
+              }
             }
           }
         }
@@ -836,7 +841,20 @@ class Interp
         {
           return error(EInvalidAccess(id));
         }
-        if (l == null) setVar(id, v);
+
+        if (l == null)
+        {
+          // Check if we're assigning the value of a static field inside the class itself.
+          // We check inside here to make sure we aren't overriding a local variable.
+          var fullClassName:String = getClassFullyQualifiedName();
+          if (PolymodScriptClass.hasScriptClassStaticField(fullClassName, id))
+          {
+            return PolymodScriptClass.setScriptClassStaticField(fullClassName, id, v);
+          }
+
+          // Fallback to just setting the var.
+          setVar(id, v);
+        }
         else
           l.r = v;
       case EField(e0, id):
@@ -1458,6 +1476,7 @@ class Interp
 
         var l = locals.get(id);
         if (l != null) return l.r;
+
         return resolve(id);
       case EVar(name, type, expression):
         declared.push({
@@ -2642,6 +2661,7 @@ class Interp
     var imports:Map<String, ClassImport> = [];
     var importsToValidate:Map<String, ClassImport> = [];
     var usings:Map<String, ClassImport> = [];
+    var usingsToValidate:Map<String, ClassImport> = [];
 
     // Don't add the default imports to import.hx since they're added to other script classes anyway.
     if (!isImportFile)
@@ -2745,13 +2765,20 @@ class Interp
             abs: null
           };
 
-          if (_scriptEnumDescriptors.exists(importedClass.fullPath))
+          if (!_scriptEnumDescriptors.exists(importedClass.fullPath))
           {
-            // do nothing
-          }
-          else
-          {
-            if (!resolveImportedClass(importedClass, true) || importedClass.cls == null && importedClass.enm == null && importedClass.abs == null) continue;
+            if (resolveImportedClass(importedClass, true) && importedClass.cls == null && importedClass.enm == null && importedClass.abs == null)
+            {
+              if (isImportFile)
+              {
+                registerImportForPackage(pkg, importedClass, true);
+                continue;
+              }
+
+              // this could be a scripted class that hasn't been registered yet
+              usingsToValidate.set(importedClass.name, importedClass);
+              continue;
+            }
           }
 
           if (isImportFile)
@@ -2759,6 +2786,7 @@ class Interp
             registerImportForPackage(pkg, importedClass, true);
             continue;
           }
+
           usings.set(importedClass.name, importedClass);
         case DClass(c):
           if (isImportFile) continue;
@@ -2781,6 +2809,7 @@ class Interp
             imports: imports,
             importsToValidate: importsToValidate,
             usings: usings,
+            usingsToValidate: usingsToValidate,
             pkg: pkg,
             name: c.name,
             params: c.params,
@@ -2871,11 +2900,11 @@ class Interp
         for (imp in imps) cls.imports.set(imp.name, imp);
       }
 
-      for (key => imps in _scriptClassUsings)
+      for (key => uses in _scriptClassUsings)
       {
         if (!pkg.startsWith(key) && key.length != 0) continue;
 
-        for (imp in imps) cls.usings.set(imp.name, imp);
+        for (use in uses) cls.usings.set(use.name, use);
       }
 
       // Add the scripted imports.
@@ -2903,6 +2932,22 @@ class Interp
         #end
 
         Polymod.error(SCRIPTED_CLASS_UNRESOLVED_IMPORT, 'Could not import ${imp.fullPath}. Check to ensure the module exists and is spelled correctly.', SCRIPT_RUNTIME);
+      }
+
+      // Add the scripted usings.
+      for (key => use in cls.usingsToValidate)
+      {
+        if (_scriptClassDescriptors.exists(use.fullPath))
+        {
+          cls.usings.set(key, use);
+          continue;
+        }
+
+        Polymod.error(
+          SCRIPTED_CLASS_UNRESOLVED_IMPORT,
+          'Could not use ${use.fullPath}. Check to ensure the module exists and is spelled correctly.',
+          SCRIPT_RUNTIME
+        );
       }
 
       // Check if the scripted classes extend the right type.
