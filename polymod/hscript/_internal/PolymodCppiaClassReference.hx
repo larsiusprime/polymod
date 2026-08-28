@@ -1,5 +1,7 @@
 package polymod.hscript._internal;
 
+import polymod.hscript._internal.PolymodCppiaScanner.CppiaScan;
+
 /**
  * A class reference backed by a compiled cppia class instead of a parsed script.
  */
@@ -59,7 +61,7 @@ class PolymodCppiaClassReference extends PolymodStaticClassReference
    */
   static function signatureOf(data:haxe.io.Bytes):String
   {
-    return '${data.length}:${haxe.crypto.Crc32.make(data)}';
+    return '${data.length}:${haxe.crypto.Crc32.make(data)}:${PolymodScriptClass.blacklistGeneration}';
   }
 
   public static function hasCppiaClass(clsName:String):Bool
@@ -215,6 +217,228 @@ class PolymodCppiaClassReference extends PolymodStaticClassReference
     return found;
   }
 
+  /**
+   * The hxcpp builtins a compiled script may call, mapped to the only argument count that is safe.
+   */
+  static final ALLOWED_GLOBALS:Map<String, Int> = [
+    '__hxcpp_memory_get_byte' => 2,
+    '__hxcpp_memory_set_byte' => 3,
+    '__hxcpp_memory_get_i32' => 2,
+    '__hxcpp_memory_set_i32' => 3,
+    '__hxcpp_memory_get_ui32' => 2,
+    '__hxcpp_memory_set_ui32' => 3,
+    '__hxcpp_memory_get_i16' => 2,
+    '__hxcpp_memory_set_i16' => 3,
+    '__hxcpp_memory_get_ui16' => 2,
+    '__hxcpp_memory_set_ui16' => 3,
+    '__hxcpp_memory_get_float' => 2,
+    '__hxcpp_memory_set_float' => 3,
+    '__hxcpp_memory_get_double' => 2,
+    '__hxcpp_memory_set_double' => 3,
+    '__hxcpp_thread_create' => 1,
+    '__hxcpp_thread_send' => 2
+  ];
+
+  /**
+   * Turn a name out of a compiled script's type table into one the game can compare.
+   */
+  static function normalizeTypeName(raw:String):String
+  {
+    if (raw == null) return '';
+
+    var name:String = StringTools.replace(raw, '::', '.');
+
+    while (name.length > 0 && name.charAt(0) == '.')
+      name = name.substr(1);
+
+    // A parameterised array is written with its element type, as `Array.String` and the like.
+    if (StringTools.startsWith(name, 'Array.')) name = 'Array';
+
+    return name;
+  }
+
+  /**
+   * The name a type table entry refers to, empty if it is Dynamic or out of range.
+   */
+  static function nameOfType(typeId:Int, scan:CppiaScan):String
+  {
+    if (typeId < 0 || typeId >= scan.types.length) return '';
+    return normalizeTypeName(scan.types[typeId]);
+  }
+
+  /**
+   * Every class name a value of this type could be blacklisted under.
+   */
+  static function ancestryOf(typeId:Int, scan:CppiaScan, cache:Map<Int, Array<String>>):Array<String>
+  {
+    var cached:Null<Array<String>> = cache.get(typeId);
+    if (cached != null) return cached;
+
+    var result:Array<String> = [];
+    var seen:Map<Int, Bool> = new Map<Int, Bool>();
+    var id:Int = typeId;
+
+    var depth:Int = 0;
+
+    // Classes this module declares itself, which nothing can resolve until it has booted.
+    while (scan.ancestry.exists(id) && !seen.exists(id) && depth++ < 64)
+    {
+      seen.set(id, true);
+
+      var related:Array<Int> = scan.ancestry.get(id);
+      result.push(nameOfType(id, scan));
+
+      for (i in 1...related.length)
+        result.push(nameOfType(related[i], scan));
+
+      id = related[0];
+      if (id <= 0)
+      {
+        cache.set(typeId, result);
+        return result;
+      }
+    }
+
+    // Past that, the rest of the chain is game classes, which can be resolved the usual way.
+    var name:String = nameOfType(id, scan);
+
+    if (name.length == 0)
+    {
+      cache.set(typeId, result);
+      return result;
+    }
+
+    result.push(name);
+
+    var cls:Null<Class<Dynamic>> = null;
+    try
+    {
+      cls = Type.resolveClass(name);
+    }
+    catch (_:Dynamic) {}
+
+    while (cls != null && depth++ < 64)
+    {
+      try
+      {
+        cls = Type.getSuperClass(cls);
+      }
+      catch (_:Dynamic)
+      {
+        break;
+      }
+
+      if (cls == null) break;
+
+      var resolved:Null<String> = Type.getClassName(cls);
+      if (resolved == null || result.contains(resolved)) break;
+
+      result.push(resolved);
+    }
+
+    cache.set(typeId, result);
+    return result;
+  }
+
+  /**
+   * Where in the mod's own source a reference came from, if the script was built with that in it.
+   */
+  static function siteOf(fileId:Int, line:Int, scan:CppiaScan):String
+  {
+    if (fileId <= 0 || fileId >= scan.strings.length) return '';
+
+    var file:String = scan.strings[fileId];
+    if (file.length == 0) return '';
+
+    return ' ($file:$line)';
+  }
+
+  /**
+   * Check the fields a compiled script names against the blacklist, before any of it runs.
+   * @return The fields it may not use, described for a person to read.
+   */
+  static function scanDeniedFields(scan:CppiaScan):Array<String>
+  {
+    var found:Array<String> = [];
+    var cache:Map<Int, Array<String>> = new Map<Int, Array<String>>();
+
+    var i:Int = 0;
+
+    while (i + 1 < scan.fieldRefs.length)
+    {
+      var classId:Int = scan.fieldRefs[i];
+      var fieldId:Int = scan.fieldRefs[i + 1];
+      var fileId:Int = scan.fieldSites[i];
+      var line:Int = scan.fieldSites[i + 1];
+      i += 2;
+
+      if (fieldId < 0 || fieldId >= scan.strings.length) continue;
+
+      var field:String = scan.strings[fieldId];
+      if (field.length == 0) continue;
+
+      var where:String = siteOf(fileId, line, scan);
+
+      var owner:String = nameOfType(classId, scan);
+
+      // A receiver whose type was not known hides which class the field belongs to, so only the names singled out as
+      // unreachable by any route apply here. That is written either as the empty type or as a type literally named
+      // Dynamic, depending on how the value lost its type, so both mean the same thing.
+      if (owner.length == 0 || owner == 'Dynamic')
+      {
+        if (PolymodScriptClass.blacklistedDynamicFieldNames.exists(field))
+        {
+          var entry:String = '$field$where';
+          if (!found.contains(entry)) found.push(entry);
+        }
+
+        continue;
+      }
+
+      for (name in ancestryOf(classId, scan, cache))
+      {
+        if (name.length == 0) continue;
+        if (!PolymodScriptClass.isBlacklistedFieldExact(name, field)) continue;
+
+        var entry:String = '$name.$field$where';
+        if (!found.contains(entry)) found.push(entry);
+        break;
+      }
+    }
+
+    return found;
+  }
+
+  /**
+   * Check the hxcpp builtins a compiled script calls, before any of it runs.
+   * @return The calls it may not make, described for a person to read.
+   */
+  static function scanDeniedGlobals(scan:CppiaScan):Array<String>
+  {
+    var found:Array<String> = [];
+
+    var i:Int = 0;
+
+    while (i + 1 < scan.globalCalls.length)
+    {
+      var nameId:Int = scan.globalCalls[i];
+      var argCount:Int = scan.globalCalls[i + 1];
+      i += 2;
+
+      if (nameId < 0 || nameId >= scan.strings.length) continue;
+
+      var name:String = scan.strings[nameId];
+      if (!StringTools.startsWith(name, '__hxcpp_')) continue;
+
+      if (ALLOWED_GLOBALS.exists(name) && ALLOWED_GLOBALS.get(name) == argCount) continue;
+
+      var entry:String = '$name with $argCount argument(s)';
+      if (!found.contains(entry)) found.push(entry);
+    }
+
+    return found;
+  }
+
   public static function tryBuildCppia(clsName:String):Null<PolymodCppiaClassReference>
   {
     var cls = registry.get(clsName);
@@ -260,16 +484,40 @@ class PolymodCppiaClassReference extends PolymodStaticClassReference
       loadedModules.remove(path);
     }
 
-    var types:Array<String> = null;
+    var scan:CppiaScan = null;
 
     try
     {
-      types = PolymodCppiaScanner.readTypes(data);
+      scan = PolymodCppiaScanner.scan(data, PolymodScriptClass.blacklistedFieldNames(), true);
     }
     catch (e:Dynamic)
     {
       Polymod.error(SCRIPT_PARSE_FAILED, 'Could not read the header of compiled script "$path": $e', SCRIPT_RUNTIME);
       return [];
+    }
+
+    var types:Array<String> = scan.types;
+
+    // Cannot be CPPIB, which is the binary form of CPPIA. Harder to check.
+    if (scan.binary)
+    {
+      Polymod.error(SCRIPT_PARSE_FAILED,
+        'Compiled script "$path" is in the binary cppia format, which cannot be checked against the blacklist. Rebuild it with the current build command.',
+        SCRIPT_RUNTIME);
+      return [];
+    }
+
+    if (scan.suspect)
+    {
+      Polymod.error(SCRIPT_PARSE_FAILED, 'Compiled script "$path" is malformed and could not be checked. It will not be loaded.', SCRIPT_RUNTIME);
+      return [];
+    }
+
+    if (scan.unknownTokens.length > 0)
+    {
+      Polymod.warning(SCRIPT_PARSE_FAILED,
+        'Compiled script "$path" contains instructions this version does not know about: ${scan.unknownTokens.join(", ")}. It was still checked, but polymod may need updating for this version of hxcpp.',
+        SCRIPT_RUNTIME);
     }
 
     var denied:Array<String> = scanDenied(types);
@@ -278,6 +526,26 @@ class PolymodCppiaClassReference extends PolymodStaticClassReference
     {
       Polymod.error(SCRIPT_PARSE_FAILED,
         'Compiled script "$path" references ${denied.length == 1 ? "a class" : "classes"} that mods are not allowed to use: ${denied.join(", ")}. It will not be loaded.',
+        SCRIPT_RUNTIME);
+      return [];
+    }
+
+    var deniedFields:Array<String> = scanDeniedFields(scan);
+
+    if (deniedFields.length > 0)
+    {
+      Polymod.error(SCRIPT_PARSE_FAILED,
+        'Compiled script "$path" uses ${deniedFields.length == 1 ? "a class field" : "class fields"} that mods are not allowed to use: ${deniedFields.join(", ")}. It will not be loaded.',
+        SCRIPT_RUNTIME);
+      return [];
+    }
+
+    var deniedGlobals:Array<String> = scanDeniedGlobals(scan);
+
+    if (deniedGlobals.length > 0)
+    {
+      Polymod.error(SCRIPT_PARSE_FAILED,
+        'Compiled script "$path" uses raw memory access that mods are not allowed to use: ${deniedGlobals.join(", ")}. It will not be loaded.',
         SCRIPT_RUNTIME);
       return [];
     }
@@ -462,6 +730,12 @@ class PolymodCppiaClassReference extends PolymodStaticClassReference
       return null;
     }
 
+    if (PolymodScriptClass.isBlacklistedField(clsName, funcName))
+    {
+      Polymod.error(SCRIPTED_CLASS_BLACKLISTED_FIELD, 'Class field ${clsName}.${funcName} is blacklisted and cannot be used in scripts.', SCRIPT_RUNTIME);
+      return null;
+    }
+
     var fn:Dynamic = Reflect.field(cppiaClass, funcName);
     if (fn == null)
     {
@@ -495,6 +769,12 @@ class PolymodCppiaClassReference extends PolymodStaticClassReference
       return null;
     }
 
+    if (PolymodScriptClass.isBlacklistedField(clsName, fieldName))
+    {
+      Polymod.error(SCRIPTED_CLASS_BLACKLISTED_FIELD, 'Class field ${clsName}.${fieldName} is blacklisted and cannot be used in scripts.', SCRIPT_RUNTIME);
+      return null;
+    }
+
     return Reflect.field(cppiaClass, fieldName);
   }
 
@@ -503,6 +783,12 @@ class PolymodCppiaClassReference extends PolymodStaticClassReference
     if (cppiaClass == null)
     {
       Polymod.error(SCRIPT_RUNTIME_EXCEPTION, 'Compiled class ($clsName) is not loaded, so "$fieldName" cannot be written.', SCRIPT_RUNTIME);
+      return null;
+    }
+
+    if (PolymodScriptClass.isBlacklistedField(clsName, fieldName))
+    {
+      Polymod.error(SCRIPTED_CLASS_BLACKLISTED_FIELD, 'Class field ${clsName}.${fieldName} is blacklisted and cannot be used in scripts.', SCRIPT_RUNTIME);
       return null;
     }
 

@@ -2457,7 +2457,7 @@ class Interp
     // If not, check if it is a blacklisted instance field.
     if (oCls.length > 0 && oCls != 'Object')
     {
-      if (PolymodScriptClass.blacklistedInstanceFields.exists(oCls) && PolymodScriptClass.blacklistedInstanceFields.get(oCls).contains(f))
+      if (PolymodScriptClass.blacklistedInstanceFieldsOf(oCls).contains(f))
       {
         error(EBlacklistedField(f));
         return null;
@@ -2573,7 +2573,7 @@ class Interp
     // If not, check if it is a blacklisted instance field.
     if (oCls.length > 0 && oCls != 'Object')
     {
-      if (PolymodScriptClass.blacklistedInstanceFields.exists(oCls) && PolymodScriptClass.blacklistedInstanceFields.get(oCls).contains(f))
+      if (PolymodScriptClass.blacklistedInstanceFieldsOf(oCls).contains(f))
       {
         Polymod.error(SCRIPTED_CLASS_BLACKLISTED_FIELD, 'Class field ${oCls}.${f} is blacklisted and cannot be used in scripts.', SCRIPT_RUNTIME);
         return null;

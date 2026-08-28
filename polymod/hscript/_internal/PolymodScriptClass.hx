@@ -50,6 +50,171 @@ class PolymodScriptClass
    */
   public static final blacklistedInstanceFields:Map<String, Array<String>> = new Map<String, Array<String>>();
 
+  /**
+   * Field names that may not be reached even through a receiver whose type is not known.
+   */
+  public static final blacklistedDynamicFieldNames:Map<String, Bool> = new Map<String, Bool>();
+
+  /**
+   * Bumped whenever a blacklist changes, so anything caching a lookup can tell it went stale.
+   */
+  public static var blacklistGeneration(default, null):Int = 0;
+
+  /**
+   * `blacklistedStaticFields` re-keyed by class name, since a compiled script only knows names.
+   */
+  static var staticFieldsByNameCache:Null<Map<String, Array<String>>> = null;
+
+  /**
+   * Class name to every blacklisted instance field it has, inherited ones included.
+   */
+  static var resolvedInstanceFields:Map<String, Array<String>> = new Map<String, Array<String>>();
+
+  /**
+   * Throw away everything derived from the blacklists. Call after changing one.
+   */
+  public static function bumpBlacklistGeneration():Void
+  {
+    blacklistGeneration++;
+    staticFieldsByNameCache = null;
+    resolvedInstanceFields.clear();
+  }
+
+  /**
+   * The blacklisted static fields, keyed by class name instead of by class.
+   */
+  public static function staticFieldsByName():Map<String, Array<String>>
+  {
+    if (staticFieldsByNameCache != null) return staticFieldsByNameCache;
+
+    var result:Map<String, Array<String>> = new Map<String, Array<String>>();
+
+    for (cls in blacklistedStaticFields.keys())
+    {
+      var name:Null<String> = null;
+      try
+      {
+        name = Type.getClassName(cls);
+      }
+      catch (_:Dynamic) {}
+
+      if (name == null) continue;
+      result.set(name, blacklistedStaticFields.get(cls));
+    }
+
+    staticFieldsByNameCache = result;
+    return result;
+  }
+
+  /**
+   * Every name an instance of this class could be blacklisted under, itself first.
+   */
+  static function ancestorsOf(clsName:String):Array<String>
+  {
+    var result:Array<String> = [clsName];
+
+    var cls:Null<Class<Dynamic>> = null;
+    try
+    {
+      cls = Type.resolveClass(clsName);
+    }
+    catch (_:Dynamic) {}
+
+    // A hand written script could name a class that is its own super, so do not trust the chain.
+    var depth:Int = 0;
+    while (cls != null && depth++ < 64)
+    {
+      try
+      {
+        cls = Type.getSuperClass(cls);
+      }
+      catch (_:Dynamic)
+      {
+        break;
+      }
+
+      if (cls == null) break;
+
+      var name:Null<String> = Type.getClassName(cls);
+      if (name == null || result.contains(name)) break;
+
+      result.push(name);
+    }
+
+    return result;
+  }
+
+  /**
+   * Every blacklisted instance field reachable on this class.
+   */
+  public static function blacklistedInstanceFieldsOf(clsName:String):Array<String>
+  {
+    var cached:Null<Array<String>> = resolvedInstanceFields.get(clsName);
+    if (cached != null) return cached;
+
+    var result:Array<String> = [];
+
+    for (name in ancestorsOf(clsName))
+    {
+      var fields:Null<Array<String>> = blacklistedInstanceFields.get(name);
+      if (fields == null) continue;
+
+      for (field in fields)
+        if (!result.contains(field)) result.push(field);
+    }
+
+    resolvedInstanceFields.set(clsName, result);
+    return result;
+  }
+
+  /**
+   * Whether this field is blacklisted on this exact class, ignoring what it inherits.
+   */
+  public static function isBlacklistedFieldExact(clsName:String, field:String):Bool
+  {
+    if (clsName == null || clsName.length == 0) return false;
+
+    var statics:Null<Array<String>> = staticFieldsByName().get(clsName);
+    if (statics != null && statics.contains(field)) return true;
+
+    var fields:Null<Array<String>> = blacklistedInstanceFields.get(clsName);
+    return fields != null && fields.contains(field);
+  }
+
+  /**
+   * Whether this field is blacklisted on this class or on anything it extends.
+   */
+  public static function isBlacklistedField(clsName:String, field:String):Bool
+  {
+    if (clsName == null || clsName.length == 0) return false;
+
+    var statics:Null<Array<String>> = staticFieldsByName().get(clsName);
+    if (statics != null && statics.contains(field)) return true;
+
+    return blacklistedInstanceFieldsOf(clsName).contains(field);
+  }
+
+  /**
+   * Every field name any blacklist mentions.
+   */
+  public static function blacklistedFieldNames():Map<String, Bool>
+  {
+    var result:Map<String, Bool> = new Map<String, Bool>();
+
+    for (fields in staticFieldsByName())
+      for (field in fields)
+        result.set(field, true);
+
+    for (fields in blacklistedInstanceFields)
+      for (field in fields)
+        result.set(field, true);
+
+    for (field in blacklistedDynamicFieldNames.keys())
+      result.set(field, true);
+
+    return result;
+  }
+
   /*
    * STATIC METHODS
    */
