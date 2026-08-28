@@ -710,6 +710,7 @@ class PolymodScriptClass
     {
       createSuperClass(args);
     }
+    _constructorArgs = args;
   }
 
   var __superClassFieldList:Array<String> = null;
@@ -740,6 +741,11 @@ class PolymodScriptClass
       __superClassFieldList = __superClassFieldList.concat(Type.getInstanceFields(Type.getClass(_superClass)));
     }
     return __superClassFieldList.indexOf(name) != -1;
+  }
+
+  public function getConstructorArgs():Array<Dynamic>
+  {
+    return _constructorArgs;
   }
 
   private function createSuperClass(args:Array<Dynamic> = null)
@@ -1104,6 +1110,8 @@ class PolymodScriptClass
     return _cachedFunctionDecls;
   }
 
+  private final _constructorArgs:Array<Dynamic>;
+
   private var _cachedFieldDecls:Map<String, FieldDecl> = [];
   private var _cachedSuperFunctionDecls:Map<String, Dynamic> = [];
   private var _cachedFunctionDecls:Map<String, FunctionDecl> = [];
@@ -1174,19 +1182,47 @@ class PolymodScriptClass
   {
     for (_ => u in clsDecl.usings)
     {
-      var fields = Type.getClassFields(u.cls);
-      if (fields.length == 0) continue;
-
-      for (fld in fields)
+      if (u.cls != null)
       {
-        var field:Dynamic = Reflect.getProperty(u.cls, fld);
-        if (!Reflect.isFunction(field)) continue;
+        var fields = Type.getClassFields(u.cls);
+        if (fields.length == 0) continue;
 
-        var func:Dynamic = function(params:Array<Dynamic>) {
-          return Reflect.callMethod(u.cls, field, params);
+        for (fld in fields)
+        {
+          var field:Dynamic = Reflect.getProperty(u.cls, fld);
+          if (!Reflect.isFunction(field)) continue;
+
+          var func:Dynamic = function(params:Array<Dynamic>)
+          {
+            return Reflect.callMethod(u.cls, field, params);
+          };
+
+          usingCache.set(fld, func);
         }
+      }
+      else if (Interp._scriptClassDescriptors.exists(u.fullPath))
+      {
+        var scriptDecl = Interp._scriptClassDescriptors.get(u.fullPath);
 
-        usingCache.set(fld, func);
+        for (fld in scriptDecl.staticFields)
+        {
+          if (!fld.access.contains(AStatic)) continue;
+
+          switch (fld.kind)
+          {
+            case KFunction(f):
+              var fldName = fld.name;
+
+              var func:Dynamic = function(params:Array<Dynamic>) {
+                return callScriptClassStaticFunction(u.fullPath, fldName, params);
+              };
+
+              usingCache.set(fldName, func);
+
+            default:
+              //do nothing
+          }
+        }
       }
     }
   }

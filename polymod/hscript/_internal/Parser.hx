@@ -1564,6 +1564,7 @@ class Parser
             imports: [],
             importsToValidate: [],
             usings: [],
+            usingsToValidate: [],
             staticFields: [],
           });
       case "typedef":

@@ -284,7 +284,6 @@ class SysZipFileSystem extends SysFileSystem
         var meta:ModMetadata = null;
 
         var metaFile = Util.pathJoin(modPath, PolymodConfig.modMetadataFile);
-        var iconFile = Util.pathJoin(modPath, PolymodConfig.modIconFile);
 
         if (!exists(metaFile))
         {
@@ -305,13 +304,14 @@ class SysZipFileSystem extends SysFileSystem
         meta.dirName = dir;
         meta.modPath = modPath;
 
-        if (!exists(iconFile))
+        var iconFile = getModIconPath(modId, origin);
+        var iconBytes:Null<Bytes> = getFileBytes(iconFile);
+        if (iconBytes == null)
         {
-          Polymod.warning(MOD_MISSING_ICON, 'Could not find mod icon file: $iconFile', origin);
+          Polymod.warning(MOD_MISSING_ICON, 'Could not obtain mod icon data from file: $iconFile', origin);
         }
         else
         {
-          var iconBytes = getFileBytes(iconFile);
           meta.icon = iconBytes;
           meta.iconPath = iconFile;
         }
