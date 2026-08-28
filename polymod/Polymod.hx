@@ -1156,6 +1156,7 @@ class Polymod
   public static function addImportAlias(importAlias:String, importClass:Class<Dynamic>):Void
   {
     PolymodScriptClass.importOverrides.set(importAlias, importClass);
+    PolymodScriptClass.bumpBlacklistGeneration();
   }
 
   /**
@@ -1194,6 +1195,7 @@ class Polymod
   public static function blacklistStaticFields(parentClass:Class<Dynamic>, fields:Array<String>):Void
   {
     PolymodScriptClass.blacklistedStaticFields.set(parentClass, fields);
+    PolymodScriptClass.bumpBlacklistGeneration();
   }
 
   /**
@@ -1204,6 +1206,19 @@ class Polymod
   public static function blacklistInstanceFields(parentClass:Class<Dynamic>, fields:Array<String>):Void
   {
     PolymodScriptClass.blacklistedInstanceFields.set(Type.getClassName(parentClass), fields);
+    PolymodScriptClass.bumpBlacklistGeneration();
+  }
+
+  /**
+   * Blacklist a field by name alone, on any class and on none.
+   * @param fields The field names no script may use.
+   */
+  public static function blacklistDynamicFieldNames(fields:Array<String>):Void
+  {
+    for (field in fields)
+      PolymodScriptClass.blacklistedDynamicFieldNames.set(field, true);
+
+    PolymodScriptClass.bumpBlacklistGeneration();
   }
 }
 
