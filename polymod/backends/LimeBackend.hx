@@ -1525,6 +1525,16 @@ class LimeCoreLibrary extends LimeAssetLibrary
 
   public override function loadText(id:String):Future<String>
   {
+    var redirectId:String = buildRedirectId(id);
+    if (polymodLibrary.fileSystem.exists(redirectId))
+    {
+      var bytesFuture = polymodLibrary.fileSystem.loadFileBytes(redirectId);
+      var textFuture = bytesFuture.then((bytes:Bytes) -> {
+        return Future.withValue(bytes.toString());
+      });
+      return textFuture;
+    }
+
     return fallback.loadText(id);
   }
 
