@@ -1543,11 +1543,32 @@ class Interp
           catch (err:Dynamic)
           {
             var fullPath = getFullIdentPath(e);
-            if (PolymodScriptClass.importOverrides.exists(fullPath) 
-                && PolymodScriptClass.importOverrides.get(fullPath) == null)
+            if (fullPath != null)
             {
               fullPath += '.' + f;
-              return resolve(fullPath);
+
+              var pathParts = fullPath.split('.');
+              var candidateImport:ClassImport =
+              {
+                name: pathParts[pathParts.length - 1],
+                pkg: pathParts.slice(0, pathParts.length - 1),
+                fullPath: fullPath
+              };
+
+              if (!resolveImportedClass(candidateImport))
+              {
+                error(EBlacklistedModule(fullPath));
+              }
+
+              if (candidateImport.cls != null) return candidateImport.cls;
+              if (candidateImport.pkg != null) return candidateImport.pkg;
+              if (candidateImport.abs != null) return candidateImport.abs;
+
+              var enumResult = PolymodEnum.tryResolve(fullPath);
+              if (enumResult != null) return enumResult;
+
+              var scriptedCls = PolymodStaticClassReference.tryBuild(fullPath);
+              if (scriptedCls != null) return scriptedCls;
             }
             throw err;
           }
