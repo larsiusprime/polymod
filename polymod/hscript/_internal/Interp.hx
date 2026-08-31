@@ -1534,6 +1534,24 @@ class Interp
         {
           return new PolymodEnum(_scriptEnumDescriptors.get(name), f, []);
         }
+        if (name == null)
+        {
+          try
+          {
+            return get(expr(e), f);
+          }
+          catch (err:Dynamic)
+          {
+            var fullPath = getFullIdentPath(e);
+            if (PolymodScriptClass.importOverrides.exists(fullPath) 
+                && PolymodScriptClass.importOverrides.get(fullPath) == null)
+            {
+              fullPath += '.' + f;
+              return resolve(fullPath);
+            }
+            throw err;
+          }
+        }
         return get(expr(e), f);
       case EBinop(op, e1, e2):
         var fop = binops.get(op);
@@ -2169,6 +2187,21 @@ class Interp
     {
       case EIdent(v):
         return v;
+      default:
+        return null;
+    }
+  }
+
+  function getFullIdentPath(e:Expr):Null<String>
+  {
+    switch (Tools.expr(e))
+    {
+      case EIdent(id):
+        return id;
+      case EField(e2, f2):
+        var base = getFullIdentPath(e2);
+        if (base == null) return null;
+        return base + '.' + f2;
       default:
         return null;
     }
