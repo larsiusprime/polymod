@@ -258,6 +258,8 @@ class PolymodBaseClassMacro
   {
     if (cls.superClass != null) return [];
 
+    var buildPos = Context.currentPos();
+
     var ascField:Field = {
       name: '_asc',
       doc: 'The AbstractScriptClass instance which any variable or function calls are redirected to internally.',
@@ -265,15 +267,15 @@ class PolymodBaseClassMacro
       meta: [
         {
           name: ':noCompletion',
-          pos: cls.pos
+          pos: buildPos,
         },
         {
           name: ':jignored',
-          pos: cls.pos
+          pos: buildPos
         }
       ],
       kind: FieldType.FVar(macro :Null<polymod.hscript._internal.PolymodAbstractScriptClass>),
-      pos: cls.pos,
+      pos: buildPos,
     };
 
     var skipASCField:Field = {
@@ -283,22 +285,22 @@ class PolymodBaseClassMacro
       meta: [
         {
           name: ':noCompletion',
-          pos: cls.pos
+          pos: buildPos
         },
         {
           name: ':jignored',
-          pos: cls.pos
+          pos: buildPos
         }
       ],
       kind: FieldType.FVar(macro :Array<String>, macro []),
-      pos: cls.pos,
+      pos: buildPos,
     };
 
     var getField:Field = {
       name: 'scriptGet',
       doc: 'Retrieves the value of a local variable of a scripted class.',
       access: [APublic],
-      pos: cls.pos,
+      pos: buildPos,
       meta: null,
       kind: FFun({
         args: [{
@@ -317,7 +319,7 @@ class PolymodBaseClassMacro
       name: 'scriptSet',
       doc: 'Directly modifies the value of a local variable of a scripted class.',
       access: [APublic],
-      pos: cls.pos,
+      pos: buildPos,
       meta: null,
       kind: FFun({
         args: [
@@ -343,7 +345,7 @@ class PolymodBaseClassMacro
       name: 'scriptHas',
       doc: 'Determines if a field of a scripted class exists or not.',
       access: [APublic],
-      pos: cls.pos,
+      pos: buildPos,
       meta: null,
       kind: FFun({
         args: [{
@@ -362,7 +364,7 @@ class PolymodBaseClassMacro
       name: 'scriptCall',
       doc: 'Calls a function of the scripted class with the given name and arguments.',
       access: [APublic],
-      pos: cls.pos,
+      pos: buildPos,
       meta: null,
       kind: FFun({
         args: [
@@ -388,7 +390,7 @@ class PolymodBaseClassMacro
       name: 'scriptCallSuper',
       doc: 'Calls the super function directly, skipping the attached script.',
       access: [APublic],
-      pos: cls.pos,
+      pos: buildPos,
       meta: null,
       kind: FFun({
         args: [
@@ -443,6 +445,8 @@ class PolymodBaseClassMacro
       underlyingClass = formatClassString(superCls);
     }
 
+    var buildPos = Context.currentPos();
+
     var isClassField:Field = {
       name: '_isHScriptedClass',
       doc: 'Field used to identify a HScriptedClass.',
@@ -450,14 +454,14 @@ class PolymodBaseClassMacro
       meta: [
         {
           name: ':noCompletion',
-          pos: cls.pos
+          pos: buildPos
         },
         {
           name: ':jignored',
-          pos: cls.pos
+          pos: buildPos
         }
       ],
-      pos: cls.pos,
+      pos: buildPos,
       kind: FieldType.FVar(macro :Bool, macro true)
     };
 
@@ -465,7 +469,7 @@ class PolymodBaseClassMacro
       name: 'listScriptClasses',
       doc: "Returns a list of all the scripted classes which extend this class.",
       access: [APublic, AStatic],
-      pos: cls.pos,
+      pos: buildPos,
       meta: null,
       kind: FFun({
         args: [],
@@ -481,7 +485,7 @@ class PolymodBaseClassMacro
       name: 'scriptInit',
       doc: "Initializes a scripted class instance using the given scripted class name and constructor arguments.",
       access: [APublic, AStatic],
-      pos: cls.pos,
+      pos: buildPos,
       meta: null,
       kind: FFun({
         args: [
@@ -542,7 +546,7 @@ class PolymodBaseClassMacro
       name: 'scriptStaticGet',
       doc: "Retrieves a custom static variable on a scripted class, by the given name.",
       access: [APublic, AStatic],
-      pos: cls.pos,
+      pos: buildPos,
       meta: null,
       kind: FFun({
         args: [
@@ -567,7 +571,7 @@ class PolymodBaseClassMacro
       name: 'scriptStaticSet',
       doc: "Sets the value of a custom static variable on a scripted class, by the given name.",
       access: [APublic, AStatic],
-      pos: cls.pos,
+      pos: buildPos,
       meta: null,
       kind: FFun({
         args: [
@@ -598,7 +602,7 @@ class PolymodBaseClassMacro
       doc: 'Determines if a static field of a scripted class exists or not.',
       access: [APublic, AStatic],
       meta: null,
-      pos: cls.pos,
+      pos: buildPos,
       kind: FFun({
         args: [
           {
@@ -623,7 +627,7 @@ class PolymodBaseClassMacro
       doc: 'Determines if a static function of a scripted class exists or not.',
       access: [APublic, AStatic],
       meta: null,
-      pos: cls.pos,
+      pos: buildPos,
       kind: FFun({
         args: [
           {
@@ -647,7 +651,7 @@ class PolymodBaseClassMacro
       name: 'scriptStaticCall',
       doc: "Call a custom static function on a scripted class, by the given name, with the given arguments.",
       access: [APublic, AStatic],
-      pos: cls.pos,
+      pos: buildPos,
       meta: null,
       kind: FFun({
         args: [
