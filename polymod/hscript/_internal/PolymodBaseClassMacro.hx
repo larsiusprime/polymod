@@ -24,6 +24,17 @@ class PolymodBaseClassMacro
    */
   public static final PROCESS_FINISHED_META:String = ':hscriptBaseCreated';
 
+  /**
+   * A metadata a compiled script puts on one of its own classes to have these fields built for it.
+   * That is what lets an hscript class extend a class a compiled script declares.
+   */
+  public static final CPPIA_EXTENDABLE_META:String = ':hscriptExtendable';
+
+  static function useBridge():Bool
+  {
+    return Context.defined('cppia');
+  }
+
   public static function buildBaseClass():Array<Field>
   {
     var cls:ClassType = null;
@@ -84,7 +95,7 @@ class PolymodBaseClassMacro
     var fullClsName:String = formatClassString(cls);
     if (fullClsName.indexOf('polymod.') == 0) return fields; // Disallow extending polymod classes.
 
-    if (Context.defined('cppia') && !isHostClass(fullClsName)) return fields;
+    if (Context.defined('cppia') && !isHostClass(fullClsName) && !cls.meta.has(CPPIA_EXTENDABLE_META)) return fields;
 
     // Check if a class already has one of the fields needed for the scripts before attempting to build fields.
     // We only need to check (and add) instance fields if a class doesn't extend anything, considering extending classes inherit them.
@@ -218,7 +229,24 @@ class PolymodBaseClassMacro
           }
 
           var oldPos:haxe.macro.Expr.Position = f.expr.pos;
-          f.expr = macro
+          f.expr = useBridge() ? (macro
+            {
+              if (_asc != null && !_skipAscFrom.contains($v{fields[i].name}))
+              {
+                var scriptCls:Dynamic = polymod.hscript.PolymodScriptBridge.findScript(_asc, $v{fields[i].name});
+                if (scriptCls != null) $
+                {
+                  doesReturnVoid ? (macro
+                    {
+                      polymod.hscript.PolymodScriptBridge.callOn(scriptCls, $v{fields[i].name}, [$a{argExprs}]);
+                      return;
+                    }) : (macro return cast polymod.hscript.PolymodScriptBridge.callOn(scriptCls, $v{fields[i].name}, [$a{argExprs}]))
+                }
+              }
+
+              // Fallback, call the original function.
+              ${f.expr}
+            }) : (macro
             {
               if (_asc != null && !_skipAscFrom.contains($v{fields[i].name}))
               {
@@ -241,7 +269,7 @@ class PolymodBaseClassMacro
 
               // Fallback, call the original function.
               ${f.expr}
-            };
+            });
 
           f.expr.pos = oldPos;
 
@@ -276,7 +304,7 @@ class PolymodBaseClassMacro
           pos: buildPos
         }
       ],
-      kind: FieldType.FVar(macro :Null<polymod.hscript._internal.PolymodAbstractScriptClass>),
+      kind: FieldType.FVar(useBridge() ? (macro :Null<Dynamic>) : (macro :Null<polymod.hscript._internal.PolymodAbstractScriptClass>)),
       pos: buildPos,
     };
 
@@ -310,10 +338,13 @@ class PolymodBaseClassMacro
           type: macro :String
         }],
         ret: macro :Dynamic,
-        expr: macro
+        expr: useBridge() ? (macro
+        {
+          return polymod.hscript.PolymodScriptBridge.fieldRead(_asc, varName);
+        }) : (macro
         {
           return _asc?.fieldRead(varName);
-        },
+        }),
       }),
     };
 
@@ -336,10 +367,13 @@ class PolymodBaseClassMacro
           }
         ],
         ret: macro :Dynamic,
-        expr: macro
+        expr: useBridge() ? (macro
+        {
+          return polymod.hscript.PolymodScriptBridge.fieldWrite(_asc, varName, varValue);
+        }) : (macro
         {
           return _asc?.fieldWrite(varName, varValue);
-        },
+        }),
       })
     };
 
@@ -355,10 +389,13 @@ class PolymodBaseClassMacro
           type: macro :String
         }],
         ret: macro :Bool,
-        expr: macro
+        expr: useBridge() ? (macro
+        {
+          return polymod.hscript.PolymodScriptBridge.fieldExists(_asc, fieldName);
+        }) : (macro
         {
           return _asc?.fieldExists(fieldName) ?? false;
-        },
+        }),
       }),
     };
 
@@ -381,10 +418,13 @@ class PolymodBaseClassMacro
           }
         ],
         ret: macro :Dynamic,
-        expr: macro
+        expr: useBridge() ? (macro
+        {
+          return polymod.hscript.PolymodScriptBridge.callFunction(_asc, funcName, funcArgs ?? []);
+        }) : (macro
         {
           return _asc?.callFunction(funcName, funcArgs ?? []);
-        },
+        }),
       }),
     };
 
@@ -476,10 +516,13 @@ class PolymodBaseClassMacro
       kind: FFun({
         args: [],
         ret: macro :Array<String>,
-        expr: macro
+        expr: useBridge() ? (macro
+        {
+          return polymod.hscript.PolymodScriptBridge.listExtending($v{underlyingClass});
+        }) : (macro
         {
           return polymod.hscript._internal.PolymodScriptClass.listScriptClassesExtending($v{underlyingClass});
-        },
+        }),
       }),
     };
 
@@ -502,7 +545,12 @@ class PolymodBaseClassMacro
           }
         ],
         ret: macro :Null<$complexType>,
-        expr: macro
+        expr: useBridge() ? (macro
+        {
+          // The whole of this lives in the bridge, so a script names neither the class
+          // reference nor the error reporter.
+          return cast polymod.hscript.PolymodScriptBridge.instantiate(clsName, $v{underlyingClass}, (cast args) ?? []);
+        }) : (macro
         {
           var clsRef = polymod.hscript._internal.PolymodStaticClassReference.tryBuild(clsName);
 
@@ -540,7 +588,7 @@ class PolymodBaseClassMacro
             );
             return null;
           }
-        },
+        }),
       }),
     }
 
@@ -562,10 +610,13 @@ class PolymodBaseClassMacro
           },
         ],
         ret: macro :Dynamic,
-        expr: macro
+        expr: useBridge() ? (macro
+        {
+          return polymod.hscript.PolymodScriptBridge.staticGet(clsName, fieldName);
+        }) : (macro
         {
           return polymod.hscript._internal.PolymodScriptClass.getScriptClassStaticField(clsName, fieldName);
-        }
+        })
       })
     };
 
@@ -592,10 +643,13 @@ class PolymodBaseClassMacro
           },
         ],
         ret: macro :Dynamic,
-        expr: macro
+        expr: useBridge() ? (macro
+        {
+          return polymod.hscript.PolymodScriptBridge.staticSet(clsName, fieldName, fieldValue);
+        }) : (macro
         {
           return polymod.hscript._internal.PolymodScriptClass.setScriptClassStaticField(clsName, fieldName, fieldValue);
-        }
+        })
       })
     };
 
@@ -617,10 +671,13 @@ class PolymodBaseClassMacro
           }
         ],
         ret: macro :Bool,
-        expr: macro
+        expr: useBridge() ? (macro
+        {
+          return polymod.hscript.PolymodScriptBridge.staticHas(clsName, fieldName);
+        }) : (macro
         {
           return polymod.hscript._internal.PolymodScriptClass.hasScriptClassStaticField(clsName, fieldName);
-        },
+        }),
       }),
     };
 
@@ -642,10 +699,13 @@ class PolymodBaseClassMacro
           }
         ],
         ret: macro :Bool,
-        expr: macro
+        expr: useBridge() ? (macro
+        {
+          return polymod.hscript.PolymodScriptBridge.staticHasFunc(clsName, fieldName);
+        }) : (macro
         {
           return polymod.hscript._internal.PolymodScriptClass.hasScriptClassStaticFunction(clsName, fieldName);
-        },
+        }),
       }),
     };
 
@@ -672,10 +732,13 @@ class PolymodBaseClassMacro
           }
         ],
         ret: macro :Dynamic,
-        expr: macro
+        expr: useBridge() ? (macro
+        {
+          return polymod.hscript.PolymodScriptBridge.staticCall(clsName, funcName, funcArgs ?? []);
+        }) : (macro
         {
           return polymod.hscript._internal.PolymodScriptClass.callScriptClassStaticFunction(clsName, funcName, funcArgs ?? []);
-        }
+        })
       })
     };
 

@@ -78,6 +78,24 @@ class PolymodCppiaClassReference extends PolymodStaticClassReference
   }
 
   /**
+   * Whether an hscript class can extend this one.
+   */
+  public static function isExtendableCppiaClass(clsName:String):Bool
+  {
+    var cls:Null<Class<Dynamic>> = registry.get(clsName);
+    if (cls == null) return false;
+
+    try
+    {
+      return Reflect.field(cls, '_isHScriptedClass') == true;
+    }
+    catch (_:Dynamic)
+    {
+      return false;
+    }
+  }
+
+  /**
    * Whether this name belongs to a compiled script that is no longer loaded.
    *
    * The class object still exists, because hxcpp cannot unload it, but nothing should resolve to it.
@@ -178,6 +196,7 @@ class PolymodCppiaClassReference extends PolymodStaticClassReference
     {
       if (alias == null || Type.getClassName(alias) != name) result.set(name, true);
     }
+    result.remove(Type.getClassName(polymod.hscript.PolymodScriptBridge));
 
     return result;
   }
