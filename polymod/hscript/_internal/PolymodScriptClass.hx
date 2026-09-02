@@ -722,6 +722,20 @@ class PolymodScriptClass
         {
           targetClass = scriptClassOverrides.get(clsPath);
         }
+        #if POLYMOD_CPPIA
+        else if (PolymodCppiaClassReference.hasCppiaClass(clsPath))
+        {
+          if (!PolymodCppiaClassReference.isExtendableCppiaClass(clsPath))
+          {
+            Polymod.error(SCRIPT_PARSE_FAILED,
+              'Cannot extend compiled class ("${Util.getFullClassName(c)}" tried extending "$clsPath"). Mark it with @:hscriptExtendable and rebuild the compiled script.',
+              SCRIPT_RUNTIME);
+            return;
+          }
+
+          targetClass = PolymodCppiaClassReference.getCppiaClass(clsPath);
+        }
+        #end
         else if (c.imports.exists(clsName))
         {
           var importedClass:ClassImport = c.imports.get(clsName);
@@ -855,6 +869,17 @@ class PolymodScriptClass
           _interp.error(EClassUnresolvedSuperclass(fullExtendString, 'WHY?'));
         }
       }
+      #if POLYMOD_CPPIA
+      else if (PolymodCppiaClassReference.hasCppiaClass(fullExtendString))
+      {
+        clsToCreate = PolymodCppiaClassReference.getCppiaClass(fullExtendString);
+
+        if (clsToCreate == null)
+        {
+          _interp.error(EClassUnresolvedSuperclass(fullExtendString, 'no loaded compiled script provides it'));
+        }
+      }
+      #end
       else if (_c.imports.exists(extendString))
       {
         clsToCreate = _c.imports.get(extendString).cls;
