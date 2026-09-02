@@ -970,6 +970,88 @@ class Polymod
     #end
   }
 
+  static function registerAllCppiaClassesAsync():Array<lime.app.Future<Bool>>
+  {
+    #if POLYMOD_CPPIA
+    @:privateAccess {
+      var libraryIds:Array<String> = Polymod.assetLibrary.listLibraries();
+      var allBytes:Array<String> = Polymod.assetLibrary.list(BYTES);
+      var cppiaPaths:Array<String> = allBytes.filter(path -> PolymodConfig.cppiaClassExt.exists(ext -> path.endsWith(ext)));
+
+      cppiaPaths = polymod.hscript._internal.PolymodCPPIATarget.select(cppiaPaths);
+
+      var futures:Array<lime.app.Future<Bool>> = [];
+      for (binaryPath in cppiaPaths)
+      {
+        var path:String = binaryPath;
+        if (!Polymod.assetLibrary.exists(path))
+        {
+          for (libraryId in libraryIds)
+          {
+            if (Polymod.assetLibrary.exists('$libraryId:$binaryPath'))
+            {
+              path = '$libraryId:$binaryPath';
+              break;
+            }
+          }
+          if (!Polymod.assetLibrary.exists(path))
+          {
+            Polymod.error(SCRIPT_NOT_FOUND, 'Could not find file "$binaryPath"');
+            continue;
+          }
+        }
+
+        var promise = new lime.app.Promise<Bool>();
+
+        futures.push(promise.future);
+        try
+        {
+          Polymod.assetLibrary.loadBytes(path).onComplete((bytes:Bytes) ->
+          {
+            try
+            {
+              var registered = polymod.hscript._internal.PolymodCppiaClassReference.registerModule(bytes, path);
+              if (registered.length == 0)
+              {
+                Polymod.warning(SCRIPT_PARSE_FAILED, 'Compiled script "$path" registered no classes, so nothing in it can be used.', SCRIPT_RUNTIME);
+              }
+              promise.complete(true);
+            }
+            catch (e)
+            {
+              promise.error(e);
+            }
+          }).onError((err) ->
+            {
+              if (err == '404')
+              {
+                Polymod.error(
+                  SCRIPT_PARSE_FAILED,
+                  'Error while loading compiled script "${path}", could not retrieve script contents (404 error)!',
+                  SCRIPT_RUNTIME
+                );
+              }
+              else
+              {
+                Polymod.error(SCRIPT_PARSE_FAILED, 'Error while parsing script ${path}: ' + '\n' + 'An unknown error occurred: ${err}', SCRIPT_RUNTIME);
+              }
+              promise.error(err);
+            });
+        }
+        catch (e:Dynamic)
+        {
+          Polymod.error(SCRIPT_NOT_FOUND, 'Could not read compiled script "$path": $e');
+          promise.error(e);
+          continue;
+        }
+      }
+      return futures;
+    }
+    #else
+    return [];
+    #end
+  }
+
   /**
    * Loads all script classes (`.hxc` files) and registers any classes they provide.
    */
@@ -1037,13 +1119,15 @@ class Polymod
     Polymod.info(SCRIPT_PARSE_START, 'Parsing script classes asynchronously...');
     prepareRegisterScriptedClasses();
 
-    registerAllCppiaClasses();
+    var futures:Array<lime.app.Future<Bool>> = [];
+
+    // Load CPPIA scripts first asynchronously
+    futures = futures.concat(registerAllCppiaClassesAsync());
 
     // Go through each script and parse any classes in them.
     var potentialScripts:Array<String> = Polymod.assetLibrary.list(TEXT);
     var libraryIds:Array<String> = Polymod.assetLibrary.listLibraries();
 
-    var futures:Array<lime.app.Future<Bool>> = [];
     for (textPath in potentialScripts)
     {
       if (PolymodConfig.scriptClassExt.exists(ext -> textPath.endsWith(ext)))
@@ -1067,6 +1151,10 @@ class Polymod
     }
 
     return lime.app.Promise.allSettled(futures).then((results) -> {
+      #if POLYMOD_CPPIA
+      polymod.hscript._internal.PolymodCppiaClassReference.unloadInactiveModules();
+      #end
+
       // Once all scripts have been registered, THEN validate the imports.
       polymod.hscript._internal.Interp.validateImports();
 
