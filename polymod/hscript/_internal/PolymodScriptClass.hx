@@ -1134,6 +1134,7 @@ class PolymodScriptClass
     if (_cachedFunctionDecls != null)
     {
       _cachedFunctionDecls.remove(name);
+      _cachedFunctionCalls.remove(name);
     }
   }
 
@@ -1204,6 +1205,7 @@ class PolymodScriptClass
   private var _cachedFieldDecls:Map<String, FieldDecl> = [];
   private var _cachedSuperFunctionDecls:Map<String, Dynamic> = [];
   private var _cachedFunctionDecls:Map<String, FunctionDecl> = [];
+  private var _cachedFunctionCalls:Map<String, Dynamic> = [];
   private var _cachedVarDecls:Map<String, VarDecl> = [];
   private var _cachedUsingFunctions:Map<String, Array<Dynamic>->Dynamic> = [];
 
@@ -1212,6 +1214,7 @@ class PolymodScriptClass
     _cachedFieldDecls.clear();
     _cachedSuperFunctionDecls.clear();
     _cachedFunctionDecls.clear();
+    _cachedFunctionCalls.clear();
     _cachedVarDecls.clear();
     _cachedUsingFunctions.clear();
 
@@ -1229,6 +1232,10 @@ class PolymodScriptClass
       {
         case KFunction(fn):
           _cachedFunctionDecls.set(f.name, fn);
+          _cachedFunctionCalls.set(f.name, Reflect.makeVarArgs(function(args:Array<Dynamic>)
+          {
+            return callFunction(f.name, args);
+          }));
         case KVar(v):
           _cachedVarDecls.set(f.name, v);
           if (v.expr != null)
