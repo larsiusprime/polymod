@@ -26,9 +26,7 @@ abstract PolymodAbstractScriptClass(PolymodScriptClass) from PolymodScriptClass
       case _:
         if (this.findFunction(name) != null)
         {
-          return Reflect.makeVarArgs(function(args:Array<Dynamic>) {
-            return this.callFunction(name, args);
-          });
+          return this._cachedFunctionCalls.get(name);
         }
         else if (this.findVar(name) != null)
         {
