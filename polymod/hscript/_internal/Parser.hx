@@ -104,6 +104,8 @@ class Parser
   var idents:Array<Bool>;
   var uid:Int = 0;
 
+  var packageSet:Bool = false;
+
   #if hscriptPos
   var origin:String;
   var tokenMin:Int;
@@ -1463,6 +1465,13 @@ class Parser
     switch (ident)
     {
       case "package":
+        #if POLYMOD_STRICT_SYNTAX
+        if (!packageSet)
+          packageSet = true;
+        else
+          error(ECustom("Unknown identifier: package"), currentPos, currentPos); // Throw an error if there was a package already set.
+        #end
+
         var path = parsePath();
         ensure(TSemicolon);
         return DPackage(path);
@@ -1664,9 +1673,17 @@ class Parser
         case "override":
           access.push(AOverride);
         case "public":
-          access.push(APublic);
+          // Throw an error if the user tries declaring a variable as public when it's already been declared private.
+          if (access.contains(APrivate))
+            error(ECustom("Conflicting access modifier public"), currentPos, currentPos);
+          else if (!access.contains(APublic))
+            access.push(APublic);
         case "private":
-          access.push(APrivate);
+          // Throw an error if the user tries declaring a variable as private when it's already been declared public.
+          if (access.contains(APublic))
+            error(ECustom("Conflicting access modifier private"), currentPos, currentPos);
+          else if (!access.contains(APrivate))
+            access.push(APrivate);
         case "inline":
           access.push(AInline);
         case "static":
@@ -1674,6 +1691,11 @@ class Parser
         case "macro":
           access.push(AMacro);
         case "function":
+          if (access.contains(AOverride) && access.contains(AStatic))
+          {
+            error(EInvalidAccessorCombination(['override', 'static']), currentPos, currentPos);
+          }
+
           var name = getIdent();
           var inf = parseFunctionDecl();
           maybe(TSemicolon);
@@ -1713,6 +1735,13 @@ class Parser
           }
           else
             ensure(TSemicolon);
+
+          #if POLYMOD_STRICT_SYNTAX
+          if (access.contains(AInline) && !access.contains(AStatic))
+          {
+            error(ECustom('Invalid modifier: inline on non-static variable'), currentPos, currentPos);
+          }
+          #end
 
           return {
             name: name,
